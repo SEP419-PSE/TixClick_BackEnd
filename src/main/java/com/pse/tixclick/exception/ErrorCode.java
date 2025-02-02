@@ -29,6 +29,7 @@ public enum ErrorCode {
     INVALID_EMAIL(1020, "Invalid email", HttpStatus.BAD_REQUEST),
     INVALID_EMAIL_FORMAT(1021, "Invalid email format", HttpStatus.BAD_REQUEST),
     ROLE_NOT_EXISTED(1022, "Role not existed", HttpStatus.NOT_FOUND),
+    USER_ACTIVE(1023, "User is active", HttpStatus.BAD_REQUEST),
     ;
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {

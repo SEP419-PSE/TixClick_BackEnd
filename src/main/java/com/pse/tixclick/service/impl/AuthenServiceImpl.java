@@ -195,7 +195,7 @@ public class AuthenServiceImpl implements AuthenService {
         newUser.setEmail(signUpRequest.getEmail());
         newUser.setFirstName(signUpRequest.getFirstName());
         newUser.setLastName(signUpRequest.getLastName());
-        newUser.setActive(true);
+        newUser.setActive(false);
         newUser.setRole(role);
 
         userRepository.save(newUser);
@@ -209,7 +209,9 @@ public class AuthenServiceImpl implements AuthenService {
         // Kiểm tra người dùng có tồn tại trong cơ sở dữ liệu không
         var user = userRepository.findAccountByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-
+        if(user.isActive() == true){
+            throw new AppException(ErrorCode.USER_ACTIVE);
+        }
         // Lưu OTP vào bộ nhớ (ConcurrentHashMap) với thời gian hết hạn là 5 phút
         otpStore.put(email, otpCode);
         otpExpirationStore.put(email, System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(5)); // Hết hạn sau 5 phút
