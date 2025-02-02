@@ -4,6 +4,7 @@ import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.SignedJWT;
+import com.pse.tixclick.email.EmailService;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.jwt.Jwt;
@@ -21,6 +22,7 @@ import com.pse.tixclick.repository.RefreshTokenRepository;
 import com.pse.tixclick.repository.RoleRepository;
 import com.pse.tixclick.service.AccountService;
 import com.pse.tixclick.service.AuthenService;
+import jakarta.mail.MessagingException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -34,18 +36,26 @@ import org.springframework.stereotype.Service;
 import java.text.ParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AuthenServiceImpl implements AuthenService {
+    private final ConcurrentHashMap<String, String> otpStore = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Long> otpExpirationStore = new ConcurrentHashMap<>();  // Để lưu thời gian hết hạn
+
     @Autowired
     Jwt jwt;
     @Autowired
     AccountRepository userRepository;
     @Autowired
     RoleRepository roleRepository;
+    @Autowired
+    EmailService emailService;
     @Autowired
     RefreshTokenRepository refreshTokenRepository;
     @Value("${app.jwt-secret}")
@@ -190,4 +200,52 @@ public class AuthenServiceImpl implements AuthenService {
         return true;
     }
 
+    @Override
+    public void createAndSendOTP(String email) throws MessagingException {
+        String otpCode = generateOTP();  // Tạo OTP
+
+        // Kiểm tra người dùng có tồn tại trong cơ sở dữ liệu không
+        var user = userRepository.findAccountByEmail(email)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        // Lưu OTP vào bộ nhớ (ConcurrentHashMap) với thời gian hết hạn là 5 phút
+        otpStore.put(email, otpCode);
+        otpExpirationStore.put(email, System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(5)); // Hết hạn sau 5 phút
+
+        // Gửi OTP qua email
+        String message = "Your OTP code is: " + otpCode;
+        emailService.sendOTPtoActiveAccount(email, otpCode, user.getUserName());
+    }
+
+    @Override
+    public boolean verifyOTP(String email, String otpCode) {
+        // Lấy mã OTP đã lưu và thời gian hết hạn từ bộ lưu trữ
+        String storedOtp = otpStore.get(email);
+        Long expirationTime = otpExpirationStore.get(email);
+
+        // Kiểm tra nếu OTP không tồn tại hoặc đã hết hạn
+        if (storedOtp == null || expirationTime == null || System.currentTimeMillis() > expirationTime) {
+            // Xóa OTP khỏi bộ nhớ khi hết hạn hoặc không tồn tại
+            otpStore.remove(email);
+            otpExpirationStore.remove(email);
+            return false;  // OTP không tồn tại hoặc đã hết hạn
+        }
+
+        // Kiểm tra mã OTP
+        boolean isValid = storedOtp.equals(otpCode);
+
+        // Nếu OTP đã được xác thực, xóa OTP khỏi bộ nhớ
+        if (isValid) {
+            otpStore.remove(email);
+            otpExpirationStore.remove(email);
+        }
+
+        return isValid;  // Trả về true nếu OTP hợp lệ, false nếu không hợp lệ
+    }
+
+
+    public String generateOTP() {
+        Random random = new Random();
+        return String.format("%06d", random.nextInt(1000000));  // Tạo OTP 6 chữ số
+    }
 }

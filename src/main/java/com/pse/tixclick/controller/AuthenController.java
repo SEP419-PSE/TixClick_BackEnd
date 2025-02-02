@@ -119,4 +119,63 @@ public class AuthenController {
         return ResponseEntity.status(HttpStatus.OK).body(apiResponse);  // Trả về OK
     }
 
+    @PostMapping("/verify-otp")
+    public ResponseEntity<ApiResponse<Boolean>> verifyOTP(@RequestParam String email, @RequestParam String otpCode) {
+        try {
+            // Gọi service để xác thực mã OTP
+            boolean isValid = authenService.verifyOTP(email, otpCode);
+
+            // Kiểm tra nếu OTP không hợp lệ
+            if (!isValid) {
+                ApiResponse<Boolean> errorResponse = ApiResponse.<Boolean>builder()
+                        .code(HttpStatus.BAD_REQUEST.value())
+                        .message("OTP verification failed")
+                        .result(false)
+                        .build();
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);  // Trả về BAD_REQUEST
+            }
+
+            // Nếu OTP hợp lệ
+            ApiResponse<Boolean> apiResponse = ApiResponse.<Boolean>builder()
+                    .code(HttpStatus.OK.value())
+                    .message("OTP verification successful")
+                    .result(true)
+                    .build();
+            return ResponseEntity.status(HttpStatus.OK).body(apiResponse);  // Trả về OK
+
+        } catch (Exception e) {
+            // Xử lý ngoại lệ nếu có lỗi xảy ra
+            ApiResponse<Boolean> errorResponse = ApiResponse.<Boolean>builder()
+                    .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .message("An error occurred during OTP verification")
+                    .result(false)
+                    .build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);  // Trả về INTERNAL_SERVER_ERROR
+        }
+    }
+
+    @PostMapping("/send-otp")
+    public ResponseEntity<ApiResponse<Boolean>> sendOTP(@RequestParam String email) {
+        try {
+            // Gọi service để tạo và gửi mã OTP
+            authenService.createAndSendOTP(email);
+
+            // Nếu thành công, trả về phản hồi với mã trạng thái OK
+            ApiResponse<Boolean> apiResponse = ApiResponse.<Boolean>builder()
+                    .code(HttpStatus.OK.value())
+                    .message("OTP sent successfully")
+                    .result(true)
+                    .build();
+            return ResponseEntity.status(HttpStatus.OK).body(apiResponse);  // Trả về OK
+        } catch (Exception e) {
+            // Nếu có lỗi, trả về phản hồi với mã trạng thái BAD_REQUEST
+            ApiResponse<Boolean> errorResponse = ApiResponse.<Boolean>builder()
+                    .code(HttpStatus.BAD_REQUEST.value())
+                    .message("OTP sending failed: " + e.getMessage())
+                    .result(false)
+                    .build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);  // Trả về BAD_REQUEST
+        }
+    }
+
 }
