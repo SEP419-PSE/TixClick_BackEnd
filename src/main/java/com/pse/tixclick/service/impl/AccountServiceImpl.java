@@ -16,7 +16,7 @@ public class AccountServiceImpl implements AccountService {
     private AccountRepository accountRepository;
 
     @Override
-    public boolean changePassword(String email, String password) {
+    public boolean changePasswordWithOtp(String email, String password) {
         Account account = accountRepository.findAccountByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
