@@ -13,6 +13,7 @@ import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.entity.Account;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
 import java.text.ParseException;
@@ -22,13 +23,13 @@ import java.util.UUID;
 @Component
 public class Jwt {
 
-    @Value("${jwt.secret}")
+    @Value("${app.jwt-secret}")
     private String signerKey;
 
-    @Value("${jwt.app.jwt-access-expiration-milliseconds}")
+    @Value("${app.jwt-access-expiration-milliseconds}")
     private long accessExpirationMillis;
 
-    @Value("${jwt.app.jwt-refresh-expiration-milliseconds}")
+    @Value("${app.jwt-refresh-expiration-milliseconds}")
     private long refreshExpirationMillis;
 
     public TokenPair generateTokens(Account user) {
@@ -108,7 +109,7 @@ public class Jwt {
         boolean verified = signedJWT.verify(verifier);
 
         if (!(verified && expiryTime.after(new Date()))) {
-            throw new AppException(ErrorCode.UNAUTHENTICATED);
+            throw new AppException(ErrorCode.INVALID_TOKEN);
         }
 
         return signedJWT;

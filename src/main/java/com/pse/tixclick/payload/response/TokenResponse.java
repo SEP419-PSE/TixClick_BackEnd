@@ -13,6 +13,5 @@ import java.util.Date;
 public class TokenResponse {
     String accessToken;
     String refreshToken;
-    Date accessExpiryTime;
-    Date refreshExpiryTime;
+
 }

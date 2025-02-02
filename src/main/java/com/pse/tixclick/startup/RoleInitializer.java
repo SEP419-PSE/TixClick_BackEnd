@@ -21,7 +21,7 @@ public class RoleInitializer {
     public CommandLineRunner initRoles() {
         return args -> {
             // Danh sách các role cần tạo
-            String[] roleNames = {"ADMIN", "BUYER", "SELLER"};
+            String[] roleNames = {"ADMIN", "BUYER", "ORGANIZER", "MANAGER"};
 
             Arrays.stream(roleNames).forEach(roleName -> {
                 // Sử dụng phương thức findByRoleName

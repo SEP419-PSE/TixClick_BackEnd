@@ -16,13 +16,19 @@ public class Account {
     int accountId;
 
     @Column
-    String fullName;
+    String firstName;
 
-    @Column(unique = true)
+    @Column
+    String lastName;
+
+    @Column(unique = true,nullable = false)
     String userName;
 
     @Column(nullable = false)
     String password;
+
+    @Column(unique = true,nullable = false)
+    String email;
 
     @Column
     String phone;
