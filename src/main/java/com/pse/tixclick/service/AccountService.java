@@ -7,5 +7,5 @@ import com.pse.tixclick.payload.response.RefreshTokenResponse;
 import com.pse.tixclick.payload.response.TokenResponse;
 
 public interface AccountService {
-
+    boolean changePassword(String email, String password);
 }

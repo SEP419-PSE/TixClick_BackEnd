@@ -21,9 +21,9 @@ import java.text.ParseException;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/account")
+@RequestMapping("/auth")
 @Slf4j
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "http://localhost:5173")
 public class AuthenController {
     @Autowired
     AuthenService authenService;
