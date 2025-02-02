@@ -1,6 +1,7 @@
 package com.pse.tixclick.controller;
 
 import com.pse.tixclick.exception.AppException;
+import com.pse.tixclick.payload.dto.AccountDTO;
 import com.pse.tixclick.payload.response.ApiResponse;
 import com.pse.tixclick.service.AccountService;
 import lombok.extern.slf4j.Slf4j;
@@ -42,5 +43,21 @@ public class AccountController {
 
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
         }
+    }
+
+    @GetMapping("/profile")
+    public ResponseEntity<ApiResponse<AccountDTO>> getProfile() {
+        // Lấy thông tin tài khoản từ service
+        AccountDTO accountDTO = accountService.myProfile();
+
+        // Tạo phản hồi API
+        ApiResponse<AccountDTO> apiResponse = ApiResponse.<AccountDTO>builder()
+                .code(HttpStatus.OK.value())
+                .message("Profile retrieved successfully")
+                .result(accountDTO)
+                .build();
+
+        // Trả về thông tin tài khoản với mã HTTP 200
+        return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
     }
 }
