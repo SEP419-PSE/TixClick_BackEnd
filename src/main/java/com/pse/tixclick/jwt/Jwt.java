@@ -56,11 +56,11 @@ public class Jwt {
 
             JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                     .subject(user.getUserName())
-                    .issuer("devteria.com")
+                    .issuer("tixclick.com")
                     .issueTime(issueTime)
                     .expirationTime(expiryTime)
                     .jwtID(UUID.randomUUID().toString())
-                    .claim("userId", user.getAccountId())  // Store only essential information
+                    .claim("roleName", user.getRole().getRoleName())  // Store only essential information
                     .build();
 
             SignedJWT signedJWT = new SignedJWT(header, claimsSet);
@@ -82,7 +82,7 @@ public class Jwt {
 
             // Only store userId and jwtID in the refresh token
             JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
-                    .issuer("namphan.com")
+                    .issuer("tixclick.com")
                     .issueTime(issueTime)
                     .expirationTime(expiryTime)
                     .jwtID(UUID.randomUUID().toString())  // Use a shorter, unique identifier for refresh tokens

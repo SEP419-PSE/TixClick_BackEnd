@@ -5,6 +5,7 @@ import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.request.IntrospectRequest;
 import com.pse.tixclick.payload.request.LoginRequest;
 import com.pse.tixclick.payload.request.SignUpRequest;
+import com.pse.tixclick.payload.response.GetToken;
 import com.pse.tixclick.payload.response.IntrospectResponse;
 import com.pse.tixclick.payload.response.RefreshTokenResponse;
 import com.pse.tixclick.payload.response.TokenResponse;
@@ -22,4 +23,6 @@ public interface AuthenService {
 
     void createAndSendOTP(String email) throws MessagingException;
     boolean verifyOTP(String email, String otpCode);
+
+    GetToken getToken();
 }

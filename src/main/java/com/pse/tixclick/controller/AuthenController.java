@@ -6,6 +6,7 @@ import com.pse.tixclick.payload.request.IntrospectRequest;
 import com.pse.tixclick.payload.request.LoginRequest;
 import com.pse.tixclick.payload.request.SignUpRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
+import com.pse.tixclick.payload.response.GetToken;
 import com.pse.tixclick.payload.response.RefreshTokenResponse;
 import com.pse.tixclick.payload.response.TokenResponse;
 import com.pse.tixclick.service.AuthenService;
@@ -178,4 +179,29 @@ public class AuthenController {
         }
     }
 
+    @GetMapping("/get-token")
+    public ResponseEntity<ApiResponse<GetToken>> getToken() {
+        try {
+            // Gọi service để lấy thông tin từ token
+            GetToken getToken = authenService.getToken();
+
+            // Tạo phản hồi API
+            ApiResponse<GetToken> apiResponse = ApiResponse.<GetToken>builder()
+                    .code(HttpStatus.OK.value())
+                    .message("Token information retrieved successfully")
+                    .result(getToken)
+                    .build();
+
+            // Trả về response với mã HTTP 200 (OK)
+            return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+        } catch (Exception e) {
+            // Nếu có lỗi, trả về phản hồi với mã trạng thái BAD_REQUEST
+            ApiResponse<GetToken> errorResponse = ApiResponse.<GetToken>builder()
+                    .code(HttpStatus.BAD_REQUEST.value())
+                    .message("Failed to retrieve token information")
+                    .result(null)
+                    .build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        }
+    }
 }

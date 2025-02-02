@@ -14,6 +14,7 @@ import com.pse.tixclick.payload.entity.Role;
 import com.pse.tixclick.payload.request.IntrospectRequest;
 import com.pse.tixclick.payload.request.LoginRequest;
 import com.pse.tixclick.payload.request.SignUpRequest;
+import com.pse.tixclick.payload.response.GetToken;
 import com.pse.tixclick.payload.response.IntrospectResponse;
 import com.pse.tixclick.payload.response.RefreshTokenResponse;
 import com.pse.tixclick.payload.response.TokenResponse;
@@ -29,6 +30,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -242,6 +244,20 @@ public class AuthenServiceImpl implements AuthenService {
 
         return isValid;  // Trả về true nếu OTP hợp lệ, false nếu không hợp lệ
     }
+
+    @Override
+    public GetToken getToken() {
+        var context = SecurityContextHolder.getContext();
+        String name = context.getAuthentication().getName();
+        var user = userRepository.findAccountByUserName(name)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        GetToken getToken = new GetToken();
+        getToken.setRoleName(user.getRole().getRoleName());
+        getToken.setUserName(user.getUserName());
+        return getToken;
+    }
+
+
 
 
     public String generateOTP() {
