@@ -42,9 +42,8 @@ public class AuthenController {
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<String>> register(@Valid @RequestBody SignUpRequest signUpRequest, BindingResult bindingResult) {
-        // Kiểm tra nếu có lỗi validation
+        // Kiểm tra lỗi validation
         if (bindingResult.hasErrors()) {
-            // Lấy tất cả thông báo lỗi
             String errorMessages = bindingResult.getAllErrors().stream()
                     .map(error -> error.getDefaultMessage())
                     .collect(Collectors.joining(", "));
@@ -56,15 +55,22 @@ public class AuthenController {
                     .build());
         }
 
-        // Nếu không có lỗi validation, tiếp tục thực hiện logic đăng ký
-        boolean success = authenService.register(signUpRequest);
-        ApiResponse<String> apiResponse = ApiResponse.<String>builder()
-                .code(HttpStatus.OK.value())
-                .message("Register successful")
-                .result("Register successful")
-                .build();
-        return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+        try {
+            authenService.register(signUpRequest);
+            return ResponseEntity.ok(ApiResponse.<String>builder()
+                    .code(HttpStatus.OK.value())
+                    .message("Register successful")
+                    .result("Register successful")
+                    .build());
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.<String>builder()
+                    .code(HttpStatus.BAD_REQUEST.value())
+                    .message(e.getMessage())
+                    .result("Registration failed")
+                    .build());
+        }
     }
+
 
     @PostMapping("/refresh-token")
     public ResponseEntity<ApiResponse<Object>> refreshToken(@RequestBody IntrospectRequest refreshTokenRequest) {
