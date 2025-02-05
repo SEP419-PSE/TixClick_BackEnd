@@ -38,4 +38,8 @@ public class Event {
 
     @OneToMany(mappedBy = "event")
     Collection<EventImage> eventImages;
+
+    @ManyToOne
+    @JoinColumn(name = "category_id", nullable = false)
+    EventCategory category;
 }

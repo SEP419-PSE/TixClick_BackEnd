@@ -4,15 +4,13 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.util.Collection;
-
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-public class Group {
+public class Organize {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     int groupId;
@@ -20,6 +18,5 @@ public class Group {
     @Column
     String groupName;
 
-    @OneToMany
-    Collection<Member> members;
+
 }

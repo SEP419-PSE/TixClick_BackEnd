@@ -47,4 +47,5 @@ public class Account {
 
     @OneToMany(mappedBy = "account")
     Collection<Member> members;
+
 }

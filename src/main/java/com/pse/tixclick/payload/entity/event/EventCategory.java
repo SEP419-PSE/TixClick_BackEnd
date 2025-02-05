@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.Collection;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -17,4 +19,7 @@ public class EventCategory {
 
     @Column
     String categoryName;
+
+    @OneToMany(mappedBy = "category")
+    Collection<Event> events;
 }
