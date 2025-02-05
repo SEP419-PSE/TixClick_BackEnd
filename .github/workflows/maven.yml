@@ -10,13 +10,13 @@ jobs:
       CONTAINER_NAME: myappCommandContainer
     steps:
       - uses: actions/checkout@v3
+
       - name: Build Docker Image
         run: |
           echo "Building Docker image..."
           docker build -t myapp:latest -f ./Dockerfile .
 
-
-      - name: Manage Docker Container and Build
+      - name: Stop and Remove Existing Container if Any
         run: |
           CNAME=${{ env.CONTAINER_NAME }}
 
@@ -28,14 +28,16 @@ jobs:
                   docker rm $CNAME
               else
                   echo ":: Container $CNAME exists and is running"
-                  echo ":: Stopping running container - $CNAME"
+                  echo ":: Stopping and removing running container - $CNAME"
                   docker stop $CNAME
-                  echo ":: Removing stopped container - $CNAME"
                   docker rm $CNAME
               fi
           else
               echo ":: No existing container named $CNAME"
           fi
-          # Run new container
+
+      - name: Run New Docker Container
+        run: |
+          CNAME=${{ env.CONTAINER_NAME }}
           echo ":: Running new container - $CNAME"
           docker run -d -p 8080:8080 --name $CNAME myapp:latest
