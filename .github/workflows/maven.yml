@@ -11,7 +11,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Build Docker Image
-        run: docker build -t tixclick-backend:latest  -f ./Dockerfile 
+        run: docker build -t tixclick-backend:latest -f ./Dockerfile .
+
 
       - name: Manage Docker Container and Build
         run: |
