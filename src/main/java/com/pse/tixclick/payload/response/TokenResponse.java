@@ -14,4 +14,5 @@ public class TokenResponse {
     String accessToken;
     String refreshToken;
 
+    boolean status;
 }

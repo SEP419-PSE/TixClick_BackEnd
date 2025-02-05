@@ -98,6 +98,7 @@ public class AuthenServiceImpl implements AuthenService {
         return TokenResponse.builder()
                 .accessToken(tokenPair.accessToken().token())
                 .refreshToken(tokenPair.refreshToken().token())
+                .status(user.isActive())
                 .build();
     }
 
