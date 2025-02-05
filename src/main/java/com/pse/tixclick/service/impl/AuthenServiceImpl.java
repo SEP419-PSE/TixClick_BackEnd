@@ -171,7 +171,10 @@ public class AuthenServiceImpl implements AuthenService {
     }
 
     @Override
-    public boolean register(SignUpRequest signUpRequest) {
+    public boolean
+
+
+    register(SignUpRequest signUpRequest) {
 
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
 
@@ -244,6 +247,11 @@ public class AuthenServiceImpl implements AuthenService {
             otpStore.remove(email);
             otpExpirationStore.remove(email);
         }
+
+        var user = userRepository.findAccountByEmail(email)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        user.setActive(true);
+        userRepository.save(user);
 
         return isValid;  // Trả về true nếu OTP hợp lệ, false nếu không hợp lệ
     }
