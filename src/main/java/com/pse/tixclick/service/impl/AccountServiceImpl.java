@@ -2,7 +2,6 @@ package com.pse.tixclick.service.impl;
 
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
-import com.pse.tixclick.mapper.AccountMapper;
 import com.pse.tixclick.payload.dto.AccountDTO;
 import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.repository.AccountRepository;
@@ -11,6 +10,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -25,7 +25,7 @@ public class AccountServiceImpl implements AccountService {
     @Autowired
     private AccountRepository accountRepository;
     @Autowired
-    private AccountMapper accountMapper;
+    private ModelMapper accountMapper;
 
     @Override
     public boolean changePasswordWithOtp(String email, String password) {
@@ -50,7 +50,7 @@ public class AccountServiceImpl implements AccountService {
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
         // Sử dụng AccountMapper để chuyển đổi đối tượng Account thành AccountDTO
-        return accountMapper.toDTO(user);
+        return accountMapper.map(user,AccountDTO.class);
     }
 
 }
