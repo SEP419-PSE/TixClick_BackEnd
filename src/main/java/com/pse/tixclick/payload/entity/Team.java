@@ -10,13 +10,13 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-public class Organize {
+public class Team {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    int groupId;
+    int teamId;
 
     @Column
-    String groupName;
+    String teamName;
 
 
 }

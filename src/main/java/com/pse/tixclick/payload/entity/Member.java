@@ -14,14 +14,14 @@ import lombok.experimental.FieldDefaults;
 public class Member {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    int memberId; // ID của Member, không nên trùng tên với khóa ngoại
+    int memberId;
 
     @ManyToOne
-    @JoinColumn(name = "group_id", nullable = false)
-    Organize organize;
+    @JoinColumn(name = "team_id", nullable = false)
+    Team team;
 
     @ManyToOne
-    @JoinColumn(name = "account_id", nullable = false) // Sửa từ member_id thành account_id
+    @JoinColumn(name = "account_id", nullable = false)
     Account account;
 
     @Column
