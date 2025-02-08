@@ -1,6 +1,5 @@
 package com.pse.tixclick.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -8,6 +7,9 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.oauth2.client.oidc.web.logout.OidcClientInitiatedLogoutSuccessHandler;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.core.oidc.endpoint.OidcParameterNames;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
@@ -16,41 +18,54 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
+
     private final String[] PUBLIC_ENDPOINTS = {
             "/account/**",
             "/auth/**",
-            "/swagger-ui/**",  // Thêm endpoint Swagger UI
-            "/v3/api-docs/**" ,
-            "/swagger-ui.html"  //Thêm endpoint API docs
+            "/swagger-ui/**",
+            "/v3/api-docs/**",
+            "/swagger-ui.html",
+            "/oauth2/**"  // Thêm đường dẫn OAuth2
     };
 
-    @Autowired
-    private CustomJwtDecoder customJwtDecoder;
-
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
-        httpSecurity.authorizeHttpRequests(request -> request
-                .requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
-                .requestMatchers(HttpMethod.GET, PUBLIC_ENDPOINTS).permitAll()
-                .requestMatchers(HttpMethod.PUT, PUBLIC_ENDPOINTS).permitAll()
-                .requestMatchers(HttpMethod.DELETE, PUBLIC_ENDPOINTS).permitAll()
-                .anyRequest().authenticated());
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.GET, PUBLIC_ENDPOINTS).permitAll()
+                        .requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
+                        .requestMatchers(HttpMethod.PUT, PUBLIC_ENDPOINTS).permitAll()
+                        .requestMatchers(HttpMethod.DELETE, PUBLIC_ENDPOINTS).permitAll()
+                        .anyRequest().authenticated()
+                )
+                .oauth2Login(oauth2 -> oauth2
+                        .loginPage("/oauth2/authorization/github")  // Trang đăng nhập OAuth2
+                        .defaultSuccessUrl("/auth/github/success", true) // Chuyển hướng sau khi đăng nhập thành công
+                )
+                .logout(logout -> logout
+                        .logoutSuccessHandler(oidcLogoutSuccessHandler(null))
+                        .logoutUrl("/logout")
+                        .invalidateHttpSession(true)
+                        .clearAuthentication(true)
+                        .deleteCookies("JSESSIONID")
+                )
+                .csrf(AbstractHttpConfigurer::disable);
 
-        httpSecurity.oauth2ResourceServer(oauth2 ->
-                oauth2.jwt(jwtConfigurer -> jwtConfigurer.decoder(customJwtDecoder)
-                        .jwtAuthenticationConverter(jwtAuthenticationConverter())));
-
-        httpSecurity.csrf(AbstractHttpConfigurer::disable);
-        return httpSecurity.build();
+        return http.build();
     }
 
     @Bean
-    JwtAuthenticationConverter jwtAuthenticationConverter() {
+    public JwtAuthenticationConverter jwtAuthenticationConverter() {
         JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
         jwtGrantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
 
         JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);
         return jwtAuthenticationConverter;
+    }
+
+    @Bean
+    public OidcClientInitiatedLogoutSuccessHandler oidcLogoutSuccessHandler(ClientRegistrationRepository clientRegistrationRepository) {
+        return new OidcClientInitiatedLogoutSuccessHandler(clientRegistrationRepository);
     }
 }

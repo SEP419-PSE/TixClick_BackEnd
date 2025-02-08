@@ -30,15 +30,24 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
 import java.text.ParseException;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -48,7 +57,7 @@ import java.util.concurrent.TimeUnit;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AuthenServiceImpl implements AuthenService {
     private final ConcurrentHashMap<String, String> otpStore = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<String, Long> otpExpirationStore = new ConcurrentHashMap<>();  // Để lưu thời gian hết hạn
+    private final ConcurrentHashMap<String, Long> otpExpirationStore = new ConcurrentHashMap<>();  // Để lưu thời gian hết hạ
 
     @Autowired
     Jwt jwt;
@@ -259,8 +268,92 @@ public class AuthenServiceImpl implements AuthenService {
         return getToken;
     }
 
+    @Override
+    @Transactional
+    public TokenResponse signupAndLoginWithGitHub(OAuth2User principal) {
+        String username = principal.getAttribute("login");
+        String fullName = principal.getAttribute("name");
+        String email = principal.getAttribute("email");
+        String avatarUrl = principal.getAttribute("avatar_url");
 
 
+
+        // Kiểm tra tài khoản đã tồn tại chưa
+        Account user = userRepository.findAccountByEmail(email).orElse(null);
+
+        if (user == null) {
+            // Lấy role "BUYER"
+            Role role = roleRepository.findRoleByRoleName("BUYER")
+                    .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_EXISTED));
+
+            // Tạo mới tài khoản
+            user = new Account();
+            user.setUserName(username);
+            user.setEmail("none");
+            user.setRole(role);
+            user.setPassword("github");
+            user.setActive(true);
+            userRepository.save(user); // Lưu vào database
+        }
+
+        // Xóa refresh token cũ nếu tồn tại
+        refreshTokenRepository.findRefreshTokenByUserName(user.getUserName())
+                .ifPresent(refreshTokenRepository::delete);
+
+        // Tạo mới bộ token (access token & refresh token)
+        var tokenPair = jwt.generateTokens(user);
+
+        // Lưu refresh token mới
+        RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setToken(tokenPair.refreshToken().token());
+        refreshToken.setExpiryDate(tokenPair.refreshToken().expiryDate().toInstant());
+        refreshToken.setUserName(user.getUserName());
+        refreshTokenRepository.save(refreshToken);
+
+        // Trả về TokenResponse chứa access token và refresh token
+        return TokenResponse.builder()
+                .accessToken(tokenPair.accessToken().token())
+                .refreshToken(tokenPair.refreshToken().token())
+                .build();
+    }
+
+    @Override
+    public String getAccessToken(OAuth2AuthorizedClientService authorizedClientService) {
+        OAuth2AuthenticationToken authentication =
+                (OAuth2AuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
+
+        OAuth2AuthorizedClient client = authorizedClientService.loadAuthorizedClient(
+                authentication.getAuthorizedClientRegistrationId(),
+                authentication.getName());
+
+        return client.getAccessToken().getTokenValue();
+    }
+
+    @Override
+    public String getGitHubEmail(String accessToken) {
+        String url = "https://api.github.com/user/emails";
+        RestTemplate restTemplate = new RestTemplate();
+
+        // Thiết lập Header Authorization
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + accessToken);
+        headers.set("Accept", "application/vnd.github.v3+json");
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<List> response = restTemplate.exchange(
+                url, HttpMethod.GET, entity, List.class);
+
+        List<Map<String, Object>> emails = response.getBody();
+
+        // Lấy email chính
+        for (Map<String, Object> emailData : emails) {
+            if ((boolean) emailData.get("primary")) {
+                return (String) emailData.get("email");
+            }
+        }
+        return null; // Không tìm thấy email
+    }
 
     public String generateOTP() {
         Random random = new Random();

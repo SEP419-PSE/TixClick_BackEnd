@@ -2,6 +2,9 @@ package com.pse.tixclick.controller;
 
 import com.nimbusds.jose.JOSEException;
 import com.pse.tixclick.exception.AppException;
+import com.pse.tixclick.exception.ErrorCode;
+import com.pse.tixclick.payload.entity.Account;
+import com.pse.tixclick.payload.entity.Role;
 import com.pse.tixclick.payload.request.IntrospectRequest;
 import com.pse.tixclick.payload.request.LoginRequest;
 import com.pse.tixclick.payload.request.SignUpRequest;
@@ -9,16 +12,25 @@ import com.pse.tixclick.payload.response.ApiResponse;
 import com.pse.tixclick.payload.response.GetToken;
 import com.pse.tixclick.payload.response.RefreshTokenResponse;
 import com.pse.tixclick.payload.response.TokenResponse;
+import com.pse.tixclick.repository.AccountRepository;
+import com.pse.tixclick.repository.RoleRepository;
 import com.pse.tixclick.service.AuthenService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -28,6 +40,10 @@ import java.util.stream.Collectors;
 public class AuthenController {
     @Autowired
     AuthenService authenService;
+    @Autowired
+    AccountRepository accountRepository;
+    @Autowired
+    RoleRepository roleRepository;
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<TokenResponse>> login(@RequestBody LoginRequest loginRequest) {
@@ -93,7 +109,6 @@ public class AuthenController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
         }
     }
-
 
 
     @PostMapping("/introspect")
@@ -204,4 +219,17 @@ public class AuthenController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
         }
     }
+
+
+    @GetMapping("/github/success")
+    public ResponseEntity<ApiResponse<TokenResponse>> signupWithGitHub(
+            @AuthenticationPrincipal OAuth2User principal
+            ) {
+
+        // Gọi service để đăng ký và đăng nhập
+        TokenResponse tokenResponse = authenService.signupAndLoginWithGitHub(principal);
+
+        return ResponseEntity.ok(new ApiResponse<>(200, "GitHub login successful", tokenResponse));
+    }
+
 }
