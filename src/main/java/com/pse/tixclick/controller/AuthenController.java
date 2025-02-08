@@ -66,8 +66,8 @@ public class AuthenController {
 
             return ResponseEntity.badRequest().body(ApiResponse.<String>builder()
                     .code(HttpStatus.BAD_REQUEST.value())
-                    .message("Validation failed")
-                    .result(errorMessages)
+                    .message(errorMessages)
+                    .result("Validation failed")
                     .build());
         }
 
