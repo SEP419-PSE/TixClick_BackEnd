@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 @Getter
@@ -47,5 +48,6 @@ public class Account {
 
     @OneToMany(mappedBy = "account")
     Collection<Member> members;
+
 
 }
