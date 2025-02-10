@@ -288,7 +288,7 @@ public class AuthenServiceImpl implements AuthenService {
 
 
         // Kiểm tra tài khoản đã tồn tại chưa
-        Account user = userRepository.findAccountByEmail(email).orElse(null);
+        Account user = userRepository.findAccountByUserName(username).orElse(null);
 
         if (user == null) {
             // Lấy role "BUYER"
