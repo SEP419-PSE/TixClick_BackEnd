@@ -1,6 +1,5 @@
 package com.pse.tixclick.payload.entity.event;
 
-import com.pse.tixclick.payload.entity.event.Event;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.*;
@@ -14,7 +13,7 @@ import java.util.Date;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-public class EventDate {
+public class EventActivity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     int eventDateId;

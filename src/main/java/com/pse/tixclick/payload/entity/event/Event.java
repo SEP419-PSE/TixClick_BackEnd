@@ -34,7 +34,7 @@ public class Event {
     String description;
 
     @OneToMany(mappedBy = "event")
-    Collection<EventDate> eventDates;
+    Collection<EventActivity> eventActivities;
 
     @OneToMany(mappedBy = "event")
     Collection<EventImage> eventImages;
