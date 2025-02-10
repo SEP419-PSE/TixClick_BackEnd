@@ -39,8 +39,9 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
-                        .loginPage("/oauth2/authorization/github")  // Trang đăng nhập OAuth2
-                        .defaultSuccessUrl("/auth/github/success", true) // Chuyển hướng sau khi đăng nhập thành công
+                        .successHandler((request, response, authentication) -> {
+                            response.sendRedirect("/auth/facebook/success");
+                        })
                 )
                 .logout(logout -> logout
                         .logoutSuccessHandler(oidcLogoutSuccessHandler(null))
