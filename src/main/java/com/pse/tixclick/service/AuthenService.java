@@ -30,7 +30,6 @@ public interface AuthenService {
     GetToken getToken();
 
     TokenResponse signupAndLoginWithGitHub(@AuthenticationPrincipal OAuth2User principal);
-    String getAccessToken(OAuth2AuthorizedClientService authorizedClientService);
-    String getGitHubEmail(String accessToken);
 
+    TokenResponse signupAndLoginWithFacebook(@AuthenticationPrincipal OAuth2User principal);
 }

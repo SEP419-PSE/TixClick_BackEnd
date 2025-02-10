@@ -5,7 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.modelmapper.ModelMapper;
 
 @Configuration
-public class ModelMapperConfig {  // Đổi tên từ ModelMapper -> ModelMapperConfig
+public class ModelMapperConfig {
     @Bean
     public ModelMapper modelMapper() {
         return new ModelMapper();
