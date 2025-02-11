@@ -3,6 +3,8 @@ package com.pse.tixclick.payload.request;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDate;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -13,5 +15,5 @@ public class UpdateAccountRequest {
     String lastName;
     String email;
     String phone;
-    String dob;
+    LocalDate dob;
 }

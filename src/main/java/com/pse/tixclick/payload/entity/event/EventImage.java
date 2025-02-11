@@ -1,5 +1,6 @@
 package com.pse.tixclick.payload.entity.event;
 
+import com.pse.tixclick.payload.entity.entity_enum.EEventImageType;
 import com.pse.tixclick.payload.entity.event.Event;
 import jakarta.persistence.*;
 import lombok.*;
@@ -21,6 +22,9 @@ public class EventImage {
 
     @Column
     String imageCode;
+
+    @Column
+    EEventImageType imageType;
 
     @ManyToOne
     @JoinColumn(name = "event_id", nullable = false)

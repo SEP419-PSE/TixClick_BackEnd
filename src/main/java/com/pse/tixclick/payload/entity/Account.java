@@ -1,10 +1,11 @@
 package com.pse.tixclick.payload.entity;
 
+import com.pse.tixclick.payload.entity.team.Member;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.util.ArrayList;
+import java.time.LocalDate;
 import java.util.Collection;
 
 @Getter
@@ -18,29 +19,29 @@ public class Account {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     int accountId;
 
-    @Column
+    @Column(columnDefinition = "NVARCHAR(255)")
     String firstName;
 
-    @Column
+    @Column(columnDefinition = "NVARCHAR(255)")
     String lastName;
 
-    @Column(unique = true,nullable = false)
+    @Column(unique = true, nullable = false, length = 50)
     String userName;
 
     @Column(nullable = false)
     String password;
 
-    @Column(unique = true,nullable = false)
+    @Column(unique = true, nullable = false, length = 100)
     String email;
 
-    @Column
+    @Column(columnDefinition = "VARCHAR(20)")
     String phone;
 
     @Column
     boolean active;
 
     @Column
-    String dob;
+    LocalDate dob;
 
     @ManyToOne
     @JoinColumn(name = "role_id", nullable = false)

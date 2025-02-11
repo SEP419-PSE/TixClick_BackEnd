@@ -12,16 +12,17 @@ import java.util.Collection;
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Table(name = "events")
 @Entity
 public class Event {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     int eventId;
 
-    @Column
+    @Column(columnDefinition = "NVARCHAR(255)")
     String eventName;
 
-    @Column
+    @Column(columnDefinition = "NVARCHAR(255)")
     String location;
 
     @Column
@@ -30,7 +31,7 @@ public class Event {
     @Column
     ETypeEvent typeEvent;
 
-    @Column
+    @Column(columnDefinition = "NVARCHAR(MAX)")
     String description;
 
     @OneToMany(mappedBy = "event")
