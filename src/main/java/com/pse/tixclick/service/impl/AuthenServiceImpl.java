@@ -339,7 +339,7 @@ public class AuthenServiceImpl implements AuthenService {
             }
 
             // Kiểm tra tài khoản đã tồn tại chưa
-            Account user = userRepository.findAccountByUserName(username).orElse(null);
+            Account user = userRepository.findAccountByUserName(email).orElse(null);
 
             if (user == null) {
                 Role role = roleRepository.findRoleByRoleName("BUYER")
@@ -347,7 +347,7 @@ public class AuthenServiceImpl implements AuthenService {
 
                 // Tạo tài khoản mới
                 user = new Account();
-                user.setUserName(username);
+                user.setUserName(email);
                 user.setEmail(email != null ? email : "none");
                 user.setRole(role);
                 user.setPassword("facebook");
