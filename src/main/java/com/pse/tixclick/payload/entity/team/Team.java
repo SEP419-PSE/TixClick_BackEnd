@@ -1,4 +1,4 @@
-package com.pse.tixclick.payload.entity;
+package com.pse.tixclick.payload.entity.team;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -15,7 +15,7 @@ public class Team {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     int teamId;
 
-    @Column
+    @Column(columnDefinition = "NVARCHAR(255)")
     String teamName;
 
 
