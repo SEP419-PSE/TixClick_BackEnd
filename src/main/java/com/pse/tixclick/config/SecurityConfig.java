@@ -40,9 +40,15 @@ public class SecurityConfig {
                 )
                 .oauth2Login(oauth2 -> oauth2
                         .successHandler((request, response, authentication) -> {
-                            response.sendRedirect("/auth/facebook/success");
+                            String referer = request.getHeader("Referer");
+                            if (referer != null && referer.contains("/swagger-ui")) {
+                                response.sendRedirect(referer);
+                            } else {
+                                response.sendRedirect("/auth/facebook/success");
+                            }
                         })
                 )
+
                 .logout(logout -> logout
                         .logoutSuccessHandler(oidcLogoutSuccessHandler(null))
                         .logoutUrl("/logout")
