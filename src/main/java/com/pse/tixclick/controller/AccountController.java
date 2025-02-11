@@ -2,6 +2,7 @@ package com.pse.tixclick.controller;
 
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.payload.dto.AccountDTO;
+import com.pse.tixclick.payload.request.UpdateAccountRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
 import com.pse.tixclick.service.AccountService;
 import lombok.extern.slf4j.Slf4j;
@@ -45,7 +46,7 @@ public class AccountController {
         }
     }
 
-    @GetMapping("/profile")
+    @GetMapping("/my-profile")
     public ResponseEntity<ApiResponse<AccountDTO>> getProfile() {
         // Lấy thông tin tài khoản từ service
         AccountDTO accountDTO = accountService.myProfile();
@@ -59,5 +60,31 @@ public class AccountController {
 
         // Trả về thông tin tài khoản với mã HTTP 200
         return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+    }
+
+    @PutMapping("/update-profile")
+    public ResponseEntity<ApiResponse<AccountDTO>> updateProfile(@RequestBody UpdateAccountRequest accountDTO) {
+        try {
+            // Gọi service để cập nhật thông tin tài khoản
+            AccountDTO updatedAccount = accountService.updateProfile(accountDTO);
+
+            // Tạo phản hồi API
+            ApiResponse<AccountDTO> apiResponse = ApiResponse.<AccountDTO>builder()
+                    .code(HttpStatus.OK.value())
+                    .message("Profile updated successfully")
+                    .result(updatedAccount)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+
+        } catch (AppException e) {
+            ApiResponse<AccountDTO> errorResponse = ApiResponse.<AccountDTO>builder()
+                    .code(HttpStatus.BAD_REQUEST.value())
+                    .message(e.getMessage()) // Lỗi từ service
+                    .result(null)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        }
     }
 }
