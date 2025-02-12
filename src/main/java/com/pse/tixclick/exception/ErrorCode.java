@@ -31,7 +31,7 @@ public enum ErrorCode {
     ROLE_NOT_EXISTED(1022, "role không đúng", HttpStatus.NOT_FOUND),
     USER_ACTIVE(1023, "User is active", HttpStatus.BAD_REQUEST),
     GITHUB_ERROR(1024, "Lỗi Đăng nhập Github", HttpStatus.BAD_REQUEST),
-    FACEBOOK_LOGIN_FAILED(1025, "Lỗi Đăng nhập Facebook", HttpStatus.BAD_REQUEST),
+    FACEBOOK_LOGIN_FAILED(1025, "Lỗi Đăng nhập Google", HttpStatus.BAD_REQUEST),
     ;
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {

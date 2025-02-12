@@ -330,10 +330,10 @@ public class AuthenServiceImpl implements AuthenService {
     @Transactional
     public TokenResponse signupAndLoginWithFacebook(OAuth2User principal) {
         try {
-            String fullName = principal.getAttribute("name");
             String email = principal.getAttribute("email");
-
-            if (email == null || fullName == null) {
+            String firstName = principal.getAttribute("given_name");  // Lấy first name
+            String lastName = principal.getAttribute("family_name");
+            if (email == null ) {
                 throw new AppException(ErrorCode.FACEBOOK_LOGIN_FAILED);
             }
 
@@ -349,6 +349,8 @@ public class AuthenServiceImpl implements AuthenService {
                 user.setUserName(email);
                 user.setEmail(email);
                 user.setRole(role);
+                user.setFirstName(firstName);
+                user.setLastName(lastName);
                 user.setPassword("facebook");
                 user.setActive(true);
                 userRepository.save(user);
