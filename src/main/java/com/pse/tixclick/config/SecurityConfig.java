@@ -44,7 +44,7 @@ public class SecurityConfig {
                             if (referer != null && referer.contains("/swagger-ui")) {
                                 response.sendRedirect(referer);
                             } else {
-                                response.sendRedirect("/auth/facebook/success");
+                                response.sendRedirect("/auth/google/success");
                             }
                         })
                 )
