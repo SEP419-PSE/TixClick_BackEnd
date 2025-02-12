@@ -8,5 +8,5 @@ import java.io.IOException;
 import java.util.List;
 
 public interface EventService {
-    EventDTO createEvent(CreateEventRequest eventDTO, List<MultipartFile> files) throws IOException;
+    EventDTO createEvent(CreateEventRequest eventDTO, MultipartFile logoURL, MultipartFile bannerURL, MultipartFile logoOrganizeURL) throws IOException;
 }
