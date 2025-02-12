@@ -32,6 +32,10 @@ public enum ErrorCode {
     USER_ACTIVE(1023, "User is active", HttpStatus.BAD_REQUEST),
     GITHUB_ERROR(1024, "Lỗi Đăng nhập Github", HttpStatus.BAD_REQUEST),
     FACEBOOK_LOGIN_FAILED(1025, "Lỗi Đăng nhập Google", HttpStatus.BAD_REQUEST),
+    INVALID_EVENT_DATA(1026, "Tạo event bị lỗi", HttpStatus.BAD_REQUEST),
+    DATABASE_ERROR(1027, "Lỗi kết nối cơ sở dữ liệu", HttpStatus.INTERNAL_SERVER_ERROR),
+    CATEGORY_NOT_FOUND(1028, "Không tìm thấy danh mục", HttpStatus.NOT_FOUND),
+    INVALID_EVENT_TYPE(1029, "Loại sự kiện không hợp lệ", HttpStatus.BAD_REQUEST),
     ;
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {

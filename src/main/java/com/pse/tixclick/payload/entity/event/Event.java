@@ -1,6 +1,5 @@
 package com.pse.tixclick.payload.entity.event;
 
-import com.pse.tixclick.payload.entity.entity_enum.ETypeEvent;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -29,7 +28,7 @@ public class Event {
     boolean status;
 
     @Column
-    ETypeEvent typeEvent;
+    String typeEvent;
 
     @Column(columnDefinition = "NVARCHAR(MAX)")
     String description;
