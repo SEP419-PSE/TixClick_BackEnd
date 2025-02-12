@@ -1,6 +1,8 @@
 package com.pse.tixclick.payload.entity.entity_enum;
 
 public enum EEventImageType {
-    AVATAR,
-    PAGEWALL,
+    LOGO,
+    BACKGROUND,
+    LOGO_ORGANIZER0
+
 }

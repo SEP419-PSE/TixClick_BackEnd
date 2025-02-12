@@ -2,7 +2,11 @@ package com.pse.tixclick.startup;
 
 import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.Role;
+import com.pse.tixclick.payload.entity.event.EventCategory;
+import com.pse.tixclick.payload.entity.team.Member;
 import com.pse.tixclick.repository.AccountRepository;
+import com.pse.tixclick.repository.EventCategoryRepository;
+import com.pse.tixclick.repository.MemberRepository;
 import com.pse.tixclick.repository.RoleRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -21,12 +25,21 @@ import java.util.Arrays;
 public class RoleInitializer {
     RoleRepository roleRepository;
     AccountRepository accountRepository;
-
+    EventCategoryRepository eventCategoryRepository;
     @Bean
     public CommandLineRunner initRolesAndAdmin() {
         return args -> {
             // Danh sách các role cần tạo
             String[] roleNames = {"ADMIN", "BUYER", "ORGANIZER", "MANAGER"};
+            String[] categoryNames = {"Music", "Sport", "Theater",  "Other"};
+            Arrays.stream(categoryNames).forEach(categoryName -> {
+                if (eventCategoryRepository.findEventCategoriesByCategoryName(categoryName).isEmpty()) {
+                    EventCategory category = new EventCategory();
+                    category.setCategoryName(categoryName);
+                    eventCategoryRepository.save(category);
+                    System.out.println("Category Event created: " + categoryName);
+                }
+            });
 
             Arrays.stream(roleNames).forEach(roleName -> {
                 if (roleRepository.findRoleByRoleName(roleName).isEmpty()) {
