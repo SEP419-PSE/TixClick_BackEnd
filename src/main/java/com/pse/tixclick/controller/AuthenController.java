@@ -230,7 +230,7 @@ public class AuthenController {
 //        return ResponseEntity.ok(new ApiResponse<>(200, "GitHub login successful", tokenResponse));
 //    }
 
-    @GetMapping("/facebook/success")
+    @GetMapping("/google/success")
     public ResponseEntity<ApiResponse<TokenResponse>> facebookLoginSuccess(
             @AuthenticationPrincipal OAuth2User principal
     ) {
@@ -239,7 +239,7 @@ public class AuthenController {
 
             ApiResponse<TokenResponse> apiResponse = ApiResponse.<TokenResponse>builder()
                     .code(HttpStatus.OK.value())
-                    .message("Facebook login successful")
+                    .message("Google login successful")
                     .result(tokenResponse)
                     .build();
 
