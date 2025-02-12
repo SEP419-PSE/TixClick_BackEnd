@@ -1,6 +1,5 @@
 package com.pse.tixclick.payload.entity.event;
 
-import com.pse.tixclick.payload.entity.entity_enum.ETypeEvent;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -29,7 +28,16 @@ public class Event {
     boolean status;
 
     @Column
-    ETypeEvent typeEvent;
+    String typeEvent;
+
+    @Column
+    String logoURL;
+
+    @Column
+    String bannerURL;
+
+    @Column
+    String logoOrganizerURL;
 
     @Column(columnDefinition = "NVARCHAR(MAX)")
     String description;
@@ -37,8 +45,7 @@ public class Event {
     @OneToMany(mappedBy = "event")
     Collection<EventActivity> eventActivities;
 
-    @OneToMany(mappedBy = "event")
-    Collection<EventImage> eventImages;
+
 
     @ManyToOne
     @JoinColumn(name = "category_id", nullable = false)
