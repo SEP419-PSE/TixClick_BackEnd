@@ -36,6 +36,9 @@ public enum ErrorCode {
     DATABASE_ERROR(1027, "Lỗi kết nối cơ sở dữ liệu", HttpStatus.INTERNAL_SERVER_ERROR),
     CATEGORY_NOT_FOUND(1028, "Không tìm thấy danh mục", HttpStatus.NOT_FOUND),
     INVALID_EVENT_TYPE(1029, "Loại sự kiện không hợp lệ", HttpStatus.BAD_REQUEST),
+    EVENT_NOT_FOUND(1030, "Không tìm thấy sự kiện", HttpStatus.NOT_FOUND),
+    IMAGE_NOT_FOUND(1031, "Không tìm thấy ảnh", HttpStatus.NOT_FOUND),
+    IMAGE_REMOVE_FAILED(1032, "Xóa ảnh thất bại", HttpStatus.BAD_REQUEST),
     ;
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {

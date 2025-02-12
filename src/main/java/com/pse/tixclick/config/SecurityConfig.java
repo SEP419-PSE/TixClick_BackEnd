@@ -23,6 +23,7 @@ public class SecurityConfig {
             "/account/**",
             "/auth/**",
             "/event/**",
+            "event-image/**",
             "/swagger-ui/**",
             "/v3/api-docs/**",
             "/swagger-ui.html",

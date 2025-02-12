@@ -30,14 +30,22 @@ public class Event {
     @Column
     String typeEvent;
 
+    @Column
+    String logoURL;
+
+    @Column
+    String bannerURL;
+
+    @Column
+    String logoOrganizerURL;
+
     @Column(columnDefinition = "NVARCHAR(MAX)")
     String description;
 
     @OneToMany(mappedBy = "event")
     Collection<EventActivity> eventActivities;
 
-    @OneToMany(mappedBy = "event")
-    Collection<EventImage> eventImages;
+
 
     @ManyToOne
     @JoinColumn(name = "category_id", nullable = false)
