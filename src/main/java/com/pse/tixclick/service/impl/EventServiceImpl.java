@@ -32,7 +32,7 @@ public class EventServiceImpl implements EventService {
     EventCategoryRepository eventCategoryRepository;
     Cloudinary cloudinary;
     @Override
-    public EventDTO createEvent(CreateEventRequest request, List<MultipartFile> files) throws IOException {
+    public EventDTO createEvent(CreateEventRequest request, MultipartFile logoURL, MultipartFile bannerURL, MultipartFile logoOrganizeURL) throws IOException {
         if (request == null || request.getEventName() == null || request.getCategoryId() == 0) {
             throw new AppException(ErrorCode.INVALID_EVENT_DATA);
         }
@@ -41,9 +41,9 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
 
         // Upload từng ảnh lên Cloudinary
-        String logoURL = uploadImageToCloudinary(files.get(0));
-        String bannerURL = uploadImageToCloudinary(files.get(1));
-        String logoOrganizerURL = uploadImageToCloudinary(files.get(2));
+        String logocode = uploadImageToCloudinary(logoURL);
+        String bannercode = uploadImageToCloudinary(bannerURL);
+        String logoOrganizercode = uploadImageToCloudinary(logoOrganizeURL);
 
         // Tạo đối tượng Event từ request
         Event event = new Event();
@@ -53,9 +53,9 @@ public class EventServiceImpl implements EventService {
         event.setDescription(request.getDescription());
         event.setCategory(category);
         event.setStatus(false);
-        event.setLogoURL(logoURL);
-        event.setBannerURL(bannerURL);
-        event.setLogoOrganizerURL(logoOrganizerURL);
+        event.setLogoURL(logocode);
+        event.setBannerURL(bannercode);
+        event.setLogoOrganizerURL(logoOrganizercode);
 
 
         // Lưu vào database

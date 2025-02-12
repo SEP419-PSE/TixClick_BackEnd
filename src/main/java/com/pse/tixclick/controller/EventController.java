@@ -29,9 +29,11 @@ public class EventController {
     @PostMapping("/create")
     public ResponseEntity<ApiResponse<EventDTO>> createEvent(
             @ModelAttribute CreateEventRequest eventDTO,
-            @RequestParam("files") List<MultipartFile> files) {
+            @RequestParam("logoURL") MultipartFile logoURL,
+            @RequestParam("bannerURL") MultipartFile bannerURL,
+            @RequestParam("logoOrganizeURL") MultipartFile logoOrganizeURL) {
         try {
-            EventDTO createdEvent = eventService.createEvent(eventDTO, files);
+            EventDTO createdEvent = eventService.createEvent(eventDTO, logoURL,bannerURL,logoOrganizeURL);
 
             ApiResponse<EventDTO> response = ApiResponse.<EventDTO>builder()
                     .code(HttpStatus.CREATED.value())
