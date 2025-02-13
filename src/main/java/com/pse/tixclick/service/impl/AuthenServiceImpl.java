@@ -288,7 +288,7 @@ public class AuthenServiceImpl implements AuthenService {
 
 
         // Kiểm tra tài khoản đã tồn tại chưa
-        Account user = userRepository.findAccountByEmail(email).orElse(null);
+        Account user = userRepository.findAccountByUserName(username).orElse(null);
 
         if (user == null) {
             // Lấy role "BUYER"
@@ -327,42 +327,64 @@ public class AuthenServiceImpl implements AuthenService {
     }
 
     @Override
-    public String getAccessToken(OAuth2AuthorizedClientService authorizedClientService) {
-        OAuth2AuthenticationToken authentication =
-                (OAuth2AuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
-
-        OAuth2AuthorizedClient client = authorizedClientService.loadAuthorizedClient(
-                authentication.getAuthorizedClientRegistrationId(),
-                authentication.getName());
-
-        return client.getAccessToken().getTokenValue();
-    }
-
-    @Override
-    public String getGitHubEmail(String accessToken) {
-        String url = "https://api.github.com/user/emails";
-        RestTemplate restTemplate = new RestTemplate();
-
-        // Thiết lập Header Authorization
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "Bearer " + accessToken);
-        headers.set("Accept", "application/vnd.github.v3+json");
-
-        HttpEntity<String> entity = new HttpEntity<>(headers);
-
-        ResponseEntity<List> response = restTemplate.exchange(
-                url, HttpMethod.GET, entity, List.class);
-
-        List<Map<String, Object>> emails = response.getBody();
-
-        // Lấy email chính
-        for (Map<String, Object> emailData : emails) {
-            if ((boolean) emailData.get("primary")) {
-                return (String) emailData.get("email");
+    @Transactional
+    public TokenResponse signupAndLoginWithFacebook(OAuth2User principal) {
+        try {
+            String email = principal.getAttribute("email");
+            String firstName = principal.getAttribute("given_name");  // Lấy first name
+            String lastName = principal.getAttribute("family_name");
+            if (email == null ) {
+                throw new AppException(ErrorCode.FACEBOOK_LOGIN_FAILED);
             }
+
+            // Kiểm tra tài khoản đã tồn tại chưa
+            Account user = userRepository.findAccountByUserName(email).orElse(null);
+
+            if (user == null) {
+                Role role = roleRepository.findRoleByRoleName("BUYER")
+                        .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_EXISTED));
+
+                // Tạo tài khoản mới
+                user = new Account();
+                user.setUserName(email);
+                user.setEmail(email);
+                user.setRole(role);
+                user.setFirstName(firstName);
+                user.setLastName(lastName);
+                user.setPassword("facebook");
+                user.setActive(true);
+                userRepository.save(user);
+            }
+
+            // Xóa refresh token cũ nếu có
+            refreshTokenRepository.findRefreshTokenByUserName(user.getUserName())
+                    .ifPresent(refreshTokenRepository::delete);
+
+            // Tạo token mới
+            var tokenPair = jwt.generateTokens(user);
+
+            // Lưu refresh token mới
+            RefreshToken refreshToken = new RefreshToken();
+            refreshToken.setToken(tokenPair.refreshToken().token());
+            refreshToken.setExpiryDate(tokenPair.refreshToken().expiryDate().toInstant());
+            refreshToken.setUserName(user.getUserName());
+            refreshTokenRepository.save(refreshToken);
+
+            return TokenResponse.builder()
+                    .accessToken(tokenPair.accessToken().token())
+                    .refreshToken(tokenPair.refreshToken().token())
+                    .status(user.isActive())
+                    .build();
+
+        } catch (AppException e) {
+            throw e; // Ném lại để controller xử lý
+        } catch (Exception e) {
+            throw new AppException(ErrorCode.FACEBOOK_LOGIN_FAILED);
         }
-        return null; // Không tìm thấy email
     }
+
+
+
 
     public String generateOTP() {
         Random random = new Random();

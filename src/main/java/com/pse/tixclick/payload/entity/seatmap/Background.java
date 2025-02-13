@@ -1,10 +1,8 @@
-package com.pse.tixclick.payload.entity.event;
+package com.pse.tixclick.payload.entity.seatmap;
 
 import jakarta.persistence.*;
 import lombok.*;
-import lombok.experimental.FieldDefaults;
-
-import java.util.Collection;
+import lombok.experimental.*;
 
 @Getter
 @Setter
@@ -12,14 +10,18 @@ import java.util.Collection;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-public class EventCategory {
+public class Background {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    int eventCategoryId;
+    int backgroundId;
 
     @Column(columnDefinition = "NVARCHAR(255)")
-    String categoryName;
+    String backgroundName;
 
-    @OneToMany(mappedBy = "category")
-    Collection<Event> events;
+    @Column
+    String Type;
+
+    @Column
+    String value;
+
 }

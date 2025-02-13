@@ -1,10 +1,11 @@
 package com.pse.tixclick.payload.entity.event;
 
-import com.pse.tixclick.payload.entity.event.Event;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.*;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Date;
 
@@ -14,18 +15,24 @@ import java.util.Date;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-public class EventDate {
+public class EventActivity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    int eventDateId;
+    int eventActivityId;
+
+    @Column(columnDefinition = "NVARCHAR(255)")
+    String activityName;
 
     @Column
-    Date date;
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    LocalDate date;
 
     @Column
+    @JsonFormat(pattern = "HH:mm:ss")
     LocalTime startTime;
 
     @Column
+    @JsonFormat(pattern = "HH:mm:ss")
     LocalTime endTime;
 
     @ManyToOne

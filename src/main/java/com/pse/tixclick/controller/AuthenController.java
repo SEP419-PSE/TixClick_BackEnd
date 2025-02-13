@@ -2,9 +2,6 @@ package com.pse.tixclick.controller;
 
 import com.nimbusds.jose.JOSEException;
 import com.pse.tixclick.exception.AppException;
-import com.pse.tixclick.exception.ErrorCode;
-import com.pse.tixclick.payload.entity.Account;
-import com.pse.tixclick.payload.entity.Role;
 import com.pse.tixclick.payload.request.IntrospectRequest;
 import com.pse.tixclick.payload.request.LoginRequest;
 import com.pse.tixclick.payload.request.SignUpRequest;
@@ -21,16 +18,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -227,15 +219,43 @@ public class AuthenController {
     }
 
 
-    @GetMapping("/github/success")
-    public ResponseEntity<ApiResponse<TokenResponse>> signupWithGitHub(
+//    @GetMapping("/github/success")
+//    public ResponseEntity<ApiResponse<TokenResponse>> signupWithGitHub(
+//            @AuthenticationPrincipal OAuth2User principal
+//            ) {
+//
+//        // Gọi service để đăng ký và đăng nhập
+//        TokenResponse tokenResponse = authenService.signupAndLoginWithGitHub(principal);
+//
+//        return ResponseEntity.ok(new ApiResponse<>(200, "GitHub login successful", tokenResponse));
+//    }
+
+    @GetMapping("/google/success")
+    public ResponseEntity<ApiResponse<TokenResponse>> facebookLoginSuccess(
             @AuthenticationPrincipal OAuth2User principal
-            ) {
+    ) {
+        try {
+            TokenResponse tokenResponse = authenService.signupAndLoginWithFacebook(principal);
 
-        // Gọi service để đăng ký và đăng nhập
-        TokenResponse tokenResponse = authenService.signupAndLoginWithGitHub(principal);
+            ApiResponse<TokenResponse> apiResponse = ApiResponse.<TokenResponse>builder()
+                    .code(HttpStatus.OK.value())
+                    .message("Google login successful")
+                    .result(tokenResponse)
+                    .build();
 
-        return ResponseEntity.ok(new ApiResponse<>(200, "GitHub login successful", tokenResponse));
+            return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+
+        } catch (AppException e) {
+            ApiResponse<TokenResponse> errorResponse = ApiResponse.<TokenResponse>builder()
+                    .code(e.getErrorCode().getCode()) // Lấy mã lỗi từ ErrorCode
+                    .message(e.getErrorCode().getMessage()) // Lấy message từ ErrorCode
+                    .result(null)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        }
     }
+
+
 
 }

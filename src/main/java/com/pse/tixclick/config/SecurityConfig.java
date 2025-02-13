@@ -22,6 +22,8 @@ public class SecurityConfig {
     private final String[] PUBLIC_ENDPOINTS = {
             "/account/**",
             "/auth/**",
+            "/event/**",
+            "event-image/**",
             "/swagger-ui/**",
             "/v3/api-docs/**",
             "/swagger-ui.html",
@@ -39,9 +41,16 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
-                        .loginPage("/oauth2/authorization/github")  // Trang đăng nhập OAuth2
-                        .defaultSuccessUrl("/auth/github/success", true) // Chuyển hướng sau khi đăng nhập thành công
+                        .successHandler((request, response, authentication) -> {
+                            String referer = request.getHeader("Referer");
+                            if (referer != null && referer.contains("/swagger-ui")) {
+                                response.sendRedirect(referer);
+                            } else {
+                                response.sendRedirect("/auth/google/success");
+                            }
+                        })
                 )
+
                 .logout(logout -> logout
                         .logoutSuccessHandler(oidcLogoutSuccessHandler(null))
                         .logoutUrl("/logout")

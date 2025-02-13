@@ -1,4 +1,4 @@
-package com.pse.tixclick.payload.entity;
+package com.pse.tixclick.payload.entity.team;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -10,13 +10,13 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-public class Organize {
+public class Team {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    int groupId;
+    int teamId;
 
-    @Column
-    String groupName;
+    @Column(columnDefinition = "NVARCHAR(255)")
+    String teamName;
 
 
 }
