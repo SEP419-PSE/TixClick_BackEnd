@@ -8,6 +8,7 @@ import com.pse.tixclick.payload.dto.EventDTO;
 import com.pse.tixclick.payload.entity.entity_enum.ETypeEvent;
 import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.request.CreateEventRequest;
+import com.pse.tixclick.payload.request.UpdateEventRequest;
 import com.pse.tixclick.repository.EventCategoryRepository;
 import com.pse.tixclick.repository.EventRepository;
 import com.pse.tixclick.service.EventService;
@@ -66,6 +67,60 @@ public class EventServiceImpl implements EventService {
         // Chuyển đổi sang DTO để trả về
         return modelMapper.map(event, EventDTO.class);
     }
+
+    @Override
+    public EventDTO updateEvent(UpdateEventRequest eventRequest, MultipartFile logoURL, MultipartFile bannerURL, MultipartFile logoOrganizeURL) throws IOException {
+        var event = eventRepository.findById(eventRequest.getEventId())
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+
+        // Chỉ cập nhật nếu giá trị không null hoặc không phải chuỗi trống
+        if (eventRequest.getEventName() != null && !eventRequest.getEventName().trim().isEmpty()) {
+            event.setEventName(eventRequest.getEventName());
+        }
+
+        if (eventRequest.getDescription() != null && !eventRequest.getDescription().trim().isEmpty()) {
+            event.setDescription(eventRequest.getDescription());
+        }
+
+        if (eventRequest.getLocation() != null) {
+            event.setLocation(eventRequest.getLocation());
+        }
+
+        event.setStatus(eventRequest.isStatus());
+
+        if (eventRequest.getTypeEvent() != null) {
+            event.setTypeEvent(eventRequest.getTypeEvent());
+        }
+
+        if (eventRequest.getCategoryId() != 0) {
+            var category = eventCategoryRepository.findById(eventRequest.getCategoryId())
+                    .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
+            event.setCategory(category);
+        }
+
+        // Xử lý upload file nếu có
+        if (logoURL != null && !logoURL.isEmpty()) {
+            String logoUrl = uploadImageToCloudinary(logoURL);
+            event.setLogoURL(logoUrl);
+        }
+
+        if (bannerURL != null && !bannerURL.isEmpty()) {
+            String bannerUrl = uploadImageToCloudinary(bannerURL);
+            event.setBannerURL(bannerUrl);
+        }
+
+        if (logoOrganizeURL != null && !logoOrganizeURL.isEmpty()) {
+            String logoOrganizeUrl = uploadImageToCloudinary(logoOrganizeURL);
+            event.setLogoOrganizerURL(logoOrganizeUrl);
+        }
+
+        // Lưu thay đổi vào database
+        event = eventRepository.save(event);
+
+        // Chuyển đổi sang DTO và trả về
+        return modelMapper.map(event,EventDTO.class);
+    }
+
 
 
     private String uploadImageToCloudinary(MultipartFile file) throws IOException {

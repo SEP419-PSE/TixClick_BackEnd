@@ -3,6 +3,7 @@ package com.pse.tixclick.controller;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.payload.dto.EventDTO;
 import com.pse.tixclick.payload.request.CreateEventRequest;
+import com.pse.tixclick.payload.request.UpdateEventRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
 import com.pse.tixclick.service.EventService;
 import lombok.extern.slf4j.Slf4j;
@@ -56,5 +57,34 @@ public class EventController {
         }
     }
 
+    @PutMapping("/update")
+    public ResponseEntity<ApiResponse<EventDTO>> updateEvent(
+            @ModelAttribute UpdateEventRequest eventDTO,
+            @RequestParam("logoURL") MultipartFile logoURL,
+            @RequestParam("bannerURL") MultipartFile bannerURL,
+            @RequestParam("logoOrganizeURL") MultipartFile logoOrganizeURL) {
+        try {
+            EventDTO updatedEvent = eventService.updateEvent(eventDTO, logoURL,bannerURL,logoOrganizeURL);
+
+            ApiResponse<EventDTO> response = ApiResponse.<EventDTO>builder()
+                    .code(HttpStatus.OK.value())
+                    .message("Event updated successfully")
+                    .result(updatedEvent)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+
+        } catch (AppException e) {
+            ApiResponse<EventDTO> errorResponse = ApiResponse.<EventDTO>builder()
+                    .code(HttpStatus.BAD_REQUEST.value())
+                    .message(e.getMessage()) // Lỗi từ service
+                    .result(null)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
 }
