@@ -1,6 +1,7 @@
 package com.pse.tixclick.payload.entity.seatmap;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.pse.tixclick.payload.entity.payment.OrderDetail;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
 import jakarta.persistence.*;
 import lombok.*;
@@ -41,8 +42,9 @@ public class Seat {
     @JoinColumn(name="ticket_id", nullable = false)
     Ticket ticket;
 
+    @OneToOne(mappedBy = "seat")
+    private OrderDetail orderDetail;
+
     @Column
     boolean status;
-
-
 }
