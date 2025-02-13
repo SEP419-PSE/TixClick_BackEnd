@@ -8,6 +8,8 @@ import com.pse.tixclick.payload.dto.EventDTO;
 import com.pse.tixclick.payload.entity.entity_enum.ETypeEvent;
 import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.request.CreateEventRequest;
+import com.pse.tixclick.payload.request.UpdateEventRequest;
+import com.pse.tixclick.repository.AccountRepository;
 import com.pse.tixclick.repository.EventCategoryRepository;
 import com.pse.tixclick.repository.EventRepository;
 import com.pse.tixclick.service.EventService;
@@ -15,6 +17,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -30,13 +33,17 @@ public class EventServiceImpl implements EventService {
     EventRepository eventRepository;
     ModelMapper modelMapper;
     EventCategoryRepository eventCategoryRepository;
+    AccountRepository accountRepository;
     Cloudinary cloudinary;
     @Override
     public EventDTO createEvent(CreateEventRequest request, MultipartFile logoURL, MultipartFile bannerURL, MultipartFile logoOrganizeURL) throws IOException {
         if (request == null || request.getEventName() == null || request.getCategoryId() == 0) {
             throw new AppException(ErrorCode.INVALID_EVENT_DATA);
         }
-
+        var context = SecurityContextHolder.getContext();
+        String name = context.getAuthentication().getName();
+        var organnizer = accountRepository.findAccountByUserName(name)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
         var category = eventCategoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
 
@@ -52,10 +59,11 @@ public class EventServiceImpl implements EventService {
         event.setTypeEvent(request.getTypeEvent());
         event.setDescription(request.getDescription());
         event.setCategory(category);
-        event.setStatus(false);
+        event.setStatus("FENDING");
         event.setLogoURL(logocode);
         event.setBannerURL(bannercode);
         event.setLogoOrganizerURL(logoOrganizercode);
+        event.setOrganizer(organnizer);
 
 
         // Lưu vào database
@@ -65,6 +73,71 @@ public class EventServiceImpl implements EventService {
 
         // Chuyển đổi sang DTO để trả về
         return modelMapper.map(event, EventDTO.class);
+    }
+
+    @Override
+    public EventDTO updateEvent(UpdateEventRequest eventRequest, MultipartFile logoURL, MultipartFile bannerURL, MultipartFile logoOrganizeURL) throws IOException {
+        var context = SecurityContextHolder.getContext();
+        String name = context.getAuthentication().getName();
+        var event = eventRepository.findEventByEventIdAndOrganizer_UserName(eventRequest.getEventId(),name)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+
+        // Chỉ cập nhật nếu giá trị không null hoặc không phải chuỗi trống
+        if (eventRequest.getEventName() != null && !eventRequest.getEventName().trim().isEmpty()) {
+            event.setEventName(eventRequest.getEventName());
+        }
+
+        if (eventRequest.getDescription() != null && !eventRequest.getDescription().trim().isEmpty()) {
+            event.setDescription(eventRequest.getDescription());
+        }
+
+        if (eventRequest.getLocation() != null) {
+            event.setLocation(eventRequest.getLocation());
+        }
+
+        if (eventRequest.getStatus() != null) {
+            event.setStatus(eventRequest.getStatus());
+        }
+
+        if (eventRequest.getTypeEvent() != null) {
+            event.setTypeEvent(eventRequest.getTypeEvent());
+        }
+
+        if (eventRequest.getCategoryId() != 0) {
+            var category = eventCategoryRepository.findById(eventRequest.getCategoryId())
+                    .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
+            event.setCategory(category);
+        }
+
+        // Xử lý upload file nếu có
+        if (logoURL != null && !logoURL.isEmpty()) {
+            String logoUrl = uploadImageToCloudinary(logoURL);
+            event.setLogoURL(logoUrl);
+        }
+
+        if (bannerURL != null && !bannerURL.isEmpty()) {
+            String bannerUrl = uploadImageToCloudinary(bannerURL);
+            event.setBannerURL(bannerUrl);
+        }
+
+        if (logoOrganizeURL != null && !logoOrganizeURL.isEmpty()) {
+            String logoOrganizeUrl = uploadImageToCloudinary(logoOrganizeURL);
+            event.setLogoOrganizerURL(logoOrganizeUrl);
+        }
+
+        // Lưu thay đổi vào database
+        event = eventRepository.save(event);
+
+        // Chuyển đổi sang DTO và trả về
+        return modelMapper.map(event,EventDTO.class);
+    }
+
+    @Override
+    public boolean deleteEvent(int id) {
+        var event = eventRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+        event.setStatus("REMOVE");
+        return true;
     }
 
 
