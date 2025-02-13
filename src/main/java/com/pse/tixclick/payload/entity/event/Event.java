@@ -1,5 +1,6 @@
 package com.pse.tixclick.payload.entity.event;
 
+import com.pse.tixclick.payload.entity.Account;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -25,7 +26,7 @@ public class Event {
     String location;
 
     @Column
-    boolean status;
+    String status;
 
     @Column
     String typeEvent;
@@ -45,7 +46,9 @@ public class Event {
     @OneToMany(mappedBy = "event")
     Collection<EventActivity> eventActivities;
 
-
+    @ManyToOne
+    @JoinColumn(name = "organizer_id", nullable = false)
+    Account organizer;
 
     @ManyToOne
     @JoinColumn(name = "category_id", nullable = false)

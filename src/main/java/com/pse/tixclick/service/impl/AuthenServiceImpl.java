@@ -351,7 +351,7 @@ public class AuthenServiceImpl implements AuthenService {
                 user.setRole(role);
                 user.setFirstName(firstName);
                 user.setLastName(lastName);
-                user.setPassword("facebook");
+                user.setPassword("google");
                 user.setActive(true);
                 userRepository.save(user);
             }

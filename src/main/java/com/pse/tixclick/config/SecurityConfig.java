@@ -1,5 +1,6 @@
 package com.pse.tixclick.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -9,15 +10,21 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.oauth2.client.oidc.web.logout.OidcClientInitiatedLogoutSuccessHandler;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
-import org.springframework.security.oauth2.core.oidc.endpoint.OidcParameterNames;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.AuthenticationEntryPoint;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
+
+    @Autowired
+    private CustomJwtDecoder customJwtDecoder;
+
+    @Autowired
+    private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;  // Thêm EntryPoint vào
 
     private final String[] PUBLIC_ENDPOINTS = {
             "/account/**",
@@ -27,7 +34,7 @@ public class SecurityConfig {
             "/swagger-ui/**",
             "/v3/api-docs/**",
             "/swagger-ui.html",
-            "/oauth2/**"  // Thêm đường dẫn OAuth2
+            "/oauth2/**"
     };
 
     @Bean
@@ -50,7 +57,13 @@ public class SecurityConfig {
                             }
                         })
                 )
-
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .jwt(jwtConfigurer -> jwtConfigurer
+                                .decoder(customJwtDecoder)
+                                .jwtAuthenticationConverter(jwtAuthenticationConverter())
+                        )
+                        .authenticationEntryPoint(customAuthenticationEntryPoint) // Bắt lỗi Token hết hạn
+                )
                 .logout(logout -> logout
                         .logoutSuccessHandler(oidcLogoutSuccessHandler(null))
                         .logoutUrl("/logout")
