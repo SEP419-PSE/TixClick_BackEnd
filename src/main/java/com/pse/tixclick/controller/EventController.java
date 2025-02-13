@@ -87,4 +87,27 @@ public class EventController {
         }
     }
 
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<ApiResponse<Boolean>> deleteEvent(@PathVariable int id) {
+        try {
+            boolean isDeleted = eventService.deleteEvent(id);
+
+            ApiResponse<Boolean> response = ApiResponse.<Boolean>builder()
+                    .code(HttpStatus.OK.value())
+                    .message("Event deleted successfully")
+                    .result(isDeleted)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+
+        } catch (AppException e) {
+            ApiResponse<Boolean> errorResponse = ApiResponse.<Boolean>builder()
+                    .code(HttpStatus.BAD_REQUEST.value())
+                    .message(e.getMessage()) // Lỗi từ service
+                    .result(null)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        }
+    }
 }

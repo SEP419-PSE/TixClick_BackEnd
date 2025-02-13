@@ -13,6 +13,7 @@ public class ModelMapperConfig {
         ModelMapper modelMapper = new ModelMapper();
         modelMapper.typeMap(Event.class, EventDTO.class).addMappings(mapper -> {
             mapper.map(src -> src.getCategory().getEventCategoryId(), EventDTO::setCategoryId);
+            mapper.map(src -> src.getOrganizer().getAccountId(), EventDTO::setOrganizerId);
         });
         return new ModelMapper();
     }

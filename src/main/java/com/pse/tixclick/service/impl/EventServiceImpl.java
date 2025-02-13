@@ -9,6 +9,7 @@ import com.pse.tixclick.payload.entity.entity_enum.ETypeEvent;
 import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.request.CreateEventRequest;
 import com.pse.tixclick.payload.request.UpdateEventRequest;
+import com.pse.tixclick.repository.AccountRepository;
 import com.pse.tixclick.repository.EventCategoryRepository;
 import com.pse.tixclick.repository.EventRepository;
 import com.pse.tixclick.service.EventService;
@@ -16,6 +17,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -31,13 +33,17 @@ public class EventServiceImpl implements EventService {
     EventRepository eventRepository;
     ModelMapper modelMapper;
     EventCategoryRepository eventCategoryRepository;
+    AccountRepository accountRepository;
     Cloudinary cloudinary;
     @Override
     public EventDTO createEvent(CreateEventRequest request, MultipartFile logoURL, MultipartFile bannerURL, MultipartFile logoOrganizeURL) throws IOException {
         if (request == null || request.getEventName() == null || request.getCategoryId() == 0) {
             throw new AppException(ErrorCode.INVALID_EVENT_DATA);
         }
-
+        var context = SecurityContextHolder.getContext();
+        String name = context.getAuthentication().getName();
+        var organnizer = accountRepository.findAccountByUserName(name)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
         var category = eventCategoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
 
@@ -53,10 +59,11 @@ public class EventServiceImpl implements EventService {
         event.setTypeEvent(request.getTypeEvent());
         event.setDescription(request.getDescription());
         event.setCategory(category);
-        event.setStatus(false);
+        event.setStatus("FENDING");
         event.setLogoURL(logocode);
         event.setBannerURL(bannercode);
         event.setLogoOrganizerURL(logoOrganizercode);
+        event.setOrganizer(organnizer);
 
 
         // Lưu vào database
@@ -70,7 +77,9 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public EventDTO updateEvent(UpdateEventRequest eventRequest, MultipartFile logoURL, MultipartFile bannerURL, MultipartFile logoOrganizeURL) throws IOException {
-        var event = eventRepository.findById(eventRequest.getEventId())
+        var context = SecurityContextHolder.getContext();
+        String name = context.getAuthentication().getName();
+        var event = eventRepository.findEventByEventIdAndOrganizer_UserName(eventRequest.getEventId(),name)
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
 
         // Chỉ cập nhật nếu giá trị không null hoặc không phải chuỗi trống
@@ -86,7 +95,9 @@ public class EventServiceImpl implements EventService {
             event.setLocation(eventRequest.getLocation());
         }
 
-        event.setStatus(eventRequest.isStatus());
+        if (eventRequest.getStatus() != null) {
+            event.setStatus(eventRequest.getStatus());
+        }
 
         if (eventRequest.getTypeEvent() != null) {
             event.setTypeEvent(eventRequest.getTypeEvent());
@@ -121,6 +132,13 @@ public class EventServiceImpl implements EventService {
         return modelMapper.map(event,EventDTO.class);
     }
 
+    @Override
+    public boolean deleteEvent(int id) {
+        var event = eventRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+        event.setStatus("REMOVE");
+        return true;
+    }
 
 
     private String uploadImageToCloudinary(MultipartFile file) throws IOException {
