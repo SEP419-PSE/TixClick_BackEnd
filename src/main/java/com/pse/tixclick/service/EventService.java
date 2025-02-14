@@ -14,4 +14,8 @@ public interface EventService {
     EventDTO updateEvent(UpdateEventRequest eventRequest, MultipartFile logoURL, MultipartFile bannerURL, MultipartFile logoOrganizeURL) throws IOException;
 
     boolean deleteEvent(int id);
+
+    List<EventDTO> getAllEvent();
+
+    EventDTO getEventById(int id);
 }

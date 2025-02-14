@@ -18,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @RestController
 @RequestMapping("/event")
@@ -34,7 +35,7 @@ public class EventController {
             @RequestParam("bannerURL") MultipartFile bannerURL,
             @RequestParam("logoOrganizeURL") MultipartFile logoOrganizeURL) {
         try {
-            EventDTO createdEvent = eventService.createEvent(eventDTO, logoURL,bannerURL,logoOrganizeURL);
+            EventDTO createdEvent = eventService.createEvent(eventDTO, logoURL, bannerURL, logoOrganizeURL);
 
             ApiResponse<EventDTO> response = ApiResponse.<EventDTO>builder()
                     .code(HttpStatus.CREATED.value())
@@ -64,7 +65,7 @@ public class EventController {
             @RequestParam("bannerURL") MultipartFile bannerURL,
             @RequestParam("logoOrganizeURL") MultipartFile logoOrganizeURL) {
         try {
-            EventDTO updatedEvent = eventService.updateEvent(eventDTO, logoURL,bannerURL,logoOrganizeURL);
+            EventDTO updatedEvent = eventService.updateEvent(eventDTO, logoURL, bannerURL, logoOrganizeURL);
 
             ApiResponse<EventDTO> response = ApiResponse.<EventDTO>builder()
                     .code(HttpStatus.OK.value())
@@ -108,6 +109,56 @@ public class EventController {
                     .build();
 
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        }
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<ApiResponse<List<EventDTO>>> getAllEvent() {
+        List<EventDTO> events = eventService.getAllEvent();
+
+        if (events.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.<List<EventDTO>>builder()
+                            .code(HttpStatus.NOT_FOUND.value())
+                            .message("No events found")
+                            .result(null)
+                            .build());
+        }
+
+        return ResponseEntity.ok(
+                ApiResponse.<List<EventDTO>>builder()
+                        .code(HttpStatus.OK.value())
+                        .message("Get all events successfully")
+                        .result(events)
+                        .build()
+        );
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<EventDTO>> getEventById(@PathVariable int id) {
+        try {
+            EventDTO event = eventService.getEventById(id);
+            return ResponseEntity.ok(
+                    ApiResponse.<EventDTO>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Get event by id successfully")
+                            .result(event)
+                            .build()
+            );
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.<EventDTO>builder()
+                            .code(HttpStatus.NOT_FOUND.value())
+                            .message("Event not found with id: " + id)
+                            .result(null)
+                            .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<EventDTO>builder()
+                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .message("An error occurred while retrieving the event")
+                            .result(null)
+                            .build());
         }
     }
 }

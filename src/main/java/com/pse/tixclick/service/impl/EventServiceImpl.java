@@ -17,6 +17,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.modelmapper.ModelMapper;
+import org.modelmapper.TypeToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -138,6 +139,19 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
         event.setStatus("REMOVE");
         return true;
+    }
+
+    @Override
+    public List<EventDTO> getAllEvent() {
+        List<Event> events = eventRepository.findAll();
+        return modelMapper.map(events, new TypeToken<List<EventDTO>>() {}.getType());
+    }
+
+    @Override
+    public EventDTO getEventById(int id) {
+        var event = eventRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+        return modelMapper.map(event, EventDTO.class);
     }
 
 
