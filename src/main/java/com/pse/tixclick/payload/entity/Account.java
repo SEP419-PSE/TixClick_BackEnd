@@ -1,5 +1,8 @@
 package com.pse.tixclick.payload.entity;
 
+import com.pse.tixclick.payload.entity.payment.Order;
+import com.pse.tixclick.payload.entity.payment.Payment;
+import com.pse.tixclick.payload.entity.payment.Transaction;
 import com.pse.tixclick.payload.entity.team.Member;
 import jakarta.persistence.*;
 import lombok.*;
@@ -50,5 +53,12 @@ public class Account {
     @OneToMany(mappedBy = "account")
     Collection<Member> members;
 
+    @OneToMany(mappedBy = "account")
+    Collection<Order> orders;
 
+    @OneToMany(mappedBy = "account")
+    Collection<Payment> payments;
+
+    @OneToMany(mappedBy = "account")
+    Collection<Transaction> transactions;
 }
