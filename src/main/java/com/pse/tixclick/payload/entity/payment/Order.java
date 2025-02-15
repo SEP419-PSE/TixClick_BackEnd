@@ -29,18 +29,12 @@ public class Order {
     private int totalAmount;
 
     @ManyToOne
-    @JoinColumn(name = "accountId", nullable = false)
+    @JoinColumn(name = "account_id", nullable = false)
     private Account account;
 
     @OneToMany(mappedBy = "order")
     private Collection<OrderDetail> orderDetails;
 
     @OneToMany(mappedBy = "order")
-    private Collection<OrderVoucher> orderVouchers;
-
-    @OneToMany(mappedBy = "order")
     private Collection<Payment> payments;
-
-    @OneToMany(mappedBy = "order")
-    private Collection<Transaction> transactions;
 }

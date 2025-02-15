@@ -1,9 +1,11 @@
 package com.pse.tixclick.payload.entity;
 
+import com.pse.tixclick.payload.entity.Company.Contract;
 import com.pse.tixclick.payload.entity.payment.Order;
 import com.pse.tixclick.payload.entity.payment.Payment;
 import com.pse.tixclick.payload.entity.payment.Transaction;
-import com.pse.tixclick.payload.entity.team.Member;
+import com.pse.tixclick.payload.entity.Company.Member;
+import com.pse.tixclick.payload.entity.payment.Voucher;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -61,4 +63,10 @@ public class Account {
 
     @OneToMany(mappedBy = "account")
     Collection<Transaction> transactions;
+
+    @OneToOne(mappedBy = "account")
+    private Contract contract;
+
+    @OneToMany(mappedBy = "account")
+    private Collection<Voucher> vouchers;
 }
