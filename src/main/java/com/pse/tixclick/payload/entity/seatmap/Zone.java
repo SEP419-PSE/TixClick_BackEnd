@@ -1,11 +1,13 @@
 package com.pse.tixclick.payload.entity.seatmap;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.pse.tixclick.payload.entity.ticket.TicketPurchase;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 
 @Getter
 @Setter
@@ -21,10 +23,6 @@ public class Zone {
 
     @Column(columnDefinition = "NVARCHAR(255)")
     String zoneName;
-
-    @ManyToOne
-    @JoinColumn(name = "seatmap_id", nullable = false)
-    SeatMap seatMap;
 
     @Column
     String xPosition;
@@ -50,10 +48,6 @@ public class Zone {
     @Column
     String columns;
 
-    @ManyToOne
-    @JoinColumn(name = "zone_type_id", nullable = false)
-    ZoneType zoneType;
-
     @Column
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     LocalDateTime createdDate;
@@ -65,4 +59,17 @@ public class Zone {
     @Column
     boolean status;
 
+    @ManyToOne
+    @JoinColumn(name = "seatmap_id", nullable = false)
+    SeatMap seatMap;
+
+    @ManyToOne
+    @JoinColumn(name = "zone_type_id", nullable = false)
+    ZoneType zoneType;
+
+    @OneToMany(mappedBy = "zone")
+    private Collection<TicketPurchase> ticketPurchases;
+
+    @OneToMany(mappedBy = "zone")
+    private Collection<Seat> seats;
 }
