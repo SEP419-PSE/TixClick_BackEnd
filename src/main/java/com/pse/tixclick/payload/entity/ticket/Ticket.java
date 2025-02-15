@@ -32,6 +32,17 @@ public class Ticket {
     LocalDateTime createdDate;
 
     @Column
+    double price;
+
+    @Column
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    LocalDate startDate;
+
+    @Column
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    LocalDate endDate;
+
+    @Column
     int minQuantity;
 
     @Column

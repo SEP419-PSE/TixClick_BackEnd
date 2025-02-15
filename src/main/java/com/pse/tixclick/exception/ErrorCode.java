@@ -42,6 +42,9 @@ public enum ErrorCode {
     ACTIVITY_NOT_FOUND(1033, "Không tìm thấy hoạt động", HttpStatus.NOT_FOUND),
     ;
 
+
+
+
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;
         this.message = message;
