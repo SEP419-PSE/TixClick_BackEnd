@@ -6,6 +6,7 @@ import com.pse.tixclick.payload.entity.payment.Payment;
 import com.pse.tixclick.payload.entity.payment.Transaction;
 import com.pse.tixclick.payload.entity.Company.Member;
 import com.pse.tixclick.payload.entity.payment.Voucher;
+import com.pse.tixclick.payload.entity.ticket.Ticket;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -69,4 +70,7 @@ public class Account {
 
     @OneToMany(mappedBy = "account")
     private Collection<Voucher> vouchers;
+
+    @OneToMany(mappedBy = "account")
+    private Collection<Ticket> tickets;
 }

@@ -21,7 +21,7 @@ public class OrderDetail {
     private int orderDetailId;
 
     @Column(nullable = false)
-    private byte qrCode;
+    private double amount;
 
     @ManyToOne
     @JoinColumn(name = "order_id", nullable = false)
