@@ -66,13 +66,6 @@ public class SecurityConfig {
                         )
                         .authenticationEntryPoint(customAuthenticationEntryPoint) // Bắt lỗi Token hết hạn
                 )
-                .logout(logout -> logout
-                        .logoutSuccessHandler(oidcLogoutSuccessHandler(null))
-                        .logoutUrl("/logout")
-                        .invalidateHttpSession(true)
-                        .clearAuthentication(true)
-                        .deleteCookies("JSESSIONID")
-                )
                 .csrf(AbstractHttpConfigurer::disable);
 
         return http.build();
