@@ -12,5 +12,7 @@ public interface AccountService {
     boolean changePasswordWithOtp(String email, String password);
     AccountDTO myProfile();
 
+
+
     AccountDTO updateProfile(UpdateAccountRequest accountDTO);
 }
