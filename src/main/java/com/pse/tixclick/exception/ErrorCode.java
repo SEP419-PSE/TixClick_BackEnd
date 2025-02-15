@@ -41,6 +41,9 @@ public enum ErrorCode {
     IMAGE_REMOVE_FAILED(1032, "Xóa ảnh thất bại", HttpStatus.BAD_REQUEST),
     ;
 
+
+
+
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;
         this.message = message;
