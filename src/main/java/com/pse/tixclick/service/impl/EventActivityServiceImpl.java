@@ -1,0 +1,45 @@
+package com.pse.tixclick.service.impl;
+
+import com.pse.tixclick.exception.AppException;
+import com.pse.tixclick.exception.ErrorCode;
+import com.pse.tixclick.payload.dto.EventActivityDTO;
+import com.pse.tixclick.payload.entity.event.EventActivity;
+import com.pse.tixclick.payload.request.CreateEventActivityRequest;
+import com.pse.tixclick.repository.AccountRepository;
+import com.pse.tixclick.repository.EventActivityRepository;
+import com.pse.tixclick.repository.EventRepository;
+import com.pse.tixclick.service.EventActivityService;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import org.modelmapper.ModelMapper;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+
+@Service
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+public class EventActivityServiceImpl implements EventActivityService {
+    AccountRepository accountRepository;
+    EventActivityRepository eventActivityRepository;
+    EventRepository eventRepository;
+    ModelMapper modelMapper;
+    @Override
+    public EventActivityDTO createEventActivity(CreateEventActivityRequest eventActivityRequest) {
+        var context = SecurityContextHolder.getContext();
+        String name = context.getAuthentication().getName();
+        var organizer = accountRepository.findAccountByUserName(name)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        var event = eventRepository.findById(eventActivityRequest.getEventId())
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+        var eventActivity = new EventActivity();
+        eventActivity.setActivityName(eventActivityRequest.getActivityName());;
+        eventActivity.setCreatedBy(organizer);
+        eventActivity.setEvent(event);
+        eventActivity.setDate(eventActivityRequest.getDate());
+        eventActivity.setStartTime(eventActivityRequest.getStartTime());
+        eventActivity.setEndTime(eventActivityRequest.getEndTime());
+        eventActivityRepository.save(eventActivity);
+        return modelMapper.map(eventActivity, EventActivityDTO.class);
+    }
+}
