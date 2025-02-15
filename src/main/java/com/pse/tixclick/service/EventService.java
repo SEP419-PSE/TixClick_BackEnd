@@ -20,4 +20,8 @@ public interface EventService {
     EventDTO getEventById(int id);
 
     List<EventDTO> getEventByStatus(String status);
+
+    List<EventDTO> getEventByDraft();
+
+    List<EventDTO> getEventByCompleted();
 }

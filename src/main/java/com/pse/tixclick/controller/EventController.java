@@ -183,4 +183,48 @@ public class EventController {
                         .build()
         );
     }
+
+    @GetMapping("/draft")
+    public ResponseEntity<ApiResponse<List<EventDTO>>> getEventByDraft() {
+        List<EventDTO> events = eventService.getEventByDraft();
+
+        if (events.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.<List<EventDTO>>builder()
+                            .code(HttpStatus.NOT_FOUND.value())
+                            .message("No draft events found")
+                            .result(null)
+                            .build());
+        }
+
+        return ResponseEntity.ok(
+                ApiResponse.<List<EventDTO>>builder()
+                        .code(HttpStatus.OK.value())
+                        .message("Get all draft events successfully")
+                        .result(events)
+                        .build()
+        );
+    }
+
+    @GetMapping("/completed")
+    public ResponseEntity<ApiResponse<List<EventDTO>>> getEventByCompleted() {
+        List<EventDTO> events = eventService.getEventByCompleted();
+
+        if (events.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.<List<EventDTO>>builder()
+                            .code(HttpStatus.NOT_FOUND.value())
+                            .message("No completed events found")
+                            .result(null)
+                            .build());
+        }
+
+        return ResponseEntity.ok(
+                ApiResponse.<List<EventDTO>>builder()
+                        .code(HttpStatus.OK.value())
+                        .message("Get all completed events successfully")
+                        .result(events)
+                        .build()
+        );
+    }
 }

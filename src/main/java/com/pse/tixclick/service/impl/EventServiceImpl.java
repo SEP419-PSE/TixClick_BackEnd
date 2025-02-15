@@ -158,6 +158,24 @@ public class EventServiceImpl implements EventService {
         return modelMapper.map(events, new TypeToken<List<EventDTO>>() {}.getType());
     }
 
+    @Override
+    public List<EventDTO> getEventByDraft() {
+        var context = SecurityContextHolder.getContext();
+        String name = context.getAuthentication().getName();
+        var account = accountRepository.findAccountByUserName(name)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        List<Event> events = eventRepository.findEventsByStatusAndOrganizer_UserName("DRAFT",name)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+        return modelMapper.map(events, new TypeToken<List<EventDTO>>() {}.getType());
+    }
+
+    @Override
+    public List<EventDTO> getEventByCompleted() {
+        List<Event> events = eventRepository.findEventsByStatus("COMPLETED")
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+        return modelMapper.map(events, new TypeToken<List<EventDTO>>() {}.getType());
+    }
+
 
     private String uploadImageToCloudinary(MultipartFile file) throws IOException {
         Map uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
