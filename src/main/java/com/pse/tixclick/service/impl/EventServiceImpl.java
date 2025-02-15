@@ -5,7 +5,6 @@ import com.cloudinary.utils.ObjectUtils;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.EventDTO;
-import com.pse.tixclick.payload.entity.entity_enum.ETypeEvent;
 import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.request.CreateEventRequest;
 import com.pse.tixclick.payload.request.UpdateEventRequest;
@@ -21,9 +20,7 @@ import org.modelmapper.TypeToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -154,10 +151,18 @@ public class EventServiceImpl implements EventService {
         return modelMapper.map(event, EventDTO.class);
     }
 
+    @Override
+    public List<EventDTO> getEventByStatus(String status) {
+        List<Event> events = eventRepository.findEventsByStatus(status)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+        return modelMapper.map(events, new TypeToken<List<EventDTO>>() {}.getType());
+    }
+
 
     private String uploadImageToCloudinary(MultipartFile file) throws IOException {
         Map uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
         return (String) uploadResult.get("url");
     }
+
 
 }
