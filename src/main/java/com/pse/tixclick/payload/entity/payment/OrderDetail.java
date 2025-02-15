@@ -1,6 +1,8 @@
 package com.pse.tixclick.payload.entity.payment;
 
 import com.pse.tixclick.payload.entity.seatmap.Seat;
+import com.pse.tixclick.payload.entity.ticket.Ticket;
+import com.pse.tixclick.payload.entity.ticket.TicketPurchase;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -21,17 +23,15 @@ public class OrderDetail {
     @Column(nullable = false)
     private byte qrCode;
 
-    @Column(nullable = false)
-    private Date checkinTime;
-
-    @Column(nullable = false)
-    private String checkinStatus;
+    @ManyToOne
+    @JoinColumn(name = "order_id", nullable = false)
+    private Order order;
 
     @OneToOne
-    @JoinColumn(name="seatId", nullable = false)
-    private Seat seat;
+    @JoinColumn(name="ticket_purchase_id", nullable = false)
+    private TicketPurchase ticketPurchase;
 
     @ManyToOne
-    @JoinColumn(name = "orderId", nullable = false)
-    private Order order;
+    @JoinColumn(name = "voucher_id", nullable = false)
+    private Voucher voucher;
 }

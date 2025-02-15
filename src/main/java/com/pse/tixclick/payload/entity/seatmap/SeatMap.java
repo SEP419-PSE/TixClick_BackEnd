@@ -1,10 +1,13 @@
 package com.pse.tixclick.payload.entity.seatmap;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.entity.event.EventActivity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+
+import java.util.Collection;
 
 @Getter
 @Setter
@@ -26,14 +29,6 @@ public class SeatMap {
     @Column
     String seatMapHeight;
 
-    @ManyToOne
-    @JoinColumn(name = "background_id", nullable = false)
-    Background background;
-
-    @OneToOne
-    @JoinColumn(name = "event_activity_id", nullable = false)
-    EventActivity eventActivity;
-
     @Column
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     String createdAt;
@@ -44,4 +39,16 @@ public class SeatMap {
 
     @Column
     boolean status;
+
+    @ManyToOne
+    @JoinColumn(name = "background_id", nullable = false)
+    Background background;
+
+    @OneToOne
+    @JoinColumn(name = "event_activity_id", nullable = false)
+    EventActivity eventActivity;
+
+    @OneToOne
+    @JoinColumn(name = "event_id", nullable = false)
+    private Event event;
 }

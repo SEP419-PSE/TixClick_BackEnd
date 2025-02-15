@@ -1,9 +1,12 @@
 package com.pse.tixclick.payload.entity.payment;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.pse.tixclick.payload.entity.Account;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Date;
 
@@ -30,12 +33,14 @@ public class Voucher {
     @Column(nullable = false)
     private String status;
 
-    @Column(nullable = false)
-    private Date createAt;
+    @Column
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime createdDate;
 
-    @Column(nullable = false)
-    private int accountId;
+    @ManyToOne
+    @JoinColumn(name = "account_id", nullable = false)
+    private Account account;
 
     @OneToMany(mappedBy = "voucher")
-    private Collection<OrderVoucher> orderVouchers;
+    private Collection<OrderDetail> orderDetails;
 }

@@ -48,14 +48,17 @@ public class Ticket {
     @Column
     int maxQuantity;
 
+    @Column
+    boolean status;
+
     @ManyToOne
     @JoinColumn(name="account_id", nullable = false)
     Account account;
 
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name="event_activity_id", nullable = false)
     EventActivity eventActivity;
 
-    @Column
-    boolean status;
+    @OneToOne(mappedBy = "ticket")
+    private TicketPurchase ticketPurchase;
 }
