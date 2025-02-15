@@ -42,4 +42,46 @@ public class EventActivityServiceImpl implements EventActivityService {
         eventActivityRepository.save(eventActivity);
         return modelMapper.map(eventActivity, EventActivityDTO.class);
     }
+
+    @Override
+    public EventActivityDTO updateEventActivity(CreateEventActivityRequest eventActivityRequest, int id) {
+        var context = SecurityContextHolder.getContext();
+        String name = context.getAuthentication().getName();
+
+        var organizer = accountRepository.findAccountByUserName(name)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        var eventActivity = eventActivityRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.ACTIVITY_NOT_FOUND));
+
+        // Chỉ cập nhật nếu giá trị không rỗng (null)
+        if (eventActivityRequest.getActivityName() != null && !eventActivityRequest.getActivityName().isEmpty()) {
+            eventActivity.setActivityName(eventActivityRequest.getActivityName());
+        }
+
+
+            var event = eventRepository.findById(eventActivityRequest.getEventId())
+                    .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+            eventActivity.setEvent(event);
+
+
+        if (eventActivityRequest.getDate() != null) {
+            eventActivity.setDate(eventActivityRequest.getDate());
+        }
+
+        if (eventActivityRequest.getStartTime() != null) {
+            eventActivity.setStartTime(eventActivityRequest.getStartTime());
+        }
+
+        if (eventActivityRequest.getEndTime() != null) {
+            eventActivity.setEndTime(eventActivityRequest.getEndTime());
+        }
+
+        eventActivity.setCreatedBy(organizer);
+
+        eventActivityRepository.save(eventActivity);
+
+        return modelMapper.map(eventActivity, EventActivityDTO.class);
+    }
+
 }

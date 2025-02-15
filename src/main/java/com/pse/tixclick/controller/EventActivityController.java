@@ -43,4 +43,25 @@ public class EventActivityController {
         }
     }
 
+    @PutMapping("/update/{id}")
+    public ResponseEntity<ApiResponse<EventActivityDTO>> updateEventActivity(@RequestBody CreateEventActivityRequest eventActivityRequest, @PathVariable int id) {
+        try {
+            EventActivityDTO eventActivityDTO = eventActivityService.updateEventActivity(eventActivityRequest, id);
+            return ResponseEntity.ok(
+                    ApiResponse.<EventActivityDTO>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Event activity updated successfully")
+                            .result(eventActivityDTO)
+                            .build()
+            );
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST.value())
+                    .body(ApiResponse.<EventActivityDTO>builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        }
+    }
+
 }
