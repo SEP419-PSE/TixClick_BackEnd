@@ -43,10 +43,6 @@ public class Payment {
     @JoinColumn(name = "account_id", nullable = false)
     private Account account;
 
-    @ManyToOne
-    @JoinColumn(name = "contract_id", nullable = false)
-    private Contract contract;
-
     @OneToMany(mappedBy = "payment")
     private Collection<Transaction> transactions;
 }
