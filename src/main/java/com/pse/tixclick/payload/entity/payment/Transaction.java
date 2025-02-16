@@ -44,4 +44,8 @@ public class Transaction {
     @ManyToOne
     @JoinColumn(name = "payment_id", nullable = false)
     private Payment payment;
+
+    @ManyToOne
+    @JoinColumn(name = "contract_payment_id", nullable = false)
+    private ContractPayment contractPayment;
 }

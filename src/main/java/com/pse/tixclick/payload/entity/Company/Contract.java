@@ -42,9 +42,5 @@ public class Contract {
     @JoinColumn(name="event_id", nullable = false)
     private Event event;
 
-    @OneToMany(mappedBy = "contract")
-    private Collection<ContractPayment> contractPayments;
 
-    @OneToMany(mappedBy = "contract")
-    private Collection<Payment> payments;
 }
