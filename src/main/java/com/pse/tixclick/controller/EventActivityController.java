@@ -13,6 +13,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/event-activity")
 @Slf4j
@@ -63,5 +65,48 @@ public class EventActivityController {
                             .build());
         }
     }
+
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<ApiResponse<Boolean>> deleteEventActivity(@PathVariable int id) {
+        try {
+            boolean result = eventActivityService.deleteEventActivity(id);
+            return ResponseEntity.ok(
+                    ApiResponse.<Boolean>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Event activity deleted successfully")
+                            .result(result)
+                            .build()
+            );
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST.value())
+                    .body(ApiResponse.<Boolean>builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        }
+    }
+
+    @GetMapping("/get-by-event-id/{eventId}")
+    public ResponseEntity<ApiResponse<List<EventActivityDTO>>> getEventActivityByEventId(@PathVariable int eventId) {
+        try {
+            List<EventActivityDTO> eventActivityDTOs = eventActivityService.getEventActivityByEventId(eventId);
+            return ResponseEntity.ok(
+                    ApiResponse.<List<EventActivityDTO>>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Event activity retrieved successfully")
+                            .result(eventActivityDTOs)
+                            .build()
+            );
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.<List<EventActivityDTO>>builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        }
+    }
+
 
 }
