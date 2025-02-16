@@ -3,6 +3,7 @@ package com.pse.tixclick.service.impl;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.EventActivityDTO;
+import com.pse.tixclick.payload.dto.EventDTO;
 import com.pse.tixclick.payload.entity.event.EventActivity;
 import com.pse.tixclick.payload.request.CreateEventActivityRequest;
 import com.pse.tixclick.repository.AccountRepository;
@@ -13,8 +14,11 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.modelmapper.ModelMapper;
+import org.modelmapper.TypeToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -82,6 +86,22 @@ public class EventActivityServiceImpl implements EventActivityService {
         eventActivityRepository.save(eventActivity);
 
         return modelMapper.map(eventActivity, EventActivityDTO.class);
+    }
+
+    @Override
+    public boolean deleteEventActivity(int id) {
+        var eventActivity = eventActivityRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.ACTIVITY_NOT_FOUND));
+        eventActivityRepository.delete(eventActivity);
+        return true;
+    }
+
+    @Override
+    public List<EventActivityDTO> getEventActivityByEventId(int eventId) {
+        List<EventActivity> eventActivities = eventActivityRepository.findEventActivitiesByEvent_EventId(eventId)
+                .orElseThrow(() -> new AppException(ErrorCode.ACTIVITY_NOT_FOUND));
+
+        return modelMapper.map(eventActivities, new TypeToken<List<EventActivityDTO>>() {}.getType());
     }
 
 }

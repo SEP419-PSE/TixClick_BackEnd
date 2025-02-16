@@ -47,9 +47,5 @@ public class EventActivity {
     @JoinColumn(name = "created_by", nullable = false)
     Account createdBy;
 
-    @OneToMany(mappedBy = "eventActivity")
-    private Collection<TicketPurchase> ticketPurchases;
 
-    @OneToOne(mappedBy = "eventActivity")
-    private Ticket ticket;
 }
