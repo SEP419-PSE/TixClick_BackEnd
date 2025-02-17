@@ -4,6 +4,9 @@ import com.pse.tixclick.payload.entity.Company.Member;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface MemberRepository extends JpaRepository<Member,Integer> {
+    Optional<Member> findMemberByAccount_AccountIdAndCompany_CompanyId(Integer accountId, Integer companyId);
 }

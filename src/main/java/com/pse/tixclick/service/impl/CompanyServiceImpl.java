@@ -4,10 +4,13 @@ import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.CompanyDTO;
 import com.pse.tixclick.payload.entity.Company.Company;
+import com.pse.tixclick.payload.entity.Company.Member;
 import com.pse.tixclick.payload.entity.entity_enum.ECompanyStatus;
+import com.pse.tixclick.payload.entity.entity_enum.ESubRole;
 import com.pse.tixclick.payload.request.CreateCompanyRequest;
 import com.pse.tixclick.repository.AccountRepository;
 import com.pse.tixclick.repository.CompanyRepository;
+import com.pse.tixclick.repository.MemberRepository;
 import com.pse.tixclick.service.CompanyService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +25,7 @@ import org.springframework.stereotype.Service;
 public class CompanyServiceImpl implements CompanyService {
     CompanyRepository companyRepository;
     AccountRepository accountRepository;
+    MemberRepository memberRepository;
     ModelMapper modelMapper;
 
     @Override
@@ -43,6 +47,11 @@ public class CompanyServiceImpl implements CompanyService {
         company.setLogoURL(createCompanyRequest.getLogoURL());
         company.setStatus(ECompanyStatus.INACTIVE);
         companyRepository.save(company);
+        Member member = new Member();
+        member.setCompany(company);
+        member.setSubRole(ESubRole.OWNER.name());
+        member.setAccount(account);
+        memberRepository.save(member);
         return modelMapper.map(company, CompanyDTO.class);
 
     }
