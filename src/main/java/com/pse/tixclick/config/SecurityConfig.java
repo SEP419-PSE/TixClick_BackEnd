@@ -33,6 +33,7 @@ public class SecurityConfig {
             "event-image/**",
             "/event-activity/**",
             "/ticket/**",
+            "/company/**",
             "/swagger-ui/**",
             "/v3/api-docs/**",
             "/swagger-ui.html",
