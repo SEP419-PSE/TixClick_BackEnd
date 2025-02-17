@@ -32,10 +32,10 @@ public class EventController {
     public ResponseEntity<ApiResponse<EventDTO>> createEvent(
             @ModelAttribute CreateEventRequest eventDTO,
             @RequestParam("logoURL") MultipartFile logoURL,
-            @RequestParam("bannerURL") MultipartFile bannerURL,
-            @RequestParam("logoOrganizeURL") MultipartFile logoOrganizeURL) {
+            @RequestParam("bannerURL") MultipartFile bannerURL
+            ) {
         try {
-            EventDTO createdEvent = eventService.createEvent(eventDTO, logoURL, bannerURL, logoOrganizeURL);
+            EventDTO createdEvent = eventService.createEvent(eventDTO, logoURL, bannerURL);
 
             ApiResponse<EventDTO> response = ApiResponse.<EventDTO>builder()
                     .code(HttpStatus.CREATED.value())
@@ -62,10 +62,10 @@ public class EventController {
     public ResponseEntity<ApiResponse<EventDTO>> updateEvent(
             @ModelAttribute UpdateEventRequest eventDTO,
             @RequestParam("logoURL") MultipartFile logoURL,
-            @RequestParam("bannerURL") MultipartFile bannerURL,
-            @RequestParam("logoOrganizeURL") MultipartFile logoOrganizeURL) {
+            @RequestParam("bannerURL") MultipartFile bannerURL
+            ) {
         try {
-            EventDTO updatedEvent = eventService.updateEvent(eventDTO, logoURL, bannerURL, logoOrganizeURL);
+            EventDTO updatedEvent = eventService.updateEvent(eventDTO, logoURL, bannerURL);
 
             ApiResponse<EventDTO> response = ApiResponse.<EventDTO>builder()
                     .code(HttpStatus.OK.value())

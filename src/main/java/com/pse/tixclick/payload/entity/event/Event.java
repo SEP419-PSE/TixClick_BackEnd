@@ -41,9 +41,6 @@ public class Event {
     @Column
     String bannerURL;
 
-    @Column
-    String logoOrganizerURL;
-
     @Column(columnDefinition = "NVARCHAR(MAX)")
     String description;
 

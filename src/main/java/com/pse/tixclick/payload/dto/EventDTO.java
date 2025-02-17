@@ -15,7 +15,6 @@ public class EventDTO {
     String location;
     String logoURL;
     String bannerURL;
-    String logoOrganizerURL;
     String status;
     String typeEvent;
     String description;

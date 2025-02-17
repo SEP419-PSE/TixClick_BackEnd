@@ -16,6 +16,7 @@ public class AccountDTO {
     String email;
     String phone;
     boolean active;
+    String avatarURL;
     String dob;
     int roleId;
 }
