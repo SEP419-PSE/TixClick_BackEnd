@@ -5,6 +5,7 @@ import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.TicketDTO;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
 import com.pse.tixclick.payload.request.CreateTicketRequest;
+import com.pse.tixclick.payload.request.UpdateTicketRequest;
 import com.pse.tixclick.repository.AccountRepository;
 import com.pse.tixclick.repository.EventActivityRepository;
 import com.pse.tixclick.repository.TicketRepository;
@@ -52,4 +53,19 @@ public class TicketServiceImpl implements TicketService {
         return modelMapper.map(ticket, TicketDTO.class);
 
     }
+
+    @Override
+    public TicketDTO updateTicket(UpdateTicketRequest ticketDTO, int ticketId) {
+        var context = SecurityContextHolder.getContext();
+        String name = context.getAuthentication().getName();
+
+        var account = accountRepository.findAccountByUserName(name)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        var ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new AppException(ErrorCode.TICKET_NOT_FOUND));
+
+
+    return null;
+    }
+
 }
