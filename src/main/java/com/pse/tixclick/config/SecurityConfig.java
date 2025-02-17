@@ -34,6 +34,7 @@ public class SecurityConfig {
             "/event-activity/**",
             "/ticket/**",
             "/company/**",
+            "/member/**",
             "/swagger-ui/**",
             "/v3/api-docs/**",
             "/swagger-ui.html",

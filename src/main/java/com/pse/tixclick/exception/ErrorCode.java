@@ -41,6 +41,10 @@ public enum ErrorCode {
     IMAGE_REMOVE_FAILED(1032, "Xóa ảnh thất bại", HttpStatus.BAD_REQUEST),
     ACTIVITY_NOT_FOUND(1033, "Không tìm thấy hoạt động", HttpStatus.NOT_FOUND),
     TICKET_NOT_FOUND(1034, "Không tìm thấy vé", HttpStatus.NOT_FOUND),
+    COMPANY_NOT_FOUND(1035, "Không tìm thấy công ty", HttpStatus.NOT_FOUND),
+    CANNOT_CREATE_MEMBER(1036, "Không thể tạo thành viên", HttpStatus.BAD_REQUEST),
+    INVALID_ROLE(1037, "Vai trò không hợp lệ", HttpStatus.BAD_REQUEST),
+    MEMBER_NOT_FOUND(1038, "Không tìm thấy thành viên", HttpStatus.NOT_FOUND),
     ;
 
 
