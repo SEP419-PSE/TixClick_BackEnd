@@ -40,6 +40,7 @@ public enum ErrorCode {
     IMAGE_NOT_FOUND(1031, "Không tìm thấy ảnh", HttpStatus.NOT_FOUND),
     IMAGE_REMOVE_FAILED(1032, "Xóa ảnh thất bại", HttpStatus.BAD_REQUEST),
     ACTIVITY_NOT_FOUND(1033, "Không tìm thấy hoạt động", HttpStatus.NOT_FOUND),
+    TICKET_NOT_FOUND(1034, "Không tìm thấy vé", HttpStatus.NOT_FOUND),
     ;
 
 

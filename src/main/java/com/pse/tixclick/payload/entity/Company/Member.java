@@ -18,7 +18,7 @@ public class Member {
     int memberId;
 
     @Column
-    ESubRole subRole;
+    String subRole;
 
     @ManyToOne
     @JoinColumn(name = "company_id", nullable = false)
