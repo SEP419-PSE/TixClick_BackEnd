@@ -29,17 +29,25 @@ public class AccountServiceImpl implements AccountService {
     private ModelMapper accountMapper;
 
     @Override
-    public boolean changePasswordWithOtp(String email, String password) {
+    public boolean changePasswordWithOtp(String email, String newPassword, String oldPassword) {
+        // Retrieve the account based on the email
         Account account = accountRepository.findAccountByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        // Check if the old password matches the current password
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
-        if (account != null) {
-            account.setPassword(passwordEncoder.encode(password));
-            accountRepository.save(account);
-            return true;
+        if (!passwordEncoder.matches(oldPassword, account.getPassword())) {
+            // Handle incorrect old password scenario
+            throw new AppException(ErrorCode.PASSWORD_NOT_CORRECT);  // Or another appropriate exception
         }
-        return false;
+
+        // Encode the new password and set it
+        account.setPassword(passwordEncoder.encode(newPassword));
+        accountRepository.save(account);
+        return true;
+
     }
+
 
     @Override
     public AccountDTO myProfile() {
@@ -64,11 +72,25 @@ public class AccountServiceImpl implements AccountService {
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
         // Cập nhật thông tin tài khoản
-        user.setFirstName(accountDTO.getFirstName());
-        user.setLastName(accountDTO.getLastName());
-        user.setEmail(accountDTO.getEmail());
-        user.setPhone(accountDTO.getPhone());
-        user.setDob(accountDTO.getDob());
+        if (accountDTO.getFirstName() != null) {
+            user.setFirstName(accountDTO.getFirstName());
+        }
+        if (accountDTO.getLastName() != null) {
+            user.setLastName(accountDTO.getLastName());
+        }
+        if (accountDTO.getEmail() != null) {
+            user.setEmail(accountDTO.getEmail());
+            user.setActive(false); // This is set if email is not null
+        }
+        if (accountDTO.getPhone() != null) {
+            user.setPhone(accountDTO.getPhone());
+        }
+        if (accountDTO.getDob() != null) {
+            user.setDob(accountDTO.getDob());
+        }
+        if (accountDTO.getAvatarURL() != null) {
+            user.setAvatarURL(accountDTO.getAvatarURL());
+        }
 
 
         // Lưu thông tin tài khoản

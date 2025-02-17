@@ -15,7 +15,7 @@ public enum ErrorCode {
     UNAUTHENTICATED(1006, "Mật khẩu không hợp lệ", HttpStatus.UNAUTHORIZED),
     UNAUTHORIZED(1007, "You do not have permission", HttpStatus.FORBIDDEN),
     INVALID_DOB(1008, "Your age must be at least {min}", HttpStatus.BAD_REQUEST),
-    PASSWORD_NOT_CORRECT(1009, "Incorrect password", HttpStatus.UNAUTHORIZED),
+    PASSWORD_NOT_CORRECT(1009, "Sai mật khẩu", HttpStatus.UNAUTHORIZED),
     EMAIL_TAKEN(1010, "Email đã tồn tại", HttpStatus.BAD_REQUEST),
     EMPTY_FIELD(1011, "You cannot leave required field(s) empty", HttpStatus.BAD_REQUEST),
     ITEM_NOT_FOUND(1012, "Item not found", HttpStatus.NOT_FOUND),

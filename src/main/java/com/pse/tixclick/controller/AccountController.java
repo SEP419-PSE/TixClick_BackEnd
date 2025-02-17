@@ -20,12 +20,15 @@ public class AccountController {
     private AccountService accountService;
 
     @PostMapping("/change-password-with-otp")
-    public ResponseEntity<ApiResponse<Boolean>> changePasswordWithOtp(@RequestParam String email, @RequestParam String password) {
+    public ResponseEntity<ApiResponse<Boolean>> changePasswordWithOtp(
+            @RequestParam String email,
+            @RequestParam String oldPassword,
+            @RequestParam String newPassword) {
         try {
-            // Gọi service để thay đổi mật khẩu
-            boolean isChanged = accountService.changePasswordWithOtp(email, password);
+            // Call the service to change the password
+            boolean isChanged = accountService.changePasswordWithOtp(email, newPassword, oldPassword);
 
-            // Nếu thay đổi thành công, trả về phản hồi với mã trạng thái OK
+            // If password change is successful, return a success response
             ApiResponse<Boolean> apiResponse = ApiResponse.<Boolean>builder()
                     .code(HttpStatus.OK.value())
                     .message("Password changed successfully")
@@ -35,16 +38,26 @@ public class AccountController {
             return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
 
         } catch (AppException e) {
-            // Nếu có lỗi (ví dụ: người dùng không tồn tại), trả về phản hồi với mã trạng thái BAD_REQUEST
+            // If an error occurs (e.g., user does not exist or passwords don't match), return a BAD_REQUEST response
             ApiResponse<Boolean> errorResponse = ApiResponse.<Boolean>builder()
                     .code(HttpStatus.BAD_REQUEST.value())
-                    .message(e.getMessage()) // Lỗi từ service
+                    .message(e.getMessage()) // Error message from service
                     .result(false)
                     .build();
 
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        } catch (Exception e) {
+            // General exception handler for unforeseen errors
+            ApiResponse<Boolean> errorResponse = ApiResponse.<Boolean>builder()
+                    .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .message("An unexpected error occurred.")
+                    .result(false)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
+
 
     @GetMapping("/my-profile")
     public ResponseEntity<ApiResponse<AccountDTO>> getProfile() {

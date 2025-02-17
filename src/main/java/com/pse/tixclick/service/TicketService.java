@@ -5,4 +5,6 @@ import com.pse.tixclick.payload.request.CreateTicketRequest;
 
 public interface TicketService {
     TicketDTO createTicket(CreateTicketRequest ticketDTO);
+
+
 }

@@ -34,7 +34,7 @@ public class EventServiceImpl implements EventService {
     AccountRepository accountRepository;
     Cloudinary cloudinary;
     @Override
-    public EventDTO createEvent(CreateEventRequest request, MultipartFile logoURL, MultipartFile bannerURL, MultipartFile logoOrganizeURL) throws IOException {
+    public EventDTO createEvent(CreateEventRequest request, MultipartFile logoURL, MultipartFile bannerURL) throws IOException {
         if (request == null || request.getEventName() == null || request.getCategoryId() == 0) {
             throw new AppException(ErrorCode.INVALID_EVENT_DATA);
         }
@@ -48,8 +48,6 @@ public class EventServiceImpl implements EventService {
         // Upload từng ảnh lên Cloudinary
         String logocode = uploadImageToCloudinary(logoURL);
         String bannercode = uploadImageToCloudinary(bannerURL);
-        String logoOrganizercode = uploadImageToCloudinary(logoOrganizeURL);
-
         // Tạo đối tượng Event từ request
         Event event = new Event();
         event.setEventName(request.getEventName());
@@ -60,7 +58,6 @@ public class EventServiceImpl implements EventService {
         event.setStatus("FENDING");
         event.setLogoURL(logocode);
         event.setBannerURL(bannercode);
-        event.setLogoOrganizerURL(logoOrganizercode);
         event.setOrganizer(organnizer);
 
 
@@ -74,7 +71,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public EventDTO updateEvent(UpdateEventRequest eventRequest, MultipartFile logoURL, MultipartFile bannerURL, MultipartFile logoOrganizeURL) throws IOException {
+    public EventDTO updateEvent(UpdateEventRequest eventRequest, MultipartFile logoURL, MultipartFile bannerURL) throws IOException {
         var context = SecurityContextHolder.getContext();
         String name = context.getAuthentication().getName();
         var event = eventRepository.findEventByEventIdAndOrganizer_UserName(eventRequest.getEventId(),name)
@@ -118,10 +115,7 @@ public class EventServiceImpl implements EventService {
             event.setBannerURL(bannerUrl);
         }
 
-        if (logoOrganizeURL != null && !logoOrganizeURL.isEmpty()) {
-            String logoOrganizeUrl = uploadImageToCloudinary(logoOrganizeURL);
-            event.setLogoOrganizerURL(logoOrganizeUrl);
-        }
+
 
         // Lưu thay đổi vào database
         event = eventRepository.save(event);

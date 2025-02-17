@@ -9,7 +9,7 @@ import com.pse.tixclick.payload.response.RefreshTokenResponse;
 import com.pse.tixclick.payload.response.TokenResponse;
 
 public interface AccountService {
-    boolean changePasswordWithOtp(String email, String password);
+    boolean changePasswordWithOtp(String email, String newPassword, String oldPassword);
     AccountDTO myProfile();
 
 
