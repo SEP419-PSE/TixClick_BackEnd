@@ -1,5 +1,6 @@
 package com.pse.tixclick.payload.entity.Company;
 
+import com.pse.tixclick.payload.entity.Account;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -32,12 +33,17 @@ public class Company {
     @Column(columnDefinition = "NVARCHAR(255)", nullable = false)
     private String nationalId;
 
+    @Column
+    private String logoURL;
+
+    @Column
+    private String description;
+
     @Column(columnDefinition = "NVARCHAR(255)", nullable = false)
     private String status;
 
-    @Column(columnDefinition = "NVARCHAR(255)", nullable = false)
-    private String createdBy;
+    @ManyToOne
+    @JoinColumn(name = "representative_id", nullable = false)
+    private Account representativeId;
 
-    @OneToMany(mappedBy = "company")
-    private Collection<Member> members;
 }

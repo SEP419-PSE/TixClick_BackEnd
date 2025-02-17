@@ -49,6 +49,9 @@ public class Account {
     @Column
     LocalDate dob;
 
+    @Column
+    String avatarURL;
+
     @ManyToOne
     @JoinColumn(name = "role_id", nullable = false)
     Role role;

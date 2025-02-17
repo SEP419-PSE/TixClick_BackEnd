@@ -1,6 +1,7 @@
 package com.pse.tixclick.payload.entity.ticket;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.entity.event.EventActivity;
 import com.pse.tixclick.payload.entity.payment.OrderDetail;
 import com.pse.tixclick.payload.entity.seatmap.Seat;
@@ -20,18 +21,10 @@ import java.time.LocalDateTime;
 public class TicketPurchase {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int ticketId;
+    private int ticketPurchaseId;
 
     @Column(nullable = false)
-    private Byte qrCode;
-
-    @Column
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    LocalDateTime checkInTime;
-
-    @Column
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    LocalDateTime checkOutTime;
+    private String qrCode;
 
     @Column(nullable = false)
     private String status;
@@ -48,10 +41,12 @@ public class TicketPurchase {
     @JoinColumn(name="event_activity_id", nullable = false)
     private EventActivity eventActivity;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name="ticket_id", nullable = false)
     private Ticket ticket;
 
-    @OneToOne(mappedBy = "ticketPurchase")
-    private OrderDetail orderDetail;
+    @ManyToOne
+    @JoinColumn(name = "event_id", nullable = false)
+    private Event event;
+
 }
