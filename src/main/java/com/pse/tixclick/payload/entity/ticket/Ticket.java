@@ -59,6 +59,5 @@ public class Ticket {
     @JoinColumn(name="event_activity_id", nullable = false)
     EventActivity eventActivity;
 
-    @OneToOne(mappedBy = "ticket")
-    private TicketPurchase ticketPurchase;
+
 }

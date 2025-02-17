@@ -31,16 +31,15 @@ public class Contract {
     @Column(nullable = false)
     private String contractType;
 
-    @Column(nullable = false)
-    private String createdBy;
-
     @OneToOne
-    @JoinColumn(name="customer_id", nullable = false)
+    @JoinColumn(name="manager_id", nullable = false)
     private Account account;
 
     @OneToOne
     @JoinColumn(name="event_id", nullable = false)
     private Event event;
 
-
+    @ManyToOne
+    @JoinColumn(name="company_id", nullable = false)
+    private Company company;
 }
