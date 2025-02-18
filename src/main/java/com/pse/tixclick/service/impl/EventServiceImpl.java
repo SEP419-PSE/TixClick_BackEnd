@@ -170,6 +170,24 @@ public class EventServiceImpl implements EventService {
         return modelMapper.map(events, new TypeToken<List<EventDTO>>() {}.getType());
     }
 
+    @Override
+    public EventDTO approveEvent(int id) {
+        var context = SecurityContextHolder.getContext();
+        String name = context.getAuthentication().getName();
+        var account = accountRepository.findAccountByUserName(name)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        if(!account.getRole().getRoleName().equals("MANAGER")){
+            throw new AppException(ErrorCode.INVALID_ROLE);
+        }
+
+        var event = eventRepository.findEventByEventId(id)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+
+        event.setStatus("APPROVED");
+        eventRepository.save(event);
+        return modelMapper.map(event, EventDTO.class);
+    }
+
 
     private String uploadImageToCloudinary(MultipartFile file) throws IOException {
         Map uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());

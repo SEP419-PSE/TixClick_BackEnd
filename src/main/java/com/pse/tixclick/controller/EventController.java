@@ -227,4 +227,25 @@ public class EventController {
                         .build()
         );
     }
+
+    @PutMapping("/{id}/approve")
+    public ResponseEntity<ApiResponse<EventDTO>> approveEvent(@PathVariable int id) {
+        try {
+            EventDTO event = eventService.approveEvent(id);
+            return ResponseEntity.ok(
+                    ApiResponse.<EventDTO>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Event approved successfully")
+                            .result(event)
+                            .build()
+            );
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.<EventDTO>builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        }
+    }
 }

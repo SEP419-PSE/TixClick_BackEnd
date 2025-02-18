@@ -9,4 +9,6 @@ import java.util.Optional;
 @Repository
 public interface MemberRepository extends JpaRepository<Member,Integer> {
     Optional<Member> findMemberByAccount_AccountIdAndCompany_CompanyId(Integer accountId, Integer companyId);
+
+    Optional<Member> findMemberByAccount_UserNameAndCompany_CompanyId(String userName, Integer companyId);
 }

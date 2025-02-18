@@ -2,6 +2,7 @@ package com.pse.tixclick.controller;
 
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.payload.dto.AccountDTO;
+import com.pse.tixclick.payload.request.CreateAccountRequest;
 import com.pse.tixclick.payload.request.UpdateAccountRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
 import com.pse.tixclick.service.AccountService;
@@ -86,6 +87,32 @@ public class AccountController {
                     .code(HttpStatus.OK.value())
                     .message("Profile updated successfully")
                     .result(updatedAccount)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+
+        } catch (AppException e) {
+            ApiResponse<AccountDTO> errorResponse = ApiResponse.<AccountDTO>builder()
+                    .code(HttpStatus.BAD_REQUEST.value())
+                    .message(e.getMessage()) // Lỗi từ service
+                    .result(null)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        }
+    }
+
+    @PostMapping("/create-account")
+    public ResponseEntity<ApiResponse<AccountDTO>> createAccount(@RequestBody CreateAccountRequest accountDTO) {
+        try {
+            // Gọi service để tạo tài khoản
+            AccountDTO createdAccount = accountService.createAccount(accountDTO);
+
+            // Tạo phản hồi API
+            ApiResponse<AccountDTO> apiResponse = ApiResponse.<AccountDTO>builder()
+                    .code(HttpStatus.OK.value())
+                    .message("Account created successfully")
+                    .result(createdAccount)
                     .build();
 
             return ResponseEntity.status(HttpStatus.OK).body(apiResponse);

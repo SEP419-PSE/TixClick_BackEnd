@@ -14,5 +14,5 @@ public class MemberDTO {
     private String subRole;
     private int companyId;
     private int accountId;
-
+    private String status;
 }
