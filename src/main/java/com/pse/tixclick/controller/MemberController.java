@@ -73,4 +73,38 @@ public class MemberController {
         }
     }
 
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<ApiResponse<Boolean>> deleteMember(@PathVariable int id) {
+        try {
+            // Gọi service để xóa thành viên
+            boolean isDeleted = memberService.deleteMember(id);
+
+            // Tạo response
+            ApiResponse<Boolean> response = ApiResponse.<Boolean>builder()
+                    .code(HttpStatus.OK.value())
+                    .message("Member deleted successfully")
+                    .result(isDeleted)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+
+        } catch (AppException e) {
+            ApiResponse<Boolean> errorResponse = ApiResponse.<Boolean>builder()
+                    .code(HttpStatus.BAD_REQUEST.value())
+                    .message(e.getMessage()) // Lỗi từ service
+                    .result(null)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        } catch (Exception e) {
+            ApiResponse<Boolean> errorResponse = ApiResponse.<Boolean>builder()
+                    .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .message("An error occurred while processing the request.")
+                    .result(null)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+
 }

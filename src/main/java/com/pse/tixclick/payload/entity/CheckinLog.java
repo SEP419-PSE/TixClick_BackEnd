@@ -1,6 +1,7 @@
 package com.pse.tixclick.payload.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.pse.tixclick.payload.entity.ticket.TicketPurchase;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -30,4 +31,12 @@ public class CheckinLog {
 
     @Column
     private String checkinStatus;
+
+    @ManyToOne
+    @JoinColumn(name = "account_id")
+    private Account account;
+
+    @ManyToOne
+    @JoinColumn(name = "ticket_purchase_id")
+    private TicketPurchase ticketPurchase;
 }

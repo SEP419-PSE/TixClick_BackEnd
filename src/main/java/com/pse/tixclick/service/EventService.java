@@ -24,4 +24,6 @@ public interface EventService {
     List<EventDTO> getEventByDraft();
 
     List<EventDTO> getEventByCompleted();
+
+    EventDTO approveEvent(int id);
 }

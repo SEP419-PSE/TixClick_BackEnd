@@ -7,6 +7,7 @@ import com.pse.tixclick.payload.dto.MemberDTO;
 import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.Company.Company;
 import com.pse.tixclick.payload.entity.Company.Member;
+import com.pse.tixclick.payload.entity.entity_enum.ECompanyStatus;
 import com.pse.tixclick.payload.entity.entity_enum.ESubRole;
 import com.pse.tixclick.payload.request.CreateMemberRequest;
 import com.pse.tixclick.payload.response.MemberDTOResponse;
@@ -40,13 +41,14 @@ public class MemberServiceImpl implements MemberService {
     public MemberDTOResponse createMember(CreateMemberRequest createMemberRequest) {
         Company company = companyRepository.findById(createMemberRequest.getCompanyId())
                 .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_FOUND));
-
+        if(!company.getStatus().equals(ECompanyStatus.ACTIVE)){
+            throw new AppException(ErrorCode.COMPANY_INACTIVE);
+        }
         var context = SecurityContextHolder.getContext();
         String name = context.getAuthentication().getName();
-        Account account = accountRepository.findAccountByUserName(name)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-        var member = memberRepository.findMemberByAccount_AccountIdAndCompany_CompanyId(account.getAccountId(), createMemberRequest.getCompanyId());
+
+        var member = memberRepository.findMemberByAccount_UserNameAndCompany_CompanyId(name, createMemberRequest.getCompanyId());
 
         if (member.isPresent()) {
             if (!(member.get().getSubRole().equals(ESubRole.OWNER.name()) || member.get().getSubRole().equals(ESubRole.ADMIN.name()))) {
@@ -96,7 +98,7 @@ public class MemberServiceImpl implements MemberService {
                 newMember.setSubRole(createMemberRequest.getSubRole());
                 newMember.setCompany(company);
                 newMember.setAccount(invitedAccount);
-
+                newMember.setStatus("ACTIVE");
                 memberRepository.save(newMember);
 
                 // Add the created member to the response list
@@ -104,12 +106,34 @@ public class MemberServiceImpl implements MemberService {
                 memberDTO.setMemberId(newMember.getMemberId());
                 memberDTO.setSubRole(newMember.getSubRole());
                 memberDTO.setAccountId(newMember.getAccount().getAccountId());
+                memberDTO.setCompanyId(newMember.getCompany().getCompanyId());
+                memberDTO.setStatus(newMember.getStatus());
                 createdMembers.add(memberDTO);
             }
         }
 
         // Return the list of created members
         return new MemberDTOResponse(createdMembers,sentEmails); // A response class to return all created members
+    }
+
+    @Override
+    public boolean deleteMember(int id) {
+        Member deleteMember = memberRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
+        Company company = companyRepository.findById(deleteMember.getCompany().getCompanyId())
+                .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_FOUND));
+        var context = SecurityContextHolder.getContext();
+        String name = context.getAuthentication().getName();
+        Member member = memberRepository.findMemberByAccount_UserNameAndCompany_CompanyId(name, company.getCompanyId())
+                .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
+        String subRole = member.getSubRole();
+        if (!subRole.equals(ESubRole.OWNER.name()) && !subRole.equals(ESubRole.ADMIN.name())) {
+            throw new AppException(ErrorCode.INVALID_ROLE);
+        }
+        deleteMember.setStatus("INACTIVE");
+        memberRepository.save(deleteMember);
+        return true;
+
     }
 
 }

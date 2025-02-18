@@ -45,6 +45,8 @@ public enum ErrorCode {
     CANNOT_CREATE_MEMBER(1036, "Không thể tạo thành viên", HttpStatus.BAD_REQUEST),
     INVALID_ROLE(1037, "Vai trò không hợp lệ", HttpStatus.BAD_REQUEST),
     MEMBER_NOT_FOUND(1038, "Không tìm thấy thành viên", HttpStatus.NOT_FOUND),
+    COMPANY_INACTIVE(1039, "Công ty chưa được hoạt động", HttpStatus.BAD_REQUEST),
+    ROLE_NOT_FOUND(1040, "Không tìm thấy vai trò", HttpStatus.NOT_FOUND),
     ;
 
 

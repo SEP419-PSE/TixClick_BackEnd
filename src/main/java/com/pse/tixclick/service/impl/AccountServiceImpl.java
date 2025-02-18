@@ -4,8 +4,11 @@ import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.AccountDTO;
 import com.pse.tixclick.payload.entity.Account;
+import com.pse.tixclick.payload.entity.Role;
+import com.pse.tixclick.payload.request.CreateAccountRequest;
 import com.pse.tixclick.payload.request.UpdateAccountRequest;
 import com.pse.tixclick.repository.AccountRepository;
+import com.pse.tixclick.repository.RoleRepository;
 import com.pse.tixclick.service.AccountService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +28,8 @@ import org.springframework.stereotype.Service;
 public class AccountServiceImpl implements AccountService {
     @Autowired
     private AccountRepository accountRepository;
+    @Autowired
+    private RoleRepository roleRepository;
     @Autowired
     private ModelMapper accountMapper;
 
@@ -60,6 +65,31 @@ public class AccountServiceImpl implements AccountService {
 
         // Sử dụng AccountMapper để chuyển đổi đối tượng Account thành AccountDTO
         return accountMapper.map(user,AccountDTO.class);
+    }
+
+    @Override
+    public AccountDTO createAccount(CreateAccountRequest accountDTO) {
+        // Kiểm tra xem email đã tồn tại chưa
+        if (accountRepository.existsAccountByEmail(accountDTO.getEmail())) {
+            throw new AppException(ErrorCode.EMAIL_TAKEN);
+        }
+
+        // Kiểm tra xem username đã tồn tại chưa
+        if (accountRepository.existsAccountByUserName(accountDTO.getUsername())) {
+            throw new AppException(ErrorCode.USER_EXISTED);
+        }
+        Role role = roleRepository.findRoleByRoleName(accountDTO.getRole())
+                .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
+        // Chuyển đổi CreateAccountRequest thành Account
+        var account = accountMapper.map(accountDTO, Account.class);
+        account.setPassword(new BCryptPasswordEncoder(10).encode("123456"));
+        account.setActive(true);
+        account.setRole(role);
+        // Lưu tài khoản vào database
+        accountRepository.save(account);
+
+        // Trả về thông tin tài khoản sau khi tạo
+        return accountMapper.map(account, AccountDTO.class);
     }
 
     @Override
