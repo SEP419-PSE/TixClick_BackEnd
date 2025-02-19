@@ -248,4 +248,48 @@ public class EventController {
                             .build());
         }
     }
+
+    @GetMapping("/account")
+    public ResponseEntity<ApiResponse<List<EventDTO>>> getAllEventsByAccountId() {
+        List<EventDTO> events = eventService.getAllEventsByAccountId();
+
+        if (events.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.<List<EventDTO>>builder()
+                            .code(HttpStatus.NOT_FOUND.value())
+                            .message("No events found")
+                            .result(null)
+                            .build());
+        }
+
+        return ResponseEntity.ok(
+                ApiResponse.<List<EventDTO>>builder()
+                        .code(HttpStatus.OK.value())
+                        .message("Get all events successfully")
+                        .result(events)
+                        .build()
+        );
+    }
+
+    @GetMapping("/account/{status}")
+    public ResponseEntity<ApiResponse<List<EventDTO>>> getEventsByAccountIdAndStatus(@PathVariable String status) {
+        List<EventDTO> events = eventService.getEventsByAccountIdAndStatus(status);
+
+        if (events.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.<List<EventDTO>>builder()
+                            .code(HttpStatus.NOT_FOUND.value())
+                            .message("No events found with status: " + status)
+                            .result(null)
+                            .build());
+        }
+
+        return ResponseEntity.ok(
+                ApiResponse.<List<EventDTO>>builder()
+                        .code(HttpStatus.OK.value())
+                        .message("Get all events with status: " + status + " successfully")
+                        .result(events)
+                        .build()
+        );
+    }
 }

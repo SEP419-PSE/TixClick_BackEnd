@@ -1,6 +1,7 @@
 package com.pse.tixclick.service;
 
 import com.pse.tixclick.payload.dto.EventDTO;
+import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.request.create.CreateEventRequest;
 import com.pse.tixclick.payload.request.update.UpdateEventRequest;
 import org.springframework.web.multipart.MultipartFile;
@@ -26,4 +27,8 @@ public interface EventService {
     List<EventDTO> getEventByCompleted();
 
     EventDTO approveEvent(int id);
+
+    List<EventDTO> getAllEventsByAccountId();
+
+    List<EventDTO> getEventsByAccountIdAndStatus(String status);
 }

@@ -2,6 +2,7 @@ package com.pse.tixclick.service.impl;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import com.pse.tixclick.config.Util;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.EventDTO;
@@ -17,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -33,6 +35,10 @@ public class EventServiceImpl implements EventService {
     EventCategoryRepository eventCategoryRepository;
     AccountRepository accountRepository;
     Cloudinary cloudinary;
+
+    @Autowired
+    Util util;
+
     @Override
     public EventDTO createEvent(CreateEventRequest request, MultipartFile logoURL, MultipartFile bannerURL) throws IOException {
         if (request == null || request.getEventName() == null || request.getCategoryId() == 0) {
@@ -188,6 +194,21 @@ public class EventServiceImpl implements EventService {
         return modelMapper.map(event, EventDTO.class);
     }
 
+    @Override
+    public List<EventDTO> getAllEventsByAccountId() {
+        int uId = util.getAccountFromAuthentication().getAccountId();
+        List<Event> events = eventRepository.findEventByOrganizerId(uId)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+        return modelMapper.map(events, new TypeToken<List<EventDTO>>() {}.getType());
+    }
+
+    @Override
+    public List<EventDTO> getEventsByAccountIdAndStatus(String status) {
+        int uId = util.getAccountFromAuthentication().getAccountId();
+        List<Event> events = eventRepository.findEventByOrganizerIdAndStatus(uId, status)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+        return modelMapper.map(events, new TypeToken<List<EventDTO>>() {}.getType());
+    }
 
     private String uploadImageToCloudinary(MultipartFile file) throws IOException {
         Map uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
