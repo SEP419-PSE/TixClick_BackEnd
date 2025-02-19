@@ -2,8 +2,8 @@ package com.pse.tixclick.controller;
 
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.payload.dto.EventDTO;
-import com.pse.tixclick.payload.request.CreateEventRequest;
-import com.pse.tixclick.payload.request.UpdateEventRequest;
+import com.pse.tixclick.payload.request.create.CreateEventRequest;
+import com.pse.tixclick.payload.request.update.UpdateEventRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
 import com.pse.tixclick.service.EventService;
 import lombok.extern.slf4j.Slf4j;

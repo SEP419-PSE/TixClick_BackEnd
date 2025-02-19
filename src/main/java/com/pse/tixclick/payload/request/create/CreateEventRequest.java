@@ -1,4 +1,4 @@
-package com.pse.tixclick.payload.request;
+package com.pse.tixclick.payload.request.create;
 
 import com.pse.tixclick.payload.entity.entity_enum.ETypeEvent;
 import lombok.*;
@@ -9,11 +9,9 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class UpdateEventRequest {
-    int eventId;
+public class CreateEventRequest {
     String eventName;
     String location;
-    String status;
     String typeEvent;
     String description;
     int categoryId;

@@ -1,8 +1,8 @@
 package com.pse.tixclick.service;
 
 import com.pse.tixclick.payload.dto.EventDTO;
-import com.pse.tixclick.payload.request.CreateEventRequest;
-import com.pse.tixclick.payload.request.UpdateEventRequest;
+import com.pse.tixclick.payload.request.create.CreateEventRequest;
+import com.pse.tixclick.payload.request.update.UpdateEventRequest;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;

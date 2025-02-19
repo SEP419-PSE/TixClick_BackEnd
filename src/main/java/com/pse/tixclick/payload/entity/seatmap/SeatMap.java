@@ -7,6 +7,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 
 @Getter
@@ -18,37 +19,39 @@ import java.util.Collection;
 public class SeatMap {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    int seatMapId;
+    private int seatMapId;
 
     @Column(columnDefinition = "NVARCHAR(255)")
-    String seatMapName;
+    private String seatMapName;
 
     @Column
-    String seatMapWidth;
+    private String seatMapWidth;
 
     @Column
-    String seatMapHeight;
-
-    @Column
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    String createdAt;
+    private String seatMapHeight;
 
     @Column
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    String updatedAt;
+    private LocalDateTime createdAt;
 
     @Column
-    boolean status;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime updatedAt;
+
+    @Column
+    private boolean status;
 
     @ManyToOne
     @JoinColumn(name = "background_id", nullable = false)
-    Background background;
-
-    @OneToOne
-    @JoinColumn(name = "event_activity_id", nullable = false)
-    EventActivity eventActivity;
+    private Background background;
 
     @OneToOne
     @JoinColumn(name = "event_id", nullable = false)
     private Event event;
+
+    @OneToMany(mappedBy = "seatMap")
+    private Collection<Zone> zones;
+
+    @OneToMany(mappedBy = "seatMap")
+    private Collection<Icon> icons;
 }

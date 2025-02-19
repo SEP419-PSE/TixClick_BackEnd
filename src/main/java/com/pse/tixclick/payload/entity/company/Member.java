@@ -1,6 +1,7 @@
 package com.pse.tixclick.payload.entity.company;
 
-import com.pse.tixclick.payload.entity.event.EventActivity;
+import com.pse.tixclick.payload.entity.Account;
+import com.pse.tixclick.payload.entity.entity_enum.ESubRole;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -11,19 +12,23 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-public class MemberActivity {
+public class Member {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    int memberActivityId;
+    int memberId;
+
+    @Column
+    String subRole;
 
     @ManyToOne
-    @JoinColumn(name = "member_id", nullable = false)
-    Member member;
+    @JoinColumn(name = "company_id", nullable = false)
+    Company company;
 
     @ManyToOne
-    @JoinColumn(name = "event_activity_id", nullable = false)
-    EventActivity eventActivity;
+    @JoinColumn(name = "account_id", nullable = false)
+    Account account;
 
     @Column
     String status;
 }
+
