@@ -47,6 +47,8 @@ public enum ErrorCode {
     MEMBER_NOT_FOUND(1038, "Không tìm thấy thành viên", HttpStatus.NOT_FOUND),
     COMPANY_INACTIVE(1039, "Công ty chưa được hoạt động", HttpStatus.BAD_REQUEST),
     ROLE_NOT_FOUND(1040, "Không tìm thấy vai trò", HttpStatus.NOT_FOUND),
+    BACKGROUND_NOT_FOUND(1041, "Không tìm thấy background", HttpStatus.NOT_FOUND),
+    SEATMAP_NOT_FOUND(1042, "Không tìm thấy seatmap", HttpStatus.NOT_FOUND),
     ;
 
 

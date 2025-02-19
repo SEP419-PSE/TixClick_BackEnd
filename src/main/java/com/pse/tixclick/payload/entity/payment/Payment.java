@@ -2,14 +2,12 @@ package com.pse.tixclick.payload.entity.payment;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.pse.tixclick.payload.entity.Account;
-import com.pse.tixclick.payload.entity.Company.Contract;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
-import java.util.Date;
 
 @Getter
 @Setter

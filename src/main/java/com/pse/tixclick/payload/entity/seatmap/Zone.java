@@ -19,53 +19,53 @@ import java.util.Collection;
 public class Zone {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    int zoneId;
+    private int zoneId;
 
     @Column(columnDefinition = "NVARCHAR(255)")
-    String zoneName;
+    private String zoneName;
 
     @Column
-    String xPosition;
+    private String xPosition;
 
     @Column
-    String yPosition;
+    private String yPosition;
 
     @Column
-    String width;
+    private String width;
 
     @Column
-    String height;
+    private String height;
 
     @Column
-    int quantity;
+    private int quantity;
 
     @Column
-    int availableQuantity;
+    private int availableQuantity;
 
     @Column
-    String rows;
+    private String rows;
 
     @Column
-    String columns;
-
-    @Column
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    LocalDateTime createdDate;
+    private String columns;
 
     @Column
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    LocalDateTime updatedDate;
+    private LocalDateTime createdDate;
 
     @Column
-    boolean status;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime updatedDate;
+
+    @Column
+    private boolean status;
 
     @ManyToOne
     @JoinColumn(name = "seatmap_id", nullable = false)
-    SeatMap seatMap;
+    private SeatMap seatMap;
 
     @ManyToOne
     @JoinColumn(name = "zone_type_id", nullable = false)
-    ZoneType zoneType;
+    private ZoneType zoneType;
 
     @OneToMany(mappedBy = "zone")
     private Collection<TicketPurchase> ticketPurchases;

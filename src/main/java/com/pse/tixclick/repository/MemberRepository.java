@@ -1,6 +1,6 @@
 package com.pse.tixclick.repository;
 
-import com.pse.tixclick.payload.entity.Company.Member;
+import com.pse.tixclick.payload.entity.company.Member;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

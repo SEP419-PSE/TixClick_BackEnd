@@ -3,7 +3,7 @@ package com.pse.tixclick.controller;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.payload.dto.AccountDTO;
 import com.pse.tixclick.payload.request.CreateAccountRequest;
-import com.pse.tixclick.payload.request.UpdateAccountRequest;
+import com.pse.tixclick.payload.request.update.UpdateAccountRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
 import com.pse.tixclick.service.AccountService;
 import lombok.extern.slf4j.Slf4j;

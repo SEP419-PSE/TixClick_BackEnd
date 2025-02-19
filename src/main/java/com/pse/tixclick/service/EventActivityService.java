@@ -1,7 +1,7 @@
 package com.pse.tixclick.service;
 
 import com.pse.tixclick.payload.dto.EventActivityDTO;
-import com.pse.tixclick.payload.request.CreateEventActivityRequest;
+import com.pse.tixclick.payload.request.create.CreateEventActivityRequest;
 
 import java.util.List;
 
