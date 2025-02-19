@@ -26,6 +26,7 @@ public class Event {
 
     @Column(columnDefinition = "NVARCHAR(255)")
     String locationName;
+
     @Column(columnDefinition = "NVARCHAR(255)")
     String location;
 
