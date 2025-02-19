@@ -16,6 +16,9 @@ public class MemberActivity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     int memberActivityId;
 
+    @Column
+    String status;
+
     @ManyToOne
     @JoinColumn(name = "member_id", nullable = false)
     Member member;
@@ -24,6 +27,4 @@ public class MemberActivity {
     @JoinColumn(name = "event_activity_id", nullable = false)
     EventActivity eventActivity;
 
-    @Column
-    String status;
 }
