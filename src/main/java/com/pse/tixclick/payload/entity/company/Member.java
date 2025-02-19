@@ -1,7 +1,6 @@
 package com.pse.tixclick.payload.entity.company;
 
 import com.pse.tixclick.payload.entity.Account;
-import com.pse.tixclick.payload.entity.entity_enum.ESubRole;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
