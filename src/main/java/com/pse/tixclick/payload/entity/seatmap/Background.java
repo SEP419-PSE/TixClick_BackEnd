@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.*;
 
+import java.util.Collection;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -13,15 +15,17 @@ import lombok.experimental.*;
 public class Background {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    int backgroundId;
+    private int backgroundId;
 
     @Column(columnDefinition = "NVARCHAR(255)")
-    String backgroundName;
+    private String backgroundName;
 
     @Column
-    String Type;
+    private String Type;
 
     @Column
-    String value;
+    private String value;
 
+    @OneToMany(mappedBy = "background")
+    private Collection<SeatMap> seatMaps;
 }

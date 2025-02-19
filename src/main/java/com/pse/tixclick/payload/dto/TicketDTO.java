@@ -31,7 +31,6 @@ public class TicketDTO {
     int minQuantity;
     int maxQuantity;
     boolean status;
-
     int accountId;
     int eventActivityId;
 }

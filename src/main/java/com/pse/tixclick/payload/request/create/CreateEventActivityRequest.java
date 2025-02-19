@@ -1,4 +1,4 @@
-package com.pse.tixclick.payload.request;
+package com.pse.tixclick.payload.request.create;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 import lombok.experimental.FieldDefaults;

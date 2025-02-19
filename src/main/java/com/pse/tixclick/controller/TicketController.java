@@ -2,7 +2,7 @@ package com.pse.tixclick.controller;
 
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.payload.dto.TicketDTO;
-import com.pse.tixclick.payload.request.CreateTicketRequest;
+import com.pse.tixclick.payload.request.create.CreateTicketRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
 import com.pse.tixclick.service.TicketService;
 import lombok.AccessLevel;

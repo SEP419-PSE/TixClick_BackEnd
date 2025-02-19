@@ -14,9 +14,9 @@ import lombok.experimental.FieldDefaults;
 public class ZoneType {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    int typeId;
+    private int typeId;
 
     @Column
-    EZoneType typeName;
+    private EZoneType typeName;
 
 }

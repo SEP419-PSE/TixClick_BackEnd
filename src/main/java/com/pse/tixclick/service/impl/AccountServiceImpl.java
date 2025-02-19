@@ -6,7 +6,7 @@ import com.pse.tixclick.payload.dto.AccountDTO;
 import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.Role;
 import com.pse.tixclick.payload.request.CreateAccountRequest;
-import com.pse.tixclick.payload.request.UpdateAccountRequest;
+import com.pse.tixclick.payload.request.update.UpdateAccountRequest;
 import com.pse.tixclick.repository.AccountRepository;
 import com.pse.tixclick.repository.RoleRepository;
 import com.pse.tixclick.service.AccountService;

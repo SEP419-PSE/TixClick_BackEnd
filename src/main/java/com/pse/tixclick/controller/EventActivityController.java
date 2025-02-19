@@ -2,7 +2,7 @@ package com.pse.tixclick.controller;
 
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.payload.dto.EventActivityDTO;
-import com.pse.tixclick.payload.request.CreateEventActivityRequest;
+import com.pse.tixclick.payload.request.create.CreateEventActivityRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
 import com.pse.tixclick.service.EventActivityService;
 import lombok.AccessLevel;

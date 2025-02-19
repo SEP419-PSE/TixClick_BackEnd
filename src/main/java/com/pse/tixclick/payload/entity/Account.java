@@ -1,10 +1,10 @@
 package com.pse.tixclick.payload.entity;
 
-import com.pse.tixclick.payload.entity.Company.Contract;
+import com.pse.tixclick.payload.entity.company.Contract;
 import com.pse.tixclick.payload.entity.payment.Order;
 import com.pse.tixclick.payload.entity.payment.Payment;
 import com.pse.tixclick.payload.entity.payment.Transaction;
-import com.pse.tixclick.payload.entity.Company.Member;
+import com.pse.tixclick.payload.entity.company.Member;
 import com.pse.tixclick.payload.entity.payment.Voucher;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
 import jakarta.persistence.*;

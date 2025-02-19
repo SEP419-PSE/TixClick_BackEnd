@@ -46,6 +46,4 @@ public class EventActivity {
     @ManyToOne
     @JoinColumn(name = "created_by", nullable = false)
     Account createdBy;
-
-
 }

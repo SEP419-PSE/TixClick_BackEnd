@@ -1,7 +1,7 @@
 package com.pse.tixclick.payload.entity.event;
 
 import com.pse.tixclick.payload.entity.Account;
-import com.pse.tixclick.payload.entity.Company.Contract;
+import com.pse.tixclick.payload.entity.company.Contract;
 import com.pse.tixclick.payload.entity.seatmap.SeatMap;
 import jakarta.persistence.*;
 import lombok.*;

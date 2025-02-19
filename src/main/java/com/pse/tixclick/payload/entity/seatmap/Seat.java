@@ -19,24 +19,24 @@ import java.time.LocalDateTime;
 public class Seat {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    int seatId;
+    private int seatId;
 
     @Column
-    String rowNumber;
+    private String rowNumber;
 
     @Column
-    String columnNumber;
-
-    @Column
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    LocalDateTime createdDate;
+    private String columnNumber;
 
     @Column
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    LocalDateTime updatedDate;
+    private LocalDateTime createdDate;
 
     @Column
-    boolean status;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime updatedDate;
+
+    @Column
+    private boolean status;
 
     @ManyToOne
     @JoinColumn(name="zone_id", nullable = false)
