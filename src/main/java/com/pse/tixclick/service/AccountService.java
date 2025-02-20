@@ -1,7 +1,7 @@
 package com.pse.tixclick.service;
 
 import com.pse.tixclick.payload.dto.AccountDTO;
-import com.pse.tixclick.payload.request.CreateAccountRequest;
+import com.pse.tixclick.payload.request.create.CreateAccountRequest;
 import com.pse.tixclick.payload.request.update.UpdateAccountRequest;
 
 public interface AccountService {

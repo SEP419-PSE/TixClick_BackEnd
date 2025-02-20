@@ -5,7 +5,7 @@ import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.TicketDTO;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
 import com.pse.tixclick.payload.request.create.CreateTicketRequest;
-import com.pse.tixclick.payload.request.UpdateTicketRequest;
+import com.pse.tixclick.payload.request.update.UpdateTicketRequest;
 import com.pse.tixclick.repository.AccountRepository;
 import com.pse.tixclick.repository.EventActivityRepository;
 import com.pse.tixclick.repository.TicketRepository;

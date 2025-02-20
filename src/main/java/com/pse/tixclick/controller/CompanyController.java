@@ -2,7 +2,8 @@ package com.pse.tixclick.controller;
 
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.payload.dto.CompanyDTO;
-import com.pse.tixclick.payload.request.CreateCompanyRequest;
+import com.pse.tixclick.payload.request.create.CreateCompanyRequest;
+import com.pse.tixclick.payload.request.update.UpdateCompanyRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
 import com.pse.tixclick.service.CompanyService;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,27 @@ public class CompanyController {
                     ApiResponse.<CompanyDTO>builder()
                             .code(HttpStatus.OK.value())
                             .message("Company created successfully")
+                            .result(companyDTO)
+                            .build()
+            );
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST.value())
+                    .body(ApiResponse.<CompanyDTO>builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        }
+    }
+
+    @PutMapping("/update/{id}")
+    public ResponseEntity<ApiResponse<CompanyDTO>> updateCompany(@RequestBody UpdateCompanyRequest updateCompanyRequest, @PathVariable int id) {
+        try {
+            CompanyDTO companyDTO = companyService.updateCompany(updateCompanyRequest, id);
+            return ResponseEntity.ok(
+                    ApiResponse.<CompanyDTO>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Company updated successfully")
                             .result(companyDTO)
                             .build()
             );

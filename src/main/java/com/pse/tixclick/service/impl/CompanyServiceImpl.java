@@ -8,7 +8,8 @@ import com.pse.tixclick.payload.entity.company.CompanyAccount;
 import com.pse.tixclick.payload.entity.company.Member;
 import com.pse.tixclick.payload.entity.entity_enum.ECompanyStatus;
 import com.pse.tixclick.payload.entity.entity_enum.ESubRole;
-import com.pse.tixclick.payload.request.CreateCompanyRequest;
+import com.pse.tixclick.payload.request.create.CreateCompanyRequest;
+import com.pse.tixclick.payload.request.update.UpdateCompanyRequest;
 import com.pse.tixclick.repository.AccountRepository;
 import com.pse.tixclick.repository.CompanyAccountRepository;
 import com.pse.tixclick.repository.CompanyRepository;
@@ -69,5 +70,25 @@ public class CompanyServiceImpl implements CompanyService {
         memberRepository.save(member);
         return modelMapper.map(company, CompanyDTO.class);
 
+    }
+
+    @Override
+    public CompanyDTO updateCompany(UpdateCompanyRequest updateCompanyRequest, int id) {
+        var context = SecurityContextHolder.getContext();
+        String name = context.getAuthentication().getName();
+
+        Company company = companyRepository.findCompanyByCompanyIdAndRepresentativeId_UserName(id, name)
+                .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_EXISTED));
+
+        company.setCompanyName(updateCompanyRequest.getCompanyName());
+        company.setDescription(updateCompanyRequest.getDescription());
+        company.setCodeTax(updateCompanyRequest.getCodeTax());
+        company.setBankingCode(updateCompanyRequest.getBankingCode());
+        company.setBankingName(updateCompanyRequest.getBankingName());
+        company.setNationalId(updateCompanyRequest.getNationalId());
+        company.setLogoURL(updateCompanyRequest.getLogoURL());
+        companyRepository.save(company);
+
+        return modelMapper.map(company, CompanyDTO.class);
     }
 }
