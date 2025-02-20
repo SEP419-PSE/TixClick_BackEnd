@@ -30,6 +30,8 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -60,7 +62,11 @@ public class AuthenServiceImpl implements AuthenService {
     private final ConcurrentHashMap<String, Long> otpExpirationStore = new ConcurrentHashMap<>();  // Để lưu thời gian hết hạ
 
     @Autowired
+    private RedisTemplate<String, String> redisTemplate;
+    @Autowired
     Jwt jwt;
+    @Autowired
+    StringRedisTemplate stringRedisTemplate;
     @Autowired
     AccountRepository userRepository;
     @Autowired
@@ -75,7 +81,7 @@ public class AuthenServiceImpl implements AuthenService {
     public TokenResponse login(LoginRequest loginRequest) {
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
 
-        // Kiểm tra người dùng có tồn tại hay không
+        // Kiểm tra người dùng có tồn tại không
         var user = userRepository
                 .findAccountByUserName(loginRequest.getUserName())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
@@ -85,31 +91,26 @@ public class AuthenServiceImpl implements AuthenService {
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
 
-        // Xóa refresh token cũ (nếu có)
-        RefreshToken refreshTokenOld = refreshTokenRepository.findRefreshTokenByUserName(user.getUserName())
-                .orElse(null); // Có thể trả về null nếu không có refresh token cũ
+        // Xóa Refresh Token cũ trên Redis (nếu có)
+        String key = "REFRESH_TOKEN:" + user.getUserName();
+        redisTemplate.delete(key);
 
-        if (refreshTokenOld != null) {
-            refreshTokenRepository.delete(refreshTokenOld);
-        }
-
-        // Tạo mới bộ token (access token và refresh token)
+        // Tạo mới Access Token & Refresh Token
         var tokenPair = jwt.generateTokens(user);
 
-        // Tạo mới refresh token và lưu vào cơ sở dữ liệu
-        RefreshToken refreshToken = new RefreshToken();
-        refreshToken.setToken(tokenPair.refreshToken().token());
-        refreshToken.setExpiryDate(tokenPair.refreshToken().expiryDate().toInstant());
-        refreshToken.setUserName(user.getUserName());
-        refreshTokenRepository.save(refreshToken);
+        // Lưu Refresh Token vào Redis với thời gian hết hạn 7 ngày (1 tuần)
+        long expirationDays = 7; // 7 ngày
+        redisTemplate.opsForValue().set(key, tokenPair.refreshToken().token(), expirationDays, TimeUnit.DAYS);
 
-        // Trả về TokenResponse chứa access token và refresh token
+
+        // Trả về TokenResponse chứa Access Token & Refresh Token
         return TokenResponse.builder()
                 .accessToken(tokenPair.accessToken().token())
                 .refreshToken(tokenPair.refreshToken().token())
                 .status(user.isActive())
                 .build();
     }
+
 
 
     @Override
@@ -143,47 +144,49 @@ public class AuthenServiceImpl implements AuthenService {
 
     @Override
     public RefreshTokenResponse refreshToken(IntrospectRequest refreshTokenRequest) throws JOSEException, ParseException {
+        // Lấy refresh token từ request
+        String refreshToken = refreshTokenRequest.getToken();
 
-        RefreshToken refreshToken = refreshTokenRepository.findRefreshTokenByToken(refreshTokenRequest.getToken())
-                .orElseThrow(() -> new AppException(ErrorCode.INVALID_REFRESH_TOKEN));
+        // Giải mã refresh token để lấy username
+        int userId = jwt.extractUserId(refreshToken);
 
-        // Kiểm tra xem refresh token có còn hợp lệ không
-        boolean isTokenValid = jwt.verifyToken(refreshToken.getToken()) != null;
-        if (!isTokenValid) {
+        Account account = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+
+        if (account.getUserName() == null) {
             throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
         }
 
-        // Lấy user từ refresh token
-        String userName = refreshToken.getUserName();
-        var user = userRepository
-                .findAccountByUserName(userName)
+        // Tạo key Redis theo username
+        String refreshTokenKey = "REFRESH_TOKEN:" + account.getUserName();
+
+        // Kiểm tra refresh token có tồn tại trong Redis không
+        String storedToken = redisTemplate.opsForValue().get(refreshTokenKey);
+        if (storedToken == null || !storedToken.equals(refreshToken)) {
+            throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
+        }
+
+        // Tạo access token mới
+        var user = userRepository.findAccountByUserName(account.getUserName())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-        // Xóa refresh token cũ khỏi cơ sở dữ liệu
-        refreshTokenRepository.delete(refreshToken);
-
-        // Tạo refresh token mới và access token mới
         var tokenPair = jwt.generateTokens(user);
 
-        // Lưu refresh token mới vào cơ sở dữ liệu
-        RefreshToken newRefreshToken = new RefreshToken();
-        newRefreshToken.setToken(tokenPair.refreshToken().token());
-        newRefreshToken.setExpiryDate(tokenPair.refreshToken().expiryDate().toInstant());
-        newRefreshToken.setUserName(user.getUserName());
-        refreshTokenRepository.save(newRefreshToken);
+        // Cập nhật refresh token mới vào Redis
+        long expirationDays = 7; // Refresh token hết hạn sau 7 ngày
+        redisTemplate.opsForValue().set(refreshTokenKey, tokenPair.refreshToken().token(), expirationDays, TimeUnit.DAYS);
 
-        // Trả về access token và thời gian hết hạn của access token
+        // Trả về access token mới
         return RefreshTokenResponse.builder()
                 .accessToken(tokenPair.accessToken().token())
                 .accessExpiryTime(tokenPair.accessToken().expiryDate())
                 .build();
     }
 
+
+
     @Override
-    public boolean
-
-
-    register(SignUpRequest signUpRequest) {
+    public boolean register(SignUpRequest signUpRequest) {
 
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
 
@@ -219,18 +222,18 @@ public class AuthenServiceImpl implements AuthenService {
     public void createAndSendOTP(String email) throws MessagingException {
         String otpCode = generateOTP();  // Tạo OTP
 
-        // Kiểm tra người dùng có tồn tại trong cơ sở dữ liệu không
+        // Kiểm tra người dùng có tồn tại không
         var user = userRepository.findAccountByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-        if(user.isActive() == true){
+
+        if (user.isActive()) {
             throw new AppException(ErrorCode.USER_ACTIVE);
         }
-        // Lưu OTP vào bộ nhớ (ConcurrentHashMap) với thời gian hết hạn là 5 phút
-        otpStore.put(email, otpCode);
-        otpExpirationStore.put(email, System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(5)); // Hết hạn sau 5 phút
+
+        // Lưu OTP vào Redis với thời gian hết hạn là 5 phút
+        stringRedisTemplate.opsForValue().set("OTP:" + email, otpCode, 5, TimeUnit.MINUTES);
 
         // Gửi OTP qua email
-        String message = "Your OTP code is: " + otpCode;
         emailService.sendOTPtoActiveAccount(email, otpCode, user.getUserName());
     }
 
