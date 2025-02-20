@@ -4,11 +4,13 @@ import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.CompanyDTO;
 import com.pse.tixclick.payload.entity.company.Company;
+import com.pse.tixclick.payload.entity.company.CompanyAccount;
 import com.pse.tixclick.payload.entity.company.Member;
 import com.pse.tixclick.payload.entity.entity_enum.ECompanyStatus;
 import com.pse.tixclick.payload.entity.entity_enum.ESubRole;
 import com.pse.tixclick.payload.request.CreateCompanyRequest;
 import com.pse.tixclick.repository.AccountRepository;
+import com.pse.tixclick.repository.CompanyAccountRepository;
 import com.pse.tixclick.repository.CompanyRepository;
 import com.pse.tixclick.repository.MemberRepository;
 import com.pse.tixclick.service.CompanyService;
@@ -17,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.modelmapper.ModelMapper;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -26,6 +29,7 @@ public class CompanyServiceImpl implements CompanyService {
     CompanyRepository companyRepository;
     AccountRepository accountRepository;
     MemberRepository memberRepository;
+    CompanyAccountRepository companyAccountRepository;
     ModelMapper modelMapper;
 
     @Override
@@ -47,6 +51,17 @@ public class CompanyServiceImpl implements CompanyService {
         company.setLogoURL(createCompanyRequest.getLogoURL());
         company.setStatus(ECompanyStatus.INACTIVE);
         companyRepository.save(company);
+
+        String generatedUsername = company.getCompanyName().toLowerCase().replaceAll("\\s+", "") + (int)(Math.random() * 1000);
+
+
+        CompanyAccount companyAccount = new CompanyAccount();
+        companyAccount.setCompany(company);
+        companyAccount.setAccount(account);
+        companyAccount.setUsername(generatedUsername);
+        companyAccount.setPassword(new BCryptPasswordEncoder(10).encode("123456"));
+        companyAccountRepository.save(companyAccount);
+
         Member member = new Member();
         member.setCompany(company);
         member.setSubRole(ESubRole.OWNER.name());
