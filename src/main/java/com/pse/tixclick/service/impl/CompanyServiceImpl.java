@@ -6,15 +6,18 @@ import com.pse.tixclick.payload.dto.CompanyDTO;
 import com.pse.tixclick.payload.entity.company.Company;
 import com.pse.tixclick.payload.entity.company.CompanyAccount;
 import com.pse.tixclick.payload.entity.company.Member;
+import com.pse.tixclick.payload.entity.entity_enum.CompanyVerificationStatus;
 import com.pse.tixclick.payload.entity.entity_enum.ECompanyStatus;
 import com.pse.tixclick.payload.entity.entity_enum.ESubRole;
 import com.pse.tixclick.payload.request.create.CreateCompanyRequest;
+import com.pse.tixclick.payload.request.create.CreateCompanyVerificationRequest;
 import com.pse.tixclick.payload.request.update.UpdateCompanyRequest;
 import com.pse.tixclick.repository.AccountRepository;
 import com.pse.tixclick.repository.CompanyAccountRepository;
 import com.pse.tixclick.repository.CompanyRepository;
 import com.pse.tixclick.repository.MemberRepository;
 import com.pse.tixclick.service.CompanyService;
+import com.pse.tixclick.service.CompanyVerificationService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -32,6 +35,7 @@ public class CompanyServiceImpl implements CompanyService {
     MemberRepository memberRepository;
     CompanyAccountRepository companyAccountRepository;
     ModelMapper modelMapper;
+    CompanyVerificationService companyVerificationService;
 
     @Override
     public CompanyDTO createCompany(CreateCompanyRequest createCompanyRequest) {
@@ -68,6 +72,13 @@ public class CompanyServiceImpl implements CompanyService {
         member.setSubRole(ESubRole.OWNER.name());
         member.setAccount(account);
         memberRepository.save(member);
+
+        CreateCompanyVerificationRequest createCompanyVerificationRequest = new CreateCompanyVerificationRequest();
+        createCompanyVerificationRequest.setCompanyId(company.getCompanyId());
+        createCompanyVerificationRequest.setStatus(CompanyVerificationStatus.PENDING);
+
+        companyVerificationService.createCompanyVerification(createCompanyVerificationRequest);
+
         return modelMapper.map(company, CompanyDTO.class);
 
     }
@@ -90,5 +101,10 @@ public class CompanyServiceImpl implements CompanyService {
         companyRepository.save(company);
 
         return modelMapper.map(company, CompanyDTO.class);
+    }
+
+    @Override
+    public String approveCompany(String status) {
+        return null;
     }
 }

@@ -8,4 +8,6 @@ public interface CompanyService {
     CompanyDTO createCompany(CreateCompanyRequest createCompanyRequest);
 
     CompanyDTO updateCompany(UpdateCompanyRequest updateCompanyRequest, int id);
+
+    String approveCompany(String status);
 }
