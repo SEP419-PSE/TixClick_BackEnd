@@ -79,7 +79,7 @@ public class CompanyServiceImpl implements CompanyService {
 
         Member member = new Member();
         member.setCompany(company);
-        member.setSubRole(ESubRole.OWNER.name());
+        member.setSubRole(ESubRole.OWNER);
         member.setAccount(account);
         memberRepository.save(member);
 

@@ -7,10 +7,12 @@ import com.pse.tixclick.config.Util;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.EventDTO;
+import com.pse.tixclick.payload.entity.entity_enum.ECompanyStatus;
 import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.request.create.CreateEventRequest;
 import com.pse.tixclick.payload.request.update.UpdateEventRequest;
 import com.pse.tixclick.repository.AccountRepository;
+import com.pse.tixclick.repository.CompanyRepository;
 import com.pse.tixclick.repository.EventCategoryRepository;
 import com.pse.tixclick.repository.EventRepository;
 import com.pse.tixclick.service.EventService;
@@ -38,7 +40,7 @@ public class EventServiceImpl implements EventService {
     EventCategoryRepository eventCategoryRepository;
     AccountRepository accountRepository;
     CloudinaryService cloudinary;
-
+    CompanyRepository companyRepository;
     @Autowired
     Util util;
 
@@ -53,7 +55,13 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
         var category = eventCategoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
-
+        var company = companyRepository.findCompanyByCompanyIdAndRepresentativeId_UserName(request.getCompanyId(),name)
+                .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_FOUND));
+        if(company.getStatus()!= ECompanyStatus.ACTIVE){
+            throw new AppException(ErrorCode.COMPANY_NOT_ACTIVE);
+        }else if(company.getRepresentativeId().getAccountId() != organnizer.getAccountId()){
+            throw new AppException(ErrorCode.INVALID_COMPANY);
+        }
         // Upload từng ảnh lên Cloudinary
         String logocode = cloudinary.uploadImageToCloudinary(logoURL);
         String bannercode = cloudinary.uploadImageToCloudinary(bannerURL);
@@ -68,6 +76,7 @@ public class EventServiceImpl implements EventService {
         event.setLogoURL(logocode);
         event.setBannerURL(bannercode);
         event.setOrganizer(organnizer);
+        event.setCompany(company);
 
 
         // Lưu vào database
@@ -213,7 +222,15 @@ public class EventServiceImpl implements EventService {
         return modelMapper.map(events, new TypeToken<List<EventDTO>>() {}.getType());
     }
 
+    @Override
+    public List<EventDTO> getEventsByCompanyId(int companyId) {
 
+
+        List<Event> events = eventRepository.findEventsByCompany_CompanyId(companyId)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+        return modelMapper.map(events, new TypeToken<List<EventDTO>>() {}.getType());
+
+    }
 
 
 }

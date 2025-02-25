@@ -8,7 +8,9 @@ import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.company.Company;
 import com.pse.tixclick.payload.entity.company.Member;
 import com.pse.tixclick.payload.entity.entity_enum.ECompanyStatus;
+import com.pse.tixclick.payload.entity.entity_enum.EStatus;
 import com.pse.tixclick.payload.entity.entity_enum.ESubRole;
+import com.pse.tixclick.payload.request.create.AddMemberRequest;
 import com.pse.tixclick.payload.request.create.CreateMemberRequest;
 import com.pse.tixclick.payload.response.MemberDTOResponse;
 import com.pse.tixclick.repository.AccountRepository;
@@ -27,6 +29,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -39,6 +42,7 @@ public class MemberServiceImpl implements MemberService {
     MemberRepository memberRepository;
     EmailService emailService;
     ModelMapper modelMapper;
+
     @Override
     public MemberDTOResponse createMember(CreateMemberRequest createMemberRequest) {
         Company company = companyRepository.findById(createMemberRequest.getCompanyId())
@@ -97,19 +101,19 @@ public class MemberServiceImpl implements MemberService {
             if (!skipThisEmail && invitedAccount != null) {
                 // Create and save the new member for the company
                 Member newMember = new Member();
-                newMember.setSubRole(createMemberRequest.getSubRole());
+                newMember.setSubRole(ESubRole.valueOf(createMemberRequest.getSubRole()));
                 newMember.setCompany(company);
                 newMember.setAccount(invitedAccount);
-                newMember.setStatus("ACTIVE");
+                newMember.setStatus(EStatus.ACTIVE);
                 memberRepository.save(newMember);
 
                 // Add the created member to the response list
                 MemberDTO memberDTO = new MemberDTO();
                 memberDTO.setMemberId(newMember.getMemberId());
-                memberDTO.setSubRole(newMember.getSubRole());
+                memberDTO.setSubRole(String.valueOf(newMember.getSubRole()));
                 memberDTO.setAccountId(newMember.getAccount().getAccountId());
                 memberDTO.setCompanyId(newMember.getCompany().getCompanyId());
-                memberDTO.setStatus(newMember.getStatus());
+                memberDTO.setStatus(String.valueOf(newMember.getStatus()));
                 createdMembers.add(memberDTO);
             }
         }
@@ -128,15 +132,27 @@ public class MemberServiceImpl implements MemberService {
         String name = context.getAuthentication().getName();
         Member member = memberRepository.findMemberByAccount_UserNameAndCompany_CompanyId(name, company.getCompanyId())
                 .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
-        String subRole = member.getSubRole();
+        String subRole = String.valueOf(member.getSubRole());
         if (!subRole.equals(ESubRole.OWNER.name()) && !subRole.equals(ESubRole.ADMIN.name())) {
             throw new AppException(ErrorCode.INVALID_ROLE);
         }
-        deleteMember.setStatus("INACTIVE");
+        deleteMember.setStatus(EStatus.INACTIVE);
         memberRepository.save(deleteMember);
         return true;
 
     }
+
+    @Override
+    public List<MemberDTO> getMembersByCompanyId(int companyId) {
+        List<Member> members = memberRepository.findMembersByCompany_CompanyId(companyId)
+                .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
+
+        return members.stream()
+                .map(member -> modelMapper.map(member, MemberDTO.class))
+                .collect(Collectors.toList());
+    }
+
+
 
 }
 

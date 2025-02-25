@@ -14,6 +14,11 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -41,6 +46,8 @@ public class SecurityConfig {
             "/oauth2/**",
             "/seat-map/**",
             "/company-document/**",
+            "/company-verification/**",
+            "/member-activity/**",
             "/background/**",
     };
 
@@ -90,5 +97,18 @@ public class SecurityConfig {
     @Bean
     public OidcClientInitiatedLogoutSuccessHandler oidcLogoutSuccessHandler(ClientRegistrationRepository clientRegistrationRepository) {
         return new OidcClientInitiatedLogoutSuccessHandler(clientRegistrationRepository);
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(List.of("http://localhost:5173")); // Chỉ cho phép request từ frontend
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")); // Các phương thức HTTP được phép
+        configuration.setAllowedHeaders(List.of("*")); // Cho phép tất cả headers
+        configuration.setAllowCredentials(true); // Cho phép gửi credentials (nếu cần)
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 }

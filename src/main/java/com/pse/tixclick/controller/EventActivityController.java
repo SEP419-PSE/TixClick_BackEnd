@@ -42,6 +42,13 @@ public class EventActivityController {
                             .message(e.getMessage())
                             .result(null)
                             .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST.value())
+                    .body(ApiResponse.<EventActivityDTO>builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
         }
     }
 

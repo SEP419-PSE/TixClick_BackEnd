@@ -1,6 +1,7 @@
 package com.pse.tixclick.controller;
 
 import com.pse.tixclick.exception.AppException;
+import com.pse.tixclick.payload.dto.MemberDTO;
 import com.pse.tixclick.payload.request.create.CreateMemberRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
 import com.pse.tixclick.payload.response.MemberDTOResponse;
@@ -12,6 +13,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/member")
@@ -107,4 +110,37 @@ public class MemberController {
         }
     }
 
+    @GetMapping("/get/{companyId}")
+    public ResponseEntity<ApiResponse<List<MemberDTO>>> getMembersByCompanyId(@PathVariable int companyId) {
+        try {
+            // Gọi service để lấy danh sách thành viên theo id công ty
+            List<MemberDTO> members = memberService.getMembersByCompanyId(companyId);
+
+            // Tạo response
+            ApiResponse<List<MemberDTO>> response = ApiResponse.<List<MemberDTO>>builder()
+                    .code(HttpStatus.OK.value())
+                    .message("Members retrieved successfully")
+                    .result(members)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+
+        } catch (AppException e) {
+            ApiResponse<List<MemberDTO>> errorResponse = ApiResponse.<List<MemberDTO>>builder()
+                    .code(HttpStatus.BAD_REQUEST.value())
+                    .message(e.getMessage()) // Lỗi từ service
+                    .result(null)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        } catch (Exception e) {
+            ApiResponse<List<MemberDTO>> errorResponse = ApiResponse.<List<MemberDTO>>builder()
+                    .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .message("An error occurred while processing the request.")
+                    .result(null)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
 }
