@@ -31,4 +31,6 @@ public interface EventService {
     List<EventDTO> getAllEventsByAccountId();
 
     List<EventDTO> getEventsByAccountIdAndStatus(String status);
+
+    List<EventDTO> getEventsByCompanyId(int companyId);
 }

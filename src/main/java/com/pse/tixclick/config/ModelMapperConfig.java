@@ -3,6 +3,8 @@ package com.pse.tixclick.config;
 import com.pse.tixclick.payload.dto.*;
 import com.pse.tixclick.payload.entity.company.CompanyDocuments;
 import com.pse.tixclick.payload.entity.company.CompanyVerification;
+import com.pse.tixclick.payload.entity.company.Member;
+import com.pse.tixclick.payload.entity.company.MemberActivity;
 import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.entity.event.EventActivity;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
@@ -16,9 +18,14 @@ public class ModelMapperConfig {
     @Bean
     public ModelMapper modelMapper() {
         ModelMapper modelMapper = new ModelMapper();
-        modelMapper.typeMap(Event.class, EventDTO.class).addMappings(mapper -> {
-            mapper.map(src -> src.getCategory().getEventCategoryId(), EventDTO::setCategoryId);
-            mapper.map(src -> src.getOrganizer().getAccountId(), EventDTO::setOrganizerId);
+
+        modelMapper.addMappings(new PropertyMap<Event, EventDTO>() {
+            @Override
+            protected void configure() {
+                map().setCompanyId(source.getCompany().getCompanyId());
+                map().setOrganizerId(source.getOrganizer().getAccountId());
+                map().setCategoryId(source.getCategory().getEventCategoryId());
+            }
         });
         modelMapper.addMappings(new PropertyMap<EventActivity, EventActivityDTO>() {
             @Override
@@ -48,7 +55,20 @@ public class ModelMapperConfig {
                 map().setSubmitById(source.getAccount().getAccountId());
             }
         });
-
+        modelMapper.addMappings(new PropertyMap<Member, MemberDTO>() {
+            @Override
+            protected void configure() {
+                map().setCompanyId(source.getCompany().getCompanyId());
+                map().setAccountId(source.getAccount().getAccountId());
+            }
+        });
+        modelMapper.addMappings(new PropertyMap<MemberActivity, MemberActivityDTO>() {
+            @Override
+            protected void configure() {
+                map().setMemberId(source.getMember().getMemberId());
+                map().setEventActivityId(source.getEventActivity().getEventActivityId());
+            }
+        });
         return modelMapper;
     }
 }
