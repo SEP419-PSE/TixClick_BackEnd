@@ -25,4 +25,5 @@ public interface EventRepository extends JpaRepository<Event,Integer> {
     @Query("select e from Event e where e.organizer.accountId = :aId and e.status = :status")
     Optional<List<Event>> findEventByOrganizerIdAndStatus(@Param("aId") int id, @Param("status") String status);
 
+    Optional<List<Event>> findEventsByCompany_CompanyId(int companyId);
 }

@@ -15,4 +15,5 @@ public class CreateEventRequest {
     String typeEvent;
     String description;
     int categoryId;
+    int companyId;
 }

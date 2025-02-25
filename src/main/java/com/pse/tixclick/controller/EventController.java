@@ -292,4 +292,26 @@ public class EventController {
                         .build()
         );
     }
+
+    @GetMapping("/company/{companyId}")
+    public ResponseEntity<ApiResponse<List<EventDTO>>> getEventsByCompanyId(@PathVariable int companyId) {
+        List<EventDTO> events = eventService.getEventsByCompanyId(companyId);
+
+        if (events.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.<List<EventDTO>>builder()
+                            .code(HttpStatus.NOT_FOUND.value())
+                            .message("No events found with company id: " + companyId)
+                            .result(null)
+                            .build());
+        }
+
+        return ResponseEntity.ok(
+                ApiResponse.<List<EventDTO>>builder()
+                        .code(HttpStatus.OK.value())
+                        .message("Get all events with company id: " + companyId + " successfully")
+                        .result(events)
+                        .build()
+        );
+    }
 }

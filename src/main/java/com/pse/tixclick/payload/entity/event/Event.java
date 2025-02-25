@@ -1,6 +1,7 @@
 package com.pse.tixclick.payload.entity.event;
 
 import com.pse.tixclick.payload.entity.Account;
+import com.pse.tixclick.payload.entity.company.Company;
 import com.pse.tixclick.payload.entity.company.Contract;
 import com.pse.tixclick.payload.entity.seatmap.SeatMap;
 import jakarta.persistence.*;
@@ -55,6 +56,10 @@ public class Event {
     @ManyToOne
     @JoinColumn(name = "category_id", nullable = false)
     EventCategory category;
+
+    @ManyToOne
+    @JoinColumn(name = "company_id", nullable = false)
+    Company company;
 
     @OneToOne(mappedBy = "event")
     private Contract contract;

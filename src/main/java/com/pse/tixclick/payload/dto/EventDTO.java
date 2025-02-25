@@ -20,4 +20,5 @@ public class EventDTO {
     String description;
     int categoryId;
     int organizerId;
+    int companyId;
 }
