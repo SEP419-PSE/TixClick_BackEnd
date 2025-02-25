@@ -1,5 +1,6 @@
 package com.pse.tixclick.payload.entity.company;
 
+import com.pse.tixclick.payload.entity.entity_enum.EStatus;
 import com.pse.tixclick.payload.entity.event.EventActivity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -16,8 +17,9 @@ public class MemberActivity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     int memberActivityId;
 
-    @Column
-    String status;
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    EStatus status;
 
     @ManyToOne
     @JoinColumn(name = "member_id", nullable = false)

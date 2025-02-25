@@ -58,7 +58,7 @@ public enum ErrorCode {
     COMPANY_NOT_ACTIVE(1049, "Công ty chưa được kích hoạt", HttpStatus.BAD_REQUEST),
     INVALID_COMPANY(1050, "Công ty không hợp lệ", HttpStatus.BAD_REQUEST),
     NOT_PERMISSION(1051, "Bạn không có quyền", HttpStatus.FORBIDDEN),
-
+    EVENT_ACTIVITY_NOT_FOUND(1052, "Không tìm thấy hoạt động sự kiện", HttpStatus.NOT_FOUND),
 
     ;
 

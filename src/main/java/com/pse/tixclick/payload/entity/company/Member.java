@@ -1,6 +1,7 @@
 package com.pse.tixclick.payload.entity.company;
 
 import com.pse.tixclick.payload.entity.Account;
+import com.pse.tixclick.payload.entity.entity_enum.EStatus;
 import com.pse.tixclick.payload.entity.entity_enum.ESubRole;
 import jakarta.persistence.*;
 import lombok.*;
@@ -29,7 +30,8 @@ public class Member {
     @JoinColumn(name = "account_id", nullable = false)
     Account account;
 
-    @Column
-    String status;
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    EStatus status;
 }
 

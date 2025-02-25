@@ -8,6 +8,7 @@ import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.company.Company;
 import com.pse.tixclick.payload.entity.company.Member;
 import com.pse.tixclick.payload.entity.entity_enum.ECompanyStatus;
+import com.pse.tixclick.payload.entity.entity_enum.EStatus;
 import com.pse.tixclick.payload.entity.entity_enum.ESubRole;
 import com.pse.tixclick.payload.request.create.AddMemberRequest;
 import com.pse.tixclick.payload.request.create.CreateMemberRequest;
@@ -103,7 +104,7 @@ public class MemberServiceImpl implements MemberService {
                 newMember.setSubRole(ESubRole.valueOf(createMemberRequest.getSubRole()));
                 newMember.setCompany(company);
                 newMember.setAccount(invitedAccount);
-                newMember.setStatus("ACTIVE");
+                newMember.setStatus(EStatus.ACTIVE);
                 memberRepository.save(newMember);
 
                 // Add the created member to the response list
@@ -112,7 +113,7 @@ public class MemberServiceImpl implements MemberService {
                 memberDTO.setSubRole(String.valueOf(newMember.getSubRole()));
                 memberDTO.setAccountId(newMember.getAccount().getAccountId());
                 memberDTO.setCompanyId(newMember.getCompany().getCompanyId());
-                memberDTO.setStatus(newMember.getStatus());
+                memberDTO.setStatus(String.valueOf(newMember.getStatus()));
                 createdMembers.add(memberDTO);
             }
         }
@@ -135,7 +136,7 @@ public class MemberServiceImpl implements MemberService {
         if (!subRole.equals(ESubRole.OWNER.name()) && !subRole.equals(ESubRole.ADMIN.name())) {
             throw new AppException(ErrorCode.INVALID_ROLE);
         }
-        deleteMember.setStatus("INACTIVE");
+        deleteMember.setStatus(EStatus.INACTIVE);
         memberRepository.save(deleteMember);
         return true;
 

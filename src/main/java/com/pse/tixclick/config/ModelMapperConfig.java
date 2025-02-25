@@ -4,6 +4,7 @@ import com.pse.tixclick.payload.dto.*;
 import com.pse.tixclick.payload.entity.company.CompanyDocuments;
 import com.pse.tixclick.payload.entity.company.CompanyVerification;
 import com.pse.tixclick.payload.entity.company.Member;
+import com.pse.tixclick.payload.entity.company.MemberActivity;
 import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.entity.event.EventActivity;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
@@ -59,6 +60,13 @@ public class ModelMapperConfig {
             protected void configure() {
                 map().setCompanyId(source.getCompany().getCompanyId());
                 map().setAccountId(source.getAccount().getAccountId());
+            }
+        });
+        modelMapper.addMappings(new PropertyMap<MemberActivity, MemberActivityDTO>() {
+            @Override
+            protected void configure() {
+                map().setMemberId(source.getMember().getMemberId());
+                map().setEventActivityId(source.getEventActivity().getEventActivityId());
             }
         });
         return modelMapper;

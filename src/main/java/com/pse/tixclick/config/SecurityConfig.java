@@ -47,6 +47,7 @@ public class SecurityConfig {
             "/seat-map/**",
             "/company-document/**",
             "/company-verification/**",
+            "/member-activity/**",
             "/background/**",
     };
 
