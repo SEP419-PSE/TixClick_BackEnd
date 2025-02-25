@@ -134,16 +134,5 @@ public class AccountController {
         }
     }
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:5173")); // Chỉ cho phép request từ frontend
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")); // Các phương thức HTTP được phép
-        configuration.setAllowedHeaders(List.of("*")); // Cho phép tất cả headers
-        configuration.setAllowCredentials(true); // Cho phép gửi credentials (nếu cần)
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
-    }
 }

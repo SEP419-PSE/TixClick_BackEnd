@@ -57,6 +57,7 @@ public enum ErrorCode {
     NOT_OWNER(1048, "Bạn không phải chủ sở hữu", HttpStatus.FORBIDDEN),
     COMPANY_NOT_ACTIVE(1049, "Công ty chưa được kích hoạt", HttpStatus.BAD_REQUEST),
     INVALID_COMPANY(1050, "Công ty không hợp lệ", HttpStatus.BAD_REQUEST),
+    NOT_PERMISSION(1051, "Bạn không có quyền", HttpStatus.FORBIDDEN),
 
 
     ;

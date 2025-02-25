@@ -3,11 +3,13 @@ package com.pse.tixclick.service.impl;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.EventActivityDTO;
+import com.pse.tixclick.payload.entity.entity_enum.ESubRole;
 import com.pse.tixclick.payload.entity.event.EventActivity;
 import com.pse.tixclick.payload.request.create.CreateEventActivityRequest;
 import com.pse.tixclick.repository.AccountRepository;
 import com.pse.tixclick.repository.EventActivityRepository;
 import com.pse.tixclick.repository.EventRepository;
+import com.pse.tixclick.repository.MemberRepository;
 import com.pse.tixclick.service.EventActivityService;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -28,15 +30,25 @@ public class EventActivityServiceImpl implements EventActivityService {
     AccountRepository accountRepository;
     EventActivityRepository eventActivityRepository;
     EventRepository eventRepository;
+    MemberRepository memberRepository;
     ModelMapper modelMapper;
     @Override
     public EventActivityDTO createEventActivity(CreateEventActivityRequest eventActivityRequest) {
         var context = SecurityContextHolder.getContext();
         String name = context.getAuthentication().getName();
+
         var organizer = accountRepository.findAccountByUserName(name)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+
         var event = eventRepository.findById(eventActivityRequest.getEventId())
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+
+        var member = memberRepository.findMemberByAccount_UserNameAndCompany_CompanyId(name,event.getCompany().getCompanyId())
+                .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
+        if (member.getSubRole() != ESubRole.OWNER && member.getSubRole() != ESubRole.ADMIN) {
+            throw new AppException(ErrorCode.NOT_PERMISSION);
+        }
         var eventActivity = new EventActivity();
         eventActivity.setActivityName(eventActivityRequest.getActivityName());;
         eventActivity.setCreatedBy(organizer);

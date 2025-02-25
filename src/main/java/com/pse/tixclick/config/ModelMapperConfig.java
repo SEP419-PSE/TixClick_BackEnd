@@ -17,9 +17,14 @@ public class ModelMapperConfig {
     @Bean
     public ModelMapper modelMapper() {
         ModelMapper modelMapper = new ModelMapper();
-        modelMapper.typeMap(Event.class, EventDTO.class).addMappings(mapper -> {
-            mapper.map(src -> src.getCategory().getEventCategoryId(), EventDTO::setCategoryId);
-            mapper.map(src -> src.getOrganizer().getAccountId(), EventDTO::setOrganizerId);
+
+        modelMapper.addMappings(new PropertyMap<Event, EventDTO>() {
+            @Override
+            protected void configure() {
+                map().setCompanyId(source.getCompany().getCompanyId());
+                map().setOrganizerId(source.getOrganizer().getAccountId());
+                map().setCategoryId(source.getCategory().getEventCategoryId());
+            }
         });
         modelMapper.addMappings(new PropertyMap<EventActivity, EventActivityDTO>() {
             @Override
