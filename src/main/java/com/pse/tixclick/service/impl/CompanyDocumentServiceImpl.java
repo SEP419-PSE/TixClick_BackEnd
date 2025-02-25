@@ -2,6 +2,7 @@ package com.pse.tixclick.service.impl;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import com.pse.tixclick.cloudinary.CloudinaryService;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.CompanyDocumentDTO;
@@ -37,7 +38,7 @@ public class CompanyDocumentServiceImpl implements CompanyDocumentService {
     AccountRepository accountRepository;
     CompanyRepository companyRepository;
     ModelMapper modelMapper;
-    Cloudinary cloudinary;
+    CloudinaryService cloudinary;
     @Override
     public List<CompanyDocumentDTO> createCompanyDocument(CreateCompanyDocumentRequest createCompanyDocumentRequest, List<MultipartFile> files) {
         var context = SecurityContextHolder.getContext();
@@ -49,6 +50,7 @@ public class CompanyDocumentServiceImpl implements CompanyDocumentService {
 
         List<CompanyDocumentDTO> documentDTOList = new ArrayList<>();
         final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
         for (MultipartFile file : files) {
             try {
@@ -57,23 +59,16 @@ public class CompanyDocumentServiceImpl implements CompanyDocumentService {
                     throw new AppException(ErrorCode.FILE_TOO_LARGE);
                 }
 
-                // Upload file lên Cloudinary
-                Map uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
-
-                // Lấy URL của file sau khi upload
-                String fileURL = uploadResult.get("url").toString();
-                String fileType = file.getContentType();
-                String fileName = file.getOriginalFilename();
+                // Upload file lên Cloudinary thông qua CloudinaryService
+                String fileURL = cloudinary.uploadDocumentToCloudinary(file);
 
                 // Tạo đối tượng CompanyDocuments
                 var companyDocument = new CompanyDocuments();
                 companyDocument.setCompany(company);
-                companyDocument.setFileName(fileName);
+                companyDocument.setFileName(file.getOriginalFilename());
                 companyDocument.setFileURL(fileURL);
-                companyDocument.setFileType(fileType);
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                companyDocument.setFileType(file.getContentType());
                 companyDocument.setUploadDate(LocalDateTime.parse(createCompanyDocumentRequest.getUploadDate(), formatter));
-
 
                 // Lưu vào database
                 companyDocumentRepository.save(companyDocument);
@@ -88,6 +83,7 @@ public class CompanyDocumentServiceImpl implements CompanyDocumentService {
 
         return documentDTOList;
     }
+
 
 
 }

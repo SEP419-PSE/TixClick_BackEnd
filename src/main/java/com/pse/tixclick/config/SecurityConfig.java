@@ -41,6 +41,7 @@ public class SecurityConfig {
             "/oauth2/**",
             "/seat-map/**",
             "/company-document/**",
+            "/company-verification/**",
             "/background/**",
     };
 
