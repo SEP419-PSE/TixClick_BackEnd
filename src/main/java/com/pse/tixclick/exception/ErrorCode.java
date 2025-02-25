@@ -54,6 +54,7 @@ public enum ErrorCode {
     FILE_TOO_LARGE(1045, "File không vượt quá 10mb", HttpStatus.BAD_REQUEST),
     INVALID_FILE_TYPE(1046, "Loại tệp không hợp lệ", HttpStatus.BAD_REQUEST),
     COMPANY_VERIFICATION_NOT_FOUND(1047, "Không tìm thấy xác minh công ty", HttpStatus.NOT_FOUND),
+    NOT_OWNER(1048, "Bạn không phải chủ sở hữu", HttpStatus.FORBIDDEN),
     ;
 
 
