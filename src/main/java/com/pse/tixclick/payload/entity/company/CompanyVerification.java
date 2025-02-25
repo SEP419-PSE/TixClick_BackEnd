@@ -2,6 +2,7 @@ package com.pse.tixclick.payload.entity.company;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.pse.tixclick.payload.entity.Account;
+import com.pse.tixclick.payload.entity.entity_enum.CompanyVerificationStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.NoArgsConstructor;
@@ -32,6 +33,7 @@ public class CompanyVerification {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     LocalDateTime submitDate;
 
-    @Column
-    String status;
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    CompanyVerificationStatus status;
 }

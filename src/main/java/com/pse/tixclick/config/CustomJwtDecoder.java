@@ -14,7 +14,8 @@ import javax.crypto.spec.SecretKeySpec;
 import java.util.Objects;
 
 @Component
-public class CustomJwtDecoder implements JwtDecoder {
+public class
+CustomJwtDecoder implements JwtDecoder {
     @Value("${app.jwt-secret}")
     private String signerKey;
 

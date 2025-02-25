@@ -12,6 +12,8 @@ import com.nimbusds.jwt.SignedJWT;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.entity.Account;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
@@ -19,6 +21,9 @@ import org.springframework.stereotype.Component;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.UUID;
+import java.util.function.Function;
+
+import static javax.crypto.Cipher.SECRET_KEY;
 
 @Component
 public class Jwt {
@@ -118,4 +123,16 @@ public class Jwt {
     public record TokenInfo(String token, Date expiryDate) {}
 
     public record TokenPair(TokenInfo accessToken, TokenInfo refreshToken) {}
+
+    public Integer extractUserId(String token) {
+        try {
+            SignedJWT signedJWT = SignedJWT.parse(token); // Parse token
+            return signedJWT.getJWTClaimsSet().getIntegerClaim("userId"); // Lấy userId
+        } catch (ParseException e) {
+            throw new RuntimeException("Invalid token format", e);
+        }
+    }
+
+
+
 }

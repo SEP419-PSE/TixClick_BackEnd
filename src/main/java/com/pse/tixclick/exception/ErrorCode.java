@@ -49,6 +49,9 @@ public enum ErrorCode {
     ROLE_NOT_FOUND(1040, "Không tìm thấy vai trò", HttpStatus.NOT_FOUND),
     BACKGROUND_NOT_FOUND(1041, "Không tìm thấy background", HttpStatus.NOT_FOUND),
     SEATMAP_NOT_FOUND(1042, "Không tìm thấy seatmap", HttpStatus.NOT_FOUND),
+    COMPANY_NOT_EXISTED(1043, "Công ty không tồn tại", HttpStatus.NOT_FOUND),
+    FILE_UPLOAD_FAILED(1044, "Tải lên tệp thất bại", HttpStatus.BAD_REQUEST),
+    FILE_TOO_LARGE(1045, "File không vượt quá 10mb", HttpStatus.BAD_REQUEST),
     ;
 
 
