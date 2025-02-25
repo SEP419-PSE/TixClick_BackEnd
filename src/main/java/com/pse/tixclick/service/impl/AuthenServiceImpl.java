@@ -1,15 +1,11 @@
 package com.pse.tixclick.service.impl;
 
 import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWSVerifier;
-import com.nimbusds.jose.crypto.MACVerifier;
-import com.nimbusds.jwt.SignedJWT;
 import com.pse.tixclick.email.EmailService;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.jwt.Jwt;
 import com.pse.tixclick.payload.entity.Account;
-import com.pse.tixclick.payload.entity.RefreshToken;
 import com.pse.tixclick.payload.entity.Role;
 import com.pse.tixclick.payload.request.IntrospectRequest;
 import com.pse.tixclick.payload.request.LoginRequest;
@@ -19,9 +15,7 @@ import com.pse.tixclick.payload.response.IntrospectResponse;
 import com.pse.tixclick.payload.response.RefreshTokenResponse;
 import com.pse.tixclick.payload.response.TokenResponse;
 import com.pse.tixclick.repository.AccountRepository;
-import com.pse.tixclick.repository.RefreshTokenRepository;
 import com.pse.tixclick.repository.RoleRepository;
-import com.pse.tixclick.service.AccountService;
 import com.pse.tixclick.service.AuthenService;
 import jakarta.mail.MessagingException;
 import lombok.AccessLevel;
@@ -32,23 +26,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
 
 import java.text.ParseException;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -56,6 +41,7 @@ import java.util.concurrent.TimeUnit;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AuthenServiceImpl implements AuthenService {
     private final ConcurrentHashMap<String, String> otpStore = new ConcurrentHashMap<>();
@@ -73,8 +59,7 @@ public class AuthenServiceImpl implements AuthenService {
     RoleRepository roleRepository;
     @Autowired
     EmailService emailService;
-    @Autowired
-    RefreshTokenRepository refreshTokenRepository;
+
     @Value("${app.jwt-secret}")
     private String SIGNER_KEY;
     @Override
@@ -281,14 +266,11 @@ public class AuthenServiceImpl implements AuthenService {
     }
 
     @Override
-    @Transactional
     public TokenResponse signupAndLoginWithGitHub(OAuth2User principal) {
         String username = principal.getAttribute("login");
         String fullName = principal.getAttribute("name");
         String email = principal.getAttribute("email");
         String avatarUrl = principal.getAttribute("avatar_url");
-
-
 
         // Kiểm tra tài khoản đã tồn tại chưa
         Account user = userRepository.findAccountByUserName(username).orElse(null);
@@ -301,33 +283,32 @@ public class AuthenServiceImpl implements AuthenService {
             // Tạo mới tài khoản
             user = new Account();
             user.setUserName(username);
-            user.setEmail("none");
+            user.setEmail(email != null ? email : "none");
             user.setRole(role);
             user.setPassword("github");
             user.setActive(true);
             userRepository.save(user); // Lưu vào database
         }
 
-        // Xóa refresh token cũ nếu tồn tại
-        refreshTokenRepository.findRefreshTokenByUserName(user.getUserName())
-                .ifPresent(refreshTokenRepository::delete);
+        // Xóa Refresh Token cũ trên Redis (nếu có)
+        String key = "REFRESH_TOKEN:" + user.getUserName();
+        redisTemplate.delete(key);
 
         // Tạo mới bộ token (access token & refresh token)
         var tokenPair = jwt.generateTokens(user);
 
-        // Lưu refresh token mới
-        RefreshToken refreshToken = new RefreshToken();
-        refreshToken.setToken(tokenPair.refreshToken().token());
-        refreshToken.setExpiryDate(tokenPair.refreshToken().expiryDate().toInstant());
-        refreshToken.setUserName(user.getUserName());
-        refreshTokenRepository.save(refreshToken);
+        // Lưu Refresh Token vào Redis với thời gian hết hạn 7 ngày (1 tuần)
+        long expirationDays = 7; // 7 ngày
+        redisTemplate.opsForValue().set(key, tokenPair.refreshToken().token(), expirationDays, TimeUnit.DAYS);
 
         // Trả về TokenResponse chứa access token và refresh token
         return TokenResponse.builder()
                 .accessToken(tokenPair.accessToken().token())
                 .refreshToken(tokenPair.refreshToken().token())
+                .status(user.isActive())
                 .build();
     }
+
 
     @Override
     @Transactional
@@ -359,20 +340,18 @@ public class AuthenServiceImpl implements AuthenService {
                 userRepository.save(user);
             }
 
-            // Xóa refresh token cũ nếu có
-            refreshTokenRepository.findRefreshTokenByUserName(user.getUserName())
-                    .ifPresent(refreshTokenRepository::delete);
+            // Xóa Refresh Token cũ trên Redis (nếu có)
+            String key = "REFRESH_TOKEN:" + user.getUserName();
+            redisTemplate.delete(key);
 
-            // Tạo token mới
+            // Tạo mới bộ token (access token & refresh token)
             var tokenPair = jwt.generateTokens(user);
 
-            // Lưu refresh token mới
-            RefreshToken refreshToken = new RefreshToken();
-            refreshToken.setToken(tokenPair.refreshToken().token());
-            refreshToken.setExpiryDate(tokenPair.refreshToken().expiryDate().toInstant());
-            refreshToken.setUserName(user.getUserName());
-            refreshTokenRepository.save(refreshToken);
+            // Lưu Refresh Token vào Redis với thời gian hết hạn 7 ngày (1 tuần)
+            long expirationDays = 7; // 7 ngày
+            redisTemplate.opsForValue().set(key, tokenPair.refreshToken().token(), expirationDays, TimeUnit.DAYS);
 
+            // Trả về TokenResponse chứa access token và refresh token
             return TokenResponse.builder()
                     .accessToken(tokenPair.accessToken().token())
                     .refreshToken(tokenPair.refreshToken().token())
