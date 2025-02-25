@@ -30,7 +30,8 @@ public class CompanyVerificationServiceImpl implements CompanyVerificationServic
     @Override
     public CompanyVerificationDTO createCompanyVerification(CreateCompanyVerificationRequest createCompanyVerificationRequest) {
 
-
+        var account = accountRepository.findManagerWithLeastVerifications()
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
 
         var company = companyRepository.findById(createCompanyVerificationRequest.getCompanyId())
@@ -41,6 +42,7 @@ public class CompanyVerificationServiceImpl implements CompanyVerificationServic
         companyVerification.setCompany(company);
         companyVerification.setSubmitDate(createCompanyVerificationRequest.getSubmitDate());
         companyVerification.setStatus(createCompanyVerificationRequest.getStatus());
+        companyVerification.setAccount(account);
         companyVerificationRepository.save(companyVerification);
         return  modelMapper.map(companyVerification, CompanyVerificationDTO.class);
 

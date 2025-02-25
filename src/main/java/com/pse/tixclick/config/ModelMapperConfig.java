@@ -1,10 +1,8 @@
 package com.pse.tixclick.config;
 
-import com.pse.tixclick.payload.dto.CompanyDocumentDTO;
-import com.pse.tixclick.payload.dto.EventActivityDTO;
-import com.pse.tixclick.payload.dto.EventDTO;
-import com.pse.tixclick.payload.dto.TicketDTO;
+import com.pse.tixclick.payload.dto.*;
 import com.pse.tixclick.payload.entity.company.CompanyDocuments;
+import com.pse.tixclick.payload.entity.company.CompanyVerification;
 import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.entity.event.EventActivity;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
@@ -43,7 +41,13 @@ public class ModelMapperConfig {
                 map().setCompanyId(source.getCompany().getCompanyId());
             }
         });
-
+        modelMapper.addMappings(new PropertyMap<CompanyVerification, CompanyVerificationDTO>() {
+            @Override
+            protected void configure() {
+                map().setCompanyId(source.getCompany().getCompanyId());
+                map().setSubmitById(source.getAccount().getAccountId());
+            }
+        });
 
         return modelMapper;
     }

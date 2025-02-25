@@ -9,6 +9,7 @@ import com.pse.tixclick.payload.request.create.CreateBackgroundRequest;
 import com.pse.tixclick.payload.request.update.UpdateBackgroundRequest;
 import com.pse.tixclick.repository.BackgroundRepository;
 import com.pse.tixclick.service.BackgroundService;
+import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -21,6 +22,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Transactional
 public class BackgroundServiceImpl implements BackgroundService {
     @Autowired
     BackgroundRepository backgroundRepository;

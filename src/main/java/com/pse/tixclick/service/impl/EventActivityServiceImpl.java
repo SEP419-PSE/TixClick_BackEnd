@@ -9,6 +9,7 @@ import com.pse.tixclick.repository.AccountRepository;
 import com.pse.tixclick.repository.EventActivityRepository;
 import com.pse.tixclick.repository.EventRepository;
 import com.pse.tixclick.service.EventActivityService;
+import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -22,6 +23,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Transactional
 public class EventActivityServiceImpl implements EventActivityService {
     AccountRepository accountRepository;
     EventActivityRepository eventActivityRepository;

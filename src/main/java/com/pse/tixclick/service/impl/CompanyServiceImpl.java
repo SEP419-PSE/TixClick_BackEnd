@@ -1,5 +1,7 @@
 package com.pse.tixclick.service.impl;
 
+import com.cloudinary.Cloudinary;
+import com.pse.tixclick.cloudinary.CloudinaryService;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.CompanyDTO;
@@ -18,6 +20,7 @@ import com.pse.tixclick.repository.CompanyRepository;
 import com.pse.tixclick.repository.MemberRepository;
 import com.pse.tixclick.service.CompanyService;
 import com.pse.tixclick.service.CompanyVerificationService;
+import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -25,8 +28,12 @@ import org.modelmapper.ModelMapper;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class CompanyServiceImpl implements CompanyService {
@@ -36,14 +43,17 @@ public class CompanyServiceImpl implements CompanyService {
     CompanyAccountRepository companyAccountRepository;
     ModelMapper modelMapper;
     CompanyVerificationService companyVerificationService;
-
+    CloudinaryService cloudinary;
     @Override
-    public CompanyDTO createCompany(CreateCompanyRequest createCompanyRequest) {
+    public CompanyDTO createCompany(CreateCompanyRequest createCompanyRequest, MultipartFile file) throws IOException {
         var context = SecurityContextHolder.getContext();
         String name = context.getAuthentication().getName();
 
         var account = accountRepository.findAccountByUserName(name)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        String logoURL = cloudinary.uploadImageToCloudinary(file);
+
 
         Company company = new Company();
         company.setCompanyName(createCompanyRequest.getCompanyName());
@@ -53,7 +63,7 @@ public class CompanyServiceImpl implements CompanyService {
         company.setBankingCode(createCompanyRequest.getBankingCode());
         company.setBankingName(createCompanyRequest.getBankingName());
         company.setNationalId(createCompanyRequest.getNationalId());
-        company.setLogoURL(createCompanyRequest.getLogoURL());
+        company.setLogoURL(logoURL);
         company.setStatus(ECompanyStatus.INACTIVE);
         companyRepository.save(company);
 
@@ -76,6 +86,7 @@ public class CompanyServiceImpl implements CompanyService {
         CreateCompanyVerificationRequest createCompanyVerificationRequest = new CreateCompanyVerificationRequest();
         createCompanyVerificationRequest.setCompanyId(company.getCompanyId());
         createCompanyVerificationRequest.setStatus(CompanyVerificationStatus.PENDING);
+
 
         companyVerificationService.createCompanyVerification(createCompanyVerificationRequest);
 

@@ -311,7 +311,6 @@ public class AuthenServiceImpl implements AuthenService {
 
 
     @Override
-    @Transactional
     public TokenResponse signupAndLoginWithFacebook(OAuth2User principal) {
         try {
             String email = principal.getAttribute("email");
