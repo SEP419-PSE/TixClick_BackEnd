@@ -5,11 +5,12 @@ import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.TicketDTO;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
 import com.pse.tixclick.payload.request.create.CreateTicketRequest;
-import com.pse.tixclick.payload.request.UpdateTicketRequest;
+import com.pse.tixclick.payload.request.update.UpdateTicketRequest;
 import com.pse.tixclick.repository.AccountRepository;
 import com.pse.tixclick.repository.EventActivityRepository;
 import com.pse.tixclick.repository.TicketRepository;
 import com.pse.tixclick.service.TicketService;
+import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Transactional
 public class TicketServiceImpl implements TicketService {
     AccountRepository accountRepository;
     EventActivityRepository eventActivityRepository;

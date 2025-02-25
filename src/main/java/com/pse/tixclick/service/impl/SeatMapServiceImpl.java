@@ -15,6 +15,7 @@ import com.pse.tixclick.repository.BackgroundRepository;
 import com.pse.tixclick.repository.EventRepository;
 import com.pse.tixclick.repository.SeatMapRepository;
 import com.pse.tixclick.service.SeatMapService;
+import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -28,6 +29,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Transactional
 public class SeatMapServiceImpl implements SeatMapService {
     @Autowired
     Util util;

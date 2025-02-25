@@ -1,4 +1,4 @@
-package com.pse.tixclick.payload.request;
+package com.pse.tixclick.payload.request.create;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;

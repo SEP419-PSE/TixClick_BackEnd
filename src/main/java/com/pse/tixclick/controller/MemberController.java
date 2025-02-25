@@ -1,7 +1,7 @@
 package com.pse.tixclick.controller;
 
 import com.pse.tixclick.exception.AppException;
-import com.pse.tixclick.payload.request.CreateMemberRequest;
+import com.pse.tixclick.payload.request.create.CreateMemberRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
 import com.pse.tixclick.payload.response.MemberDTOResponse;
 import com.pse.tixclick.service.MemberService;

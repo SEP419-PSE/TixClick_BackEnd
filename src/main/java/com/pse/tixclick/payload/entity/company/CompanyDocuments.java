@@ -1,5 +1,6 @@
 package com.pse.tixclick.payload.entity.company;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -21,7 +22,7 @@ public class CompanyDocuments {
     @JoinColumn(name="company_id", nullable = false)
     private Company company;
 
-    @Column
+    @Column(columnDefinition = "NVARCHAR(255)")
     private String fileName;
 
     @Column
@@ -31,5 +32,6 @@ public class CompanyDocuments {
     private String fileType;
 
     @Column
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime uploadDate;
 }

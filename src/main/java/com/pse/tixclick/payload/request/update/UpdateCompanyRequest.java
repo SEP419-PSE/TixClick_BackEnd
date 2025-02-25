@@ -1,4 +1,4 @@
-package com.pse.tixclick.payload.request;
+package com.pse.tixclick.payload.request.update;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -8,7 +8,7 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class CreateCompanyRequest {
+public class UpdateCompanyRequest {
     private String companyName;
     private String codeTax;
     private String bankingName;

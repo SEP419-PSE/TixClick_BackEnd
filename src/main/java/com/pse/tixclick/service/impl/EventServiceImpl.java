@@ -2,6 +2,7 @@ package com.pse.tixclick.service.impl;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import com.pse.tixclick.cloudinary.CloudinaryService;
 import com.pse.tixclick.config.Util;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
@@ -13,6 +14,7 @@ import com.pse.tixclick.repository.AccountRepository;
 import com.pse.tixclick.repository.EventCategoryRepository;
 import com.pse.tixclick.repository.EventRepository;
 import com.pse.tixclick.service.EventService;
+import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -29,12 +31,13 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Transactional
 public class EventServiceImpl implements EventService {
     EventRepository eventRepository;
     ModelMapper modelMapper;
     EventCategoryRepository eventCategoryRepository;
     AccountRepository accountRepository;
-    Cloudinary cloudinary;
+    CloudinaryService cloudinary;
 
     @Autowired
     Util util;
@@ -52,8 +55,8 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
 
         // Upload từng ảnh lên Cloudinary
-        String logocode = uploadImageToCloudinary(logoURL);
-        String bannercode = uploadImageToCloudinary(bannerURL);
+        String logocode = cloudinary.uploadImageToCloudinary(logoURL);
+        String bannercode = cloudinary.uploadImageToCloudinary(bannerURL);
         // Tạo đối tượng Event từ request
         Event event = new Event();
         event.setEventName(request.getEventName());
@@ -112,12 +115,12 @@ public class EventServiceImpl implements EventService {
 
         // Xử lý upload file nếu có
         if (logoURL != null && !logoURL.isEmpty()) {
-            String logoUrl = uploadImageToCloudinary(logoURL);
+            String logoUrl = cloudinary.uploadImageToCloudinary(logoURL);
             event.setLogoURL(logoUrl);
         }
 
         if (bannerURL != null && !bannerURL.isEmpty()) {
-            String bannerUrl = uploadImageToCloudinary(bannerURL);
+            String bannerUrl = cloudinary.uploadImageToCloudinary(bannerURL);
             event.setBannerURL(bannerUrl);
         }
 
@@ -210,10 +213,7 @@ public class EventServiceImpl implements EventService {
         return modelMapper.map(events, new TypeToken<List<EventDTO>>() {}.getType());
     }
 
-    private String uploadImageToCloudinary(MultipartFile file) throws IOException {
-        Map uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
-        return (String) uploadResult.get("url");
-    }
+
 
 
 }
