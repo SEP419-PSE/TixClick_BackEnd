@@ -1,6 +1,6 @@
 package com.pse.tixclick.service.impl;
 
-import com.pse.tixclick.config.Util;
+import com.pse.tixclick.utils.AppUtils;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.BackgroundDTO;
@@ -32,7 +32,7 @@ import java.util.List;
 @Transactional
 public class SeatMapServiceImpl implements SeatMapService {
     @Autowired
-    Util util;
+    AppUtils appUtils;
 
     @Autowired
     ModelMapper mapper;
