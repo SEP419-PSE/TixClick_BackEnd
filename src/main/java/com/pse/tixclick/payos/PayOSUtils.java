@@ -6,7 +6,7 @@ import org.springframework.lang.NonNull;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import vn.payos.PayOS;
 @Configuration
-public class PayOSConfig {
+public class PayOSUtils {
     @Value("${PAYOS_CLIENT_ID}")
     private String clientId;
 

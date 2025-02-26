@@ -1,10 +1,12 @@
 package com.pse.tixclick.payload.entity.payment;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.pse.tixclick.payload.entity.Account;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 
 @Getter
@@ -26,7 +28,11 @@ public class  Order {
     private String status;
 
     @Column(nullable = false)
-    private int totalAmount;
+    private double totalAmount;
+
+    @Column
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime orderDate;
 
     @ManyToOne
     @JoinColumn(name = "account_id", nullable = false)
