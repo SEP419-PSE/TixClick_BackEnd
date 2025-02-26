@@ -1,6 +1,6 @@
 package com.pse.tixclick.service.impl;
 
-import com.pse.tixclick.config.Util;
+import com.pse.tixclick.utils.AppUtils;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.BackgroundDTO;
@@ -28,7 +28,7 @@ public class BackgroundServiceImpl implements BackgroundService {
     BackgroundRepository backgroundRepository;
 
     @Autowired
-    Util util;
+    AppUtils appUtils;
 
     @Autowired
     ModelMapper mapper;

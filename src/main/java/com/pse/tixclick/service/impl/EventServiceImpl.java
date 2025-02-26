@@ -1,9 +1,7 @@
 package com.pse.tixclick.service.impl;
 
-import com.cloudinary.Cloudinary;
-import com.cloudinary.utils.ObjectUtils;
 import com.pse.tixclick.cloudinary.CloudinaryService;
-import com.pse.tixclick.config.Util;
+import com.pse.tixclick.utils.AppUtils;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.EventDTO;
@@ -29,7 +27,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -43,7 +40,7 @@ public class EventServiceImpl implements EventService {
     CloudinaryService cloudinary;
     CompanyRepository companyRepository;
     @Autowired
-    Util util;
+    AppUtils appUtils;
 
     @Override
     public EventDTO createEvent(CreateEventRequest request, MultipartFile logoURL, MultipartFile bannerURL) throws IOException {
@@ -209,7 +206,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public List<EventDTO> getAllEventsByAccountId() {
-        int uId = util.getAccountFromAuthentication().getAccountId();
+        int uId = appUtils.getAccountFromAuthentication().getAccountId();
         List<Event> events = eventRepository.findEventByOrganizerId(uId)
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
         return modelMapper.map(events, new TypeToken<List<EventDTO>>() {}.getType());
@@ -217,7 +214,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public List<EventDTO> getEventsByAccountIdAndStatus(String status) {
-        int uId = util.getAccountFromAuthentication().getAccountId();
+        int uId = appUtils.getAccountFromAuthentication().getAccountId();
         List<Event> events = eventRepository.findEventByOrganizerIdAndStatus(uId, status)
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
         return modelMapper.map(events, new TypeToken<List<EventDTO>>() {}.getType());
