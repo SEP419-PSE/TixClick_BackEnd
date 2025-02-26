@@ -2,6 +2,7 @@ package com.pse.tixclick.controller;
 
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.payload.dto.EventDTO;
+import com.pse.tixclick.payload.entity.entity_enum.EEventStatus;
 import com.pse.tixclick.payload.request.create.CreateEventRequest;
 import com.pse.tixclick.payload.request.update.UpdateEventRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
@@ -229,9 +230,9 @@ public class EventController {
     }
 
     @PutMapping("/{id}/approve")
-    public ResponseEntity<ApiResponse<EventDTO>> approveEvent(@PathVariable int id) {
+    public ResponseEntity<ApiResponse<EventDTO>> approveEvent(@PathVariable int id, @RequestBody EEventStatus status) {
         try {
-            EventDTO event = eventService.approveEvent(id);
+            EventDTO event = eventService.approveEvent(id,status);
             return ResponseEntity.ok(
                     ApiResponse.<EventDTO>builder()
                             .code(HttpStatus.OK.value())

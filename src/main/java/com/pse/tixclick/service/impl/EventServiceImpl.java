@@ -8,6 +8,7 @@ import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.EventDTO;
 import com.pse.tixclick.payload.entity.entity_enum.ECompanyStatus;
+import com.pse.tixclick.payload.entity.entity_enum.EEventStatus;
 import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.request.create.CreateEventRequest;
 import com.pse.tixclick.payload.request.update.UpdateEventRequest;
@@ -72,7 +73,7 @@ public class EventServiceImpl implements EventService {
         event.setTypeEvent(request.getTypeEvent());
         event.setDescription(request.getDescription());
         event.setCategory(category);
-        event.setStatus("FENDING");
+        event.setStatus(EEventStatus.PENDING);
         event.setLogoURL(logocode);
         event.setBannerURL(bannercode);
         event.setOrganizer(organnizer);
@@ -109,7 +110,7 @@ public class EventServiceImpl implements EventService {
         }
 
         if (eventRequest.getStatus() != null) {
-            event.setStatus(eventRequest.getStatus());
+            event.setStatus(EEventStatus.valueOf(eventRequest.getStatus()));
         }
 
         if (eventRequest.getTypeEvent() != null) {
@@ -146,7 +147,7 @@ public class EventServiceImpl implements EventService {
     public boolean deleteEvent(int id) {
         var event = eventRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
-        event.setStatus("REMOVE");
+        event.setStatus(EEventStatus.CANCELLED);
         return true;
     }
 
@@ -189,7 +190,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public EventDTO approveEvent(int id) {
+    public EventDTO approveEvent(int id, EEventStatus status) {
         var context = SecurityContextHolder.getContext();
         String name = context.getAuthentication().getName();
         var account = accountRepository.findAccountByUserName(name)
@@ -201,7 +202,7 @@ public class EventServiceImpl implements EventService {
         var event = eventRepository.findEventByEventId(id)
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
 
-        event.setStatus("APPROVED");
+        event.setStatus(status);
         eventRepository.save(event);
         return modelMapper.map(event, EventDTO.class);
     }

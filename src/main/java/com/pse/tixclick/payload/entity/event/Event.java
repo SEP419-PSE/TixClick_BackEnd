@@ -3,6 +3,7 @@ package com.pse.tixclick.payload.entity.event;
 import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.company.Company;
 import com.pse.tixclick.payload.entity.company.Contract;
+import com.pse.tixclick.payload.entity.entity_enum.EEventStatus;
 import com.pse.tixclick.payload.entity.seatmap.SeatMap;
 import jakarta.persistence.*;
 import lombok.*;
@@ -31,8 +32,9 @@ public class Event {
     @Column(columnDefinition = "NVARCHAR(255)")
     String location;
 
-    @Column
-    String status;
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    EEventStatus status;
 
     @Column
     String typeEvent;
