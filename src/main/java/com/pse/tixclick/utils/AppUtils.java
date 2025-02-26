@@ -1,5 +1,7 @@
 package com.pse.tixclick.utils;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.pse.tixclick.payload.entity.Account;
@@ -31,6 +33,20 @@ public class AppUtils {
         return accountRepository.findAccountByUserName(authentication.getName())
                 .orElseThrow(() -> new EntityNotFoundException(new Exception("UserName not found!!!")));
     }
+
+
+    public static String transferToString(Object object){
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(object);
+
+
+        }catch (JsonProcessingException e){
+            e.printStackTrace();
+        }
+        return "";
+    }
+
 
     public static String generateQRCode(String data, int width, int height){
         StringBuilder result = new StringBuilder();
