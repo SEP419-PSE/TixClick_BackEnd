@@ -45,6 +45,7 @@ public class SecurityConfig {
             "/swagger-ui.html",
             "/oauth2/**",
             "/seat-map/**",
+            "/contract/**",
             "/company-document/**",
             "/company-verification/**",
             "/member-activity/**",
