@@ -1,4 +1,4 @@
-package com.pse.tixclick.config;
+package com.pse.tixclick.payos;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
