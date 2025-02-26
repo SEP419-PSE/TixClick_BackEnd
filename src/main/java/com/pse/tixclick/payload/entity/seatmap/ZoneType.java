@@ -17,5 +17,5 @@ public class ZoneType {
     private int typeId;
 
     @Column
-    private String typeName;
+    private EZoneType typeName;
 }

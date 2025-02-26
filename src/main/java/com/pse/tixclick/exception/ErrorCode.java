@@ -67,6 +67,7 @@ public enum ErrorCode {
     VOUCHER_NOT_FOUND(1058, "Không tìm thấy voucher", HttpStatus.NOT_FOUND),
     ORDER_NOT_FOUND(1059, "Không tìm thấy order", HttpStatus.NOT_FOUND),
     ACCOUNT_NOT_FOUND(1060, "Không tìm thấy account", HttpStatus.NOT_FOUND),
+    ZONE_TYPE_NOT_FOUND(1061, "Không tìm thấy zone type", HttpStatus.NOT_FOUND),
     ;
 
 
