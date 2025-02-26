@@ -1,7 +1,14 @@
 package com.pse.tixclick.payload.request.update;
 
-import java.time.LocalDateTime;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDateTime;
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class UpdateZoneRequest {
     private String zoneName;
 
