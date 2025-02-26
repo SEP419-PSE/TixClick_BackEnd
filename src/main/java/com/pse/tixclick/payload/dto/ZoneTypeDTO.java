@@ -1,7 +1,10 @@
-package com.pse.tixclick.payload.entity.seatmap;
+package com.pse.tixclick.payload.dto;
 
 import com.pse.tixclick.payload.entity.entity_enum.EZoneType;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -10,12 +13,8 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Entity
-public class ZoneType {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class ZoneTypeDTO {
     private int typeId;
 
-    @Column
     private String typeName;
 }

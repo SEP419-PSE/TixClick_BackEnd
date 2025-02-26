@@ -34,7 +34,7 @@ public class TicketPurchase {
     private Zone zone;
 
     @OneToOne
-    @JoinColumn(name="seat_id", nullable = false)
+    @JoinColumn(name="seat_id")
     private Seat seat;
 
     @ManyToOne
