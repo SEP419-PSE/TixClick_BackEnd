@@ -52,7 +52,6 @@ public enum ErrorCode {
     COMPANY_NOT_EXISTED(1043, "Công ty không tồn tại", HttpStatus.NOT_FOUND),
     FILE_UPLOAD_FAILED(1044, "Tải lên tệp thất bại", HttpStatus.BAD_REQUEST),
     FILE_TOO_LARGE(1045, "File không vượt quá 10mb", HttpStatus.BAD_REQUEST),
-
     INVALID_FILE_TYPE(1046, "Loại tệp không hợp lệ", HttpStatus.BAD_REQUEST),
     COMPANY_VERIFICATION_NOT_FOUND(1047, "Không tìm thấy xác minh công ty", HttpStatus.NOT_FOUND),
     NOT_OWNER(1048, "Bạn không phải chủ sở hữu", HttpStatus.FORBIDDEN),
@@ -60,7 +59,14 @@ public enum ErrorCode {
     INVALID_COMPANY(1050, "Công ty không hợp lệ", HttpStatus.BAD_REQUEST),
     NOT_PERMISSION(1051, "Bạn không có quyền", HttpStatus.FORBIDDEN),
     EVENT_ACTIVITY_NOT_FOUND(1052, "Không tìm thấy hoạt động sự kiện", HttpStatus.NOT_FOUND),
-    STATUS_NOT_CORRECT(1053, "Tình trạng event không đúng", HttpStatus.BAD_REQUEST)
+    STATUS_NOT_CORRECT(1053, "Tình trạng event không đúng", HttpStatus.BAD_REQUEST),
+    ZONE_NOT_FOUND(1054, "Không tìm thấy zone", HttpStatus.NOT_FOUND),
+    SEAT_NOT_FOUND(1055, "Không tìm thấy seat", HttpStatus.NOT_FOUND),
+    TICKET_PURCHASE_NOT_FOUND(1056, "Không tìm thấy ticket purchase", HttpStatus.NOT_FOUND),
+    INVALID_QUANTITY(1057, "Số lượng không hợp lệ", HttpStatus.BAD_REQUEST),
+    VOUCHER_NOT_FOUND(1058, "Không tìm thấy voucher", HttpStatus.NOT_FOUND),
+    ORDER_NOT_FOUND(1059, "Không tìm thấy order", HttpStatus.NOT_FOUND),
+    ACCOUNT_NOT_FOUND(1060, "Không tìm thấy account", HttpStatus.NOT_FOUND),
     ;
 
 

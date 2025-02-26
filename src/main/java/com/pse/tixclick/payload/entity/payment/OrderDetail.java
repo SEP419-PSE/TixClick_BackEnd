@@ -32,6 +32,6 @@ public class OrderDetail {
     private TicketPurchase ticketPurchase;
 
     @ManyToOne
-    @JoinColumn(name = "voucher_id", nullable = false)
+    @JoinColumn(name = "voucher_id", nullable = true)
     private Voucher voucher;
 }
