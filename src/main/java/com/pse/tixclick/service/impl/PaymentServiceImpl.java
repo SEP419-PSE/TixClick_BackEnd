@@ -4,9 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.entity.Account;
+import com.pse.tixclick.payload.entity.entity_enum.EOrderStatus;
 import com.pse.tixclick.payload.entity.entity_enum.EPaymentStatus;
 import com.pse.tixclick.payload.entity.payment.Order;
 import com.pse.tixclick.payload.entity.payment.Payment;
+import com.pse.tixclick.payload.entity.payment.Transaction;
 import com.pse.tixclick.payload.response.PayOSResponse;
 import com.pse.tixclick.payload.response.PaymentResponse;
 import com.pse.tixclick.payos.PayOSUtils;
@@ -123,6 +125,7 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setAmount(order.getTotalAmount());
         payment.setStatus(EPaymentStatus.PENDING.name());
         payment.setPaymentDate(LocalDateTime.now());
+        payment.setOrderCode(order.getOrderCode());
         payment.setOrder(order);
         payment.setPaymentMethod("Thanh toán ngân hàng");
         payment.setAccount(account);
@@ -134,7 +137,6 @@ public class PaymentServiceImpl implements PaymentService {
                 .message("success")
                 .data(objectMapper.valueToTree(result))
                 .build();
-
     }
 
     @Override
@@ -147,13 +149,47 @@ public class PaymentServiceImpl implements PaymentService {
         String orderCode = request.getParameter("orderCode");
         String amount = request.getParameter("amount");
 
+        Payment payment = paymentRepository.findPaymentByOrderCode(orderCode);
 
+        if (code.equals("00") && status.equals("PAID")) {
+            payment.setStatus(EPaymentStatus.SUCCESSFULLY.name());
+            payment.setPaymentDate(LocalDateTime.now());
+            paymentRepository.save(payment);
 
+            Order order = orderRepository
+                    .findById(Integer.valueOf(orderId))
+                    .orElseThrow(() -> new RuntimeException("Order not found!"));
 
+            Account account = accountRepository
+                    .findAccountByUserName(userName)
+                    .orElseThrow(() -> new AppException(ErrorCode.ACCOUNT_NOT_FOUND));
 
+            order.setStatus(EOrderStatus.SUCCESSFUL.name());
+            orderRepository.save(order);
 
+            Transaction transaction = new Transaction();
+            transaction.setAmount(Double.valueOf(amount));
+            transaction.setTransactionCode(transactionNo);
+            transaction.setTransactionDate(LocalDateTime.now());
+            transaction.setDescription("Thanh toan don hang: " + orderCode);
+            transaction.setAccount(account);
+            transaction.setPayment(payment);
+            transactionRepository.save(transaction);
 
-        return null;
+            return new PaymentResponse(status, "SUCCESSFUL", mapper.map(payment, PaymentResponse.class));
+        }
+        else {
+            payment.setStatus(EPaymentStatus.FAILURE.name());
+            paymentRepository.save(payment);
+
+            Order order = orderRepository
+                    .findById(Integer.valueOf(orderId))
+                    .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+            order.setStatus(EOrderStatus.CANCELLED.name());
+            orderRepository.save(order);
+
+            return new PaymentResponse(status, "CANCELLED", mapper.map(payment, PaymentResponse.class));
+        }
     }
 
 
