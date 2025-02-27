@@ -68,6 +68,7 @@ public enum ErrorCode {
     ORDER_NOT_FOUND(1059, "Không tìm thấy order", HttpStatus.NOT_FOUND),
     ACCOUNT_NOT_FOUND(1060, "Không tìm thấy account", HttpStatus.NOT_FOUND),
     ZONE_TYPE_NOT_FOUND(1061, "Không tìm thấy zone type", HttpStatus.NOT_FOUND),
+    CONTRACT_NOT_FOUND(1062, "Không tìm thấy contract", HttpStatus.NOT_FOUND),
     ;
 
 

@@ -49,6 +49,7 @@ public class SecurityConfig {
             "/company-document/**",
             "/company-verification/**",
             "/member-activity/**",
+            "/contract-document/**",
             "/background/**",
     };
 
