@@ -33,6 +33,9 @@ public class Payment {
     @Column(nullable = false)
     private String status;
 
+    @Column(nullable = false)
+    private String orderCode;
+
     @ManyToOne
     @JoinColumn(name = "order_id", nullable = false)
     private Order order;

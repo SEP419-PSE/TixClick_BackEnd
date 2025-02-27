@@ -1,5 +1,9 @@
-package com.pse.tixclick.payload.request.create;
+package com.pse.tixclick.payload.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.pse.tixclick.payload.entity.seatmap.SeatMap;
+import com.pse.tixclick.payload.entity.seatmap.ZoneType;
+import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -9,7 +13,9 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class CreateZoneRequest {
+public class ZoneDTO {
+    private int zoneId;
+
     private String zoneName;
 
     private String xPosition;
@@ -27,6 +33,12 @@ public class CreateZoneRequest {
     private String rows;
 
     private String columns;
+
+    private LocalDateTime createdDate;
+
+    private LocalDateTime updatedDate;
+
+    private boolean status;
 
     private int seatMapId;
 
