@@ -23,7 +23,7 @@ public class TicketPurchase {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int ticketPurchaseId;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "NVARCHAR(MAX)")
     private String qrCode;
 
     @Column(nullable = false)
@@ -34,7 +34,7 @@ public class TicketPurchase {
     private Zone zone;
 
     @OneToOne
-    @JoinColumn(name="seat_id", nullable = false)
+    @JoinColumn(name="seat_id")
     private Seat seat;
 
     @ManyToOne

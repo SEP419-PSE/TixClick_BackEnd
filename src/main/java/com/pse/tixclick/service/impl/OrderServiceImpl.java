@@ -70,14 +70,16 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public OrderDTO createOrder(CreateOrderRequest createOrderRequest) {
         Order order = new Order();
-        double total_amount = 0;
         order.setOrderCode(orderCodeAutomationCreating());
         order.setStatus(EOrderStatus.PENDING.name());
         order.setOrderDate(LocalDateTime.now());
         order.setAccount(appUtils.getAccountFromAuthentication());
-        order.setTotalAmount(total_amount);
+        order.setTotalAmount(0);
+        order = orderRepository.save(order);
 
-        for(TicketOrderDTO ticketOrderDTO : createOrderRequest.getTicketOrderDTOS()) {
+        double totalAmount = 0;
+
+        for (TicketOrderDTO ticketOrderDTO : createOrderRequest.getTicketOrderDTOS()) {
             int ticketPurchaseId = ticketOrderDTO.getTicketPurchaseId();
             int quantity = ticketOrderDTO.getQuantity();
 
@@ -85,37 +87,37 @@ public class OrderServiceImpl implements OrderService {
                     .findById(ticketPurchaseId)
                     .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
 
-            OrderDetail orderDetail = new OrderDetail();
-            orderDetail.setOrder(order);
             Ticket ticket = ticketRepository.findById(ticketPurchase.getTicket().getTicketId())
                     .orElseThrow(() -> new AppException(ErrorCode.TICKET_NOT_FOUND));
-            int min_quantity = ticket.getMinQuantity();
-            int max_quantity = ticket.getMaxQuantity();
 
-            if(quantity < min_quantity || quantity > max_quantity) {
+            int minQuantity = ticket.getMinQuantity();
+            int maxQuantity = ticket.getMaxQuantity();
+
+            if (quantity < minQuantity || quantity > maxQuantity) {
                 throw new AppException(ErrorCode.INVALID_QUANTITY);
-            }else {
+            }
+
+            OrderDetail orderDetail = new OrderDetail();
+            orderDetail.setOrder(order);
+            orderDetail.setTicketPurchase(ticketPurchase);
+
+            double amount = ticket.getPrice() * quantity;
+
+            if (createOrderRequest.getVoucherCode() != null && !createOrderRequest.getVoucherCode().isEmpty()) {
                 Voucher voucher = voucherRepository.findByVoucherCode(createOrderRequest.getVoucherCode())
                         .orElseThrow(() -> new AppException(ErrorCode.VOUCHER_NOT_FOUND));
-
-                if(createOrderRequest.getVoucherCode().equals(voucher.getVoucherCode())) {
-                    orderDetail.setVoucher(voucher);
-                    double discount = voucher.getDiscount();
-
-                    orderDetail.setAmount(ticket.getPrice() * quantity * discount);
-                    orderDetail.setVoucher(voucher);
-                }
-                else{
-                    orderDetail.setAmount(ticket.getPrice() * quantity);
-                }
+                orderDetail.setVoucher(voucher);
+                amount *= voucher.getDiscount();
             }
-            orderDetail.setTicketPurchase(ticketPurchase);
-            orderDetailRepository.save(orderDetail);
-            total_amount += orderDetail.getAmount();
-        }
-        order.setTotalAmount(total_amount);
-        orderRepository.save(order);
 
+            orderDetail.setAmount(amount);
+            totalAmount += amount;
+
+            orderDetailRepository.save(orderDetail);
+        }
+
+        order.setTotalAmount(totalAmount);
+        orderRepository.save(order);
         return mapper.map(order, OrderDTO.class);
     }
 

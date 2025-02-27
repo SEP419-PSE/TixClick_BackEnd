@@ -1,4 +1,4 @@
-package com.pse.tixclick.payload.request.create;
+package com.pse.tixclick.payload.request.update;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class CreateZoneRequest {
+public class UpdateZoneRequest {
     private String zoneName;
 
     private String xPosition;
@@ -27,8 +27,6 @@ public class CreateZoneRequest {
     private String rows;
 
     private String columns;
-
-    private int seatMapId;
 
     private int zoneTypeId;
 }

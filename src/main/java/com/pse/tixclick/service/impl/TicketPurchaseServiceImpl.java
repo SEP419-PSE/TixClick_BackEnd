@@ -106,7 +106,7 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
 
         ticketPurchaseRepository.save(ticketPurchase);
 
-        return modelMapper.map(ticketPurchase, TicketPurchaseDTO.class);
+        return null;
     }
 
     private String generateQRCode(TicketQrCodeDTO ticketQrCodeDTO){
