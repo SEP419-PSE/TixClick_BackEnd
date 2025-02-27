@@ -3,6 +3,8 @@ package com.pse.tixclick.service.impl;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.OrderDTO;
+import com.pse.tixclick.payload.dto.OrderDetailDTO;
+import com.pse.tixclick.payload.dto.Order_OrderDetailDTO;
 import com.pse.tixclick.payload.dto.TicketOrderDTO;
 import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.entity_enum.EOrderStatus;
@@ -27,6 +29,7 @@ import org.springframework.stereotype.Service;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.List;
 import java.util.Random;
 
 @Service
@@ -119,6 +122,46 @@ public class OrderServiceImpl implements OrderService {
         order.setTotalAmount(totalAmount);
         orderRepository.save(order);
         return mapper.map(order, OrderDTO.class);
+    }
+
+    @Override
+    public List<Order_OrderDetailDTO> getAllOrderOfUser() {
+        Account account = appUtils.getAccountFromAuthentication();
+        List<Order> orders = orderRepository.findByAccountId(account.getAccountId());
+
+        return orders.stream()
+                .map(order -> {
+                    Order_OrderDetailDTO dto = mapper.map(order, Order_OrderDetailDTO.class);
+
+                    // Lấy danh sách OrderDetail
+                    List<OrderDetail> orderDetails = orderDetailRepository.findByOrderId(order.getOrderId());
+                    if (!orderDetails.isEmpty()) {
+                        OrderDetail orderDetail = orderDetails.get(0); // Lấy orderDetail đầu tiên
+                        dto.setOrderDetail(mapper.map(orderDetail, OrderDetailDTO.class));
+                    }
+                    return dto;
+                })
+                .toList();
+    }
+
+    @Override
+    public List<Order_OrderDetailDTO> getOrderStatusOfUser(String status) {
+        Account account = appUtils.getAccountFromAuthentication();
+        List<Order> orders = orderRepository.findByStatusOfAccount(account.getAccountId(), status);
+
+        return orders.stream()
+                .map(order -> {
+                    Order_OrderDetailDTO dto = mapper.map(order, Order_OrderDetailDTO.class);
+
+                    // Lấy danh sách OrderDetail
+                    List<OrderDetail> orderDetails = orderDetailRepository.findByOrderId(order.getOrderId());
+                    if (!orderDetails.isEmpty()) {
+                        OrderDetail orderDetail = orderDetails.get(0); // Lấy orderDetail đầu tiên
+                        dto.setOrderDetail(mapper.map(orderDetail, OrderDetailDTO.class));
+                    }
+                    return dto;
+                })
+                .toList();
     }
 
 
