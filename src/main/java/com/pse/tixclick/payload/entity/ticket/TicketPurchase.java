@@ -23,7 +23,7 @@ public class TicketPurchase {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int ticketPurchaseId;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "NVARCHAR(MAX)")
     private String qrCode;
 
     @Column(nullable = false)
