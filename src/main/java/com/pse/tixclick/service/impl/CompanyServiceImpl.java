@@ -10,6 +10,7 @@ import com.pse.tixclick.payload.entity.company.CompanyAccount;
 import com.pse.tixclick.payload.entity.company.Member;
 import com.pse.tixclick.payload.entity.entity_enum.CompanyVerificationStatus;
 import com.pse.tixclick.payload.entity.entity_enum.ECompanyStatus;
+import com.pse.tixclick.payload.entity.entity_enum.EStatus;
 import com.pse.tixclick.payload.entity.entity_enum.ESubRole;
 import com.pse.tixclick.payload.request.create.CreateCompanyRequest;
 import com.pse.tixclick.payload.request.create.CreateCompanyVerificationRequest;
@@ -81,6 +82,7 @@ public class CompanyServiceImpl implements CompanyService {
         member.setCompany(company);
         member.setSubRole(ESubRole.OWNER);
         member.setAccount(account);
+        member.setStatus(EStatus.ACTIVE);
         memberRepository.save(member);
 
         CreateCompanyVerificationRequest createCompanyVerificationRequest = new CreateCompanyVerificationRequest();
