@@ -14,9 +14,9 @@ import lombok.experimental.FieldDefaults;
 public class CompanyAccountDTO {
     private int companyAccountId;
 
-    private Company company;
+    private int companyId;
 
-    private Account account;
+    private int accountId;
 
     private String username;
 
