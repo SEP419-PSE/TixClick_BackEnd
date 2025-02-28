@@ -2,10 +2,7 @@ package com.pse.tixclick.service.impl;
 
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
-import com.pse.tixclick.payload.dto.OrderDTO;
-import com.pse.tixclick.payload.dto.OrderDetailDTO;
-import com.pse.tixclick.payload.dto.Order_OrderDetailDTO;
-import com.pse.tixclick.payload.dto.TicketOrderDTO;
+import com.pse.tixclick.payload.dto.*;
 import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.entity_enum.EOrderStatus;
 import com.pse.tixclick.payload.entity.entity_enum.ETicketPurchaseStatus;
@@ -35,6 +32,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -147,11 +145,45 @@ public class OrderServiceImpl implements OrderService {
                 .map(order -> {
                     Order_OrderDetailDTO dto = mapper.map(order, Order_OrderDetailDTO.class);
 
-                    // Lấy danh sách OrderDetail
                     List<OrderDetail> orderDetails = orderDetailRepository.findByOrderId(order.getOrderId());
                     if (!orderDetails.isEmpty()) {
-                        OrderDetail orderDetail = orderDetails.get(0); // Lấy orderDetail đầu tiên
-                        dto.setOrderDetail(mapper.map(orderDetail, OrderDetailDTO.class));
+                        List<OrderDetailDTO> orderDetailDTOs = orderDetails.stream()
+                                .map(orderDetail -> {
+                                    OrderDetailDTO orderDetailDTO = mapper.map(orderDetail, OrderDetailDTO.class);
+
+                                    if (orderDetail.getTicketPurchase() != null) {
+                                        TicketPurchase ticketPurchase = orderDetail.getTicketPurchase();
+                                        TicketPurchaseDTO ticketPurchaseDTO = new TicketPurchaseDTO();
+
+                                        ticketPurchaseDTO.setTicketPurchaseId(ticketPurchase.getTicketPurchaseId());
+                                        ticketPurchaseDTO.setQrCode(ticketPurchase.getQrCode());
+                                        ticketPurchaseDTO.setStatus(ticketPurchase.getStatus());
+
+                                        if (ticketPurchase.getTicket() != null) {
+                                            ticketPurchaseDTO.setTicketId(ticketPurchase.getTicket().getTicketId());
+                                        }
+
+                                        if (ticketPurchase.getEventActivity() != null) {
+                                            ticketPurchaseDTO.setEventActivityId(ticketPurchase.getEventActivity().getEventActivityId());
+                                        }
+
+                                        if (ticketPurchase.getZone() != null) {
+                                            ticketPurchaseDTO.setZoneId(ticketPurchase.getZone().getZoneId());
+                                        }
+
+                                        if (ticketPurchase.getSeat() != null) {
+                                            ticketPurchaseDTO.setSeatId(ticketPurchase.getSeat().getSeatId());
+                                        }
+
+                                        if (ticketPurchase.getEvent() != null) {
+                                            ticketPurchaseDTO.setEventId(ticketPurchase.getEvent().getEventId());
+                                        }
+                                        orderDetailDTO.setTicketPurchaseDTO(ticketPurchaseDTO);
+                                    }
+                                    return orderDetailDTO;
+                                })
+                                .collect(Collectors.toList());
+                        dto.setOrderDetail(orderDetailDTOs);
                     }
                     return dto;
                 })
@@ -167,16 +199,52 @@ public class OrderServiceImpl implements OrderService {
                 .map(order -> {
                     Order_OrderDetailDTO dto = mapper.map(order, Order_OrderDetailDTO.class);
 
-                    // Lấy danh sách OrderDetail
                     List<OrderDetail> orderDetails = orderDetailRepository.findByOrderId(order.getOrderId());
                     if (!orderDetails.isEmpty()) {
-                        OrderDetail orderDetail = orderDetails.get(0); // Lấy orderDetail đầu tiên
-                        dto.setOrderDetail(mapper.map(orderDetail, OrderDetailDTO.class));
+                        List<OrderDetailDTO> orderDetailDTOs = orderDetails.stream()
+                                .map(orderDetail -> {
+                                    OrderDetailDTO orderDetailDTO = mapper.map(orderDetail, OrderDetailDTO.class);
+
+                                    if (orderDetail.getTicketPurchase() != null) {
+                                        TicketPurchase ticketPurchase = orderDetail.getTicketPurchase();
+                                        TicketPurchaseDTO ticketPurchaseDTO = new TicketPurchaseDTO();
+
+                                        ticketPurchaseDTO.setTicketPurchaseId(ticketPurchase.getTicketPurchaseId());
+                                        ticketPurchaseDTO.setQrCode(ticketPurchase.getQrCode());
+                                        ticketPurchaseDTO.setStatus(ticketPurchase.getStatus());
+
+                                        if (ticketPurchase.getTicket() != null) {
+                                            ticketPurchaseDTO.setTicketId(ticketPurchase.getTicket().getTicketId());
+                                        }
+
+                                        if (ticketPurchase.getEventActivity() != null) {
+                                            ticketPurchaseDTO.setEventActivityId(ticketPurchase.getEventActivity().getEventActivityId());
+                                        }
+
+                                        if (ticketPurchase.getZone() != null) {
+                                            ticketPurchaseDTO.setZoneId(ticketPurchase.getZone().getZoneId());
+                                        }
+
+                                        if (ticketPurchase.getSeat() != null) {
+                                            ticketPurchaseDTO.setSeatId(ticketPurchase.getSeat().getSeatId());
+                                        }
+
+                                        if (ticketPurchase.getEvent() != null) {
+                                            ticketPurchaseDTO.setEventId(ticketPurchase.getEvent().getEventId());
+                                        }
+                                        orderDetailDTO.setTicketPurchaseDTO(ticketPurchaseDTO);
+                                    }
+                                    return orderDetailDTO;
+                                })
+                                .collect(Collectors.toList());
+                        dto.setOrderDetail(orderDetailDTOs);
                     }
                     return dto;
                 })
                 .toList();
     }
+
+
 
     private String orderCodeAutomationCreating() {
         Account account = appUtils.getAccountFromAuthentication();

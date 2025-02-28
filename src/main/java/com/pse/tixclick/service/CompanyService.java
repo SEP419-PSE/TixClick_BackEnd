@@ -6,11 +6,18 @@ import com.pse.tixclick.payload.request.update.UpdateCompanyRequest;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 
 public interface CompanyService {
     CompanyDTO createCompany(CreateCompanyRequest createCompanyRequest, MultipartFile file) throws IOException;
 
     CompanyDTO updateCompany(UpdateCompanyRequest updateCompanyRequest, int id);
 
-    String approveCompany(String status);
+    String approveCompany(int id);
+
+    String rejectCompany(int id);
+
+    String inactiveCompany(int id);
+
+    List<CompanyDTO> getAllCompany();
 }
