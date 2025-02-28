@@ -26,7 +26,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cglib.core.Local;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -133,7 +132,7 @@ public class OrderServiceImpl implements OrderService {
         order.setTotalAmount(totalAmount);
         orderRepository.save(order);
 
-        final int orderId = order.getOrderId(); // Tạo biến cục bộ final
+        final int orderId = order.getOrderId();
         CompletableFuture.runAsync(() -> scheduleStatusUpdate(LocalDateTime.now(), orderId));
 
         return mapper.map(order, OrderDTO.class);
@@ -187,7 +186,6 @@ public class OrderServiceImpl implements OrderService {
         String date = new SimpleDateFormat("yyyyMMdd").format(new Date());
 
         // Tạo phần số thứ tự tự động hoặc ngẫu nhiên cho mã đơn hàng
-        // Bạn có thể thay thế bằng logic lấy số thứ tự từ DB
         String uniqueId = String.format("%04d", new Random().nextInt(10000));
 
         return accountId + date  + uniqueId;
@@ -196,7 +194,7 @@ public class OrderServiceImpl implements OrderService {
     @Async
     public void scheduleStatusUpdate(LocalDateTime startTime, int orderId) {
         LocalDateTime currentTime = LocalDateTime.now();
-        long delay = java.time.Duration.between(currentTime, startTime.plusMinutes(1)).toSeconds();
+        long delay = java.time.Duration.between(currentTime, startTime.plusMinutes(15)).toSeconds();
 
         if (delay > 0) {
             scheduler.schedule(() -> {
