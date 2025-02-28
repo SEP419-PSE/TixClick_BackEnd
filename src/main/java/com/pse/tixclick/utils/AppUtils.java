@@ -6,9 +6,16 @@ import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.repository.AccountRepository;
+import com.pse.tixclick.repository.SeatRepository;
+import com.pse.tixclick.repository.TicketPurchaseRepository;
+import com.pse.tixclick.repository.ZoneRepository;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -20,13 +27,25 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
+import java.time.LocalDateTime;
 import java.util.Base64;
+import java.util.concurrent.ScheduledFuture;
 
 @RequiredArgsConstructor
 @Component
 public class AppUtils {
     @Autowired
     private final AccountRepository accountRepository;
+
+    @Autowired
+    private final TicketPurchaseRepository ticketPurchaseRepository;
+
+    @Autowired
+    private final SeatRepository seatRepository;
+
+    @Autowired
+    private final ZoneRepository zoneRepository;
+
 
     public Account getAccountFromAuthentication(){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

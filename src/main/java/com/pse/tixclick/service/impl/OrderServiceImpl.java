@@ -8,9 +8,12 @@ import com.pse.tixclick.payload.dto.Order_OrderDetailDTO;
 import com.pse.tixclick.payload.dto.TicketOrderDTO;
 import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.entity_enum.EOrderStatus;
+import com.pse.tixclick.payload.entity.entity_enum.ETicketPurchaseStatus;
 import com.pse.tixclick.payload.entity.payment.Order;
 import com.pse.tixclick.payload.entity.payment.OrderDetail;
 import com.pse.tixclick.payload.entity.payment.Voucher;
+import com.pse.tixclick.payload.entity.seatmap.Seat;
+import com.pse.tixclick.payload.entity.seatmap.Zone;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
 import com.pse.tixclick.payload.entity.ticket.TicketPurchase;
 import com.pse.tixclick.payload.request.create.CreateOrderRequest;
@@ -24,13 +27,15 @@ import lombok.experimental.FieldDefaults;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cglib.core.Local;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
-import java.util.Date;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 @Service
 @RequiredArgsConstructor
@@ -44,22 +49,19 @@ public class OrderServiceImpl implements OrderService {
     OrderRepository orderRepository;
 
     @Autowired
-    AccountRepository accountRepository;
-
-    @Autowired
     OrderDetailRepository orderDetailRepository;
 
     @Autowired
     ModelMapper mapper;
 
     @Autowired
-    PaymentRepository paymentRepository;
+    ZoneRepository zoneRepository;
 
     @Autowired
     TicketPurchaseRepository ticketPurchaseRepository;
 
     @Autowired
-    EventRepository eventRepository;
+    SeatRepository seatRepository;
 
     @Autowired
     TicketRepository ticketRepository;
@@ -67,6 +69,7 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     VoucherRepository voucherRepository;
 
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
 
 
@@ -81,14 +84,22 @@ public class OrderServiceImpl implements OrderService {
         order = orderRepository.save(order);
 
         double totalAmount = 0;
+        Set<Integer> ticketPurchaseIds = new HashSet<>();
 
         for (TicketOrderDTO ticketOrderDTO : createOrderRequest.getTicketOrderDTOS()) {
             int ticketPurchaseId = ticketOrderDTO.getTicketPurchaseId();
             int quantity = ticketOrderDTO.getQuantity();
 
+            if (!ticketPurchaseIds.add(ticketPurchaseId)) {
+                throw new AppException(ErrorCode.DUPLICATE_TICKET_PURCHASE);
+            }
+
             TicketPurchase ticketPurchase = ticketPurchaseRepository
                     .findById(ticketPurchaseId)
                     .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
+            if(ticketPurchase.getStatus().equals(ETicketPurchaseStatus.EXPIRED.name())) {
+                throw new AppException(ErrorCode.TICKET_PURCHASE_EXPIRED);
+            }
 
             Ticket ticket = ticketRepository.findById(ticketPurchase.getTicket().getTicketId())
                     .orElseThrow(() -> new AppException(ErrorCode.TICKET_NOT_FOUND));
@@ -121,6 +132,10 @@ public class OrderServiceImpl implements OrderService {
 
         order.setTotalAmount(totalAmount);
         orderRepository.save(order);
+
+        final int orderId = order.getOrderId(); // Tạo biến cục bộ final
+        CompletableFuture.runAsync(() -> scheduleStatusUpdate(LocalDateTime.now(), orderId));
+
         return mapper.map(order, OrderDTO.class);
     }
 
@@ -164,7 +179,6 @@ public class OrderServiceImpl implements OrderService {
                 .toList();
     }
 
-
     private String orderCodeAutomationCreating() {
         Account account = appUtils.getAccountFromAuthentication();
         int accountId = account.getAccountId(); // Giả định bạn có hàm lấy userId
@@ -179,5 +193,101 @@ public class OrderServiceImpl implements OrderService {
         return accountId + date  + uniqueId;
     }
 
+    @Async
+    public void scheduleStatusUpdate(LocalDateTime startTime, int orderId) {
+        LocalDateTime currentTime = LocalDateTime.now();
+        long delay = java.time.Duration.between(currentTime, startTime.plusMinutes(1)).toSeconds();
 
+        if (delay > 0) {
+            scheduler.schedule(() -> {
+                Order order = orderRepository
+                        .findById(orderId)
+                        .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+                if (order.getStatus().equals(EOrderStatus.SUCCESSFUL.name())) {
+                    return;
+                }
+                if (order.getStatus().equals(EOrderStatus.FAILURE.name())) {
+                    return;
+                }
+                if (order.getStatus().equals(EOrderStatus.EXPIRED.name())) {
+                    return;
+                }
+                if (order.getStatus().equals(EOrderStatus.PENDING.name())) {
+                    List<OrderDetail> orderDetails = orderDetailRepository.findByOrderId(orderId);
+                    for (OrderDetail orderDetail : orderDetails) {
+                        TicketPurchase ticketPurchase = ticketPurchaseRepository
+                                .findById(orderDetail.getTicketPurchase().getTicketPurchaseId())
+                                .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
+
+                        Seat seat = seatRepository
+                                .findById(ticketPurchase.getSeat().getSeatId())
+                                .orElseThrow(() -> new AppException(ErrorCode.SEAT_NOT_FOUND));
+                        seat.setStatus(true);
+
+                        Zone zone = zoneRepository
+                                .findById(ticketPurchase.getZone().getZoneId())
+                                .orElseThrow(() -> new AppException(ErrorCode.ZONE_NOT_FOUND));
+
+                        if (zone.getAvailableQuantity() < 1) {
+                            zone.setAvailableQuantity(zone.getAvailableQuantity() + 1);
+                            zone.setStatus(true);
+                        } else {
+                            zone.setAvailableQuantity(zone.getAvailableQuantity() + 1);
+                        }
+                        ticketPurchase.setStatus(ETicketPurchaseStatus.EXPIRED.name());
+
+                        ticketPurchaseRepository.save(ticketPurchase);
+                        seatRepository.save(seat);
+                        zoneRepository.save(zone);
+                    }
+                    order.setStatus(EOrderStatus.EXPIRED.name());
+                    orderRepository.save(order);
+                }
+            }, delay, java.util.concurrent.TimeUnit.SECONDS);
+        } else {
+            Order order = orderRepository
+                    .findById(orderId)
+                    .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+            if (order.getStatus().equals(EOrderStatus.SUCCESSFUL.name())) {
+                return;
+            }
+            if (order.getStatus().equals(EOrderStatus.FAILURE.name())) {
+                return;
+            }
+            if (order.getStatus().equals(EOrderStatus.EXPIRED.name())) {
+                return;
+            }
+            if (order.getStatus().equals(EOrderStatus.PENDING.name())) {
+                List<OrderDetail> orderDetails = orderDetailRepository.findByOrderId(orderId);
+                for (OrderDetail orderDetail : orderDetails) {
+                    TicketPurchase ticketPurchase = ticketPurchaseRepository
+                            .findById(orderDetail.getTicketPurchase().getTicketPurchaseId())
+                            .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
+
+                    Seat seat = seatRepository
+                            .findById(ticketPurchase.getSeat().getSeatId())
+                            .orElseThrow(() -> new AppException(ErrorCode.SEAT_NOT_FOUND));
+                    seat.setStatus(true);
+
+                    Zone zone = zoneRepository
+                            .findById(ticketPurchase.getZone().getZoneId())
+                            .orElseThrow(() -> new AppException(ErrorCode.ZONE_NOT_FOUND));
+
+                    if (zone.getAvailableQuantity() < 1) {
+                        zone.setAvailableQuantity(zone.getAvailableQuantity() + 1);
+                        zone.setStatus(true);
+                    } else {
+                        zone.setAvailableQuantity(zone.getAvailableQuantity() + 1);
+                    }
+                    ticketPurchase.setStatus(ETicketPurchaseStatus.EXPIRED.name());
+
+                    ticketPurchaseRepository.save(ticketPurchase);
+                    seatRepository.save(seat);
+                    zoneRepository.save(zone);
+                }
+                order.setStatus(EOrderStatus.EXPIRED.name());
+                orderRepository.save(order);
+            }
+        }
+    }
 }
