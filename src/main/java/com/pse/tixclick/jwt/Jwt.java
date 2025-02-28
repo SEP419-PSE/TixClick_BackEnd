@@ -12,6 +12,7 @@ import com.nimbusds.jwt.SignedJWT;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.entity.Account;
+import com.pse.tixclick.payload.entity.company.CompanyAccount;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import org.springframework.beans.factory.annotation.Value;
@@ -47,7 +48,67 @@ public class Jwt {
         return new TokenPair(accessToken, refreshToken);
     }
 
+    public TokenPair generateTokensOfCompanyAccount(CompanyAccount companyAccount) {
+        // Generate Access Token
+        TokenInfo accessToken = generateTokenOfCompanyAccount(companyAccount, accessExpirationMillis);
+
+        // Generate Refresh Token
+        TokenInfo refreshToken = generateRefreshTokenOfCompanyAccount(companyAccount);
+
+        return new TokenPair(accessToken, refreshToken);
+    }
+
+    private TokenInfo generateTokenOfCompanyAccount(CompanyAccount companyAccount, long expirationMillis) {
+        try {
+            JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
+
+            Date issueTime = new Date();
+            Date expiryTime = new Date(issueTime.getTime() + expirationMillis);
+
+            JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
+                    .subject(companyAccount.getUsername())
+                    .issuer("tixclick.com")
+                    .issueTime(issueTime)
+                    .expirationTime(expiryTime)
+                    .jwtID(UUID.randomUUID().toString())
+                    .build();
+
+            SignedJWT signedJWT = new SignedJWT(header, claimsSet);
+            signedJWT.sign(new MACSigner(signerKey.getBytes()));
+
+            return new TokenInfo(signedJWT.serialize(), expiryTime);
+        } catch (JOSEException e) {
+            throw new RuntimeException("Error creating JWT token", e);
+        }
+    }
+
+    private TokenInfo generateRefreshTokenOfCompanyAccount(CompanyAccount companyAccount) {
+        try {
+            JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
+
+            Date issueTime = new Date();
+            Date expiryTime = new Date(issueTime.getTime() + refreshExpirationMillis);
+
+            // Only store userId and jwtID in the refresh token
+            JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
+                    .issuer("tixclick.com")
+                    .issueTime(issueTime)
+                    .expirationTime(expiryTime)
+                    .jwtID(UUID.randomUUID().toString())  // Use a shorter, unique identifier for refresh tokens
+                    .claim("Company Account ID", companyAccount.getCompanyAccountId())  // Store only the userId or reference
+                    .build();
+
+            SignedJWT signedJWT = new SignedJWT(header, claimsSet);
+            signedJWT.sign(new MACSigner(signerKey.getBytes()));
+
+            return new TokenInfo(signedJWT.serialize(), expiryTime);
+        } catch (JOSEException e) {
+            throw new RuntimeException("Error creating refresh JWT token", e);
+        }
+    }
+
     public  TokenInfo generateAccessToken(Account user) {
+
         return generateToken(user, accessExpirationMillis);
     }
 
