@@ -4,6 +4,8 @@ import com.cloudinary.Cloudinary;
 import com.pse.tixclick.cloudinary.CloudinaryService;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
+import com.pse.tixclick.payload.dto.AccountDTO;
+import com.pse.tixclick.payload.dto.BackgroundDTO;
 import com.pse.tixclick.payload.dto.CompanyDTO;
 import com.pse.tixclick.payload.entity.company.Company;
 import com.pse.tixclick.payload.entity.company.CompanyAccount;
@@ -153,7 +155,13 @@ public class CompanyServiceImpl implements CompanyService {
     public List<CompanyDTO> getAllCompany() {
         List<Company> companies = companyRepository.findAll();
         return companies.stream()
-                .map(company -> modelMapper.map(company, CompanyDTO.class))
+                .map(company -> {
+                    CompanyDTO companyDTO = modelMapper.map(company, CompanyDTO.class);
+                    companyDTO.setAccountDTO(modelMapper.map(company.getRepresentativeId(), AccountDTO.class));
+                    return companyDTO;
+                })
                 .toList();
     }
+
+
 }
