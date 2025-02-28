@@ -71,7 +71,6 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
         TicketPurchase ticketPurchase = new TicketPurchase();
         ticketPurchase.setStatus(ETicketPurchaseStatus.PENDING.name());
 
-        // Lấy thông tin Zone
         Zone zone = zoneRepository.findById(createTicketPurchaseRequest.getZoneId())
                 .orElseThrow(() -> new AppException(ErrorCode.ZONE_NOT_FOUND));
 
@@ -84,7 +83,6 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
         }
         zoneRepository.save(zone);
 
-        // Lấy thông tin Seat
         Seat seat = seatRepository.findById(createTicketPurchaseRequest.getSeatId())
                 .orElseThrow(() -> new AppException(ErrorCode.SEAT_NOT_FOUND));
 
@@ -94,7 +92,6 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
         seat.setStatus(false);
         seatRepository.save(seat);
 
-        // Lấy thông tin EventActivity, Ticket, Event
         EventActivity eventActivity = eventActivityRepository.findById(createTicketPurchaseRequest.getEventActivityId())
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_ACTIVITY_NOT_FOUND));
 
@@ -104,14 +101,12 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
         Event event = eventRepository.findById(createTicketPurchaseRequest.getEventId())
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
 
-        // Gán dữ liệu vào ticketPurchase
         ticketPurchase.setZone(zone);
         ticketPurchase.setSeat(seat);
         ticketPurchase.setEventActivity(eventActivity);
         ticketPurchase.setTicket(ticket);
         ticketPurchase.setEvent(event);
 
-        // Tạo dữ liệu QR Code
         Account account = appUtils.getAccountFromAuthentication();
 
         TicketQrCodeDTO ticketQrCodeDTO = new TicketQrCodeDTO();
@@ -128,14 +123,12 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
         String qrCode = generateQRCode(ticketQrCodeDTO);
         ticketPurchase.setQrCode(qrCode);
 
-        // Lưu vào database
         ticketPurchase = ticketPurchaseRepository.save(ticketPurchase);
 
-        // Tạo DTO (explicit mapping để tránh lỗi ModelMapper)
         TicketPurchaseDTO ticketPurchaseDTO = new TicketPurchaseDTO();
         ticketPurchaseDTO.setTicketPurchaseId(ticketPurchase.getTicketPurchaseId());
-        ticketPurchaseDTO.setEventActivityId(eventActivity.getEventActivityId()); // Chỉ lấy đúng ID, tránh xung đột với event
-        ticketPurchaseDTO.setTicketId(ticket.getTicketId()); // Chỉ lấy đúng ID, tránh xung đột với ticketPurchaseId
+        ticketPurchaseDTO.setEventActivityId(eventActivity.getEventActivityId());
+        ticketPurchaseDTO.setTicketId(ticket.getTicketId());
         ticketPurchaseDTO.setZoneId(zone.getZoneId());
         ticketPurchaseDTO.setSeatId(seat.getSeatId());
         ticketPurchaseDTO.setQrCode(ticketPurchase.getQrCode());
@@ -144,8 +137,6 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
 
         return ticketPurchaseDTO;
     }
-
-
 
     private String generateQRCode(TicketQrCodeDTO ticketQrCodeDTO) {
         String dataTransfer = AppUtils.transferToString(ticketQrCodeDTO);
