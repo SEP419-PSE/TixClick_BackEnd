@@ -6,6 +6,7 @@ import com.pse.tixclick.payload.entity.entity_enum.EEventStatus;
 import com.pse.tixclick.payload.request.create.CreateEventRequest;
 import com.pse.tixclick.payload.request.update.UpdateEventRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
+import com.pse.tixclick.payload.response.EventResponse;
 import com.pse.tixclick.service.EventService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -114,12 +115,12 @@ public class EventController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<ApiResponse<List<EventDTO>>> getAllEvent() {
-        List<EventDTO> events = eventService.getAllEvent();
+    public ResponseEntity<ApiResponse<List<EventResponse>>> getAllEvent() {
+        List<EventResponse> events = eventService.getAllEvent();
 
         if (events.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(ApiResponse.<List<EventDTO>>builder()
+                    .body(ApiResponse.<List<EventResponse>>builder()
                             .code(HttpStatus.NOT_FOUND.value())
                             .message("No events found")
                             .result(null)
@@ -127,7 +128,7 @@ public class EventController {
         }
 
         return ResponseEntity.ok(
-                ApiResponse.<List<EventDTO>>builder()
+                ApiResponse.<List<EventResponse>>builder()
                         .code(HttpStatus.OK.value())
                         .message("Get all events successfully")
                         .result(events)

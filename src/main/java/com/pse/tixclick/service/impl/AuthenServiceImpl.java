@@ -15,6 +15,7 @@ import com.pse.tixclick.payload.response.IntrospectResponse;
 import com.pse.tixclick.payload.response.RefreshTokenResponse;
 import com.pse.tixclick.payload.response.TokenResponse;
 import com.pse.tixclick.repository.AccountRepository;
+import com.pse.tixclick.repository.CompanyAccountRepository;
 import com.pse.tixclick.repository.RoleRepository;
 import com.pse.tixclick.service.AuthenService;
 import jakarta.mail.MessagingException;
@@ -59,6 +60,8 @@ public class AuthenServiceImpl implements AuthenService {
     RoleRepository roleRepository;
     @Autowired
     EmailService emailService;
+    @Autowired
+    CompanyAccountRepository companyAccountRepository;
 
     @Value("${app.jwt-secret}")
     private String SIGNER_KEY;
