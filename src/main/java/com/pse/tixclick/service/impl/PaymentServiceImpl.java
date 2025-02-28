@@ -174,6 +174,7 @@ public class PaymentServiceImpl implements PaymentService {
             transaction.setDescription("Thanh toan don hang: " + orderCode);
             transaction.setAccount(account);
             transaction.setPayment(payment);
+            transaction.setContractPayment(null);
             transactionRepository.save(transaction);
 
             return new PaymentResponse(status, "SUCCESSFUL", mapper.map(payment, PaymentResponse.class));
@@ -185,7 +186,8 @@ public class PaymentServiceImpl implements PaymentService {
             Order order = orderRepository
                     .findById(Integer.valueOf(orderId))
                     .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
-            order.setStatus(EOrderStatus.CANCELLED.name());
+            order.setStatus(EOrderStatus.FAILURE.name());
+
             orderRepository.save(order);
 
             return new PaymentResponse(status, "CANCELLED", mapper.map(payment, PaymentResponse.class));

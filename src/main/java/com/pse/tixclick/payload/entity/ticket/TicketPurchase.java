@@ -33,7 +33,7 @@ public class TicketPurchase {
     @JoinColumn(name="zone_id", nullable = false)
     private Zone zone;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name="seat_id")
     private Seat seat;
 
@@ -48,5 +48,4 @@ public class TicketPurchase {
     @ManyToOne
     @JoinColumn(name = "event_id", nullable = false)
     private Event event;
-
 }

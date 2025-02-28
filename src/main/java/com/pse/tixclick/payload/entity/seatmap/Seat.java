@@ -9,6 +9,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 
 @Getter
 @Setter
@@ -42,6 +43,6 @@ public class Seat {
     @JoinColumn(name="zone_id", nullable = false)
     private Zone zone;
 
-    @OneToOne(mappedBy = "seat")
-    private TicketPurchase ticketPurchase;
+    @OneToMany(mappedBy = "seat")
+    private Collection<TicketPurchase> ticketPurchases;
 }
