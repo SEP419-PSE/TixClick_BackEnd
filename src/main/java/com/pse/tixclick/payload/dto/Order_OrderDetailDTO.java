@@ -3,6 +3,8 @@ package com.pse.tixclick.payload.dto;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.List;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -19,5 +21,5 @@ public class Order_OrderDetailDTO {
 
     private int accountId;
 
-    private OrderDetailDTO orderDetail;
+    private List<OrderDetailDTO> orderDetail;
 }
