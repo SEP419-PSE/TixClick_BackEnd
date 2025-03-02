@@ -1,6 +1,7 @@
 package com.pse.tixclick.service.impl;
 
 import com.pse.tixclick.cloudinary.CloudinaryService;
+import com.pse.tixclick.payload.response.EventResponse;
 import com.pse.tixclick.utils.AppUtils;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
@@ -27,6 +28,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -130,9 +132,6 @@ public class EventServiceImpl implements EventService {
             String bannerUrl = cloudinary.uploadImageToCloudinary(bannerURL);
             event.setBannerURL(bannerUrl);
         }
-
-
-
         // Lưu thay đổi vào database
         event = eventRepository.save(event);
 
@@ -149,10 +148,30 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public List<EventDTO> getAllEvent() {
+    public List<EventResponse> getAllEvent() {
         List<Event> events = eventRepository.findAll();
-        return modelMapper.map(events, new TypeToken<List<EventDTO>>() {}.getType());
+        return events.stream().map(event -> {
+            EventResponse response = new EventResponse();
+            response.setEventId(event.getEventId());
+            response.setEventName(event.getEventName());
+            response.setLocation(event.getLocation());
+            response.setStatus(String.valueOf(event.getStatus()));
+            response.setTypeEvent(event.getTypeEvent());
+
+            if (event.getOrganizer() != null) {
+                response.setOrganizerId(event.getOrganizer().getAccountId());
+                response.setOrganizerName(event.getOrganizer().getUserName());
+            }
+
+            if (event.getCompany() != null) {
+                response.setCompanyId(event.getCompany().getCompanyId());
+                response.setCompanyName(event.getCompany().getCompanyName());
+            }
+
+            return response;
+        }).collect(Collectors.toList());
     }
+
 
     @Override
     public EventDTO getEventById(int id) {

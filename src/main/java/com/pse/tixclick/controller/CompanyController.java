@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 
 @RestController
 @RequestMapping("/company")
@@ -72,6 +73,90 @@ public class CompanyController {
         } catch (AppException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST.value())
                     .body(ApiResponse.<CompanyDTO>builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        }
+    }
+
+    @PutMapping("/approve/{id}")
+    public ResponseEntity<ApiResponse<String>> approveCompany(@PathVariable int id) {
+        try {
+            String message = companyService.approveCompany(id);
+            return ResponseEntity.ok(
+                    ApiResponse.<String>builder()
+                            .code(HttpStatus.OK.value())
+                            .message(message)
+                            .result(null)
+                            .build()
+            );
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.<String>builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        }
+    }
+
+    @PutMapping("/reject/{id}")
+    public ResponseEntity<ApiResponse<String>> rejectCompany(@PathVariable int id) {
+        try {
+            String message = companyService.rejectCompany(id);
+            return ResponseEntity.ok(
+                    ApiResponse.<String>builder()
+                            .code(HttpStatus.OK.value())
+                            .message(message)
+                            .result(null)
+                            .build()
+            );
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.<String>builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        }
+    }
+
+    @PutMapping("/inactive/{id}")
+    public ResponseEntity<ApiResponse<String>> inactiveCompany(@PathVariable int id) {
+        try {
+            String message = companyService.inactiveCompany(id);
+            return ResponseEntity.ok(
+                    ApiResponse.<String>builder()
+                            .code(HttpStatus.OK.value())
+                            .message(message)
+                            .result(null)
+                            .build()
+            );
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.<String>builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        }
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<ApiResponse<List<CompanyDTO>>> getAllCompany() {
+        try {
+            List<CompanyDTO> companyDTOList = companyService.getAllCompany();
+            return ResponseEntity.ok(
+                    ApiResponse.<List<CompanyDTO>>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Get all company successfully")
+                            .result(companyDTOList)
+                            .build()
+            );
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.<List<CompanyDTO>>builder()
                             .code(HttpStatus.BAD_REQUEST.value())
                             .message(e.getMessage())
                             .result(null)

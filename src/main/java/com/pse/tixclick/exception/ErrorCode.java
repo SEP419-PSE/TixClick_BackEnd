@@ -69,7 +69,12 @@ public enum ErrorCode {
     ACCOUNT_NOT_FOUND(1060, "Không tìm thấy account", HttpStatus.NOT_FOUND),
     ZONE_TYPE_NOT_FOUND(1061, "Không tìm thấy zone type", HttpStatus.NOT_FOUND),
     CONTRACT_NOT_FOUND(1062, "Không tìm thấy contract", HttpStatus.NOT_FOUND),
+    SEAT_NOT_AVAILABLE(1062, "Ghế không khả dụng", HttpStatus.BAD_REQUEST),
+    DUPLICATE_TICKET_PURCHASE(1063, "Ticket purchase đã tồn tại", HttpStatus.BAD_REQUEST),
+    ZONE_FULL(1064, "Zone đã đầy", HttpStatus.BAD_REQUEST),
+    TICKET_PURCHASE_EXPIRED(1065, "Ticket purchase đã hết hạn", HttpStatus.BAD_REQUEST),
     ;
+
 
 
 

@@ -34,6 +34,7 @@ public class SecurityConfig {
     private final String[] PUBLIC_ENDPOINTS = {
             "/account/**",
             "/auth/**",
+            "/company-account/**",
             "/event/**",
             "event-image/**",
             "/event-activity/**",

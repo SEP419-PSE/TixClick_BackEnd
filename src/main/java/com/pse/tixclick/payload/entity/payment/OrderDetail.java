@@ -27,7 +27,7 @@ public class OrderDetail {
     @JoinColumn(name = "order_id", nullable = false)
     private Order order;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name="ticket_purchase_id", nullable = false)
     private TicketPurchase ticketPurchase;
 

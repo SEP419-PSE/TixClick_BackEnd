@@ -6,9 +6,14 @@ import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.entity_enum.EOrderStatus;
 import com.pse.tixclick.payload.entity.entity_enum.EPaymentStatus;
+import com.pse.tixclick.payload.entity.entity_enum.ETicketPurchaseStatus;
 import com.pse.tixclick.payload.entity.payment.Order;
+import com.pse.tixclick.payload.entity.payment.OrderDetail;
 import com.pse.tixclick.payload.entity.payment.Payment;
 import com.pse.tixclick.payload.entity.payment.Transaction;
+import com.pse.tixclick.payload.entity.seatmap.Seat;
+import com.pse.tixclick.payload.entity.seatmap.Zone;
+import com.pse.tixclick.payload.entity.ticket.TicketPurchase;
 import com.pse.tixclick.payload.response.PayOSResponse;
 import com.pse.tixclick.payload.response.PaymentResponse;
 import com.pse.tixclick.payos.PayOSUtils;
@@ -62,7 +67,14 @@ public class PaymentServiceImpl implements PaymentService {
     @Autowired
     AccountRepository accountRepository;
 
+    @Autowired
+    TicketPurchaseRepository ticketPurchaseRepository;
 
+    @Autowired
+    SeatRepository seatRepository;
+
+    @Autowired
+    ZoneRepository zoneRepository;
 
 
     @Override
@@ -158,11 +170,21 @@ public class PaymentServiceImpl implements PaymentService {
 
             Order order = orderRepository
                     .findById(Integer.valueOf(orderId))
-                    .orElseThrow(() -> new RuntimeException("Order not found!"));
+                    .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
 
             Account account = accountRepository
                     .findAccountByUserName(userName)
                     .orElseThrow(() -> new AppException(ErrorCode.ACCOUNT_NOT_FOUND));
+
+            List<OrderDetail> orderDetail = orderDetailRepository.findByOrderId(order.getOrderId());
+
+            for(OrderDetail detail : orderDetail) {
+                TicketPurchase ticketPurchase = ticketPurchaseRepository
+                        .findById(detail.getTicketPurchase().getTicketPurchaseId())
+                        .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
+                ticketPurchase.setStatus(ETicketPurchaseStatus.PURCHASED.name());
+                ticketPurchaseRepository.save(ticketPurchase);
+            }
 
             order.setStatus(EOrderStatus.SUCCESSFUL.name());
             orderRepository.save(order);
@@ -174,6 +196,7 @@ public class PaymentServiceImpl implements PaymentService {
             transaction.setDescription("Thanh toan don hang: " + orderCode);
             transaction.setAccount(account);
             transaction.setPayment(payment);
+            transaction.setContractPayment(null);
             transactionRepository.save(transaction);
 
             return new PaymentResponse(status, "SUCCESSFUL", mapper.map(payment, PaymentResponse.class));
@@ -185,17 +208,41 @@ public class PaymentServiceImpl implements PaymentService {
             Order order = orderRepository
                     .findById(Integer.valueOf(orderId))
                     .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
-            order.setStatus(EOrderStatus.CANCELLED.name());
+            order.setStatus(EOrderStatus.FAILURE.name());
             orderRepository.save(order);
 
+            List<OrderDetail> orderDetail = orderDetailRepository.findByOrderId(order.getOrderId());
+            for(OrderDetail detail : orderDetail) {
+                TicketPurchase ticketPurchase = ticketPurchaseRepository
+                        .findById(detail.getTicketPurchase().getTicketPurchaseId())
+                        .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
+                ticketPurchase.setStatus(ETicketPurchaseStatus.CANCELLED.name());
+                Seat seat = seatRepository
+                        .findById(ticketPurchase.getSeat().getSeatId())
+                        .orElseThrow(() -> new AppException(ErrorCode.SEAT_NOT_FOUND));
+                seat.setStatus(true);
+
+                Zone zone = zoneRepository
+                        .findById(ticketPurchase.getZone().getZoneId())
+                        .orElseThrow(() -> new AppException(ErrorCode.ZONE_NOT_FOUND));
+
+                if (zone.getAvailableQuantity() < 1) {
+                    zone.setAvailableQuantity(zone.getAvailableQuantity() + 1);
+                    zone.setStatus(true);
+                } else {
+                    zone.setAvailableQuantity(zone.getAvailableQuantity() + 1);
+                }
+
+                seatRepository.save(seat);
+                zoneRepository.save(zone);
+                ticketPurchaseRepository.save(ticketPurchase);
+            }
             return new PaymentResponse(status, "CANCELLED", mapper.map(payment, PaymentResponse.class));
         }
     }
 
-
     private String getBaseUrl(HttpServletRequest request) {
-        // Trả về URL cố định
-        return "https://tixclick.site/";
+        return "https://tixclick.site";
     }
 
     private Date setTransactionDateFromPayDate(String payDate) {

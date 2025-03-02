@@ -1,9 +1,9 @@
 package com.pse.tixclick.payload.entity.entity_enum;
 
-public enum EOrderStatus {
+public enum ETicketPurchaseStatus {
     PENDING,
-    SUCCESSFUL,
-    FAILURE,
-    REFUNDED,
+    PURCHASED,
+    CANCELLED,
+    CHECKED_IN,
     EXPIRED,
 }

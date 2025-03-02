@@ -4,6 +4,8 @@ import com.cloudinary.Cloudinary;
 import com.pse.tixclick.cloudinary.CloudinaryService;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
+import com.pse.tixclick.payload.dto.AccountDTO;
+import com.pse.tixclick.payload.dto.BackgroundDTO;
 import com.pse.tixclick.payload.dto.CompanyDTO;
 import com.pse.tixclick.payload.entity.company.Company;
 import com.pse.tixclick.payload.entity.company.CompanyAccount;
@@ -32,6 +34,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 
 @Service
 @Transactional
@@ -117,7 +120,48 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     @Override
-    public String approveCompany(String status) {
-        return null;
+    public String approveCompany(int id) {
+        Company company = companyRepository
+                .findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_EXISTED));
+
+        company.setStatus(ECompanyStatus.ACTIVE);
+        companyRepository.save(company);
+        return "Company is now active";    }
+
+    @Override
+    public String rejectCompany(int id) {
+        Company company = companyRepository
+                .findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_EXISTED));
+
+        company.setStatus(ECompanyStatus.REJECTED);
+        companyRepository.save(company);
+        return "Company is now rejected";
     }
+
+    @Override
+    public String inactiveCompany(int id) {
+        Company company = companyRepository
+                .findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_EXISTED));
+
+        company.setStatus(ECompanyStatus.INACTIVE);
+        companyRepository.save(company);
+        return "Company is now inactive";
+    }
+
+    @Override
+    public List<CompanyDTO> getAllCompany() {
+        List<Company> companies = companyRepository.findAll();
+        return companies.stream()
+                .map(company -> {
+                    CompanyDTO companyDTO = modelMapper.map(company, CompanyDTO.class);
+                    companyDTO.setAccountDTO(modelMapper.map(company.getRepresentativeId(), AccountDTO.class));
+                    return companyDTO;
+                })
+                .toList();
+    }
+
+
 }

@@ -37,7 +37,7 @@ public class PaymentController {
 
 
     @PostMapping("/pay-os-create")
-    public ResponseObject<PayOSResponse>PayOS(@RequestBody CreateOrderRequest request, HttpServletRequest httpServletRequest) throws Exception {
+    public ResponseObject<PayOSResponse>payOS(@RequestBody CreateOrderRequest request, HttpServletRequest httpServletRequest) throws Exception {
         OrderDTO orderDTO = orderService.createOrder(request);
         return new ResponseObject<>(HttpStatus.OK, "Success", paymentService.createPaymentLink(orderDTO.getOrderId(), httpServletRequest));
     }

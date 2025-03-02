@@ -3,8 +3,11 @@ package com.pse.tixclick.service.impl;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.EventDTO;
+import com.pse.tixclick.payload.dto.TicketDTO;
 import com.pse.tixclick.payload.dto.TicketPurchaseDTO;
 import com.pse.tixclick.payload.dto.TicketQrCodeDTO;
+import com.pse.tixclick.payload.entity.Account;
+import com.pse.tixclick.payload.entity.entity_enum.ETicketPurchaseStatus;
 import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.entity.event.EventActivity;
 import com.pse.tixclick.payload.entity.seatmap.Seat;
@@ -21,10 +24,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Optional;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 @Service
 @RequiredArgsConstructor
@@ -62,33 +69,45 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
     @Override
     public TicketPurchaseDTO createTicketPurchase(CreateTicketPurchaseRequest createTicketPurchaseRequest) {
         TicketPurchase ticketPurchase = new TicketPurchase();
-        ticketPurchase.setStatus("PENDING");
+        ticketPurchase.setStatus(ETicketPurchaseStatus.PENDING.name());
 
-        Zone zone = zoneRepository
-                .findById(createTicketPurchaseRequest.getZoneId())
+        Zone zone = zoneRepository.findById(createTicketPurchaseRequest.getZoneId())
                 .orElseThrow(() -> new AppException(ErrorCode.ZONE_NOT_FOUND));
 
-        Seat seat = seatRepository
-                .findById(createTicketPurchaseRequest.getSeatId())
+        if (zone.getAvailableQuantity() <= 0) {
+            throw new AppException(ErrorCode.ZONE_FULL);
+        }
+        zone.setAvailableQuantity(zone.getAvailableQuantity() - 1);
+        if (zone.getAvailableQuantity() == 0) {
+            zone.setStatus(false);
+        }
+        zoneRepository.save(zone);
+
+        Seat seat = seatRepository.findById(createTicketPurchaseRequest.getSeatId())
                 .orElseThrow(() -> new AppException(ErrorCode.SEAT_NOT_FOUND));
 
-        EventActivity eventActivity = eventActivityRepository
-                .findById(createTicketPurchaseRequest.getEventActivityId())
+        if (!seat.isStatus()) {
+            throw new AppException(ErrorCode.SEAT_NOT_AVAILABLE);
+        }
+        seat.setStatus(false);
+        seatRepository.save(seat);
+
+        EventActivity eventActivity = eventActivityRepository.findById(createTicketPurchaseRequest.getEventActivityId())
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_ACTIVITY_NOT_FOUND));
 
-        Ticket ticket = ticketRepository
-                .findById(createTicketPurchaseRequest.getTicketId())
+        Ticket ticket = ticketRepository.findById(createTicketPurchaseRequest.getTicketId())
                 .orElseThrow(() -> new AppException(ErrorCode.TICKET_NOT_FOUND));
 
-        Event event = eventRepository
-                .findById(createTicketPurchaseRequest.getEventId())
-                .orElseThrow(()-> new AppException(ErrorCode.EVENT_NOT_FOUND));
+        Event event = eventRepository.findById(createTicketPurchaseRequest.getEventId())
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
 
         ticketPurchase.setZone(zone);
         ticketPurchase.setSeat(seat);
         ticketPurchase.setEventActivity(eventActivity);
         ticketPurchase.setTicket(ticket);
         ticketPurchase.setEvent(event);
+
+        Account account = appUtils.getAccountFromAuthentication();
 
         TicketQrCodeDTO ticketQrCodeDTO = new TicketQrCodeDTO();
         ticketQrCodeDTO.setTicket_name(ticket.getTicketName());
@@ -98,18 +117,28 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
         ticketQrCodeDTO.setZone_name(zone.getZoneName());
         ticketQrCodeDTO.setSeat_row_number(seat.getRowNumber());
         ticketQrCodeDTO.setSeat_column_number(seat.getColumnNumber());
-        ticketQrCodeDTO.setAccount_name(appUtils.getAccountFromAuthentication().getUserName());
-        ticketQrCodeDTO.setPhone(appUtils.getAccountFromAuthentication().getPhone());
+        ticketQrCodeDTO.setAccount_name(account.getUserName());
+        ticketQrCodeDTO.setPhone(account.getPhone());
 
         String qrCode = generateQRCode(ticketQrCodeDTO);
         ticketPurchase.setQrCode(qrCode);
 
-        ticketPurchaseRepository.save(ticketPurchase);
+        ticketPurchase = ticketPurchaseRepository.save(ticketPurchase);
 
-        return null;
+        TicketPurchaseDTO ticketPurchaseDTO = new TicketPurchaseDTO();
+        ticketPurchaseDTO.setTicketPurchaseId(ticketPurchase.getTicketPurchaseId());
+        ticketPurchaseDTO.setEventActivityId(eventActivity.getEventActivityId());
+        ticketPurchaseDTO.setTicketId(ticket.getTicketId());
+        ticketPurchaseDTO.setZoneId(zone.getZoneId());
+        ticketPurchaseDTO.setSeatId(seat.getSeatId());
+        ticketPurchaseDTO.setQrCode(ticketPurchase.getQrCode());
+        ticketPurchaseDTO.setStatus(ticketPurchase.getStatus());
+        ticketPurchaseDTO.setEventId(ticketPurchase.getEvent().getEventId());
+
+        return ticketPurchaseDTO;
     }
 
-    private String generateQRCode(TicketQrCodeDTO ticketQrCodeDTO){
+    private String generateQRCode(TicketQrCodeDTO ticketQrCodeDTO) {
         String dataTransfer = AppUtils.transferToString(ticketQrCodeDTO);
         return AppUtils.generateQRCode(dataTransfer, QR_CODE_WIDTH, QR_CODE_HEIGHT);
     }
