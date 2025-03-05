@@ -43,6 +43,10 @@ public class Seat {
     @JoinColumn(name="zone_id", nullable = false)
     private Zone zone;
 
+    @ManyToOne
+    @JoinColumn(name="ticket_id", nullable = false)
+    private Ticket ticket;
+
     @OneToMany(mappedBy = "seat")
     private Collection<TicketPurchase> ticketPurchases;
 }

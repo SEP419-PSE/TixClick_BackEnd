@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ZoneRepository extends JpaRepository<Zone, Integer> {
@@ -15,4 +16,6 @@ public interface ZoneRepository extends JpaRepository<Zone, Integer> {
 
     @Query("SELECT z from Zone z where z.zoneType.typeId = :type")
     List<Zone> findByZoneType(@Param("type") int type);
+
+    List<Zone> findBySeatMap_SeatMapId(int seatMapId);
 }

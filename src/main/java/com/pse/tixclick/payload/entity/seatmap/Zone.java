@@ -1,6 +1,7 @@
 package com.pse.tixclick.payload.entity.seatmap;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.pse.tixclick.payload.entity.ticket.Ticket;
 import com.pse.tixclick.payload.entity.ticket.TicketPurchase;
 import jakarta.persistence.*;
 import lombok.*;
@@ -8,6 +9,7 @@ import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.List;
 
 @Getter
 @Setter
@@ -67,9 +69,13 @@ public class Zone {
     @JoinColumn(name = "zone_type_id", nullable = false)
     private ZoneType zoneType;
 
-    @OneToMany(mappedBy = "zone")
+    @ManyToOne
+    @JoinColumn(name = "ticket_id")
+    private Ticket ticket;
+
+    @OneToMany(mappedBy = "zone", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Collection<TicketPurchase> ticketPurchases;
 
-    @OneToMany(mappedBy = "zone")
-    private Collection<Seat> seats;
+    @OneToMany(mappedBy = "zone", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Seat> seats;
 }

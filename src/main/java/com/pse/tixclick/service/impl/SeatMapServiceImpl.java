@@ -1,5 +1,11 @@
 package com.pse.tixclick.service.impl;
 
+import com.pse.tixclick.payload.entity.seatmap.Seat;
+import com.pse.tixclick.payload.entity.seatmap.Zone;
+import com.pse.tixclick.payload.entity.ticket.Ticket;
+import com.pse.tixclick.payload.response.SeatResponse;
+import com.pse.tixclick.payload.response.SectionResponse;
+import com.pse.tixclick.repository.*;
 import com.pse.tixclick.utils.AppUtils;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
@@ -11,25 +17,25 @@ import com.pse.tixclick.payload.entity.seatmap.Background;
 import com.pse.tixclick.payload.entity.seatmap.SeatMap;
 import com.pse.tixclick.payload.request.create.CreateSeatMapRequest;
 import com.pse.tixclick.payload.request.update.UpdateSeatMapRequest;
-import com.pse.tixclick.repository.BackgroundRepository;
-import com.pse.tixclick.repository.EventRepository;
-import com.pse.tixclick.repository.SeatMapRepository;
 import com.pse.tixclick.service.SeatMapService;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Transactional
+@Slf4j
 public class SeatMapServiceImpl implements SeatMapService {
     @Autowired
     AppUtils appUtils;
@@ -45,6 +51,18 @@ public class SeatMapServiceImpl implements SeatMapService {
 
     @Autowired
     BackgroundRepository backgroundRepository;
+
+    @Autowired
+    SeatRepository seatRepository;
+
+    @Autowired
+    ZoneRepository zoneRepository;
+
+    @Autowired
+    ZoneTypeRepository zoneTypeRepository;
+
+    @Autowired
+    TicketRepository ticketRepository;
 
     @Override
     public SeatMapDTO createSeatMap(CreateSeatMapRequest createSeatMapRequest) {
@@ -131,4 +149,75 @@ public class SeatMapServiceImpl implements SeatMapService {
         seatMapDTO.setEvent(mapper.map(updatedSeatMap.getEvent(), EventDTO.class));
         return seatMapDTO;
     }
+
+    @Override
+    public List<SectionResponse> designZone(List<SectionResponse> sectionResponse, int eventId) {
+        var event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+
+        Optional<SeatMap> seatmapOpt = seatMapRepository.findSeatMapByEvent_EventId(eventId);
+
+        if (seatmapOpt.isPresent()) {
+            SeatMap seatMap = seatmapOpt.get(); // Lấy SeatMap từ Optional
+
+            // Lấy danh sách zone thuộc seatMap
+            List<Zone> zones = zoneRepository.findBySeatMapId(seatMap.getSeatMapId());
+
+            if (!zones.isEmpty()) { // Nếu có zones thì tiếp tục xóa
+                // Xóa tất cả seats trước
+                for (Zone zone : zones) {
+                    List<Seat> seats = seatRepository.findSeatsByZone_ZoneId(zone.getZoneId());
+                    if (!seats.isEmpty()) {
+                        for (Seat seat : seats) {
+                            seatRepository.delete(seat);
+                            log.info("Deleted seat: {}", seat.getSeatId());
+                        }
+                    }
+                    for (Zone zoneDelete : zones) {
+                        zoneRepository.delete(zoneDelete);
+                        log.info("Deleted zone: {}", zoneDelete.getZoneId());
+                    }
+                }
+
+                // Cuối cùng, xóa seatMap
+                seatMapRepository.delete(seatMap);
+                seatMapRepository.flush(); // Đảm bảo xóa ngay
+                log.info("Deleted seatMap: {}", seatMap.getSeatMapName());
+            }
+
+            // Tạo mới SeatMap
+            SeatMap newSeatMap = new SeatMap();
+            newSeatMap.setEvent(event);
+            seatMapRepository.save(newSeatMap);
+
+            // Duyệt qua danh sách SectionResponse để tạo Zone và Seat
+            for (SectionResponse section : sectionResponse) {
+                var zoneType = zoneTypeRepository.findById(section.getZoneTypeId())
+                        .orElseThrow(() -> new AppException(ErrorCode.ZONE_TYPE_NOT_FOUND));
+
+                Zone zone = new Zone();
+                zone.setSeatMap(newSeatMap);
+                zone.setZoneName(section.getName());
+                zone.setZoneType(zoneType);
+                zoneRepository.save(zone);
+
+                // Tạo danh sách ghế cho Zone
+                for (SeatResponse seatDto : section.getSeats()) {
+                    var price = ticketRepository.findById(seatDto.getTicketId())
+                            .orElseThrow(() -> new AppException(ErrorCode.TICKET_NOT_FOUND));
+
+                    Seat seat = new Seat();
+                    seat.setZone(zone);
+                    seat.setRowNumber(seatDto.getRowNumber());
+                    seat.setColumnNumber(seatDto.getColumnNumber());
+                    seat.setTicket(price);
+                    seatRepository.save(seat);
+                }
+            }
+
+
+        }
+        return sectionResponse;
+    }
+
 }
