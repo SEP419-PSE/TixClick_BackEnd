@@ -73,6 +73,7 @@ public enum ErrorCode {
     DUPLICATE_TICKET_PURCHASE(1063, "Ticket purchase đã tồn tại", HttpStatus.BAD_REQUEST),
     ZONE_FULL(1064, "Zone đã đầy", HttpStatus.BAD_REQUEST),
     TICKET_PURCHASE_EXPIRED(1065, "Ticket purchase đã hết hạn", HttpStatus.BAD_REQUEST),
+    COMPANY_USERNAME_EXISTED(1066, "Tên công ty đã tồn tại", HttpStatus.BAD_REQUEST),
     ;
 
 

@@ -62,6 +62,10 @@ public class CompanyAccountServiceImpl implements CompanyAccountService {
 
     @Override
     public String createCompanyAccount(CreateCompanyAccountRequest createCompanyAccountRequest) {
+        if (companyAccountRepository.findByUserName(createCompanyAccountRequest.getUserName()).isPresent()) {
+            throw new AppException(ErrorCode.COMPANY_USERNAME_EXISTED);
+        }
+
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
 
         Account account = accountRepository
