@@ -16,4 +16,5 @@ public interface SeatRepository extends JpaRepository<Seat, Integer> {
     @Query("select s from Seat s where s.zone.seatMap.seatMapId = :seatMapId")
     List<Seat> getSeatsBySeatMapId(@Param("seatMapId") int seatMapId);
 
+    List<Seat> findSeatsByZone_ZoneId(int zoneId);
 }

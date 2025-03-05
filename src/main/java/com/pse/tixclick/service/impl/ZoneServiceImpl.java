@@ -3,12 +3,15 @@ package com.pse.tixclick.service.impl;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.ZoneDTO;
+import com.pse.tixclick.payload.entity.seatmap.Seat;
 import com.pse.tixclick.payload.entity.seatmap.SeatMap;
 import com.pse.tixclick.payload.entity.seatmap.Zone;
 import com.pse.tixclick.payload.entity.seatmap.ZoneType;
 import com.pse.tixclick.payload.request.create.CreateZoneRequest;
 import com.pse.tixclick.payload.request.update.UpdateZoneRequest;
+import com.pse.tixclick.payload.response.SectionResponse;
 import com.pse.tixclick.repository.SeatMapRepository;
+import com.pse.tixclick.repository.SeatRepository;
 import com.pse.tixclick.repository.ZoneRepository;
 import com.pse.tixclick.repository.ZoneTypeRepository;
 import com.pse.tixclick.service.ZoneService;
@@ -22,7 +25,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -43,6 +48,11 @@ public class ZoneServiceImpl implements ZoneService {
 
     @Autowired
     SeatMapRepository seatMapRepository;
+
+    @Autowired
+    SeatRepository seatRepository;
+
+
 
 
 
@@ -135,4 +145,11 @@ public class ZoneServiceImpl implements ZoneService {
                 .map(zone -> mapper.map(zone, ZoneDTO.class))
                 .toList();
     }
+
+
+
+
+
+
+
 }

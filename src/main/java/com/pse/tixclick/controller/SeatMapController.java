@@ -7,6 +7,7 @@ import com.pse.tixclick.payload.request.create.CreateSeatMapRequest;
 import com.pse.tixclick.payload.request.create.CreateTicketRequest;
 import com.pse.tixclick.payload.request.update.UpdateSeatMapRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
+import com.pse.tixclick.payload.response.SectionResponse;
 import com.pse.tixclick.service.SeatMapService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -108,4 +109,26 @@ public class SeatMapController {
                         .build()
         );
     }
+
+    @PostMapping("/design-seatmap")
+    public ResponseEntity<ApiResponse<List<SectionResponse>>> designZone(@RequestBody List<SectionResponse> sectionResponse, @RequestParam int eventId) {
+        try {
+            List<SectionResponse> sectionResponses = seatMapService.designZone(sectionResponse, eventId);
+            return ResponseEntity.ok(
+                    ApiResponse.<List<SectionResponse>>builder()
+                            .code(200)
+                            .message("Zone designed successfully")
+                            .result(sectionResponses)
+                            .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(400)
+                    .body(ApiResponse.<List<SectionResponse>>builder()
+                            .code(400)
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        }
+    }
+
 }
