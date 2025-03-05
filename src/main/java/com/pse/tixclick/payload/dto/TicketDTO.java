@@ -1,6 +1,7 @@
 package com.pse.tixclick.payload.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.persistence.Column;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -31,6 +32,8 @@ public class TicketDTO {
     int minQuantity;
     int maxQuantity;
     boolean status;
+    String textColor;
+    String seatBackgroundColor;
     int accountId;
     int eventActivityId;
 }

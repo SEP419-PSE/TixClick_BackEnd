@@ -49,6 +49,8 @@ public class TicketServiceImpl implements TicketService {
         ticket.setMaxQuantity(ticketDTO.getMaxQuantity());
         ticket.setStatus(ticketDTO.isStatus());
         ticket.setAccount(account);
+        ticket.setTextColor(ticketDTO.getTextColor());
+        ticket.setSeatBackgroundColor(ticketDTO.getSeatBackgroundColor());
         ticket.setEventActivity(eventActivity);
 
         ticketRepository.save(ticket);

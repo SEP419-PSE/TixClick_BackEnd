@@ -49,6 +49,12 @@ public class Ticket {
     int maxQuantity;
 
     @Column
+    String seatBackgroundColor;
+
+    @Column
+    String textColor;
+
+    @Column
     boolean status;
 
     @ManyToOne

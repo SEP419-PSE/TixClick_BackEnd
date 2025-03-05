@@ -33,6 +33,8 @@ public class CreateTicketRequest {
     int maxQuantity;
 
     boolean status;
+    String textColor;
+    String seatBackgroundColor;
 
     int eventActivityId;
 }
