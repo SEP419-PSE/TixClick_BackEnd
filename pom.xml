@@ -197,8 +197,20 @@
 			<artifactId>dotenv-java</artifactId>
 			<version>3.0.0</version>
 		</dependency>
-
+		<dependency>
+			<groupId>com.aspose</groupId>
+			<artifactId>aspose-pdf</artifactId>
+			<version>25.2</version>
+		</dependency>
 	</dependencies>
+
+	<repositories>
+		<repository>
+			<id>AsposeRepository</id>
+			<name>Aspose Repository</name>
+			<url>https://repository.aspose.com/repo/</url>
+		</repository>
+	</repositories>
 
 	<build>
 		<plugins>
