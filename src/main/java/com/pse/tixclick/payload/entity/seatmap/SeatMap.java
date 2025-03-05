@@ -42,7 +42,7 @@ public class SeatMap {
     private boolean status;
 
     @ManyToOne
-    @JoinColumn(name = "background_id", nullable = false)
+    @JoinColumn(name = "background_id")
     private Background background;
 
     @OneToOne

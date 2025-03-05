@@ -1,6 +1,7 @@
 package com.pse.tixclick.payload.entity.seatmap;
 
 import com.pse.tixclick.payload.entity.entity_enum.EZoneType;
+import com.pse.tixclick.payload.entity.entity_enum.ZoneTypeEnum;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -16,6 +17,7 @@ public class ZoneType {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int typeId;
 
+    @Enumerated(EnumType.STRING)
     @Column
-    private String typeName;
+    private ZoneTypeEnum typeName;
 }

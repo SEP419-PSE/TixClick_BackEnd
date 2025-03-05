@@ -13,4 +13,6 @@ import java.util.Optional;
 public interface SeatMapRepository extends JpaRepository<SeatMap,Integer> {
     @Query("select sm from SeatMap sm where sm.event.eventId = :eId")
     Optional<SeatMap> findSeatMapByEvent(@Param("eId") int eventId);
+
+    Optional<SeatMap> findSeatMapByEvent_EventId(int eventId);
 }
