@@ -46,6 +46,23 @@ public class CloudinaryService {
         return uploadResult.get("secure_url").toString();
     }
 
+    public Map deleteFile(String publicId) throws IOException {
+        return cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
+    }
 
+    public String extractPublicId(String imageUrl) {
+        // Kiểm tra định dạng URL
+        if (imageUrl == null || imageUrl.isEmpty()) {
+            throw new IllegalArgumentException("Image URL cannot be null or empty");
+        }
 
+        // Ví dụ: https://res.cloudinary.com/demo/image/upload/v1234567890/public_id.jpg
+        // Trích xuất public_id "v1234567890/public_id"
+        int startIndex = imageUrl.lastIndexOf("/") + 1; // Vị trí bắt đầu của public_id
+        int endIndex = imageUrl.lastIndexOf("."); // Vị trí kết thúc trước đuôi file
+        if (startIndex < 0 || endIndex < 0 || startIndex >= endIndex) {
+            throw new RuntimeException("Invalid image URL format: " + imageUrl);
+        }
+        return imageUrl.substring(startIndex, endIndex); // Trả về public_id
+    }
 }
