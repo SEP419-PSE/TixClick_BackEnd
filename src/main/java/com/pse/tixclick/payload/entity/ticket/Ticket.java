@@ -34,19 +34,18 @@ public class Ticket {
     @Column
     double price;
 
-    @Column
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    LocalDate startDate;
-
-    @Column
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    LocalDate endDate;
 
     @Column
     int minQuantity;
 
     @Column
     int maxQuantity;
+
+    @Column
+    String seatBackgroundColor;
+
+    @Column
+    String textColor;
 
     @Column
     boolean status;

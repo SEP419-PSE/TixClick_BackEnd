@@ -6,10 +6,7 @@ import com.pse.tixclick.payload.dto.EventActivityDTO;
 import com.pse.tixclick.payload.entity.entity_enum.ESubRole;
 import com.pse.tixclick.payload.entity.event.EventActivity;
 import com.pse.tixclick.payload.request.create.CreateEventActivityRequest;
-import com.pse.tixclick.repository.AccountRepository;
-import com.pse.tixclick.repository.EventActivityRepository;
-import com.pse.tixclick.repository.EventRepository;
-import com.pse.tixclick.repository.MemberRepository;
+import com.pse.tixclick.repository.*;
 import com.pse.tixclick.service.EventActivityService;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -32,6 +29,7 @@ public class EventActivityServiceImpl implements EventActivityService {
     EventRepository eventRepository;
     MemberRepository memberRepository;
     ModelMapper modelMapper;
+    SeatMapRepository   seatMapRepository;
     @Override
     public EventActivityDTO createEventActivity(CreateEventActivityRequest eventActivityRequest) {
         var context = SecurityContextHolder.getContext();
@@ -40,6 +38,8 @@ public class EventActivityServiceImpl implements EventActivityService {
         var organizer = accountRepository.findAccountByUserName(name)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
+        var seatmap = seatMapRepository.findById(eventActivityRequest.getSeatmapId())
+                .orElseThrow(() -> new AppException(ErrorCode.SEATMAP_NOT_FOUND));
 
         var event = eventRepository.findById(eventActivityRequest.getEventId())
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
@@ -56,6 +56,7 @@ public class EventActivityServiceImpl implements EventActivityService {
         eventActivity.setDate(eventActivityRequest.getDate());
         eventActivity.setStartTime(eventActivityRequest.getStartTime());
         eventActivity.setEndTime(eventActivityRequest.getEndTime());
+        eventActivity.setSeatMap(seatmap);
         eventActivityRepository.save(eventActivity);
         return modelMapper.map(eventActivity, EventActivityDTO.class);
     }
@@ -71,6 +72,8 @@ public class EventActivityServiceImpl implements EventActivityService {
         var eventActivity = eventActivityRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.ACTIVITY_NOT_FOUND));
 
+        var seatmap = seatMapRepository.findById(eventActivityRequest.getSeatmapId())
+                .orElseThrow(() -> new AppException(ErrorCode.SEATMAP_NOT_FOUND));
         // Chỉ cập nhật nếu giá trị không rỗng (null)
         if (eventActivityRequest.getActivityName() != null && !eventActivityRequest.getActivityName().isEmpty()) {
             eventActivity.setActivityName(eventActivityRequest.getActivityName());
@@ -93,6 +96,7 @@ public class EventActivityServiceImpl implements EventActivityService {
         if (eventActivityRequest.getEndTime() != null) {
             eventActivity.setEndTime(eventActivityRequest.getEndTime());
         }
+        eventActivity.setSeatMap(seatmap);
 
         eventActivity.setCreatedBy(organizer);
 

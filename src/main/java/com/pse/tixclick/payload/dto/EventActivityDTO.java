@@ -26,5 +26,6 @@ public class EventActivityDTO {
     LocalTime endTime;
 
     int eventId;
+    int seatmapId;
     int createdBy;
 }

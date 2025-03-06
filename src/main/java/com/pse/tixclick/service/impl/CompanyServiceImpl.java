@@ -68,18 +68,13 @@ public class CompanyServiceImpl implements CompanyService {
         company.setBankingName(createCompanyRequest.getBankingName());
         company.setNationalId(createCompanyRequest.getNationalId());
         company.setLogoURL(logoURL);
-        company.setStatus(ECompanyStatus.INACTIVE);
+        company.setStatus(ECompanyStatus.PENDING);
         companyRepository.save(company);
 
         String generatedUsername = company.getCompanyName().toLowerCase().replaceAll("\\s+", "") + (int)(Math.random() * 1000);
 
 
-        CompanyAccount companyAccount = new CompanyAccount();
-        companyAccount.setCompany(company);
-        companyAccount.setAccount(account);
-        companyAccount.setUsername(generatedUsername);
-        companyAccount.setPassword(new BCryptPasswordEncoder(10).encode("123456"));
-        companyAccountRepository.save(companyAccount);
+
 
         Member member = new Member();
         member.setCompany(company);

@@ -20,4 +20,6 @@ public interface CompanyService {
     String inactiveCompany(int id);
 
     List<CompanyDTO> getAllCompany();
+
+
 }

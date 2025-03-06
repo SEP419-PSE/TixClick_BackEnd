@@ -1,6 +1,7 @@
 package com.pse.tixclick.payload.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.persistence.Column;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -22,15 +23,11 @@ public class TicketDTO {
 
     double price;
 
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    LocalDate startDate;
-
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    LocalDate endDate;
-
     int minQuantity;
     int maxQuantity;
     boolean status;
+    String textColor;
+    String seatBackgroundColor;
     int accountId;
     int eventActivityId;
 }

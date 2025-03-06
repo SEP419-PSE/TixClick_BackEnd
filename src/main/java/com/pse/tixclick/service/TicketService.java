@@ -8,4 +8,6 @@ public interface TicketService {
     TicketDTO createTicket(CreateTicketRequest ticketDTO);
 
     TicketDTO updateTicket(UpdateTicketRequest ticketDTO, int ticketId);
+
+
 }

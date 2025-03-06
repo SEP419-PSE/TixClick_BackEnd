@@ -76,6 +76,7 @@ public enum ErrorCode {
     COMPANY_USERNAME_EXISTED(1066, "Tên công ty đã tồn tại", HttpStatus.BAD_REQUEST),
     CONTRACT_DOCUMENT_NOT_FOUND(1067, "Không tìm thấy contract document", HttpStatus.NOT_FOUND),
     FILE_NOT_FOUND(1068, "Không tìm thấy file", HttpStatus.NOT_FOUND),
+    COMPANY_VERIFICATION_NOT_REJECTED(1069, "Xác minh công ty không bị từ chối", HttpStatus.BAD_REQUEST),
     ;
 
 

@@ -18,4 +18,5 @@ public class SectionResponse {
     private int width;
     private int height;
     private int zoneTypeId;
+
 }

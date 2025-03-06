@@ -13,6 +13,7 @@ public class EventDTO {
     int eventId;
     String eventName;
     String location;
+    String locationName;
     String logoURL;
     String bannerURL;
     String status;

@@ -14,6 +14,7 @@ public class CreateEventRequest {
     String location;
     String typeEvent;
     String description;
+    String locationName;
     int categoryId;
     int companyId;
 }

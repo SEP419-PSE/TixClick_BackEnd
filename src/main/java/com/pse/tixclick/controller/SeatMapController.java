@@ -1,5 +1,7 @@
 package com.pse.tixclick.controller;
 
+import com.pse.tixclick.exception.AppException;
+import com.pse.tixclick.payload.dto.EventActivityDTO;
 import com.pse.tixclick.payload.dto.EventDTO;
 import com.pse.tixclick.payload.dto.SeatMapDTO;
 import com.pse.tixclick.payload.dto.TicketDTO;
@@ -121,10 +123,17 @@ public class SeatMapController {
                             .result(sectionResponses)
                             .build()
             );
-        } catch (Exception e) {
-            return ResponseEntity.status(400)
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST.value())
                     .body(ApiResponse.<List<SectionResponse>>builder()
-                            .code(400)
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST.value())
+                    .body(ApiResponse.<List<SectionResponse>>builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
                             .message(e.getMessage())
                             .result(null)
                             .build());
