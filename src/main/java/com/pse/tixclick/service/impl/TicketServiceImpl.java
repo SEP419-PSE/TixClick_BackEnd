@@ -43,8 +43,6 @@ public class TicketServiceImpl implements TicketService {
         ticket.setQuantity(ticketDTO.getQuantity());
         ticket.setCreatedDate(ticketDTO.getCreatedDate());
         ticket.setPrice(ticketDTO.getPrice());
-        ticket.setStartDate(ticketDTO.getStartDate());
-        ticket.setEndDate(ticketDTO.getEndDate());
         ticket.setMinQuantity(ticketDTO.getMinQuantity());
         ticket.setMaxQuantity(ticketDTO.getMaxQuantity());
         ticket.setStatus(ticketDTO.isStatus());

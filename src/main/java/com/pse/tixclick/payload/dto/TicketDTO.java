@@ -23,12 +23,6 @@ public class TicketDTO {
 
     double price;
 
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    LocalDate startDate;
-
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    LocalDate endDate;
-
     int minQuantity;
     int maxQuantity;
     boolean status;

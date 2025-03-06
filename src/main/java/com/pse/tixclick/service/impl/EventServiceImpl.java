@@ -72,6 +72,7 @@ public class EventServiceImpl implements EventService {
         event.setTypeEvent(request.getTypeEvent());
         event.setDescription(request.getDescription());
         event.setCategory(category);
+        event.setLocationName(request.getLocationName());
         event.setStatus(EEventStatus.PENDING);
         event.setLogoURL(logocode);
         event.setBannerURL(bannercode);
@@ -120,6 +121,9 @@ public class EventServiceImpl implements EventService {
             var category = eventCategoryRepository.findById(eventRequest.getCategoryId())
                     .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
             event.setCategory(category);
+        }
+        if(eventRequest.getLocationName() != null && !eventRequest.getLocationName().trim().isEmpty()){
+            event.setLocationName(eventRequest.getLocationName());
         }
 
         // Xử lý upload file nếu có
