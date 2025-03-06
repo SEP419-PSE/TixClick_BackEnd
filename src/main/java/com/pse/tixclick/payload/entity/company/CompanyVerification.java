@@ -33,6 +33,9 @@ public class CompanyVerification {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     LocalDateTime submitDate;
 
+    @Column
+    String note;
+
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     CompanyVerificationStatus status;

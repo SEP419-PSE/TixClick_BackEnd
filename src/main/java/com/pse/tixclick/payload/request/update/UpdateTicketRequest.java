@@ -22,11 +22,7 @@ public class UpdateTicketRequest {
 
     double price;
 
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    LocalDate startDate;
 
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    LocalDate endDate;
 
     int minQuantity;
 

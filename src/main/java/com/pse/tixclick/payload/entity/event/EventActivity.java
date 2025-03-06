@@ -2,6 +2,7 @@ package com.pse.tixclick.payload.entity.event;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.pse.tixclick.payload.entity.Account;
+import com.pse.tixclick.payload.entity.seatmap.SeatMap;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
 import com.pse.tixclick.payload.entity.ticket.TicketPurchase;
 import jakarta.persistence.*;
@@ -38,6 +39,10 @@ public class EventActivity {
     @Column
     @JsonFormat(pattern = "HH:mm:ss")
     LocalTime endTime;
+
+    @ManyToOne
+    @JoinColumn(name = "seatmap_id", nullable = false)
+    SeatMap seatMap;
 
     @ManyToOne
     @JoinColumn(name = "event_id", nullable = false)

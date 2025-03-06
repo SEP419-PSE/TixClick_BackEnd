@@ -13,6 +13,7 @@ public class UpdateEventRequest {
     int eventId;
     String eventName;
     String location;
+    String locationName;
     String status;
     String typeEvent;
     String description;

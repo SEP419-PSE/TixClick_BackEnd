@@ -53,5 +53,5 @@ public class SeatMap {
     private Collection<Zone> zones;
 
     @OneToMany(mappedBy = "seatMap")
-    private Collection<Icon> icons;
+    private Collection<EventActivity> eventActivities;
 }

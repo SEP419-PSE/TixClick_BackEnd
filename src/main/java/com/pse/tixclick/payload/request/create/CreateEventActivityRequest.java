@@ -24,5 +24,7 @@ public class CreateEventActivityRequest {
     @JsonFormat(pattern = "HH:mm:ss")
     LocalTime endTime;
 
+    int seatmapId;
+
     int eventId;
 }

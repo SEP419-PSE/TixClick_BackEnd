@@ -19,5 +19,6 @@ public class CompanyVerificationDTO {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     LocalDateTime submitDate;
 
+    String note;
     String status;
 }
