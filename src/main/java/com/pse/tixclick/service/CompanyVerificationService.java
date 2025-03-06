@@ -14,4 +14,6 @@ public interface CompanyVerificationService {
     CompanyVerificationDTO approveCompanyVerification(CompanyVerificationStatus status, int companyVerificationId);
 
     List<CompanyVerificationDTO> getCompanyVerificationsByManager();
+
+    CompanyVerificationDTO resubmitCompanyVerification(int companyVerificationId);
 }

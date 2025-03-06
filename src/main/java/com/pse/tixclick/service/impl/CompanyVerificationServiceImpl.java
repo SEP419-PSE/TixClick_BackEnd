@@ -124,4 +124,20 @@ public class CompanyVerificationServiceImpl implements CompanyVerificationServic
 
     }
 
+    @Override
+    public CompanyVerificationDTO resubmitCompanyVerification(int companyVerificationId) {
+        var context = SecurityContextHolder.getContext();
+        String username = context.getAuthentication().getName();
+        CompanyVerification companyVerification = companyVerificationRepository
+                .findCompanyVerificationByCompanyVerificationIdAndAccount_UserName(companyVerificationId, username)
+                .orElseThrow(() -> new AppException(ErrorCode.COMPANY_VERIFICATION_NOT_FOUND));
+        if (companyVerification.getStatus() != CompanyVerificationStatus.REJECTED) {
+            throw new AppException(ErrorCode.COMPANY_VERIFICATION_NOT_REJECTED);
+        }
+        companyVerification.setSubmitDate(LocalDateTime.now());
+        companyVerification.setStatus(CompanyVerificationStatus.PENDING);
+        companyVerificationRepository.save(companyVerification);
+        return modelMapper.map(companyVerification, CompanyVerificationDTO.class);
+    }
+
 }
