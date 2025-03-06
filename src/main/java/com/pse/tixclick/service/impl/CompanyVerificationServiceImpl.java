@@ -23,6 +23,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @Transactional
@@ -107,6 +108,20 @@ public class CompanyVerificationServiceImpl implements CompanyVerificationServic
         companyVerificationRepository.save(companyVerification);
 
         return modelMapper.map(companyVerification, CompanyVerificationDTO.class);
+    }
+
+    @Override
+    public List<CompanyVerificationDTO> getCompanyVerificationsByManager() {
+        var context = SecurityContextHolder.getContext();
+        String username = context.getAuthentication().getName();
+        List<CompanyVerification> companyVerificationList = companyVerificationRepository.findCompanyVerificationsByAccount_UserName(username);
+        if(companyVerificationList.isEmpty()) {
+            throw new AppException(ErrorCode.COMPANY_VERIFICATION_NOT_FOUND);
+        }
+        return companyVerificationList.stream()
+                .map(companyVerification -> modelMapper.map(companyVerification, CompanyVerificationDTO.class))
+                .toList();
+
     }
 
 }
