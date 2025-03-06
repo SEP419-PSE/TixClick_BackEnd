@@ -3,10 +3,13 @@ package com.pse.tixclick.service.impl;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.CompanyVerificationDTO;
+import com.pse.tixclick.payload.entity.company.CompanyAccount;
 import com.pse.tixclick.payload.entity.company.CompanyVerification;
 import com.pse.tixclick.payload.entity.entity_enum.CompanyVerificationStatus;
+import com.pse.tixclick.payload.entity.entity_enum.ECompanyStatus;
 import com.pse.tixclick.payload.request.create.CreateCompanyVerificationRequest;
 import com.pse.tixclick.repository.AccountRepository;
+import com.pse.tixclick.repository.CompanyAccountRepository;
 import com.pse.tixclick.repository.CompanyRepository;
 import com.pse.tixclick.repository.CompanyVerificationRepository;
 import com.pse.tixclick.service.CompanyVerificationService;
@@ -16,7 +19,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.modelmapper.ModelMapper;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 
 @Service
 @Transactional
@@ -27,6 +33,7 @@ public class CompanyVerificationServiceImpl implements CompanyVerificationServic
     CompanyRepository companyRepository;
     AccountRepository accountRepository;
     ModelMapper modelMapper;
+    CompanyAccountRepository companyAccountRepository;
     @Override
     public CompanyVerificationDTO createCompanyVerification(CreateCompanyVerificationRequest createCompanyVerificationRequest) {
 
@@ -55,12 +62,51 @@ public class CompanyVerificationServiceImpl implements CompanyVerificationServic
         String username = context.getAuthentication().getName();
 
         CompanyVerification companyVerification = companyVerificationRepository.
-                findCompanyVerificationByCompanyVerificationIdAndAccount_UserName(companyVerificationId,username)
+                findCompanyVerificationByCompanyVerificationIdAndAccount_UserName(companyVerificationId, username)
                 .orElseThrow(() -> new AppException(ErrorCode.COMPANY_VERIFICATION_NOT_FOUND));
 
+        var company = companyRepository.findById(companyVerification.getCompany().getCompanyId())
+                .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_FOUND));
+
+
+        switch (status) {
+            case APPROVED:
+
+                CompanyAccount companyAccount = new CompanyAccount();
+                companyAccount.setCompany(company);
+                companyAccount.setAccount(company.getRepresentativeId());
+                companyAccount.setUsername(company.getRepresentativeId().getUserName());
+                companyAccount.setPassword(new BCryptPasswordEncoder(10).encode("123456"));
+                companyAccountRepository.save(companyAccount);
+
+
+                company.setStatus(ECompanyStatus.ACTIVE);
+                break;
+
+            case REJECTED:
+
+                company.setStatus(ECompanyStatus.REJECTED);
+                break;
+
+            case PENDING:
+
+                company.setStatus(ECompanyStatus.PENDING);
+                break;
+
+            default:
+
+                company.setStatus(ECompanyStatus.INACTIVE);
+                break;
+        }
+
+        companyRepository.save(company);
+
+        // Cập nhật trạng thái xác minh
+        companyVerification.setSubmitDate(LocalDateTime.now());
         companyVerification.setStatus(status);
         companyVerificationRepository.save(companyVerification);
-        return modelMapper.map(companyVerification, CompanyVerificationDTO.class);
 
+        return modelMapper.map(companyVerification, CompanyVerificationDTO.class);
     }
+
 }
