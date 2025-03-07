@@ -54,4 +54,26 @@ public class EmailService {
                 "</html>";
         sendNewMail(to, subject, body, fullname);
     }
+
+    public void sendAccountCreatedEmail(String to, String username, String password,String fullname) throws MessagingException {
+        String subject = "Your TixClick Account Has Been Created!";
+
+        String body = "<html>" +
+                "<body>" +
+                "<h2 style=\"color: #0D6EFD;\">Welcome to TixClick!</h2>" +
+                "<p>Dear " + fullname + ",</p>" +
+                "<p>Your account has been successfully created. Below are your login details:</p>" +
+                "<p><strong>Username:</strong> " + username + "</p>" +
+                "<p><strong>Password:</strong> " + password + "</p>" +
+                "<p>Please change your password after logging in for security reasons.</p>" +
+                "<p>You can log in to your account using the following link:</p>" +
+                "<p><a href=\"https://tixclick.com/login\" style=\"color: #0D6EFD;\">Login to TixClick</a></p>" +
+                "<p>Thank you for choosing TixClick!</p>" +
+                "<p>Best regards,<br/>TixClick Team</p>" +
+                "</body>" +
+                "</html>";
+
+        sendNewMail(to, subject, body, fullname);
+    }
+
 }

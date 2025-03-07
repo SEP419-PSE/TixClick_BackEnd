@@ -5,10 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.pse.tixclick.payload.entity.Account;
-import com.pse.tixclick.repository.AccountRepository;
-import com.pse.tixclick.repository.SeatRepository;
-import com.pse.tixclick.repository.TicketPurchaseRepository;
-import com.pse.tixclick.repository.ZoneRepository;
+import com.pse.tixclick.repository.*;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -45,6 +42,9 @@ public class AppUtils {
 
     @Autowired
     private final ZoneRepository zoneRepository;
+
+    private final CompanyAccountRepository companyAccountRepository;
+
 
 
     public Account getAccountFromAuthentication(){
@@ -88,4 +88,19 @@ public class AppUtils {
         }
         return result.toString();
     }
+
+    public String generateUniqueUsername(String baseUsername) {
+        baseUsername = baseUsername.replaceAll("\\s+", "").toLowerCase(); // Loại bỏ khoảng trắng và chuẩn hóa
+        String newUsername = baseUsername;
+        int suffix = 1;
+
+        // Kiểm tra username đã tồn tại chưa
+        while (companyAccountRepository.findCompanyAccountByUsername(newUsername).isPresent()) {
+            newUsername = baseUsername + suffix;
+            suffix++;
+        }
+        return newUsername;
+    }
+
+
 }
