@@ -2,7 +2,7 @@ package com.pse.tixclick.controller;
 
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.payload.dto.CompanyVerificationDTO;
-import com.pse.tixclick.payload.entity.entity_enum.CompanyVerificationStatus;
+import com.pse.tixclick.payload.entity.entity_enum.EVerificationStatus;
 import com.pse.tixclick.payload.response.ApiResponse;
 import com.pse.tixclick.service.CompanyVerificationService;
 import lombok.AccessLevel;
@@ -26,7 +26,7 @@ public class CompanyVerificationController {
     @PatchMapping("/{companyVerificationId}/approve")
     public ResponseEntity<ApiResponse<CompanyVerificationDTO>> approveCompanyVerification(
             @PathVariable int companyVerificationId,
-            @RequestParam CompanyVerificationStatus status) {
+            @RequestParam EVerificationStatus status) {
         try {
             CompanyVerificationDTO result = companyVerificationService.approveCompanyVerification(status, companyVerificationId);
 

@@ -5,7 +5,7 @@ import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.CompanyVerificationDTO;
 import com.pse.tixclick.payload.entity.company.CompanyAccount;
 import com.pse.tixclick.payload.entity.company.CompanyVerification;
-import com.pse.tixclick.payload.entity.entity_enum.CompanyVerificationStatus;
+import com.pse.tixclick.payload.entity.entity_enum.EVerificationStatus;
 import com.pse.tixclick.payload.entity.entity_enum.ECompanyStatus;
 import com.pse.tixclick.payload.request.create.CreateCompanyVerificationRequest;
 import com.pse.tixclick.repository.AccountRepository;
@@ -58,7 +58,7 @@ public class CompanyVerificationServiceImpl implements CompanyVerificationServic
     }
 
     @Override
-    public CompanyVerificationDTO approveCompanyVerification(CompanyVerificationStatus status, int companyVerificationId) {
+    public CompanyVerificationDTO approveCompanyVerification(EVerificationStatus status, int companyVerificationId) {
         var context = SecurityContextHolder.getContext();
         String username = context.getAuthentication().getName();
 
@@ -131,13 +131,23 @@ public class CompanyVerificationServiceImpl implements CompanyVerificationServic
         CompanyVerification companyVerification = companyVerificationRepository
                 .findCompanyVerificationByCompanyVerificationIdAndAccount_UserName(companyVerificationId, username)
                 .orElseThrow(() -> new AppException(ErrorCode.COMPANY_VERIFICATION_NOT_FOUND));
-        if (companyVerification.getStatus() != CompanyVerificationStatus.REJECTED) {
+        if (companyVerification.getStatus() != EVerificationStatus.REJECTED) {
             throw new AppException(ErrorCode.COMPANY_VERIFICATION_NOT_REJECTED);
         }
-        companyVerification.setSubmitDate(LocalDateTime.now());
-        companyVerification.setStatus(CompanyVerificationStatus.PENDING);
-        companyVerificationRepository.save(companyVerification);
-        return modelMapper.map(companyVerification, CompanyVerificationDTO.class);
+
+        var account = accountRepository.findManagerWithLeastVerifications()
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        CompanyVerification resubmitCompanyVerification = new CompanyVerification();
+
+        resubmitCompanyVerification.setCompany(companyVerification.getCompany());
+        resubmitCompanyVerification.setAccount(account);
+        resubmitCompanyVerification.setNote(companyVerification.getNote());
+        resubmitCompanyVerification.setStatus(EVerificationStatus.PENDING);
+        resubmitCompanyVerification.setSubmitDate(LocalDateTime.now());
+        companyVerificationRepository.save(resubmitCompanyVerification);
+
+        return modelMapper.map(resubmitCompanyVerification, CompanyVerificationDTO.class);
     }
 
 }

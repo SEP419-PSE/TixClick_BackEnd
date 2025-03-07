@@ -5,7 +5,6 @@ import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.entity_enum.EVerificationStatus;
 import jakarta.persistence.*;
 import lombok.*;
-import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
@@ -16,27 +15,29 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-public class CompanyVerification {
+public class ContractVerification {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int companyVerificationId;
+    private int contractVerificationId;
 
     @ManyToOne
-    @JoinColumn(name = "company_id", nullable = false)
-    Company company;
+    @JoinColumn(name = "contract_id", nullable = false)
+    Contract contract;
 
     @ManyToOne
-    @JoinColumn(name = "submit_by_id", nullable = false)
+    @JoinColumn(name = "verified_by_id", nullable = false)
     Account account;
-
-    @Column
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    LocalDateTime submitDate;
 
     @Column
     String note;
 
-    @Column(nullable = false)
+    @Column
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    LocalDateTime verifyDate;
+
     @Enumerated(EnumType.STRING)
-    EVerificationStatus status;
+    @Column(nullable = false)
+    private EVerificationStatus status;
+
+
 }
