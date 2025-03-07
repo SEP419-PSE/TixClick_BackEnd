@@ -7,19 +7,14 @@ import com.pse.tixclick.payload.dto.AccountDTO;
 import com.pse.tixclick.payload.dto.CompanyDTO;
 import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.company.Company;
+import com.pse.tixclick.payload.entity.company.CompanyVerification;
 import com.pse.tixclick.payload.entity.company.Member;
-import com.pse.tixclick.payload.entity.entity_enum.EVerificationStatus;
-import com.pse.tixclick.payload.entity.entity_enum.ECompanyStatus;
-import com.pse.tixclick.payload.entity.entity_enum.EStatus;
-import com.pse.tixclick.payload.entity.entity_enum.ESubRole;
+import com.pse.tixclick.payload.entity.entity_enum.*;
 import com.pse.tixclick.payload.request.create.CreateCompanyRequest;
 import com.pse.tixclick.payload.request.create.CreateCompanyVerificationRequest;
 import com.pse.tixclick.payload.request.update.UpdateCompanyRequest;
 import com.pse.tixclick.payload.response.GetByCompanyResponse;
-import com.pse.tixclick.repository.AccountRepository;
-import com.pse.tixclick.repository.CompanyAccountRepository;
-import com.pse.tixclick.repository.CompanyRepository;
-import com.pse.tixclick.repository.MemberRepository;
+import com.pse.tixclick.repository.*;
 import com.pse.tixclick.service.CompanyService;
 import com.pse.tixclick.service.CompanyVerificationService;
 import jakarta.transaction.Transactional;
@@ -27,12 +22,14 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.modelmapper.ModelMapper;
+import org.modelmapper.internal.bytebuddy.implementation.bytecode.Throw;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -46,6 +43,7 @@ public class CompanyServiceImpl implements CompanyService {
     ModelMapper modelMapper;
     CompanyVerificationService companyVerificationService;
     CloudinaryService cloudinary;
+    CompanyVerificationRepository companyVerificationRepository;
     @Override
     public CompanyDTO createCompany(CreateCompanyRequest createCompanyRequest, MultipartFile file) throws IOException {
         var context = SecurityContextHolder.getContext();
@@ -146,29 +144,37 @@ public class CompanyServiceImpl implements CompanyService {
         List<Company> companies = companyRepository.findAll();
         return companies.stream()
                 .map(company -> {
-                    // Map dữ liệu từ Company sang CompanyDTO
-                    CompanyDTO companyDTO = modelMapper.map(company, CompanyDTO.class);
-
-                    // Lấy dữ liệu Account từ repository (nếu cần)
+                    // Lấy thông tin Account (nếu có)
                     Account account = accountRepository.findById(company.getRepresentativeId().getAccountId())
                             .orElse(null);
 
-                    // Map Account sang CustomAccount (nested class trong GetByCompanyResponse)
-                    GetByCompanyResponse.CustomAccount customAccount = null;
-                    if (account != null) {
-                        customAccount = new GetByCompanyResponse.CustomAccount(
-                                account.getFirstName(),
-                                account.getLastName(),
-                                account.getEmail(),
-                                account.getPhone()
-                        );
-                    }
+                    // Tạo CustomAccount
+                    GetByCompanyResponse.CustomAccount customAccount = (account != null)
+                            ? new GetByCompanyResponse.CustomAccount(
+                            account.getFirstName(),
+                            account.getLastName(),
+                            account.getEmail(),
+                            account.getPhone()
+                    )
+                            : null;
 
-                    // Tạo response object
-                    return new GetByCompanyResponse(companyDTO, customAccount);
+                    // Trả về GetByCompanyResponse
+                    return new GetByCompanyResponse(
+                            company.getCompanyId(),
+                            company.getCompanyName(),
+                            company.getCodeTax(),
+                            company.getBankingName(),
+                            company.getBankingCode(),
+                            company.getNationalId(),
+                            company.getLogoURL(),
+                            company.getDescription(),
+                            company.getStatus(),
+                            customAccount
+                    );
                 })
                 .toList();
     }
+
 
 
     @Override
@@ -178,7 +184,16 @@ public class CompanyServiceImpl implements CompanyService {
                 .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_EXISTED));
 
         GetByCompanyResponse getByCompanyResponse = new GetByCompanyResponse();
-        getByCompanyResponse.setCompanyDTO(modelMapper.map(company, CompanyDTO.class));
+        getByCompanyResponse.setCompanyId(company.getCompanyId());
+        getByCompanyResponse.setCompanyName(company.getCompanyName());
+        getByCompanyResponse.setCodeTax(company.getCodeTax());
+        getByCompanyResponse.setBankingName(company.getBankingName());
+        getByCompanyResponse.setBankingCode(company.getBankingCode());
+        getByCompanyResponse.setNationalId(company.getNationalId());
+        getByCompanyResponse.setLogoURL(company.getLogoURL());
+        getByCompanyResponse.setDescription(company.getDescription());
+        getByCompanyResponse.setStatus(company.getStatus());
+
         getByCompanyResponse.setCustomAccount(new GetByCompanyResponse.CustomAccount(
                 company.getRepresentativeId().getLastName(),
                 company.getRepresentativeId().getFirstName(),
@@ -188,6 +203,53 @@ public class CompanyServiceImpl implements CompanyService {
 
 
         return getByCompanyResponse;
+    }
+
+    @Override
+    public List<GetByCompanyResponse> getCompanysByManager() {
+        var context = SecurityContextHolder.getContext();
+        String userName = context.getAuthentication().getName();
+
+        Account account = accountRepository.findAccountByUserName(userName)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        if (account.getRole().getRoleName() != ERole.MANAGER) {
+            throw new AppException(ErrorCode.USER_NOT_MANAGER);
+        }
+
+
+        List<CompanyVerification> verifications = companyVerificationRepository.findCompanyVerificationsByAccount_UserName(userName);
+
+        if (verifications.isEmpty()) {
+            throw new AppException(ErrorCode.COMPANY_NOT_EXISTED);
+        }
+
+        // Chuyển đổi danh sách CompanyVerification sang danh sách GetByCompanyResponse
+        return verifications.stream().map(verification -> {
+            Company company = verification.getCompany();
+
+            // Tạo đối tượng CustomAccount
+            GetByCompanyResponse.CustomAccount customAccount = new GetByCompanyResponse.CustomAccount(
+                    company.getRepresentativeId().getLastName(),
+                    company.getRepresentativeId().getFirstName(),
+                    company.getRepresentativeId().getEmail(),
+                    company.getRepresentativeId().getPhone()
+            );
+
+            // Trả về đối tượng GetByCompanyResponse
+            return new GetByCompanyResponse(
+                    company.getCompanyId(),
+                    company.getCompanyName(),
+                    company.getCodeTax(),
+                    company.getBankingName(),
+                    company.getBankingCode(),
+                    company.getNationalId(),
+                    company.getLogoURL(),
+                    company.getDescription(),
+                    company.getStatus(),
+                    customAccount
+            );
+        }).collect(Collectors.toList());
     }
 
 

@@ -1,5 +1,6 @@
 package com.pse.tixclick.payload.request.create;
 
+import com.pse.tixclick.payload.entity.entity_enum.ERole;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -11,5 +12,5 @@ import lombok.experimental.FieldDefaults;
 public class CreateAccountRequest {
     String email;
     String username;
-    String role;
+    ERole role;
 }

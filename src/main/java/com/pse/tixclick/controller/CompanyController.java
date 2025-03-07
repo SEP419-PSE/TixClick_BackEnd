@@ -199,4 +199,32 @@ public class CompanyController {
                             .build());
         }
     }
+
+    @GetMapping("/manager")
+    public ResponseEntity<ApiResponse<List<GetByCompanyResponse>>> getCompanysByManager() {
+        try {
+            List<GetByCompanyResponse> companyDTOList = companyService.getCompanysByManager();
+            return ResponseEntity.ok(
+                    ApiResponse.<List<GetByCompanyResponse>>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Get all company successfully")
+                            .result(companyDTOList)
+                            .build()
+            );
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.<List<GetByCompanyResponse>>builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        }catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<List<GetByCompanyResponse>>builder()
+                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .message("Internal server error")
+                            .result(null)
+                            .build());
+        }
+    }
 }

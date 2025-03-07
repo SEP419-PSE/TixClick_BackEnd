@@ -2,6 +2,7 @@ package com.pse.tixclick.payload.response;
 
 import com.pse.tixclick.payload.dto.AccountDTO;
 import com.pse.tixclick.payload.dto.CompanyDTO;
+import com.pse.tixclick.payload.entity.entity_enum.ECompanyStatus;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -11,7 +12,15 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class GetByCompanyResponse {
-    private CompanyDTO companyDTO;
+    private int companyId;
+    private String companyName;
+    private String codeTax;
+    private String bankingName;
+    private String bankingCode;
+    private String nationalId;
+    private String logoURL;
+    private String description;
+    private ECompanyStatus status;
     private CustomAccount customAccount;
 
     @Getter
