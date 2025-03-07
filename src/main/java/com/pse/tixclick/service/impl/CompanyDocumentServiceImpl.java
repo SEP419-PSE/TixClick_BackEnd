@@ -69,7 +69,7 @@ public class CompanyDocumentServiceImpl implements CompanyDocumentService {
                 companyDocument.setFileURL(fileURL);
                 companyDocument.setFileType(file.getContentType());
                 companyDocument.setUploadDate(LocalDateTime.parse(createCompanyDocumentRequest.getUploadDate(), formatter));
-
+                companyDocument.setStatus(true);
                 // Lưu vào database
                 companyDocumentRepository.save(companyDocument);
 
@@ -84,6 +84,19 @@ public class CompanyDocumentServiceImpl implements CompanyDocumentService {
         return documentDTOList;
     }
 
+    @Override
+    public boolean deleteCompanyDocument(int companyDocumentId) {
+//        var companyDocument = companyDocumentRepository.findById(companyDocumentId)
+//                .orElseThrow(() -> new AppException(ErrorCode.COMPANY_DOCUMENT_NOT_FOUND));
+//
+//        // Xóa file trên Cloudinary
+//        cloudinary.deleteDocumentFromCloudinary(companyDocument.getFileURL());
+//
+//        // Xóa trong database
+//        companyDocumentRepository.delete(companyDocument);
+
+        return true;
+    }
 
 
 }
