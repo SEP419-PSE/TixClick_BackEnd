@@ -14,6 +14,7 @@ import com.pse.tixclick.payload.request.create.CreateCompanyRequest;
 import com.pse.tixclick.payload.request.create.CreateCompanyVerificationRequest;
 import com.pse.tixclick.payload.request.update.UpdateCompanyRequest;
 import com.pse.tixclick.payload.response.GetByCompanyResponse;
+import com.pse.tixclick.payload.response.GetByCompanyWithVerificationResponse;
 import com.pse.tixclick.repository.*;
 import com.pse.tixclick.service.CompanyService;
 import com.pse.tixclick.service.CompanyVerificationService;
@@ -220,7 +221,7 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     @Override
-    public List<GetByCompanyResponse> getCompanysByManager() {
+    public List<GetByCompanyWithVerificationResponse> getCompanysByManager() {
         var context = SecurityContextHolder.getContext();
         String userName = context.getAuthentication().getName();
 
@@ -231,27 +232,29 @@ public class CompanyServiceImpl implements CompanyService {
             throw new AppException(ErrorCode.USER_NOT_MANAGER);
         }
 
-
         List<CompanyVerification> verifications = companyVerificationRepository.findCompanyVerificationsByAccount_UserName(userName);
 
         if (verifications.isEmpty()) {
             throw new AppException(ErrorCode.COMPANY_NOT_EXISTED);
         }
 
-        // Chuyển đổi danh sách CompanyVerification sang danh sách GetByCompanyResponse
+        // Chuyển đổi danh sách CompanyVerification sang danh sách GetByCompanyWithVerificationResponse
         return verifications.stream().map(verification -> {
             Company company = verification.getCompany();
+            Account representative = company.getRepresentativeId();
 
-            // Tạo đối tượng CustomAccount
-            GetByCompanyResponse.CustomAccount customAccount = new GetByCompanyResponse.CustomAccount(
-                    company.getRepresentativeId().getLastName(),
-                    company.getRepresentativeId().getFirstName(),
-                    company.getRepresentativeId().getEmail(),
-                    company.getRepresentativeId().getPhone()
-            );
+            // Kiểm tra nếu không có representative để tránh NullPointerException
+            GetByCompanyWithVerificationResponse.CustomAccount customAccount = (representative != null)
+                    ? new GetByCompanyWithVerificationResponse.CustomAccount(
+                    representative.getLastName(),
+                    representative.getFirstName(),
+                    representative.getEmail(),
+                    representative.getPhone()
+            )
+                    : null;
 
-            // Trả về đối tượng GetByCompanyResponse
-            return new GetByCompanyResponse(
+            // Trả về đối tượng GetByCompanyWithVerificationResponse
+            return new GetByCompanyWithVerificationResponse(
                     company.getCompanyId(),
                     company.getCompanyName(),
                     company.getCodeTax(),
@@ -259,13 +262,15 @@ public class CompanyServiceImpl implements CompanyService {
                     company.getBankingCode(),
                     company.getNationalId(),
                     company.getLogoURL(),
-                    company.getAddress(), // Thêm address
+                    company.getAddress(),
                     company.getDescription(),
+                    verification.getCompanyVerificationId(), // Thêm ID của CompanyVerification
                     company.getStatus(),
                     customAccount
             );
         }).collect(Collectors.toList());
     }
+
 
 
 }
