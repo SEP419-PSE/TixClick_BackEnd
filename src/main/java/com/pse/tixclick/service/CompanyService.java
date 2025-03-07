@@ -3,6 +3,7 @@ package com.pse.tixclick.service;
 import com.pse.tixclick.payload.dto.CompanyDTO;
 import com.pse.tixclick.payload.request.create.CreateCompanyRequest;
 import com.pse.tixclick.payload.request.update.UpdateCompanyRequest;
+import com.pse.tixclick.payload.response.GetByCompanyResponse;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -19,7 +20,7 @@ public interface CompanyService {
 
     String inactiveCompany(int id);
 
-    List<CompanyDTO> getAllCompany();
+    List<GetByCompanyResponse> getAllCompany();
 
-
+    GetByCompanyResponse getCompanyById(int id);
 }

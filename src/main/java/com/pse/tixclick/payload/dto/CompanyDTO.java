@@ -19,5 +19,4 @@ public class CompanyDTO {
     private String description;
     private String status;
     private int representativeId;
-    private AccountDTO accountDTO;
 }

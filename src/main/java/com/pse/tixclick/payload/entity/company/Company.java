@@ -34,9 +34,12 @@ public class Company {
     private String nationalId;
 
     @Column
-    private String logoURL;
+    private String address;
 
     @Column
+    private String logoURL;
+
+    @Column(columnDefinition = "NVARCHAR(255)")
     private String description;
 
     @Column(nullable = false)

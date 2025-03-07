@@ -14,5 +14,6 @@ public class CreateCompanyRequest {
     private String bankingName;
     private String bankingCode;
     private String nationalId;
+    private String address;
     private String description;
 }

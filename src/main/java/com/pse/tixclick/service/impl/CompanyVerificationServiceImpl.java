@@ -5,13 +5,13 @@ import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.CompanyVerificationDTO;
 import com.pse.tixclick.payload.entity.company.CompanyAccount;
 import com.pse.tixclick.payload.entity.company.CompanyVerification;
+import com.pse.tixclick.payload.entity.company.Member;
+import com.pse.tixclick.payload.entity.entity_enum.EStatus;
+import com.pse.tixclick.payload.entity.entity_enum.ESubRole;
 import com.pse.tixclick.payload.entity.entity_enum.EVerificationStatus;
 import com.pse.tixclick.payload.entity.entity_enum.ECompanyStatus;
 import com.pse.tixclick.payload.request.create.CreateCompanyVerificationRequest;
-import com.pse.tixclick.repository.AccountRepository;
-import com.pse.tixclick.repository.CompanyAccountRepository;
-import com.pse.tixclick.repository.CompanyRepository;
-import com.pse.tixclick.repository.CompanyVerificationRepository;
+import com.pse.tixclick.repository.*;
 import com.pse.tixclick.service.CompanyVerificationService;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -35,6 +35,7 @@ public class CompanyVerificationServiceImpl implements CompanyVerificationServic
     AccountRepository accountRepository;
     ModelMapper modelMapper;
     CompanyAccountRepository companyAccountRepository;
+    MemberRepository memberRepository;
     @Override
     public CompanyVerificationDTO createCompanyVerification(CreateCompanyVerificationRequest createCompanyVerificationRequest) {
 
@@ -79,6 +80,14 @@ public class CompanyVerificationServiceImpl implements CompanyVerificationServic
                 companyAccount.setUsername(company.getRepresentativeId().getUserName());
                 companyAccount.setPassword(new BCryptPasswordEncoder(10).encode("123456"));
                 companyAccountRepository.save(companyAccount);
+
+                Member member = new Member();
+                member.setCompany(company);
+                member.setSubRole(ESubRole.OWNER);
+                member.setAccount(company.getRepresentativeId());
+                member.setStatus(EStatus.ACTIVE);
+                memberRepository.save(member);
+
 
 
                 company.setStatus(ECompanyStatus.ACTIVE);
