@@ -19,6 +19,7 @@ public class GetByCompanyResponse {
     private String bankingCode;
     private String nationalId;
     private String logoURL;
+    private String address;
     private String description;
     private ECompanyStatus status;
     private CustomAccount customAccount;

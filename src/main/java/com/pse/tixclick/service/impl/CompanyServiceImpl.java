@@ -29,6 +29,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -142,11 +143,24 @@ public class CompanyServiceImpl implements CompanyService {
     @Override
     public List<GetByCompanyResponse> getAllCompany() {
         List<Company> companies = companyRepository.findAll();
+
+        // Lấy danh sách các accountId từ companies (lọc null)
+        List<Integer> accountIds = companies.stream()
+                .map(company -> company.getRepresentativeId() != null ? company.getRepresentativeId().getAccountId() : null)
+                .filter(accountId -> accountId != null)
+                .toList();
+
+        // Lấy danh sách Account một lần để tránh N+1 Query
+        Map<Integer, Account> accountMap = accountRepository.findAllById(accountIds)
+                .stream()
+                .collect(Collectors.toMap(Account::getAccountId, account -> account));
+
         return companies.stream()
                 .map(company -> {
-                    // Lấy thông tin Account (nếu có)
-                    Account account = accountRepository.findById(company.getRepresentativeId().getAccountId())
-                            .orElse(null);
+                    // Lấy account từ map thay vì query riêng lẻ
+                    Account account = (company.getRepresentativeId() != null)
+                            ? accountMap.get(company.getRepresentativeId().getAccountId())
+                            : null;
 
                     // Tạo CustomAccount
                     GetByCompanyResponse.CustomAccount customAccount = (account != null)
@@ -158,7 +172,6 @@ public class CompanyServiceImpl implements CompanyService {
                     )
                             : null;
 
-                    // Trả về GetByCompanyResponse
                     return new GetByCompanyResponse(
                             company.getCompanyId(),
                             company.getCompanyName(),
@@ -167,6 +180,7 @@ public class CompanyServiceImpl implements CompanyService {
                             company.getBankingCode(),
                             company.getNationalId(),
                             company.getLogoURL(),
+                            company.getAddress(), // Thêm address
                             company.getDescription(),
                             company.getStatus(),
                             customAccount
@@ -245,6 +259,7 @@ public class CompanyServiceImpl implements CompanyService {
                     company.getBankingCode(),
                     company.getNationalId(),
                     company.getLogoURL(),
+                    company.getAddress(), // Thêm address
                     company.getDescription(),
                     company.getStatus(),
                     customAccount

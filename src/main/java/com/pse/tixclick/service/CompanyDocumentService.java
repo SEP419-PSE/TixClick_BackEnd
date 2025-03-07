@@ -8,4 +8,6 @@ import java.util.List;
 
 public interface CompanyDocumentService {
     List<CompanyDocumentDTO> createCompanyDocument(CreateCompanyDocumentRequest createCompanyDocumentRequest, List<MultipartFile> files);
+
+    boolean deleteCompanyDocument(int companyDocumentId);
 }

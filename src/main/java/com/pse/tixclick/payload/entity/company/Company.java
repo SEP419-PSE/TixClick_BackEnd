@@ -33,7 +33,7 @@ public class Company {
     @Column(columnDefinition = "NVARCHAR(255)", nullable = false)
     private String nationalId;
 
-    @Column
+    @Column(columnDefinition = "NVARCHAR(255)")
     private String address;
 
     @Column

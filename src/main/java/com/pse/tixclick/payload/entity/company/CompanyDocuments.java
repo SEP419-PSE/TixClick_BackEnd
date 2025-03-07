@@ -34,4 +34,7 @@ public class CompanyDocuments {
     @Column
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime uploadDate;
+
+    @Column
+    private boolean status;
 }
