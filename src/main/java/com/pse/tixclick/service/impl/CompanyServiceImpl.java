@@ -5,6 +5,7 @@ import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.AccountDTO;
 import com.pse.tixclick.payload.dto.CompanyDTO;
+import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.company.Company;
 import com.pse.tixclick.payload.entity.company.Member;
 import com.pse.tixclick.payload.entity.entity_enum.EVerificationStatus;
@@ -14,6 +15,7 @@ import com.pse.tixclick.payload.entity.entity_enum.ESubRole;
 import com.pse.tixclick.payload.request.create.CreateCompanyRequest;
 import com.pse.tixclick.payload.request.create.CreateCompanyVerificationRequest;
 import com.pse.tixclick.payload.request.update.UpdateCompanyRequest;
+import com.pse.tixclick.payload.response.GetByCompanyResponse;
 import com.pse.tixclick.repository.AccountRepository;
 import com.pse.tixclick.repository.CompanyAccountRepository;
 import com.pse.tixclick.repository.CompanyRepository;
@@ -64,6 +66,7 @@ public class CompanyServiceImpl implements CompanyService {
         company.setBankingName(createCompanyRequest.getBankingName());
         company.setNationalId(createCompanyRequest.getNationalId());
         company.setLogoURL(logoURL);
+        company.setAddress(createCompanyRequest.getAddress());
         company.setStatus(ECompanyStatus.PENDING);
         companyRepository.save(company);
 
@@ -72,12 +75,7 @@ public class CompanyServiceImpl implements CompanyService {
 
 
 
-        Member member = new Member();
-        member.setCompany(company);
-        member.setSubRole(ESubRole.OWNER);
-        member.setAccount(account);
-        member.setStatus(EStatus.ACTIVE);
-        memberRepository.save(member);
+
 
         CreateCompanyVerificationRequest createCompanyVerificationRequest = new CreateCompanyVerificationRequest();
         createCompanyVerificationRequest.setCompanyId(company.getCompanyId());
@@ -105,6 +103,7 @@ public class CompanyServiceImpl implements CompanyService {
         company.setBankingName(updateCompanyRequest.getBankingName());
         company.setNationalId(updateCompanyRequest.getNationalId());
         company.setLogoURL(updateCompanyRequest.getLogoURL());
+        company.setAddress(updateCompanyRequest.getAddress());
         companyRepository.save(company);
 
         return modelMapper.map(company, CompanyDTO.class);
@@ -143,15 +142,52 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     @Override
-    public List<CompanyDTO> getAllCompany() {
+    public List<GetByCompanyResponse> getAllCompany() {
         List<Company> companies = companyRepository.findAll();
         return companies.stream()
                 .map(company -> {
+                    // Map dữ liệu từ Company sang CompanyDTO
                     CompanyDTO companyDTO = modelMapper.map(company, CompanyDTO.class);
-                    companyDTO.setAccountDTO(modelMapper.map(company.getRepresentativeId(), AccountDTO.class));
-                    return companyDTO;
+
+                    // Lấy dữ liệu Account từ repository (nếu cần)
+                    Account account = accountRepository.findById(company.getRepresentativeId().getAccountId())
+                            .orElse(null);
+
+                    // Map Account sang CustomAccount (nested class trong GetByCompanyResponse)
+                    GetByCompanyResponse.CustomAccount customAccount = null;
+                    if (account != null) {
+                        customAccount = new GetByCompanyResponse.CustomAccount(
+                                account.getFirstName(),
+                                account.getLastName(),
+                                account.getEmail(),
+                                account.getPhone()
+                        );
+                    }
+
+                    // Tạo response object
+                    return new GetByCompanyResponse(companyDTO, customAccount);
                 })
                 .toList();
+    }
+
+
+    @Override
+    public GetByCompanyResponse getCompanyById(int id) {
+        Company company = companyRepository
+                .findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_EXISTED));
+
+        GetByCompanyResponse getByCompanyResponse = new GetByCompanyResponse();
+        getByCompanyResponse.setCompanyDTO(modelMapper.map(company, CompanyDTO.class));
+        getByCompanyResponse.setCustomAccount(new GetByCompanyResponse.CustomAccount(
+                company.getRepresentativeId().getLastName(),
+                company.getRepresentativeId().getFirstName(),
+                company.getRepresentativeId().getEmail(),
+                company.getRepresentativeId().getPhone()
+        ));
+
+
+        return getByCompanyResponse;
     }
 
 

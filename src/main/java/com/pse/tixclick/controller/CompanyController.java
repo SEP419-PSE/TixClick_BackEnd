@@ -6,6 +6,7 @@ import com.pse.tixclick.payload.request.create.CreateCompanyRequest;
 import com.pse.tixclick.payload.request.create.CreateEventRequest;
 import com.pse.tixclick.payload.request.update.UpdateCompanyRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
+import com.pse.tixclick.payload.response.GetByCompanyResponse;
 import com.pse.tixclick.service.CompanyService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -144,11 +145,11 @@ public class CompanyController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<ApiResponse<List<CompanyDTO>>> getAllCompany() {
+    public ResponseEntity<ApiResponse<List<GetByCompanyResponse>>> getAllCompany() {
         try {
-            List<CompanyDTO> companyDTOList = companyService.getAllCompany();
+            List<GetByCompanyResponse> companyDTOList = companyService.getAllCompany();
             return ResponseEntity.ok(
-                    ApiResponse.<List<CompanyDTO>>builder()
+                    ApiResponse.<List<GetByCompanyResponse>>builder()
                             .code(HttpStatus.OK.value())
                             .message("Get all company successfully")
                             .result(companyDTOList)
@@ -156,9 +157,44 @@ public class CompanyController {
             );
         } catch (AppException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.<List<CompanyDTO>>builder()
+                    .body(ApiResponse.<List<GetByCompanyResponse>>builder()
                             .code(HttpStatus.BAD_REQUEST.value())
                             .message(e.getMessage())
+                            .result(null)
+                            .build());
+        }catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<List<GetByCompanyResponse>>builder()
+                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .message("Internal server error")
+                            .result(null)
+                            .build());
+        }
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<GetByCompanyResponse>> getCompanyById(@PathVariable int id) {
+        try {
+            GetByCompanyResponse companyDTO = companyService.getCompanyById(id);
+            return ResponseEntity.ok(
+                    ApiResponse.<GetByCompanyResponse>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Get company by id successfully")
+                            .result(companyDTO)
+                            .build()
+            );
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.<GetByCompanyResponse>builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<GetByCompanyResponse>builder()
+                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .message("Internal server error")
                             .result(null)
                             .build());
         }

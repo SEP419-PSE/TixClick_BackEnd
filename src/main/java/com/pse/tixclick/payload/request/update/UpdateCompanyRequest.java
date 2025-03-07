@@ -15,5 +15,6 @@ public class UpdateCompanyRequest {
     private String bankingCode;
     private String nationalId;
     private String logoURL;
+    private String address;
     private String description;
 }
