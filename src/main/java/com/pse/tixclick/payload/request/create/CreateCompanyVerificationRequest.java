@@ -1,7 +1,7 @@
 package com.pse.tixclick.payload.request.create;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.pse.tixclick.payload.entity.entity_enum.CompanyVerificationStatus;
+import com.pse.tixclick.payload.entity.entity_enum.EVerificationStatus;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -19,5 +19,5 @@ public class CreateCompanyVerificationRequest {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     LocalDateTime submitDate;
 
-    CompanyVerificationStatus status;
+    EVerificationStatus status;
 }

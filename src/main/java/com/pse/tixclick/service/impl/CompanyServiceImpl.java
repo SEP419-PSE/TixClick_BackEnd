@@ -1,16 +1,13 @@
 package com.pse.tixclick.service.impl;
 
-import com.cloudinary.Cloudinary;
 import com.pse.tixclick.cloudinary.CloudinaryService;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.AccountDTO;
-import com.pse.tixclick.payload.dto.BackgroundDTO;
 import com.pse.tixclick.payload.dto.CompanyDTO;
 import com.pse.tixclick.payload.entity.company.Company;
-import com.pse.tixclick.payload.entity.company.CompanyAccount;
 import com.pse.tixclick.payload.entity.company.Member;
-import com.pse.tixclick.payload.entity.entity_enum.CompanyVerificationStatus;
+import com.pse.tixclick.payload.entity.entity_enum.EVerificationStatus;
 import com.pse.tixclick.payload.entity.entity_enum.ECompanyStatus;
 import com.pse.tixclick.payload.entity.entity_enum.EStatus;
 import com.pse.tixclick.payload.entity.entity_enum.ESubRole;
@@ -29,7 +26,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.modelmapper.ModelMapper;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -85,7 +81,7 @@ public class CompanyServiceImpl implements CompanyService {
 
         CreateCompanyVerificationRequest createCompanyVerificationRequest = new CreateCompanyVerificationRequest();
         createCompanyVerificationRequest.setCompanyId(company.getCompanyId());
-        createCompanyVerificationRequest.setStatus(CompanyVerificationStatus.PENDING);
+        createCompanyVerificationRequest.setStatus(EVerificationStatus.PENDING);
 
 
         companyVerificationService.createCompanyVerification(createCompanyVerificationRequest);

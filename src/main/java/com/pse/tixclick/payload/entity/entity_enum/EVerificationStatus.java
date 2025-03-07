@@ -1,6 +1,6 @@
 package com.pse.tixclick.payload.entity.entity_enum;
 
-public enum CompanyVerificationStatus {
+public enum EVerificationStatus {
     PENDING,
     APPROVED,
     REJECTED,
