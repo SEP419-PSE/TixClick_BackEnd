@@ -7,6 +7,7 @@ import com.pse.tixclick.payload.request.create.CreateEventRequest;
 import com.pse.tixclick.payload.request.update.UpdateCompanyRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
 import com.pse.tixclick.payload.response.GetByCompanyResponse;
+import com.pse.tixclick.payload.response.GetByCompanyWithVerificationResponse;
 import com.pse.tixclick.service.CompanyService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -201,11 +202,11 @@ public class CompanyController {
     }
 
     @GetMapping("/manager")
-    public ResponseEntity<ApiResponse<List<GetByCompanyResponse>>> getCompanysByManager() {
+    public ResponseEntity<ApiResponse<List<GetByCompanyWithVerificationResponse>>> getCompanysByManager() {
         try {
-            List<GetByCompanyResponse> companyDTOList = companyService.getCompanysByManager();
+            List<GetByCompanyWithVerificationResponse> companyDTOList = companyService.getCompanysByManager();
             return ResponseEntity.ok(
-                    ApiResponse.<List<GetByCompanyResponse>>builder()
+                    ApiResponse.<List<GetByCompanyWithVerificationResponse>>builder()
                             .code(HttpStatus.OK.value())
                             .message("Get all company successfully")
                             .result(companyDTOList)
@@ -213,14 +214,14 @@ public class CompanyController {
             );
         } catch (AppException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.<List<GetByCompanyResponse>>builder()
+                    .body(ApiResponse.<List<GetByCompanyWithVerificationResponse>>builder()
                             .code(HttpStatus.BAD_REQUEST.value())
                             .message(e.getMessage())
                             .result(null)
                             .build());
         }catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.<List<GetByCompanyResponse>>builder()
+                    .body(ApiResponse.<List<GetByCompanyWithVerificationResponse>>builder()
                             .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .message("Internal server error")
                             .result(null)

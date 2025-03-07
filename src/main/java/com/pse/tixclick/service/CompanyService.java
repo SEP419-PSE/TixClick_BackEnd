@@ -4,6 +4,7 @@ import com.pse.tixclick.payload.dto.CompanyDTO;
 import com.pse.tixclick.payload.request.create.CreateCompanyRequest;
 import com.pse.tixclick.payload.request.update.UpdateCompanyRequest;
 import com.pse.tixclick.payload.response.GetByCompanyResponse;
+import com.pse.tixclick.payload.response.GetByCompanyWithVerificationResponse;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -24,5 +25,5 @@ public interface CompanyService {
 
     GetByCompanyResponse getCompanyById(int id);
 
-    List<GetByCompanyResponse> getCompanysByManager();
+    List<GetByCompanyWithVerificationResponse> getCompanysByManager();
 }
