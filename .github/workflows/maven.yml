@@ -6,6 +6,7 @@ on:
 jobs:
   build_and_deploy:
     runs-on: [self-hosted]
+
     env:
       CONTAINER_NAME: myappCommandContainer
     steps:
