@@ -7,6 +7,7 @@ import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.jwt.Jwt;
 import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.Role;
+import com.pse.tixclick.payload.entity.entity_enum.ERole;
 import com.pse.tixclick.payload.request.IntrospectRequest;
 import com.pse.tixclick.payload.request.LoginRequest;
 import com.pse.tixclick.payload.request.SignUpRequest;
@@ -190,7 +191,7 @@ public class AuthenServiceImpl implements AuthenService {
         if (userRepository.findAccountByEmail(signUpRequest.getEmail()).isPresent()) {
             throw new AppException(ErrorCode.EMAIL_TAKEN);
         }
-        Role role = roleRepository.findRoleByRoleName("BUYER")
+        Role role = roleRepository.findRoleByRoleName(ERole.BUYER)
                 .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_EXISTED));
         // Nếu tất cả hợp lệ, tiếp tục tạo tài khoản mới
         Account newUser = new Account();
@@ -280,7 +281,7 @@ public class AuthenServiceImpl implements AuthenService {
 
         if (user == null) {
             // Lấy role "BUYER"
-            Role role = roleRepository.findRoleByRoleName("BUYER")
+            Role role = roleRepository.findRoleByRoleName(ERole.BUYER)
                     .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_EXISTED));
 
             // Tạo mới tài khoản
@@ -327,7 +328,7 @@ public class AuthenServiceImpl implements AuthenService {
             Account user = userRepository.findAccountByUserName(email).orElse(null);
 
             if (user == null) {
-                Role role = roleRepository.findRoleByRoleName("BUYER")
+                Role role = roleRepository.findRoleByRoleName(ERole.BUYER)
                         .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_EXISTED));
 
                 // Tạo tài khoản mới

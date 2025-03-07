@@ -2,6 +2,7 @@ package com.pse.tixclick.startup;
 
 import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.Role;
+import com.pse.tixclick.payload.entity.entity_enum.ERole;
 import com.pse.tixclick.payload.entity.entity_enum.ZoneTypeEnum;
 import com.pse.tixclick.payload.entity.event.EventCategory;
 import com.pse.tixclick.payload.entity.seatmap.ZoneType;
@@ -19,6 +20,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 @RequiredArgsConstructor
@@ -32,7 +34,7 @@ public class RoleInitializer {
     public CommandLineRunner initRolesAndAdmin() {
         return args -> {
             // Danh sách các role cần tạo
-            String[] roleNames = {"ADMIN", "BUYER", "ORGANIZER", "MANAGER"};
+            List<ERole> roles = List.of(ERole.ADMIN, ERole.BUYER, ERole.ORGANIZER, ERole.MANAGER);
             String[] categoryNames = {"Music", "Sport", "Theater",  "Other"};
             Arrays.stream(categoryNames).forEach(categoryName -> {
                 if (eventCategoryRepository.findEventCategoriesByCategoryName(categoryName).isEmpty()) {
@@ -43,12 +45,12 @@ public class RoleInitializer {
                 }
             });
 
-            Arrays.stream(roleNames).forEach(roleName -> {
+            roles.forEach(roleName -> {
                 if (roleRepository.findRoleByRoleName(roleName).isEmpty()) {
                     Role role = new Role();
                     role.setRoleName(roleName);
                     roleRepository.save(role);
-                    System.out.println("Role created: " + roleName);
+                    System.out.println("✅ Role created: " + roleName);
                 }
             });
 
@@ -64,7 +66,7 @@ public class RoleInitializer {
 
             // Tạo tài khoản admin nếu chưa tồn tại
             if (accountRepository.findAccountByUserName("admin").isEmpty()) {
-                Role adminRole = roleRepository.findRoleByRoleName("ADMIN")
+                Role adminRole = roleRepository.findRoleByRoleName(ERole.ADMIN)
                         .orElseThrow(() -> new RuntimeException("Role ADMIN not found"));
 
                 PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);

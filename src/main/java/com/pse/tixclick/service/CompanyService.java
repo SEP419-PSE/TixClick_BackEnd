@@ -23,4 +23,6 @@ public interface CompanyService {
     List<GetByCompanyResponse> getAllCompany();
 
     GetByCompanyResponse getCompanyById(int id);
+
+    List<GetByCompanyResponse> getCompanysByManager();
 }
