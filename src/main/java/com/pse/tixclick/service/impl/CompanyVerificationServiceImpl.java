@@ -1,5 +1,6 @@
 package com.pse.tixclick.service.impl;
 
+import com.pse.tixclick.email.EmailService;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.CompanyVerificationDTO;
@@ -13,6 +14,8 @@ import com.pse.tixclick.payload.entity.entity_enum.ECompanyStatus;
 import com.pse.tixclick.payload.request.create.CreateCompanyVerificationRequest;
 import com.pse.tixclick.repository.*;
 import com.pse.tixclick.service.CompanyVerificationService;
+import com.pse.tixclick.utils.AppUtils;
+import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +39,8 @@ public class CompanyVerificationServiceImpl implements CompanyVerificationServic
     ModelMapper modelMapper;
     CompanyAccountRepository companyAccountRepository;
     MemberRepository memberRepository;
+    EmailService emailService;
+    AppUtils appUtils;
     @Override
     public CompanyVerificationDTO createCompanyVerification(CreateCompanyVerificationRequest createCompanyVerificationRequest) {
 
@@ -59,7 +64,7 @@ public class CompanyVerificationServiceImpl implements CompanyVerificationServic
     }
 
     @Override
-    public CompanyVerificationDTO approveCompanyVerification(EVerificationStatus status, int companyVerificationId) {
+    public CompanyVerificationDTO approveCompanyVerification(EVerificationStatus status, int companyVerificationId) throws MessagingException {
         var context = SecurityContextHolder.getContext();
         String username = context.getAuthentication().getName();
 
@@ -77,9 +82,18 @@ public class CompanyVerificationServiceImpl implements CompanyVerificationServic
                 CompanyAccount companyAccount = new CompanyAccount();
                 companyAccount.setCompany(company);
                 companyAccount.setAccount(company.getRepresentativeId());
-                companyAccount.setUsername(company.getRepresentativeId().getUserName());
+
+                String baseUsername = (company.getCompanyName() != null)
+                        ? company.getCompanyName().trim().toLowerCase()
+                        : "defaultcompany";
+                String usernameCompanyAccount = appUtils.generateUniqueUsername(baseUsername);
+
+                companyAccount.setUsername(usernameCompanyAccount);
                 companyAccount.setPassword(new BCryptPasswordEncoder(10).encode("123456"));
+
                 companyAccountRepository.save(companyAccount);
+
+
 
                 Member member = new Member();
                 member.setCompany(company);
@@ -88,7 +102,9 @@ public class CompanyVerificationServiceImpl implements CompanyVerificationServic
                 member.setStatus(EStatus.ACTIVE);
                 memberRepository.save(member);
 
+                String fullName = company.getRepresentativeId().getFirstName() + " " + company.getRepresentativeId().getLastName();
 
+                emailService.sendAccountCreatedEmail(company.getRepresentativeId().getEmail(), company.getRepresentativeId().getUserName(), "123456", fullName);
 
                 company.setStatus(ECompanyStatus.ACTIVE);
                 break;

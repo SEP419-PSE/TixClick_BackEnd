@@ -12,4 +12,8 @@ import java.util.Optional;
 public interface CompanyAccountRepository extends JpaRepository<CompanyAccount,Integer> {
     @Query("SELECT ca FROM CompanyAccount ca WHERE ca.username = :userName")
     Optional<CompanyAccount> findByUserName(@Param("userName") String userName);
+
+    boolean existsCompanyAccountByUsername(String username);
+
+    Optional<CompanyAccount> findCompanyAccountByUsername(String username);
 }
