@@ -30,21 +30,24 @@ public class RoleInitializer {
     AccountRepository accountRepository;
     EventCategoryRepository eventCategoryRepository;
     ZoneTypeRepository zoneTypeRepository;
+
     @Bean
     public CommandLineRunner initRolesAndAdmin() {
         return args -> {
-            // Danh sách các role cần tạo
             List<ERole> roles = List.of(ERole.ADMIN, ERole.BUYER, ERole.ORGANIZER, ERole.MANAGER);
-            String[] categoryNames = {"Music", "Sport", "Theater",  "Other"};
+            String[] categoryNames = {"Music", "Sport", "Theater", "Other"};
+
+            // Kiểm tra danh mục sự kiện
             Arrays.stream(categoryNames).forEach(categoryName -> {
-                if (eventCategoryRepository.findEventCategoriesByCategoryName(categoryName).isEmpty()) {
+                if (eventCategoryRepository.findEventCategoriesByCategoryName(categoryName).stream().findFirst().isEmpty()) {
                     EventCategory category = new EventCategory();
                     category.setCategoryName(categoryName);
                     eventCategoryRepository.save(category);
-                    System.out.println("Category Event created: " + categoryName);
+                    System.out.println("✅ Category Event created: " + categoryName);
                 }
             });
 
+            // Kiểm tra Role
             roles.forEach(roleName -> {
                 if (roleRepository.findRoleByRoleName(roleName).isEmpty()) {
                     Role role = new Role();
@@ -54,17 +57,17 @@ public class RoleInitializer {
                 }
             });
 
-
+            // Kiểm tra ZoneType
             Arrays.stream(ZoneTypeEnum.values()).forEach(type -> {
                 if (zoneTypeRepository.findZoneTypeByTypeName(type).isEmpty()) {
                     ZoneType zoneType = new ZoneType();
                     zoneType.setTypeName(type);
                     zoneTypeRepository.save(zoneType);
-                    System.out.println("ZoneType created: " + type);
+                    System.out.println("✅ ZoneType created: " + type);
                 }
             });
 
-            // Tạo tài khoản admin nếu chưa tồn tại
+            // Kiểm tra tài khoản admin
             if (accountRepository.findAccountByUserName("admin").isEmpty()) {
                 Role adminRole = roleRepository.findRoleByRoleName(ERole.ADMIN)
                         .orElseThrow(() -> new RuntimeException("Role ADMIN not found"));
@@ -81,7 +84,7 @@ public class RoleInitializer {
                 adminAccount.setRole(adminRole);
 
                 accountRepository.save(adminAccount);
-                System.out.println("Admin account created: admin/admin");
+                System.out.println("✅ Admin account created: admin/admin");
             }
         };
     }

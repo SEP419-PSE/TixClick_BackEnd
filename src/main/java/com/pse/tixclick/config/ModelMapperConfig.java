@@ -35,7 +35,6 @@ public class ModelMapperConfig {
         modelMapper.addMappings(new PropertyMap<Ticket, TicketDTO>() {
             @Override
             protected void configure() {
-                map().setEventActivityId(source.getEventActivity().getEventActivityId());
                 map().setAccountId(source.getAccount().getAccountId());
             }
         });

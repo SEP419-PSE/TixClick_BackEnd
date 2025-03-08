@@ -29,5 +29,5 @@ public class TicketDTO {
     String textColor;
     String seatBackgroundColor;
     int accountId;
-    int eventActivityId;
+    int eventId;
 }
