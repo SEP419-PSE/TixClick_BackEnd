@@ -2,6 +2,7 @@ package com.pse.tixclick.payload.entity.ticket;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.pse.tixclick.payload.entity.Account;
+import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.entity.event.EventActivity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -54,9 +55,10 @@ public class Ticket {
     @JoinColumn(name="account_id", nullable = false)
     Account account;
 
-    @OneToOne
-    @JoinColumn(name="event_activity_id", nullable = false)
-    EventActivity eventActivity;
+    @ManyToOne
+    @JoinColumn(name="event_id", nullable = false)
+    Event event;
+
 
 
 }

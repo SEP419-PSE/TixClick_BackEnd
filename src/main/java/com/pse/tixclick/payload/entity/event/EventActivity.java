@@ -10,6 +10,7 @@ import lombok.*;
 import lombok.experimental.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Collection;
 import java.util.Date;
@@ -30,15 +31,23 @@ public class EventActivity {
 
     @Column
     @JsonFormat(pattern = "yyyy-MM-dd")
-    LocalDate date;
+    LocalDate dateEvent;
 
     @Column
     @JsonFormat(pattern = "HH:mm:ss")
-    LocalTime startTime;
+    LocalTime startTimeEvent;
 
     @Column
     @JsonFormat(pattern = "HH:mm:ss")
-    LocalTime endTime;
+    LocalTime endTimeEvent;
+
+    @Column
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    LocalDateTime startTicketSale;
+
+    @Column
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    LocalDateTime endTicketSale;
 
     @ManyToOne
     @JoinColumn(name = "seatmap_id", nullable = false)

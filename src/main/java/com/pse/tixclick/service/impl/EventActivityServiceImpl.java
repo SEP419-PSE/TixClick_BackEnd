@@ -53,9 +53,9 @@ public class EventActivityServiceImpl implements EventActivityService {
         eventActivity.setActivityName(eventActivityRequest.getActivityName());;
         eventActivity.setCreatedBy(organizer);
         eventActivity.setEvent(event);
-        eventActivity.setDate(eventActivityRequest.getDate());
-        eventActivity.setStartTime(eventActivityRequest.getStartTime());
-        eventActivity.setEndTime(eventActivityRequest.getEndTime());
+        eventActivity.setDateEvent(eventActivityRequest.getDate());
+        eventActivity.setStartTimeEvent(eventActivityRequest.getStartTime());
+        eventActivity.setEndTimeEvent(eventActivityRequest.getEndTime());
         eventActivity.setSeatMap(seatmap);
         eventActivityRepository.save(eventActivity);
         return modelMapper.map(eventActivity, EventActivityDTO.class);
@@ -86,15 +86,15 @@ public class EventActivityServiceImpl implements EventActivityService {
 
 
         if (eventActivityRequest.getDate() != null) {
-            eventActivity.setDate(eventActivityRequest.getDate());
+            eventActivity.setDateEvent(eventActivityRequest.getDate());
         }
 
         if (eventActivityRequest.getStartTime() != null) {
-            eventActivity.setStartTime(eventActivityRequest.getStartTime());
+            eventActivity.setStartTimeEvent(eventActivityRequest.getStartTime());
         }
 
         if (eventActivityRequest.getEndTime() != null) {
-            eventActivity.setEndTime(eventActivityRequest.getEndTime());
+            eventActivity.setEndTimeEvent(eventActivityRequest.getEndTime());
         }
         eventActivity.setSeatMap(seatmap);
 

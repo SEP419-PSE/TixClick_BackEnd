@@ -8,6 +8,7 @@ import com.pse.tixclick.payload.request.create.CreateTicketRequest;
 import com.pse.tixclick.payload.request.update.UpdateTicketRequest;
 import com.pse.tixclick.repository.AccountRepository;
 import com.pse.tixclick.repository.EventActivityRepository;
+import com.pse.tixclick.repository.EventRepository;
 import com.pse.tixclick.repository.TicketRepository;
 import com.pse.tixclick.service.TicketService;
 import jakarta.transaction.Transactional;
@@ -27,7 +28,7 @@ public class TicketServiceImpl implements TicketService {
     EventActivityRepository eventActivityRepository;
     TicketRepository ticketRepository;
     ModelMapper modelMapper;
-
+    EventRepository eventRepository;
     @Override
     public TicketDTO createTicket(CreateTicketRequest ticketDTO) {
         var context = SecurityContextHolder.getContext();
@@ -35,9 +36,8 @@ public class TicketServiceImpl implements TicketService {
 
         var account = accountRepository.findAccountByUserName(name)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-        var eventActivity = eventActivityRepository.findById(ticketDTO.getEventActivityId())
-                .orElseThrow(() -> new AppException(ErrorCode.ACTIVITY_NOT_FOUND));
-
+        var event = eventRepository.findById(ticketDTO.getEventId())
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
         var ticket = new Ticket();
         ticket.setTicketName(ticketDTO.getTicketName());
         ticket.setQuantity(ticketDTO.getQuantity());
@@ -49,8 +49,7 @@ public class TicketServiceImpl implements TicketService {
         ticket.setAccount(account);
         ticket.setTextColor(ticketDTO.getTextColor());
         ticket.setSeatBackgroundColor(ticketDTO.getSeatBackgroundColor());
-        ticket.setEventActivity(eventActivity);
-
+        ticket.setEvent(event);
         ticketRepository.save(ticket);
         return modelMapper.map(ticket, TicketDTO.class);
 

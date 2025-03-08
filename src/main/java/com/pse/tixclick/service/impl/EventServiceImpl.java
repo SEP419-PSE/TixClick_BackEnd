@@ -56,7 +56,7 @@ public class EventServiceImpl implements EventService {
         var category = eventCategoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
         var company = companyRepository.findCompanyByCompanyIdAndRepresentativeId_UserName(request.getCompanyId(),name)
-                .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_FOUND));
+                .orElseThrow(() -> new AppException(ErrorCode.ACCOUNT_NOT_CREATE_COMPANY));
         if(company.getStatus()!= ECompanyStatus.ACTIVE){
             throw new AppException(ErrorCode.COMPANY_NOT_ACTIVE);
         }else if(company.getRepresentativeId().getAccountId() != organnizer.getAccountId()){
