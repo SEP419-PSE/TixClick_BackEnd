@@ -6,9 +6,11 @@ import com.pse.tixclick.payload.request.create.CreateCompanyRequest;
 import com.pse.tixclick.payload.request.create.CreateEventRequest;
 import com.pse.tixclick.payload.request.update.UpdateCompanyRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
+import com.pse.tixclick.payload.response.CreateCompanyResponse;
 import com.pse.tixclick.payload.response.GetByCompanyResponse;
 import com.pse.tixclick.payload.response.GetByCompanyWithVerificationResponse;
 import com.pse.tixclick.service.CompanyService;
+import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,14 +32,14 @@ public class CompanyController {
     private CompanyService companyService;
 
     @PostMapping("/create")
-    public ResponseEntity<ApiResponse<CompanyDTO>> createCompany(
+    public ResponseEntity<ApiResponse<CreateCompanyResponse>> createCompany(
             @ModelAttribute CreateCompanyRequest createCompanyRequest,
             @RequestParam("file") MultipartFile file
     ) {
         try {
-            CompanyDTO companyDTO = companyService.createCompany(createCompanyRequest, file);
+            CreateCompanyResponse companyDTO = companyService.createCompany(createCompanyRequest, file);
             return ResponseEntity.ok(
-                    ApiResponse.<CompanyDTO>builder()
+                    ApiResponse.<CreateCompanyResponse>builder()
                             .code(HttpStatus.OK.value())
                             .message("Company created successfully")
                             .result(companyDTO)
@@ -45,18 +47,20 @@ public class CompanyController {
             );
         } catch (AppException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.<CompanyDTO>builder()
+                    .body(ApiResponse.<CreateCompanyResponse>builder()
                             .code(HttpStatus.BAD_REQUEST.value())
                             .message(e.getMessage())
                             .result(null)
                             .build());
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.<CompanyDTO>builder()
+                    .body(ApiResponse.<CreateCompanyResponse>builder()
                             .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .message("File upload failed. Please try again.")
                             .result(null)
                             .build());
+        } catch (MessagingException e) {
+            throw new RuntimeException(e);
         }
     }
 

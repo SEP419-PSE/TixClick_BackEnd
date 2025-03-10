@@ -1,6 +1,7 @@
 package com.pse.tixclick.service.impl;
 
 import com.pse.tixclick.cloudinary.CloudinaryService;
+import com.pse.tixclick.email.EmailService;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.AccountDTO;
@@ -13,11 +14,13 @@ import com.pse.tixclick.payload.entity.entity_enum.*;
 import com.pse.tixclick.payload.request.create.CreateCompanyRequest;
 import com.pse.tixclick.payload.request.create.CreateCompanyVerificationRequest;
 import com.pse.tixclick.payload.request.update.UpdateCompanyRequest;
+import com.pse.tixclick.payload.response.CreateCompanyResponse;
 import com.pse.tixclick.payload.response.GetByCompanyResponse;
 import com.pse.tixclick.payload.response.GetByCompanyWithVerificationResponse;
 import com.pse.tixclick.repository.*;
 import com.pse.tixclick.service.CompanyService;
 import com.pse.tixclick.service.CompanyVerificationService;
+import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -46,8 +49,9 @@ public class CompanyServiceImpl implements CompanyService {
     CompanyVerificationService companyVerificationService;
     CloudinaryService cloudinary;
     CompanyVerificationRepository companyVerificationRepository;
+    EmailService emailService;
     @Override
-    public CompanyDTO createCompany(CreateCompanyRequest createCompanyRequest, MultipartFile file) throws IOException {
+    public CreateCompanyResponse createCompany(CreateCompanyRequest createCompanyRequest, MultipartFile file) throws IOException, MessagingException {
         var context = SecurityContextHolder.getContext();
         String name = context.getAuthentication().getName();
 
@@ -55,7 +59,6 @@ public class CompanyServiceImpl implements CompanyService {
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
         String logoURL = cloudinary.uploadImageToCloudinary(file);
-
 
         Company company = new Company();
         company.setCompanyName(createCompanyRequest.getCompanyName());
@@ -70,23 +73,36 @@ public class CompanyServiceImpl implements CompanyService {
         company.setStatus(ECompanyStatus.PENDING);
         companyRepository.save(company);
 
-        String generatedUsername = company.getCompanyName().toLowerCase().replaceAll("\\s+", "") + (int)(Math.random() * 1000);
-
-
-
-
-
-
         CreateCompanyVerificationRequest createCompanyVerificationRequest = new CreateCompanyVerificationRequest();
         createCompanyVerificationRequest.setCompanyId(company.getCompanyId());
         createCompanyVerificationRequest.setStatus(EVerificationStatus.PENDING);
 
+        var companyVerification = companyVerificationService.createCompanyVerification(createCompanyVerificationRequest);
 
-        companyVerificationService.createCompanyVerification(createCompanyVerificationRequest);
+        String fullname = (account.getFirstName() != null ? account.getFirstName() : "") +
+                " " +
+                (account.getLastName() != null ? account.getLastName() : "");
+        fullname = fullname.trim(); // Loại bỏ khoảng trắng thừa nếu có
 
-        return modelMapper.map(company, CompanyDTO.class);
+        emailService.sendCompanyCreationRequestNotification(account.getEmail(), company.getCompanyName(), fullname);
 
+        // Tạo đối tượng response
+        return new CreateCompanyResponse(
+                company.getCompanyId(),
+                company.getCompanyName(),
+                company.getCodeTax(),
+                company.getBankingName(),
+                company.getBankingCode(),
+                company.getNationalId(),
+                company.getLogoURL(),
+                company.getAddress(),
+                company.getDescription(),
+                company.getStatus().name(),
+                account.getAccountId(),
+                companyVerification.getCompanyVerificationId()
+        );
     }
+
 
     @Override
     public CompanyDTO updateCompany(UpdateCompanyRequest updateCompanyRequest, int id) {

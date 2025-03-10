@@ -76,4 +76,21 @@ public class EmailService {
         sendNewMail(to, subject, body, fullname);
     }
 
+    public void sendCompanyCreationRequestNotification(String to, String companyName, String fullname) throws MessagingException {
+        String subject = "New Company Creation Request - TixClick";
+        String body = "<html>" +
+                "<body>" +
+                "<h2 style=\"color: #0D6EFD;\">Company Creation Request</h2>" +
+                "<p>Dear " + fullname + ",</p>" +
+                "<p>A new company creation request has been submitted with the following details:</p>" +
+                "<p><strong>Company Name:</strong> " + companyName + "</p>" +
+                "<p>Your request is currently under review. You will receive an update once the verification process is completed.</p>" +
+                "<p>Thank you for using TixClick!</p>" +
+                "<p>Best regards,<br/>TixClick Team</p>" +
+                "</body>" +
+                "</html>";
+
+        sendNewMail(to, subject, body, fullname);
+    }
+
 }
