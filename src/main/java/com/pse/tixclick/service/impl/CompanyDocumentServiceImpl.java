@@ -7,10 +7,12 @@ import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.CompanyDocumentDTO;
 import com.pse.tixclick.payload.entity.company.CompanyDocuments;
+import com.pse.tixclick.payload.entity.entity_enum.EVerificationStatus;
 import com.pse.tixclick.payload.request.create.CreateCompanyDocumentRequest;
 import com.pse.tixclick.repository.AccountRepository;
 import com.pse.tixclick.repository.CompanyDocumentRepository;
 import com.pse.tixclick.repository.CompanyRepository;
+import com.pse.tixclick.repository.CompanyVerificationRepository;
 import com.pse.tixclick.service.CompanyDocumentService;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -39,14 +41,18 @@ public class CompanyDocumentServiceImpl implements CompanyDocumentService {
     CompanyRepository companyRepository;
     ModelMapper modelMapper;
     CloudinaryService cloudinary;
+    CompanyVerificationRepository companyVerificationRepository;
     @Override
     public List<CompanyDocumentDTO> createCompanyDocument(CreateCompanyDocumentRequest createCompanyDocumentRequest, List<MultipartFile> files) {
         var context = SecurityContextHolder.getContext();
         String username = context.getAuthentication().getName();
 
+        var companyVerification = companyVerificationRepository.findById(createCompanyDocumentRequest.getCompanyVerificationId())
+                .orElseThrow(() -> new AppException(ErrorCode.COMPANY_VERIFICATION_NOT_FOUND));
+
         var company = companyRepository.findCompanyByCompanyIdAndRepresentativeId_UserName(
                         createCompanyDocumentRequest.getCompanyId(), username)
-                .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_FOUND));
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_OWNER));
 
         List<CompanyDocumentDTO> documentDTOList = new ArrayList<>();
         final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -80,7 +86,8 @@ public class CompanyDocumentServiceImpl implements CompanyDocumentService {
                 throw new AppException(ErrorCode.FILE_UPLOAD_FAILED);
             }
         }
-
+        companyVerification.setStatus(EVerificationStatus.REVIEWING);
+        companyVerificationRepository.save(companyVerification);
         return documentDTOList;
     }
 
