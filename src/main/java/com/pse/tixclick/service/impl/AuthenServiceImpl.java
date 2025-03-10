@@ -73,6 +73,9 @@ public class AuthenServiceImpl implements AuthenService {// Để lưu thời gi
                 .findAccountByUserName(loginRequest.getUserName())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
+        if(!user.isActive()){
+            throw new AppException(ErrorCode.USER_NOT_ACTIVE);
+        }
         // Kiểm tra mật khẩu hợp lệ
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
             throw new AppException(ErrorCode.UNAUTHENTICATED);
@@ -95,6 +98,7 @@ public class AuthenServiceImpl implements AuthenService {// Để lưu thời gi
                 .accessToken(tokenPair.accessToken().token())
                 .refreshToken(tokenPair.refreshToken().token())
                 .status(user.isActive())
+                .roleName(String.valueOf(user.getRole().getRoleName()))
                 .build();
     }
 
