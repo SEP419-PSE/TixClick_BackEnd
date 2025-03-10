@@ -45,9 +45,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Transactional
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class AuthenServiceImpl implements AuthenService {
-    private final ConcurrentHashMap<String, String> otpStore = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<String, Long> otpExpirationStore = new ConcurrentHashMap<>();  // Để lưu thời gian hết hạ
+public class AuthenServiceImpl implements AuthenService {// Để lưu thời gian hết hạ
 
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
@@ -207,55 +205,58 @@ public class AuthenServiceImpl implements AuthenService {
         return true;
     }
 
-    @Override
-    public void createAndSendOTP(String email) throws MessagingException {
-        String otpCode = generateOTP();  // Tạo OTP
+        @Override
+        public void createAndSendOTP(String email) throws MessagingException {
+            // Kiểm tra người dùng có tồn tại không
+            var user = userRepository.findAccountByEmail(email)
+                    .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-        // Kiểm tra người dùng có tồn tại không
-        var user = userRepository.findAccountByEmail(email)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+            if (user.isActive()) {
+                throw new AppException(ErrorCode.USER_ACTIVE);
+            }
 
-        if (user.isActive()) {
-            throw new AppException(ErrorCode.USER_ACTIVE);
+            // Kiểm tra xem OTP đã tồn tại trong Redis chưa
+            String existingOTP = stringRedisTemplate.opsForValue().get("OTP:" + email);
+            if (existingOTP != null) {
+                throw new AppException(ErrorCode.OTP_ALREADY_SENT);
+            }
+
+            // Tạo OTP mới
+            String otpCode = generateOTP();
+
+            // Lưu OTP vào Redis với thời gian hết hạn là 5 phút
+            String key = "OTP:" + email;
+            stringRedisTemplate.opsForValue().set(key, otpCode, 60, TimeUnit.MINUTES);
+
+// In ra log để kiểm tra key và value
+            String savedOtp = stringRedisTemplate.opsForValue().get(key);
+            System.out.println("🔹 OTP stored in Redis: Key = " + key + ", Value = " + savedOtp);
+
+            // Gửi OTP qua email
+            emailService.sendOTPtoActiveAccount(email, otpCode, user.getUserName());
         }
 
-        // Lưu OTP vào Redis với thời gian hết hạn là 5 phút
-        stringRedisTemplate.opsForValue().set("OTP:" + email, otpCode, 5, TimeUnit.MINUTES);
-
-        // Gửi OTP qua email
-        emailService.sendOTPtoActiveAccount(email, otpCode, user.getUserName());
-    }
 
     @Override
     public boolean verifyOTP(String email, String otpCode) {
-        // Lấy mã OTP đã lưu và thời gian hết hạn từ bộ lưu trữ
-        String storedOtp = otpStore.get(email);
-        Long expirationTime = otpExpirationStore.get(email);
 
-        // Kiểm tra nếu OTP không tồn tại hoặc đã hết hạn
-        if (storedOtp == null || expirationTime == null || System.currentTimeMillis() > expirationTime) {
-            // Xóa OTP khỏi bộ nhớ khi hết hạn hoặc không tồn tại
-            otpStore.remove(email);
-            otpExpirationStore.remove(email);
-            return false;  // OTP không tồn tại hoặc đã hết hạn
+
+        String storedOTP = stringRedisTemplate.opsForValue().get("OTP:" + email);
+
+        // Kiểm tra OTP có tồn tại và khớp với mã người dùng nhập không
+        if (storedOTP != null && storedOTP.equals(otpCode)) {
+            // Xóa OTP sau khi xác minh thành công
+            Account user = userRepository.findAccountByEmail(email)
+                    .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+            user.setActive(true);
+            stringRedisTemplate.delete("OTP:" + email);
+            return true;
         }
-
-        // Kiểm tra mã OTP
-        boolean isValid = storedOtp.equals(otpCode);
-
-        // Nếu OTP đã được xác thực, xóa OTP khỏi bộ nhớ
-        if (isValid) {
-            otpStore.remove(email);
-            otpExpirationStore.remove(email);
-        }
-
-        var user = userRepository.findAccountByEmail(email)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-        user.setActive(true);
-        userRepository.save(user);
-
-        return isValid;  // Trả về true nếu OTP hợp lệ, false nếu không hợp lệ
+        return false;
     }
+
+
+
 
     @Override
     public GetToken getToken() {
