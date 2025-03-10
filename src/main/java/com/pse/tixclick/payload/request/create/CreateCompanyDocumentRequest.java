@@ -16,4 +16,6 @@ public class CreateCompanyDocumentRequest {
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     String uploadDate;
+
+    int companyVerificationId;
 }
