@@ -80,6 +80,7 @@ public enum ErrorCode {
     USER_NOT_MANAGER(1070, "Người dùng không phải là quản lý", HttpStatus.BAD_REQUEST),
     ACCOUNT_NOT_CREATE_COMPANY(1071, "Tài khoản không phải đại diện công ty", HttpStatus.BAD_REQUEST),
     OTP_ALREADY_SENT(1072, "OTP đã được gửi", HttpStatus.BAD_REQUEST),
+    USER_NOT_ACTIVE(1073, "Tài khoản chưa được kích hoạt", HttpStatus.BAD_REQUEST),
     ;
 
 

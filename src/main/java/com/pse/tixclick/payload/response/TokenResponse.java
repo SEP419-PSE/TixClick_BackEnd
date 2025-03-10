@@ -13,6 +13,6 @@ import java.util.Date;
 public class TokenResponse {
     String accessToken;
     String refreshToken;
-
+    String roleName;
     boolean status;
 }
