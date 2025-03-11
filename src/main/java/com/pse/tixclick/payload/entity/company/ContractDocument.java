@@ -31,6 +31,9 @@ public class ContractDocument {
     @Column
     String fileType;
 
+    @Column
+    String status;
+
     @ManyToOne
     @JoinColumn(name="uploaded_by", nullable = false)
     Account uploadedBy;

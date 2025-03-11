@@ -7,6 +7,8 @@ import com.pse.tixclick.payload.dto.TicketDTO;
 import com.pse.tixclick.payload.dto.TicketPurchaseDTO;
 import com.pse.tixclick.payload.dto.TicketQrCodeDTO;
 import com.pse.tixclick.payload.entity.Account;
+import com.pse.tixclick.payload.entity.CheckinLog;
+import com.pse.tixclick.payload.entity.entity_enum.ECheckinLogStatus;
 import com.pse.tixclick.payload.entity.entity_enum.ETicketPurchaseStatus;
 import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.entity.event.EventActivity;
@@ -14,6 +16,7 @@ import com.pse.tixclick.payload.entity.seatmap.Seat;
 import com.pse.tixclick.payload.entity.seatmap.Zone;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
 import com.pse.tixclick.payload.entity.ticket.TicketPurchase;
+import com.pse.tixclick.payload.request.create.CheckinRequest;
 import com.pse.tixclick.payload.request.create.CreateTicketPurchaseRequest;
 import com.pse.tixclick.repository.*;
 import com.pse.tixclick.service.TicketPurchaseService;
@@ -28,6 +31,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Date;
 import java.util.Optional;
 import java.util.concurrent.Executors;
@@ -38,9 +42,6 @@ import java.util.concurrent.ScheduledExecutorService;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Transactional
 public class TicketPurchaseServiceImpl implements TicketPurchaseService {
-    private static final int QR_CODE_WIDTH = 400;
-    private static final int QR_CODE_HEIGHT = 400;
-
     @Autowired
     AppUtils appUtils;
 
@@ -64,6 +65,12 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
 
     @Autowired
     EventRepository eventRepository;
+
+    @Autowired
+    AccountRepository accountRepository;
+
+    @Autowired
+    CheckinLogRepository checkinLogRepository;
 
 
     @Override
@@ -106,22 +113,7 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
         ticketPurchase.setEventActivity(eventActivity);
         ticketPurchase.setTicket(ticket);
         ticketPurchase.setEvent(event);
-
-        Account account = appUtils.getAccountFromAuthentication();
-
-        TicketQrCodeDTO ticketQrCodeDTO = new TicketQrCodeDTO();
-        ticketQrCodeDTO.setTicket_name(ticket.getTicketName());
-        ticketQrCodeDTO.setPurchase_date(new Date());
-        ticketQrCodeDTO.setEvent_name(event.getEventName());
-        ticketQrCodeDTO.setActivity_name(eventActivity.getActivityName());
-        ticketQrCodeDTO.setZone_name(zone.getZoneName());
-        ticketQrCodeDTO.setSeat_row_number(seat.getRowNumber());
-        ticketQrCodeDTO.setSeat_column_number(seat.getColumnNumber());
-        ticketQrCodeDTO.setAccount_name(account.getUserName());
-        ticketQrCodeDTO.setPhone(account.getPhone());
-
-        String qrCode = generateQRCode(ticketQrCodeDTO);
-        ticketPurchase.setQrCode(qrCode);
+        ticketPurchase.setQrCode(null);
 
         ticketPurchase = ticketPurchaseRepository.save(ticketPurchase);
 
@@ -138,8 +130,36 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
         return ticketPurchaseDTO;
     }
 
-    private String generateQRCode(TicketQrCodeDTO ticketQrCodeDTO) {
-        String dataTransfer = AppUtils.transferToString(ticketQrCodeDTO);
-        return AppUtils.generateQRCode(dataTransfer, QR_CODE_WIDTH, QR_CODE_HEIGHT);
+    @Override
+    public String checkinTicketPurchase(int checkinId) {
+        CheckinLog checkinLog = checkinLogRepository
+                .findById(checkinId)
+                .orElseThrow(() -> new AppException(ErrorCode.CHECKIN_LOG_NOT_FOUND));
+
+        TicketPurchase ticketPurchase = ticketPurchaseRepository
+                .findById(checkinLog.getTicketPurchase().getTicketPurchaseId())
+                .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
+
+        EventActivity eventActivity = eventActivityRepository
+                .findById(checkinLog.getTicketPurchase().getEventActivity().getEventActivityId())
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_ACTIVITY_NOT_FOUND));
+
+        if (checkinLog.getCheckinStatus().equals(ECheckinLogStatus.PENDING.name())) {
+            checkinLog.setCheckinTime(LocalDateTime.now());
+            checkinLog.setCheckinStatus(ECheckinLogStatus.CHECKED_IN.name());
+        }
+        else if (checkinLog.getCheckinStatus().equals(ECheckinLogStatus.CHECKED_IN.name())) {
+            throw new AppException(ErrorCode.CHECKIN_LOG_CHECKED_IN);
+        }
+        else if(eventActivity.getEndTimeEvent().isBefore(LocalTime.now())) {
+            checkinLog.setCheckinTime(LocalDateTime.now());
+            checkinLog.setCheckinStatus(ECheckinLogStatus.EXPIRED.name());
+            throw new AppException(ErrorCode.CHECKIN_LOG_EXPIRED);
+        }
+
+        ticketPurchase.setStatus(ETicketPurchaseStatus.CHECKED_IN.name());
+        ticketPurchaseRepository.save(ticketPurchase);
+        checkinLogRepository.save(checkinLog);
+        return "Checkin successful";
     }
 }
