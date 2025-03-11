@@ -37,4 +37,6 @@ public interface EventService {
     List<EventDTO> getEventsByCompanyId(int companyId);
 
     int countTotalScheduledEvents();
+
+    double getAverageTicketPrice();
 }
