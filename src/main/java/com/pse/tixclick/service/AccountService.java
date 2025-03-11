@@ -24,4 +24,6 @@ public interface AccountService {
 
     int countTotalManagers();
 
+    int countTotalAccounts();
+
 }

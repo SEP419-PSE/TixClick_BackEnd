@@ -164,4 +164,9 @@ public class AccountServiceImpl implements AccountService {
         return Optional.of(accountRepository.countTotalManagers()).orElse(0);
     }
 
+    @Override
+    public int countTotalAccounts() {
+        return Optional.of(accountRepository.countTotalAccounts()).orElse(0);
+    }
+
 }
