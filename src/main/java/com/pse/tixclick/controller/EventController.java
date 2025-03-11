@@ -2,6 +2,7 @@ package com.pse.tixclick.controller;
 
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.payload.dto.EventDTO;
+import com.pse.tixclick.payload.dto.UpcomingEventDTO;
 import com.pse.tixclick.payload.entity.entity_enum.EEventStatus;
 import com.pse.tixclick.payload.request.create.CreateEventRequest;
 import com.pse.tixclick.payload.request.update.UpdateEventRequest;
@@ -363,5 +364,27 @@ public class EventController {
     @GetMapping("/category/distribution")
     public ResponseEntity<Map<String, Double>> getEventCategoryDistribution() {
         return ResponseEntity.ok(eventService.getEventCategoryDistribution());
+    }
+
+    @GetMapping("/upcoming")
+    public ResponseEntity<ApiResponse<List<UpcomingEventDTO>>> getUpcomingEvents() {
+        List<UpcomingEventDTO> events = eventService.getUpcomingEvents();
+
+        if (events.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.<List<UpcomingEventDTO>>builder()
+                            .code(HttpStatus.NOT_FOUND.value())
+                            .message("No upcoming events found")
+                            .result(null)
+                            .build());
+        }
+
+        return ResponseEntity.ok(
+                ApiResponse.<List<UpcomingEventDTO>>builder()
+                        .code(HttpStatus.OK.value())
+                        .message("Get all upcoming events successfully")
+                        .result(events)
+                        .build()
+        );
     }
 }

@@ -1,6 +1,7 @@
 package com.pse.tixclick.service;
 
 import com.pse.tixclick.payload.dto.EventDTO;
+import com.pse.tixclick.payload.dto.UpcomingEventDTO;
 import com.pse.tixclick.payload.entity.entity_enum.EEventStatus;
 import com.pse.tixclick.payload.request.create.CreateEventRequest;
 import com.pse.tixclick.payload.request.update.UpdateEventRequest;
@@ -41,4 +42,6 @@ public interface EventService {
     double getAverageTicketPrice();
 
     Map<String, Double> getEventCategoryDistribution();
+
+    List<UpcomingEventDTO> getUpcomingEvents();
 }
