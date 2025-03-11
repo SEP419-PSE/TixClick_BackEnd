@@ -16,4 +16,12 @@ public interface AccountService {
 
     List<AccountDTO> getAllAccount();
 
+    int countTotalBuyers();
+
+    int countTotalAdmins();
+
+    int countTotalOrganizers();
+
+    int countTotalManagers();
+
 }
