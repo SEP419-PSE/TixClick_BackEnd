@@ -40,6 +40,8 @@ public interface EventRepository extends JpaRepository<Event,Integer> {
     """, nativeQuery = true)
     List<Object[]> getEventCategoryDistribution();
 
+    @Query(value = "SELECT e FROM Event e WHERE e.status = 'SCHEDULED'")
+    List<Event> findScheduledEvents();
 
     Optional<List<Event>> findEventsByCompany_CompanyId(int companyId);
 
