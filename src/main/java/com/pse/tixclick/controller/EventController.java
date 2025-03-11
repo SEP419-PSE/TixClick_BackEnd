@@ -387,4 +387,26 @@ public class EventController {
                         .build()
         );
     }
+
+    @GetMapping("/top-performing")
+    public ResponseEntity<ApiResponse<List<UpcomingEventDTO>>> getTopPerformingEvents() {
+        List<UpcomingEventDTO> events = eventService.getTopPerformingEvents();
+
+        if (events.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.<List<UpcomingEventDTO>>builder()
+                            .code(HttpStatus.NOT_FOUND.value())
+                            .message("No top performing events found")
+                            .result(null)
+                            .build());
+        }
+
+        return ResponseEntity.ok(
+                ApiResponse.<List<UpcomingEventDTO>>builder()
+                        .code(HttpStatus.OK.value())
+                        .message("Get all top performing events successfully")
+                        .result(events)
+                        .build()
+        );
+    }
 }

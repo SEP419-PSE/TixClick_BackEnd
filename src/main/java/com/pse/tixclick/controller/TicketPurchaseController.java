@@ -90,4 +90,25 @@ public class TicketPurchaseController {
                             .build());
         }
     }
+
+    @PostMapping("/checkin/{checkinId}")
+    public ResponseEntity<ApiResponse<String>> checkinTicketPurchase(@PathVariable int checkinId) {
+        try {
+            String checkin = ticketPurchaseService.checkinTicketPurchase(checkinId);
+            return ResponseEntity.ok(
+                    ApiResponse.<String>builder()
+                            .code(200)
+                            .message(checkin)
+                            .result(checkin)
+                            .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(400)
+                    .body(ApiResponse.<String>builder()
+                            .code(400)
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        }
+    }
 }

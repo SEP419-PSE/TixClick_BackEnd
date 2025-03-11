@@ -292,12 +292,10 @@ public class EventServiceImpl implements EventService {
         for (Event event : events) {
             int eventId = event.getEventId();
 
-            // Ví dụ: Gọi repository để lấy tổng vé đã bán cho eventId này
             int totalTicketsSold = ticketPurchaseRepository.countTotalTicketSold(eventId);
 
             double totalRevenue = orderRepository.sumTotalTransaction(eventId);
 
-            // Mapping dữ liệu vào DTO
             UpcomingEventDTO dto = new UpcomingEventDTO();
             dto.setEventName(event.getEventName());
             dto.setTicketSold(totalTicketsSold);
@@ -307,5 +305,31 @@ public class EventServiceImpl implements EventService {
         }
 
         return upcomingEventDTOs;
+    }
+
+    @Override
+    public List<UpcomingEventDTO> getTopPerformingEvents() {
+
+            List<Event> events = eventRepository.findScheduledEvents();
+            List<UpcomingEventDTO> upcomingEventDTOs = new ArrayList<>();
+
+            for (Event event : events) {
+                int eventId = event.getEventId();
+
+                int totalTicketsSold = ticketPurchaseRepository.countTotalTicketSold(eventId);
+
+                double totalRevenue = orderRepository.sumTotalTransaction(eventId);
+
+                UpcomingEventDTO dto = new UpcomingEventDTO();
+                dto.setEventName(event.getEventName());
+                dto.setTicketSold(totalTicketsSold);
+                dto.setRevenue(totalRevenue);
+
+                upcomingEventDTOs.add(dto);
+            }
+            // Sắp xếp danh sách theo revenue giảm dần
+            upcomingEventDTOs.sort((a, b) -> Double.compare(b.getRevenue(), a.getRevenue()));
+
+            return upcomingEventDTOs;
     }
 }

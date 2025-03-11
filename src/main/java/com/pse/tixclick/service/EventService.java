@@ -44,4 +44,7 @@ public interface EventService {
     Map<String, Double> getEventCategoryDistribution();
 
     List<UpcomingEventDTO> getUpcomingEvents();
+
+    List<UpcomingEventDTO> getTopPerformingEvents();
+
 }
