@@ -21,5 +21,6 @@ public interface ContractDocumentService {
     List<ContractDocumentDTO> getContractDocumentsByEvent(int eventId);
 
     List<ContractDocumentDTO> getContractDocumentsByCompany(int companyId);
+
     File signPdf(String pdfUrl, String name) throws Exception;
 }
