@@ -198,4 +198,17 @@ public class AccountController {
 
         return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
     }
+
+    @GetMapping("/count-accounts")
+    public ResponseEntity<ApiResponse<Integer>> countAccounts() {
+        int count = accountService.countTotalAccounts();
+
+        ApiResponse<Integer> apiResponse = ApiResponse.<Integer>builder()
+                .code(HttpStatus.OK.value())
+                .message("Accounts count retrieved successfully")
+                .result(count)
+                .build();
+
+        return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+    }
 }
