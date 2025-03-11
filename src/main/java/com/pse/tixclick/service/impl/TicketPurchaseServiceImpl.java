@@ -177,4 +177,9 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
                 ))
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public int countTotalCheckins() {
+        return Optional.of(checkinLogRepository.countTotalCheckins()).orElse(0);
+    }
 }

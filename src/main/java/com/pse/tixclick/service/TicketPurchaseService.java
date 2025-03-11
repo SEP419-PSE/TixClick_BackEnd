@@ -15,4 +15,6 @@ public interface TicketPurchaseService {
     int countTotalTicketSold();
 
     List<TicketSalesResponse> getMonthlyTicketSales();
+
+    int countTotalCheckins();
 }
