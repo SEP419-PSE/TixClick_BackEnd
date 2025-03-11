@@ -70,4 +70,24 @@ public class TicketPurchaseController {
                             .build());
         }
     }
+
+    @GetMapping("/monthly_ticket_sales")
+    public ResponseEntity<ApiResponse> getMonthlyTicketSales() {
+        try {
+            return ResponseEntity.ok(
+                    ApiResponse.builder()
+                            .code(200)
+                            .message("Monthly Ticket Sales")
+                            .result(ticketPurchaseService.getMonthlyTicketSales())
+                            .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(400)
+                    .body(ApiResponse.builder()
+                            .code(400)
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        }
+    }
 }

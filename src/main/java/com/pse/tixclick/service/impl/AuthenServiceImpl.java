@@ -229,9 +229,9 @@ public class AuthenServiceImpl implements AuthenService {// Để lưu thời gi
             // Tạo OTP mới
             String otpCode = generateOTP();
 
-            // Lưu OTP vào Redis với thời gian hết hạn là 5 phút
+            // Lưu OTP vào Redis với thời gian hết hạn là 15 phút
             String key = "OTP:" + email;
-            stringRedisTemplate.opsForValue().set(key, otpCode, 60, TimeUnit.MINUTES);
+            stringRedisTemplate.opsForValue().set(key, otpCode, 15, TimeUnit.MINUTES);
 
 // In ra log để kiểm tra key và value
             String savedOtp = stringRedisTemplate.opsForValue().get(key);
