@@ -162,4 +162,9 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
         checkinLogRepository.save(checkinLog);
         return "Checkin successful";
     }
+
+    @Override
+    public int countTotalTicketSold() {
+        return ticketPurchaseRepository.countTotalTicketSold();
+    }
 }
