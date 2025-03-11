@@ -1,5 +1,6 @@
 package com.pse.tixclick.controller;
 
+import com.pse.tixclick.payload.dto.TransactionDTO;
 import com.pse.tixclick.payload.response.ApiResponse;
 import com.pse.tixclick.service.TransactionService;
 import lombok.AccessLevel;
@@ -12,6 +13,8 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/transaction")
@@ -57,6 +60,27 @@ public class TransactionController {
         } catch (Exception e) {
             return ResponseEntity.status(400)
                     .body(ApiResponse.builder()
+                            .code(400)
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        }
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<ApiResponse<List<TransactionDTO>>> getTransactions() {
+        try {
+            List<TransactionDTO> transactionDTOS = transactionService.getTransactions();
+            return ResponseEntity.ok(
+                    ApiResponse.<List<TransactionDTO>>builder()
+                            .code(200)
+                            .message("All Transactions")
+                            .result(transactionDTOS)
+                            .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(400)
+                    .body(ApiResponse.<List<TransactionDTO>>builder()
                             .code(400)
                             .message(e.getMessage())
                             .result(null)
