@@ -43,4 +43,24 @@ public class TransactionController {
                             .build());
         }
     }
+
+    @GetMapping("/monthly_sales_report")
+    public ResponseEntity<ApiResponse> getMonthlySalesReport() {
+        try {
+            return ResponseEntity.ok(
+                    ApiResponse.builder()
+                            .code(200)
+                            .message("Monthly Sales Report")
+                            .result(transactionService.getMonthlySalesReport())
+                            .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(400)
+                    .body(ApiResponse.builder()
+                            .code(400)
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        }
+    }
 }
