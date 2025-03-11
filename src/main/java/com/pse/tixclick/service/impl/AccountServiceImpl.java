@@ -23,6 +23,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -141,6 +142,26 @@ public class AccountServiceImpl implements AccountService {
         return accounts.stream()
                 .map(account -> accountMapper.map(account, AccountDTO.class))
                 .toList();
+    }
+
+    @Override
+    public int countTotalBuyers() {
+        return Optional.of(accountRepository.countTotalBuyers()).orElse(0);
+    }
+
+    @Override
+    public int countTotalAdmins() {
+        return Optional.of(accountRepository.countTotalAdmins()).orElse(0);
+    }
+
+    @Override
+    public int countTotalOrganizers() {
+        return Optional.of(accountRepository.countTotalOrganizers()).orElse(0);
+    }
+
+    @Override
+    public int countTotalManagers() {
+        return Optional.of(accountRepository.countTotalManagers()).orElse(0);
     }
 
 }
