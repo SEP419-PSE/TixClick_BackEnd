@@ -1,7 +1,10 @@
 package com.pse.tixclick.controller;
 
 import com.pse.tixclick.payload.dto.OrderDTO;
+import com.pse.tixclick.payload.dto.PaymentDTO;
+import com.pse.tixclick.payload.dto.SeatDTO;
 import com.pse.tixclick.payload.request.create.CreateOrderRequest;
+import com.pse.tixclick.payload.response.ApiResponse;
 import com.pse.tixclick.payload.response.PayOSResponse;
 import com.pse.tixclick.payload.response.PaymentResponse;
 import com.pse.tixclick.payload.response.ResponseObject;
@@ -16,9 +19,11 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.List;
 
 @RestController
 @RequestMapping("/payment")
@@ -32,8 +37,6 @@ public class PaymentController {
 
     @Autowired
     PaymentService paymentService;
-
-
 
 
     @PostMapping("/pay-os-create")
@@ -52,6 +55,27 @@ public class PaymentController {
             response.sendRedirect(url);
         } else {
             response.sendRedirect(urlFail);
+        }
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<ApiResponse<List<PaymentDTO>>> getAllPayments(){
+        try {
+            List<PaymentDTO> paymentDTOS = paymentService.getAllPayments();
+            return ResponseEntity.ok(
+                    ApiResponse.<List<PaymentDTO>>builder()
+                            .code(200)
+                            .message("Successfully fetched all payments")
+                            .result(paymentDTOS)
+                            .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(400)
+                    .body(ApiResponse.<List<PaymentDTO>>builder()
+                            .code(400)
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
         }
     }
 }
