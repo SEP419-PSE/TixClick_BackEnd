@@ -8,4 +8,6 @@ public interface TicketPurchaseService {
     TicketPurchaseDTO createTicketPurchase(CreateTicketPurchaseRequest createTicketPurchaseRequest);
 
     String checkinTicketPurchase(int checkinId);
+
+    int countTotalTicketSold();
 }

@@ -49,4 +49,25 @@ public class TicketPurchaseController {
                             .build());
         }
     }
+
+    @GetMapping("/count_ticket_sold")
+    public ResponseEntity<ApiResponse<Integer>> countTotalTicketSold() {
+        try {
+            int count = ticketPurchaseService.countTotalTicketSold();
+            return ResponseEntity.ok(
+                    ApiResponse.<Integer>builder()
+                            .code(200)
+                            .message("Total ticket sold")
+                            .result(count)
+                            .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(400)
+                    .body(ApiResponse.<Integer>builder()
+                            .code(400)
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        }
+    }
 }
