@@ -3,7 +3,9 @@ package com.pse.tixclick.service.impl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
+import com.pse.tixclick.payload.dto.PaymentDTO;
 import com.pse.tixclick.payload.dto.TicketQrCodeDTO;
+import com.pse.tixclick.payload.dto.ZoneDTO;
 import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.CheckinLog;
 import com.pse.tixclick.payload.entity.entity_enum.ECheckinLogStatus;
@@ -41,6 +43,7 @@ import vn.payos.type.PaymentData;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -304,6 +307,14 @@ public class PaymentServiceImpl implements PaymentService {
             }
             return new PaymentResponse(status, "CANCELLED", mapper.map(payment, PaymentResponse.class));
         }
+    }
+
+    @Override
+    public List<PaymentDTO> getAllPayments() {
+        List<Payment> payments = paymentRepository.findAll();
+        return payments.stream()
+                .map(payment -> mapper.map(payment, PaymentDTO.class))
+                .toList();
     }
 
     private String generateQRCode(TicketQrCodeDTO ticketQrCodeDTO) {
