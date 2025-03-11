@@ -4,6 +4,8 @@ import com.pse.tixclick.payload.dto.AccountDTO;
 import com.pse.tixclick.payload.request.create.CreateAccountRequest;
 import com.pse.tixclick.payload.request.update.UpdateAccountRequest;
 
+import java.util.List;
+
 public interface AccountService {
     boolean changePasswordWithOtp(String email, String newPassword, String oldPassword);
     AccountDTO myProfile();
@@ -12,5 +14,6 @@ public interface AccountService {
 
     AccountDTO updateProfile(UpdateAccountRequest accountDTO);
 
+    List<AccountDTO> getAllAccount();
 
 }
