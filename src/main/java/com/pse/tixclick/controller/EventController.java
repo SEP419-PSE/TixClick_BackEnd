@@ -316,4 +316,25 @@ public class EventController {
                         .build()
         );
     }
+
+    @GetMapping("/count/scheduled")
+    public ResponseEntity<ApiResponse<Integer>> countTotalScheduledEvents() {
+        try {
+            int count = eventService.countTotalScheduledEvents();
+            return ResponseEntity.ok(
+                    ApiResponse.<Integer>builder()
+                            .code(200)
+                            .message("Total Upcoming Events")
+                            .result(count)
+                            .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(400)
+                    .body(ApiResponse.<Integer>builder()
+                            .code(400)
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        }
+    }
 }
