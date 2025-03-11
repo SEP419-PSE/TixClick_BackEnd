@@ -5,4 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 public interface TicketPurchaseRepository extends JpaRepository<TicketPurchase, Integer> {
+    @Query(value = "SELECT COUNT(*) FROM TicketPurchase WHERE status = 'PURCHASED'")
+    int countTotalTicketSold();
 }
