@@ -1,6 +1,11 @@
 package com.pse.tixclick.service.impl;
 
 import com.pse.tixclick.payload.dto.MonthlySalesReportDTO;
+import com.pse.tixclick.payload.dto.TransactionDTO;
+import com.pse.tixclick.payload.entity.Account;
+import com.pse.tixclick.payload.entity.payment.ContractPayment;
+import com.pse.tixclick.payload.entity.payment.Payment;
+import com.pse.tixclick.payload.entity.payment.Transaction;
 import com.pse.tixclick.repository.OrderRepository;
 import com.pse.tixclick.repository.TransactionRepository;
 import com.pse.tixclick.service.TransactionService;
@@ -38,6 +43,24 @@ public class TransactionServiceImpl implements TransactionService {
                         ((Number) row[0]).intValue(),
                         ((Number) row[1]).longValue(),
                         ((Number) row[2]).doubleValue()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<TransactionDTO> getTransactions() {
+        List<Transaction> results = transactionRepository.findAll();
+        return results.stream()
+                .map(transaction -> new TransactionDTO(
+                        transaction.getTransactionId(),
+                        transaction.getAmount(),
+                        transaction.getDescription(),
+                        transaction.getTransactionCode(),
+                        transaction.getType(),
+                        transaction.getTransactionDate(),
+                        Optional.ofNullable(transaction.getAccount()).map(Account::getAccountId).orElse(0),
+                        Optional.ofNullable(transaction.getPayment()).map(Payment::getPaymentId).orElse(0),
+                        Optional.ofNullable(transaction.getContractPayment()).map(ContractPayment::getContractPaymentId).orElse(0)
                 ))
                 .collect(Collectors.toList());
     }
