@@ -35,4 +35,6 @@ public interface EventService {
     List<EventDTO> getEventsByAccountIdAndStatus(String status);
 
     List<EventDTO> getEventsByCompanyId(int companyId);
+
+    int countTotalScheduledEvents();
 }
