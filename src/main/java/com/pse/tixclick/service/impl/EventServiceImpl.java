@@ -1,7 +1,9 @@
 package com.pse.tixclick.service.impl;
 
 import com.pse.tixclick.cloudinary.CloudinaryService;
+import com.pse.tixclick.payload.dto.UpcomingEventDTO;
 import com.pse.tixclick.payload.response.EventResponse;
+import com.pse.tixclick.repository.*;
 import com.pse.tixclick.utils.AppUtils;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
@@ -11,10 +13,6 @@ import com.pse.tixclick.payload.entity.entity_enum.EEventStatus;
 import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.request.create.CreateEventRequest;
 import com.pse.tixclick.payload.request.update.UpdateEventRequest;
-import com.pse.tixclick.repository.AccountRepository;
-import com.pse.tixclick.repository.CompanyRepository;
-import com.pse.tixclick.repository.EventCategoryRepository;
-import com.pse.tixclick.repository.EventRepository;
 import com.pse.tixclick.service.EventService;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -27,10 +25,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -46,6 +41,12 @@ public class EventServiceImpl implements EventService {
     CompanyRepository companyRepository;
     @Autowired
     AppUtils appUtils;
+
+    @Autowired
+    OrderRepository orderRepository;
+
+    @Autowired
+    TicketPurchaseRepository ticketPurchaseRepository;
 
     @Override
     public EventDTO createEvent(CreateEventRequest request, MultipartFile logoURL, MultipartFile bannerURL) throws IOException {
@@ -281,5 +282,30 @@ public class EventServiceImpl implements EventService {
             distributionMap.put((String) result[0], ((Number) result[1]).doubleValue());
         }
         return distributionMap;
+    }
+
+    @Override
+    public List<UpcomingEventDTO> getUpcomingEvents() {
+        List<Event> events = eventRepository.findScheduledEvents();
+        List<UpcomingEventDTO> upcomingEventDTOs = new ArrayList<>();
+
+        for (Event event : events) {
+            int eventId = event.getEventId();
+
+            // Ví dụ: Gọi repository để lấy tổng vé đã bán cho eventId này
+            int totalTicketsSold = ticketPurchaseRepository.countTotalTicketSold(eventId);
+
+            double totalRevenue = orderRepository.sumTotalTransaction(eventId);
+
+            // Mapping dữ liệu vào DTO
+            UpcomingEventDTO dto = new UpcomingEventDTO();
+            dto.setEventName(event.getEventName());
+            dto.setTicketSold(totalTicketsSold);
+            dto.setRevenue(totalRevenue);
+
+            upcomingEventDTOs.add(dto);
+        }
+
+        return upcomingEventDTOs;
     }
 }
