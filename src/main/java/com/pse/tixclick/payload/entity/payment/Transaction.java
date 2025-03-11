@@ -24,7 +24,7 @@ public class Transaction {
     @Column(nullable = false)
     private double amount;
 
-    @Column(nullable = false)
+    @Column()
     private String description;
 
     @Column(nullable = false)
@@ -46,6 +46,6 @@ public class Transaction {
     private Payment payment;
 
     @ManyToOne
-    @JoinColumn(name = "contract_payment_id", nullable = false)
+    @JoinColumn(name = "contract_payment_id")
     private ContractPayment contractPayment;
 }
