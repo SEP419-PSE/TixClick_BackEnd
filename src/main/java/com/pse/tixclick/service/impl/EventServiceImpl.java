@@ -28,6 +28,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -251,6 +252,11 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
         return modelMapper.map(events, new TypeToken<List<EventDTO>>() {}.getType());
 
+    }
+
+    @Override
+    public int countTotalScheduledEvents() {
+        return Optional.of(eventRepository.countTotalScheduledEvents()).orElse(0);
     }
 
 
