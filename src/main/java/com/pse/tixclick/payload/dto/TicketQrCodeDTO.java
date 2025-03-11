@@ -20,4 +20,5 @@ public class TicketQrCodeDTO {
     private String account_name;
     private Date purchase_date;
     private String phone;
+    private int checkin_Log_id;
 }

@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ContractDocumentRepository extends JpaRepository<ContractDocument,Integer> {
@@ -19,4 +20,6 @@ public interface ContractDocumentRepository extends JpaRepository<ContractDocume
     @Query("SELECT c FROM ContractDocument c WHERE c.contract.event.eventId = :id")
     List<ContractDocument> findByAllByEventId(@Param("id") int eventId);
 
+    @Query("SELECT c FROM ContractDocument c WHERE c.fileName = :name")
+    Optional<ContractDocument> findByFileName(@Param("name") String name);
 }
