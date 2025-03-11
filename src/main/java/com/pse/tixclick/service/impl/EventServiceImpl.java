@@ -259,5 +259,11 @@ public class EventServiceImpl implements EventService {
         return Optional.of(eventRepository.countTotalScheduledEvents()).orElse(0);
     }
 
+    @Override
+    public double getAverageTicketPrice() {
+        Double sum = eventRepository.getAverageTicketPrice();
+        return sum == null ? 0 : sum;
+    }
+
 
 }

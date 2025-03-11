@@ -337,4 +337,25 @@ public class EventController {
                             .build());
         }
     }
+
+    @GetMapping("/average/price")
+    public ResponseEntity<ApiResponse<Double>> getAverageTicketPrice() {
+        try {
+            double average = eventService.getAverageTicketPrice();
+            return ResponseEntity.ok(
+                    ApiResponse.<Double>builder()
+                            .code(200)
+                            .message("Average Ticket Price")
+                            .result(average)
+                            .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(400)
+                    .body(ApiResponse.<Double>builder()
+                            .code(400)
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        }
+    }
 }
