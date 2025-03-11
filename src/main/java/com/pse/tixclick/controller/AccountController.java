@@ -134,5 +134,16 @@ public class AccountController {
         }
     }
 
+    @GetMapping("/all")
+    public ResponseEntity<ApiResponse<List<AccountDTO>>> getAllAccounts() {
+        List<AccountDTO> accountDTOS = accountService.getAllAccount();
 
+        ApiResponse<List<AccountDTO>> apiResponse = ApiResponse.<List<AccountDTO>>builder()
+                .code(HttpStatus.OK.value())
+                .message("All accounts retrieved successfully")
+                .result(accountDTOS)
+                .build();
+
+        return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+    }
 }

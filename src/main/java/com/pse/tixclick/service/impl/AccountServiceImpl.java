@@ -22,6 +22,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -130,6 +132,15 @@ public class AccountServiceImpl implements AccountService {
 
         // Trả về thông tin tài khoản sau khi cập nhật
         return accountMapper.map(user, AccountDTO.class);
+    }
+
+    @Override
+    public List<AccountDTO> getAllAccount() {
+        List<Account> accounts = accountRepository.findAll();
+
+        return accounts.stream()
+                .map(account -> accountMapper.map(account, AccountDTO.class))
+                .toList();
     }
 
 }
