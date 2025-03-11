@@ -165,6 +165,6 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
 
     @Override
     public int countTotalTicketSold() {
-        return ticketPurchaseRepository.countTotalTicketSold();
+        return Optional.of(ticketPurchaseRepository.countTotalTicketSold()).orElse(0);
     }
 }

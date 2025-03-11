@@ -53,6 +53,7 @@ public class SecurityConfig {
             "/contract-document/**",
             "/background/**",
             "/ticket-purchase/**",
+            "/transaction/**",
     };
 
     @Bean
