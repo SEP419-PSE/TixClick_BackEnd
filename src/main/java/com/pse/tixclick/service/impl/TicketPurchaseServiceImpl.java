@@ -2,10 +2,7 @@ package com.pse.tixclick.service.impl;
 
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
-import com.pse.tixclick.payload.dto.EventDTO;
-import com.pse.tixclick.payload.dto.TicketDTO;
-import com.pse.tixclick.payload.dto.TicketPurchaseDTO;
-import com.pse.tixclick.payload.dto.TicketQrCodeDTO;
+import com.pse.tixclick.payload.dto.*;
 import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.CheckinLog;
 import com.pse.tixclick.payload.entity.entity_enum.ECheckinLogStatus;
@@ -33,9 +30,11 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -166,5 +165,16 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
     @Override
     public int countTotalTicketSold() {
         return Optional.of(ticketPurchaseRepository.countTotalTicketSold()).orElse(0);
+    }
+
+    @Override
+    public List<TicketSalesResponse> getMonthlyTicketSales() {
+        List<Object[]> results = ticketPurchaseRepository.countTicketsSoldPerMonth();
+        return results.stream()
+                .map(row -> new TicketSalesResponse(
+                        ((Number) row[0]).intValue(),  // month
+                        ((Number) row[1]).intValue()   // total_tickets_sold
+                ))
+                .collect(Collectors.toList());
     }
 }
