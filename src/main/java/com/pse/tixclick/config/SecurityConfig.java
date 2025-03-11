@@ -54,6 +54,7 @@ public class SecurityConfig {
             "/background/**",
             "/ticket-purchase/**",
             "/transaction/**",
+            "/payment/**"
     };
 
     @Bean
