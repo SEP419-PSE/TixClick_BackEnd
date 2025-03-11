@@ -12,10 +12,9 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/contract")
@@ -46,6 +45,27 @@ public class ContractController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.<ContractDTO>builder()
+                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .message("Internal Server Error: " + e.getMessage())
+                            .result(null)
+                            .build());
+        }
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<ApiResponse<List<ContractDTO>>> getAllContracts() {
+        try {
+            List<ContractDTO> result = contractService.getAllContracts();
+            return ResponseEntity.ok(
+                    ApiResponse.<List<ContractDTO>>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Successfully fetched all contracts")
+                            .result(result)
+                            .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<List<ContractDTO>>builder()
                             .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .message("Internal Server Error: " + e.getMessage())
                             .result(null)
