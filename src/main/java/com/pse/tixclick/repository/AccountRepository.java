@@ -51,4 +51,7 @@ public interface AccountRepository extends JpaRepository<Account, Integer> {
 
     @Query(value = "SELECT COUNT(*) FROM Account a WHERE a.role.roleId = 4")
     int countTotalManagers();
+
+    @Query(value = "SELECT COUNT(*) FROM Account")
+    int countTotalAccounts();
 }
