@@ -28,6 +28,9 @@ public interface EventRepository extends JpaRepository<Event,Integer> {
     @Query("SELECT COUNT(e) FROM Event e WHERE e.status = 'SCHEDULED'")
     int countTotalScheduledEvents();
 
+    @Query("SELECT COALESCE(AVG(t.price), 0) FROM Ticket t")
+    Double getAverageTicketPrice();
+
     Optional<List<Event>> findEventsByCompany_CompanyId(int companyId);
 
     Optional<Event> findEventByEventIdAndCompany_RepresentativeId_UserName(int eventId, String userName);
