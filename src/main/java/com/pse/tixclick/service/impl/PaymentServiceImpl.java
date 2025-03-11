@@ -3,16 +3,22 @@ package com.pse.tixclick.service.impl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
+import com.pse.tixclick.payload.dto.TicketQrCodeDTO;
 import com.pse.tixclick.payload.entity.Account;
+import com.pse.tixclick.payload.entity.CheckinLog;
+import com.pse.tixclick.payload.entity.entity_enum.ECheckinLogStatus;
 import com.pse.tixclick.payload.entity.entity_enum.EOrderStatus;
 import com.pse.tixclick.payload.entity.entity_enum.EPaymentStatus;
 import com.pse.tixclick.payload.entity.entity_enum.ETicketPurchaseStatus;
+import com.pse.tixclick.payload.entity.event.Event;
+import com.pse.tixclick.payload.entity.event.EventActivity;
 import com.pse.tixclick.payload.entity.payment.Order;
 import com.pse.tixclick.payload.entity.payment.OrderDetail;
 import com.pse.tixclick.payload.entity.payment.Payment;
 import com.pse.tixclick.payload.entity.payment.Transaction;
 import com.pse.tixclick.payload.entity.seatmap.Seat;
 import com.pse.tixclick.payload.entity.seatmap.Zone;
+import com.pse.tixclick.payload.entity.ticket.Ticket;
 import com.pse.tixclick.payload.entity.ticket.TicketPurchase;
 import com.pse.tixclick.payload.response.PayOSResponse;
 import com.pse.tixclick.payload.response.PaymentResponse;
@@ -43,6 +49,9 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Transactional
 public class PaymentServiceImpl implements PaymentService {
+    private static final int QR_CODE_WIDTH = 400;
+    private static final int QR_CODE_HEIGHT = 400;
+
     @Autowired
     PayOSUtils payOSUtils;
 
@@ -75,6 +84,18 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Autowired
     ZoneRepository zoneRepository;
+
+    @Autowired
+    CheckinLogRepository checkinLogRepository;
+
+    @Autowired
+    EventActivityRepository eventActivityRepository;
+
+    @Autowired
+    TicketRepository ticketRepository;
+
+    @Autowired
+    EventRepository eventRepository;
 
 
     @Override
@@ -182,7 +203,51 @@ public class PaymentServiceImpl implements PaymentService {
                 TicketPurchase ticketPurchase = ticketPurchaseRepository
                         .findById(detail.getTicketPurchase().getTicketPurchaseId())
                         .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
+
+                EventActivity eventActivity = eventActivityRepository
+                        .findById(ticketPurchase.getEventActivity().getEventActivityId())
+                        .orElseThrow(() -> new AppException(ErrorCode.EVENT_ACTIVITY_NOT_FOUND));
+
+                Ticket ticket = ticketRepository
+                        .findById(ticketPurchase.getTicket().getTicketId())
+                        .orElseThrow(() -> new AppException(ErrorCode.TICKET_NOT_FOUND));
+
+                Event event = eventRepository
+                        .findById(ticketPurchase.getEvent().getEventId())
+                        .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+
+                Seat seat = seatRepository
+                        .findById(ticketPurchase.getSeat().getSeatId())
+                        .orElseThrow(() -> new AppException(ErrorCode.SEAT_NOT_FOUND));
+
+                Zone zone = zoneRepository
+                        .findById(ticketPurchase.getZone().getZoneId())
+                        .orElseThrow(() -> new AppException(ErrorCode.ZONE_NOT_FOUND));
+
+                CheckinLog checkinLog = new CheckinLog();
+                checkinLog.setCheckinTime(null);
+                checkinLog.setCheckinDevice("Mobile");
+                checkinLog.setTicketPurchase(ticketPurchase);
+                checkinLog.setAccount(account);
+                checkinLog.setCheckinLocation(event.getLocation());
+                checkinLog.setCheckinStatus(ECheckinLogStatus.PENDING.name());
+                checkinLogRepository.save(checkinLog);
+
+                TicketQrCodeDTO ticketQrCodeDTO = new TicketQrCodeDTO();
+                ticketQrCodeDTO.setTicket_name(ticket.getTicketName());
+                ticketQrCodeDTO.setPurchase_date(new Date());
+                ticketQrCodeDTO.setEvent_name(event.getEventName());
+                ticketQrCodeDTO.setActivity_name(eventActivity.getActivityName());
+                ticketQrCodeDTO.setZone_name(zone.getZoneName());
+                ticketQrCodeDTO.setSeat_row_number(seat.getRowNumber());
+                ticketQrCodeDTO.setSeat_column_number(seat.getColumnNumber());
+                ticketQrCodeDTO.setAccount_name(account.getUserName());
+                ticketQrCodeDTO.setPhone(account.getPhone());
+                ticketQrCodeDTO.setCheckin_Log_id(checkinLog.getCheckinId());
+
+                String qrCode = generateQRCode(ticketQrCodeDTO);
                 ticketPurchase.setStatus(ETicketPurchaseStatus.PURCHASED.name());
+                ticketPurchase.setQrCode(qrCode);
                 ticketPurchaseRepository.save(ticketPurchase);
             }
 
@@ -239,6 +304,11 @@ public class PaymentServiceImpl implements PaymentService {
             }
             return new PaymentResponse(status, "CANCELLED", mapper.map(payment, PaymentResponse.class));
         }
+    }
+
+    private String generateQRCode(TicketQrCodeDTO ticketQrCodeDTO) {
+        String dataTransfer = AppUtils.transferToString(ticketQrCodeDTO);
+        return AppUtils.generateQRCode(dataTransfer, QR_CODE_WIDTH, QR_CODE_HEIGHT);
     }
 
     private String getBaseUrl(HttpServletRequest request) {

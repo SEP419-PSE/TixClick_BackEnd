@@ -244,8 +244,6 @@ public class OrderServiceImpl implements OrderService {
                 .toList();
     }
 
-
-
     private String orderCodeAutomationCreating() {
         Account account = appUtils.getAccountFromAuthentication();
         int accountId = account.getAccountId(); // Giả định bạn có hàm lấy userId

@@ -63,6 +63,7 @@ public class ContractDocumentServiceImpl implements ContractDocumentService {
         contractDocument.setFileType(file.getContentType());
         contractDocument.setUploadedBy(account);
         contractDocument.setUploadDate(java.time.LocalDateTime.now());
+        contractDocument.setStatus("PENDING");
         contractDocumentRepository.save(contractDocument);
 
         return modelMapper.map(contractDocument, ContractDocumentDTO.class);
@@ -121,41 +122,47 @@ public class ContractDocumentServiceImpl implements ContractDocumentService {
     }
 
     @Override
-    public File signPdf(String pdfUrl, String name) throws Exception {
-        return null;
+    public File signPdf(String pdfFileName, String name) throws Exception {
+        // Tải file PDF từ Cloudinary
+        File pdfFile = downloadFromCloudinary(pdfFileName);
+
+        // Tạo chữ ký từ tên người dùng
+        File signatureImage = generateSignatureImage(name);
+
+        // Mở file PDF bằng PdfFileSignature
+        PdfFileSignature signature = new PdfFileSignature();
+        signature.bindPdf(pdfFile.getAbsolutePath());
+
+        // Load chứng chỉ số (nếu cần)
+        PKCS7 pkcs = new PKCS7("certificate.pfx", "password");
+        DocMDPSignature docMdpSignature = new DocMDPSignature(pkcs, DocMDPAccessPermissions.FillingInForms);
+
+        // Xác định vị trí chèn chữ ký (trang 1)
+        Rectangle rect = new Rectangle(150, 650, 450, 750);
+
+        // Gán ảnh chữ ký
+        signature.setSignatureAppearance(signatureImage.getAbsolutePath());
+
+        // Ký file PDF
+        signature.certify(1, "Ký tài liệu", "contact@example.com", "Vietnam", true, rect, docMdpSignature);
+
+        // Tạo file tạm để lưu PDF đã ký
+        File signedPdf = File.createTempFile("signed_", ".pdf");
+
+        // Lưu file PDF đã ký
+        signature.save(signedPdf.getAbsolutePath());
+
+        ContractDocument contractDocument = contractDocumentRepository.findByFileName(pdfFileName)
+                .orElseThrow(() -> new AppException(ErrorCode.CONTRACT_DOCUMENT_NOT_FOUND));
+
+
+        Map fileURL = cloudinaryService.uploadFile(signedPdf);
+        contractDocument.setFileURL(fileURL.get("secure_url").toString());
+        contractDocument.setStatus("SIGNED");
+        contractDocumentRepository.save(contractDocument);
+        return signedPdf;
     }
 
-//    @Override
-//    public File signPdf(String pdfUrl, String name) throws Exception {
-//        // Tải file PDF từ Cloudinary
-//        File pdfFile = downloadFromCloudinary(pdfUrl);
-//
-//        // Tạo chữ ký
-//        File signatureImage = generateSignatureImage(name);
-//
-//        // Mở file PDF
-//        Document doc = new Document(pdfFile.getAbsolutePath());
-//        PdfFileSignature signature = new PdfFileSignature(doc);
-//
-//        // Load chứng chỉ (Nếu cần)
-//        PKCS7 pkcs = new PKCS7("certificate.pfx", "password");
-//        DocMDPSignature docMdpSignature = new DocMDPSignature(pkcs, DocMDPAccessPermissions.FillingInForms);
-//
-//        // Vị trí chèn chữ ký (trang 1)
-//        java.awt.Rectangle rect = new java.awt.Rectangle(150, 650, 450, 750);
-//
-//        // Gán ảnh chữ ký
-//        signature.setSignatureAppearance(signatureImage.getAbsolutePath());
-//
-//        // Ký file
-//        signature.certify(1, "Ký tài liệu", "contact@example.com", "Vietnam", true, rect, docMdpSignature);
-//
-//        // Lưu file đã ký
-//        File signedPdf = File.createTempFile("signed_", ".pdf");
-//        signature.save(signedPdf.getAbsolutePath());
-//
-//        return signedPdf;
-//    }
 
     private File generateSignatureImage(String name) throws IOException {
         int width = 400, height = 100;
@@ -183,9 +190,4 @@ public class ContractDocumentServiceImpl implements ContractDocumentService {
         java.nio.file.Files.copy(in, tempFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
         return tempFile;
     }
-
-//    public String uploadToCloudinary(File file) throws Exception {
-//        Map uploadResult = cloudinaryService.uploadDocumentToCloudinary(file, ObjectUtils.asMap("resource_type", "auto"));
-//        return uploadResult.get("secure_url").toString();
-//    }
 }

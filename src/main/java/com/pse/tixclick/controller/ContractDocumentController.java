@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.util.List;
 
 @RestController
@@ -50,6 +51,18 @@ public class ContractDocumentController {
                             .message("An unexpected error occurred")
                             .result(null)
                             .build());
+        }
+    }
+
+    @PostMapping("/sign")
+    public String signPdf(@RequestParam String fileUrl, @RequestParam String name) {
+        try {
+            // Ký PDF
+            File signedPdf = contractDocumentService.signPdf(fileUrl, name);
+
+            return "File đã ký: " + signedPdf.getName();
+        } catch (Exception e) {
+            return "Lỗi: " + e.getMessage();
         }
     }
 

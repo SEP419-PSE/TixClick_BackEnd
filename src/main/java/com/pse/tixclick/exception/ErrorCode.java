@@ -81,6 +81,10 @@ public enum ErrorCode {
     ACCOUNT_NOT_CREATE_COMPANY(1071, "Tài khoản không phải đại diện công ty", HttpStatus.BAD_REQUEST),
     OTP_ALREADY_SENT(1072, "OTP đã được gửi", HttpStatus.BAD_REQUEST),
     USER_NOT_ACTIVE(1073, "Tài khoản chưa được kích hoạt", HttpStatus.BAD_REQUEST),
+    TICKET_PURCHASE_CHECKED_IN(1074, "Ticket purchase đã được check in", HttpStatus.BAD_REQUEST),
+    CHECKIN_LOG_NOT_FOUND(1075, "Không tìm thấy checkin log", HttpStatus.NOT_FOUND),
+    CHECKIN_LOG_EXPIRED(1076, "Checkin log đã hết hạn", HttpStatus.BAD_REQUEST),
+    CHECKIN_LOG_CHECKED_IN(1077, "Checkin log đã được check in", HttpStatus.BAD_REQUEST),
     ;
 
 
