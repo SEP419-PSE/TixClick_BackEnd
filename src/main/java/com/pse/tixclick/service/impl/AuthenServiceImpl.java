@@ -48,8 +48,6 @@ import java.util.concurrent.TimeUnit;
 public class AuthenServiceImpl implements AuthenService {// Để lưu thời gian hết hạ
 
     @Autowired
-    private RedisTemplate<String, String> redisTemplate;
-    @Autowired
     Jwt jwt;
     @Autowired
     StringRedisTemplate stringRedisTemplate;
@@ -80,17 +78,20 @@ public class AuthenServiceImpl implements AuthenService {// Để lưu thời gi
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
-
-        // Xóa Refresh Token cũ trên Redis (nếu có)
         String key = "REFRESH_TOKEN:" + user.getUserName();
-        redisTemplate.delete(key);
+        // Xóa Refresh Token cũ trên Redis (nếu có)
+        if (stringRedisTemplate != null && user.getUserName() != null) {
+
+            stringRedisTemplate.delete(key);
+        }
+
 
         // Tạo mới Access Token & Refresh Token
         var tokenPair = jwt.generateTokens(user);
 
         // Lưu Refresh Token vào Redis với thời gian hết hạn 7 ngày (1 tuần)
         long expirationDays = 7; // 7 ngày
-        redisTemplate.opsForValue().set(key, tokenPair.refreshToken().token(), expirationDays, TimeUnit.DAYS);
+        stringRedisTemplate.opsForValue().set(key, tokenPair.refreshToken().token(), expirationDays, TimeUnit.DAYS);
 
 
         // Trả về TokenResponse chứa Access Token & Refresh Token
@@ -152,7 +153,7 @@ public class AuthenServiceImpl implements AuthenService {// Để lưu thời gi
         String refreshTokenKey = "REFRESH_TOKEN:" + account.getUserName();
 
         // Kiểm tra refresh token có tồn tại trong Redis không
-        String storedToken = redisTemplate.opsForValue().get(refreshTokenKey);
+        String storedToken = stringRedisTemplate.opsForValue().get(refreshTokenKey);
         if (storedToken == null || !storedToken.equals(refreshToken)) {
             throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
         }
@@ -165,7 +166,7 @@ public class AuthenServiceImpl implements AuthenService {// Để lưu thời gi
 
         // Cập nhật refresh token mới vào Redis
         long expirationDays = 7; // Refresh token hết hạn sau 7 ngày
-        redisTemplate.opsForValue().set(refreshTokenKey, tokenPair.refreshToken().token(), expirationDays, TimeUnit.DAYS);
+        stringRedisTemplate.opsForValue().set(refreshTokenKey, tokenPair.refreshToken().token(), expirationDays, TimeUnit.DAYS);
 
         // Trả về access token mới
         return RefreshTokenResponse.builder()
@@ -301,14 +302,14 @@ public class AuthenServiceImpl implements AuthenService {// Để lưu thời gi
 
         // Xóa Refresh Token cũ trên Redis (nếu có)
         String key = "REFRESH_TOKEN:" + user.getUserName();
-        redisTemplate.delete(key);
+        stringRedisTemplate.delete(key);
 
         // Tạo mới bộ token (access token & refresh token)
         var tokenPair = jwt.generateTokens(user);
 
         // Lưu Refresh Token vào Redis với thời gian hết hạn 7 ngày (1 tuần)
         long expirationDays = 7; // 7 ngày
-        redisTemplate.opsForValue().set(key, tokenPair.refreshToken().token(), expirationDays, TimeUnit.DAYS);
+        stringRedisTemplate.opsForValue().set(key, tokenPair.refreshToken().token(), expirationDays, TimeUnit.DAYS);
 
         // Trả về TokenResponse chứa access token và refresh token
         return TokenResponse.builder()
@@ -350,14 +351,14 @@ public class AuthenServiceImpl implements AuthenService {// Để lưu thời gi
 
             // Xóa Refresh Token cũ trên Redis (nếu có)
             String key = "REFRESH_TOKEN:" + user.getUserName();
-            redisTemplate.delete(key);
+            stringRedisTemplate.delete(key);
 
             // Tạo mới bộ token (access token & refresh token)
             var tokenPair = jwt.generateTokens(user);
 
             // Lưu Refresh Token vào Redis với thời gian hết hạn 7 ngày (1 tuần)
             long expirationDays = 7; // 7 ngày
-            redisTemplate.opsForValue().set(key, tokenPair.refreshToken().token(), expirationDays, TimeUnit.DAYS);
+            stringRedisTemplate.opsForValue().set(key, tokenPair.refreshToken().token(), expirationDays, TimeUnit.DAYS);
 
             // Trả về TokenResponse chứa access token và refresh token
             return TokenResponse.builder()
