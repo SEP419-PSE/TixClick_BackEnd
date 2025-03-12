@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 @Repository
 public interface AccountRepository extends JpaRepository<Account, Integer> {
@@ -39,6 +40,10 @@ public interface AccountRepository extends JpaRepository<Account, Integer> {
     SELECT * FROM Account a WHERE a.account_id = (SELECT account_id FROM ManagerWithLeastVerifications);
 """, nativeQuery = true)
     Optional<Account> findManagerWithLeastVerifications();
+
+    @Query(value = "SELECT * FROM Account a WHERE a.role_id IN (1, 4)", nativeQuery = true)
+    List<Account> findAccountsByRoleManagerAndAdmin();
+
 
     @Query(value = "SELECT COUNT(*) FROM Account a WHERE a.role.roleId = 1")
     int countTotalAdmins();
