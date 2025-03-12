@@ -134,5 +134,81 @@ public class AccountController {
         }
     }
 
+    @GetMapping("/all")
+    public ResponseEntity<ApiResponse<List<AccountDTO>>> getAllAccounts() {
+        List<AccountDTO> accountDTOS = accountService.getAllAccount();
 
+        ApiResponse<List<AccountDTO>> apiResponse = ApiResponse.<List<AccountDTO>>builder()
+                .code(HttpStatus.OK.value())
+                .message("All accounts retrieved successfully")
+                .result(accountDTOS)
+                .build();
+
+        return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+    }
+
+    @GetMapping("/count-buyers")
+    public ResponseEntity<ApiResponse<Integer>> countBuyers() {
+        int count = accountService.countTotalBuyers();
+
+        ApiResponse<Integer> apiResponse = ApiResponse.<Integer>builder()
+                .code(HttpStatus.OK.value())
+                .message("Buyers count retrieved successfully")
+                .result(count)
+                .build();
+
+        return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+    }
+
+    @GetMapping("/count-admins")
+    public ResponseEntity<ApiResponse<Integer>> countAdmins() {
+        int count = accountService.countTotalAdmins();
+
+        ApiResponse<Integer> apiResponse = ApiResponse.<Integer>builder()
+                .code(HttpStatus.OK.value())
+                .message("Admins count retrieved successfully")
+                .result(count)
+                .build();
+
+        return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+    }
+
+    @GetMapping("/count-organizers")
+    public ResponseEntity<ApiResponse<Integer>> countOrganizers() {
+        int count = accountService.countTotalOrganizers();
+
+        ApiResponse<Integer> apiResponse = ApiResponse.<Integer>builder()
+                .code(HttpStatus.OK.value())
+                .message("Organizers count retrieved successfully")
+                .result(count)
+                .build();
+
+        return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+    }
+
+    @GetMapping("/count-managers")
+    public ResponseEntity<ApiResponse<Integer>> countManagers() {
+        int count = accountService.countTotalManagers();
+
+        ApiResponse<Integer> apiResponse = ApiResponse.<Integer>builder()
+                .code(HttpStatus.OK.value())
+                .message("Managers count retrieved successfully")
+                .result(count)
+                .build();
+
+        return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+    }
+
+    @GetMapping("/count-accounts")
+    public ResponseEntity<ApiResponse<Integer>> countAccounts() {
+        int count = accountService.countTotalAccounts();
+
+        ApiResponse<Integer> apiResponse = ApiResponse.<Integer>builder()
+                .code(HttpStatus.OK.value())
+                .message("Accounts count retrieved successfully")
+                .result(count)
+                .build();
+
+        return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+    }
 }

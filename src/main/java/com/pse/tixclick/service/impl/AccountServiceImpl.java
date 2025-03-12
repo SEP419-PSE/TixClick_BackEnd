@@ -22,6 +22,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -130,6 +133,40 @@ public class AccountServiceImpl implements AccountService {
 
         // Trả về thông tin tài khoản sau khi cập nhật
         return accountMapper.map(user, AccountDTO.class);
+    }
+
+    @Override
+    public List<AccountDTO> getAllAccount() {
+        List<Account> accounts = accountRepository.findAll();
+
+        return accounts.stream()
+                .map(account -> accountMapper.map(account, AccountDTO.class))
+                .toList();
+    }
+
+    @Override
+    public int countTotalBuyers() {
+        return Optional.of(accountRepository.countTotalBuyers()).orElse(0);
+    }
+
+    @Override
+    public int countTotalAdmins() {
+        return Optional.of(accountRepository.countTotalAdmins()).orElse(0);
+    }
+
+    @Override
+    public int countTotalOrganizers() {
+        return Optional.of(accountRepository.countTotalOrganizers()).orElse(0);
+    }
+
+    @Override
+    public int countTotalManagers() {
+        return Optional.of(accountRepository.countTotalManagers()).orElse(0);
+    }
+
+    @Override
+    public int countTotalAccounts() {
+        return Optional.of(accountRepository.countTotalAccounts()).orElse(0);
     }
 
 }

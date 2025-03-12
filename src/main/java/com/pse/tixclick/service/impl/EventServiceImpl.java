@@ -1,7 +1,9 @@
 package com.pse.tixclick.service.impl;
 
 import com.pse.tixclick.cloudinary.CloudinaryService;
+import com.pse.tixclick.payload.dto.UpcomingEventDTO;
 import com.pse.tixclick.payload.response.EventResponse;
+import com.pse.tixclick.repository.*;
 import com.pse.tixclick.utils.AppUtils;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
@@ -11,10 +13,6 @@ import com.pse.tixclick.payload.entity.entity_enum.EEventStatus;
 import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.request.create.CreateEventRequest;
 import com.pse.tixclick.payload.request.update.UpdateEventRequest;
-import com.pse.tixclick.repository.AccountRepository;
-import com.pse.tixclick.repository.CompanyRepository;
-import com.pse.tixclick.repository.EventCategoryRepository;
-import com.pse.tixclick.repository.EventRepository;
 import com.pse.tixclick.service.EventService;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -27,7 +25,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -44,6 +42,12 @@ public class EventServiceImpl implements EventService {
     @Autowired
     AppUtils appUtils;
 
+    @Autowired
+    OrderRepository orderRepository;
+
+    @Autowired
+    TicketPurchaseRepository ticketPurchaseRepository;
+
     @Override
     public EventDTO createEvent(CreateEventRequest request, MultipartFile logoURL, MultipartFile bannerURL) throws IOException {
         if (request == null || request.getEventName() == null || request.getCategoryId() == 0) {
@@ -55,11 +59,11 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
         var category = eventCategoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
-        var company = companyRepository.findCompanyByCompanyIdAndRepresentativeId_UserName(request.getCompanyId(),name)
+        var company = companyRepository.findCompanyByCompanyIdAndRepresentativeId_UserName(request.getCompanyId(), name)
                 .orElseThrow(() -> new AppException(ErrorCode.ACCOUNT_NOT_CREATE_COMPANY));
-        if(company.getStatus()!= ECompanyStatus.ACTIVE){
+        if (company.getStatus() != ECompanyStatus.ACTIVE) {
             throw new AppException(ErrorCode.COMPANY_NOT_ACTIVE);
-        }else if(company.getRepresentativeId().getAccountId() != organnizer.getAccountId()){
+        } else if (company.getRepresentativeId().getAccountId() != organnizer.getAccountId()) {
             throw new AppException(ErrorCode.INVALID_COMPANY);
         }
         // Upload từng ảnh lên Cloudinary
@@ -84,7 +88,6 @@ public class EventServiceImpl implements EventService {
         event = eventRepository.save(event);
 
 
-
         // Chuyển đổi sang DTO để trả về
         return modelMapper.map(event, EventDTO.class);
     }
@@ -93,7 +96,7 @@ public class EventServiceImpl implements EventService {
     public EventDTO updateEvent(UpdateEventRequest eventRequest, MultipartFile logoURL, MultipartFile bannerURL) throws IOException {
         var context = SecurityContextHolder.getContext();
         String name = context.getAuthentication().getName();
-        var event = eventRepository.findEventByEventIdAndOrganizer_UserName(eventRequest.getEventId(),name)
+        var event = eventRepository.findEventByEventIdAndOrganizer_UserName(eventRequest.getEventId(), name)
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
 
         // Chỉ cập nhật nếu giá trị không null hoặc không phải chuỗi trống
@@ -122,7 +125,7 @@ public class EventServiceImpl implements EventService {
                     .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
             event.setCategory(category);
         }
-        if(eventRequest.getLocationName() != null && !eventRequest.getLocationName().trim().isEmpty()){
+        if (eventRequest.getLocationName() != null && !eventRequest.getLocationName().trim().isEmpty()) {
             event.setLocationName(eventRequest.getLocationName());
         }
 
@@ -140,7 +143,7 @@ public class EventServiceImpl implements EventService {
         event = eventRepository.save(event);
 
         // Chuyển đổi sang DTO và trả về
-        return modelMapper.map(event,EventDTO.class);
+        return modelMapper.map(event, EventDTO.class);
     }
 
     @Override
@@ -188,7 +191,8 @@ public class EventServiceImpl implements EventService {
     public List<EventDTO> getEventByStatus(String status) {
         List<Event> events = eventRepository.findEventsByStatus(status)
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
-        return modelMapper.map(events, new TypeToken<List<EventDTO>>() {}.getType());
+        return modelMapper.map(events, new TypeToken<List<EventDTO>>() {
+        }.getType());
     }
 
     @Override
@@ -197,16 +201,18 @@ public class EventServiceImpl implements EventService {
         String name = context.getAuthentication().getName();
         var account = accountRepository.findAccountByUserName(name)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-        List<Event> events = eventRepository.findEventsByStatusAndOrganizer_UserName("DRAFT",name)
+        List<Event> events = eventRepository.findEventsByStatusAndOrganizer_UserName("DRAFT", name)
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
-        return modelMapper.map(events, new TypeToken<List<EventDTO>>() {}.getType());
+        return modelMapper.map(events, new TypeToken<List<EventDTO>>() {
+        }.getType());
     }
 
     @Override
     public List<EventDTO> getEventByCompleted() {
         List<Event> events = eventRepository.findEventsByStatus("COMPLETED")
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
-        return modelMapper.map(events, new TypeToken<List<EventDTO>>() {}.getType());
+        return modelMapper.map(events, new TypeToken<List<EventDTO>>() {
+        }.getType());
     }
 
     @Override
@@ -215,7 +221,7 @@ public class EventServiceImpl implements EventService {
         String name = context.getAuthentication().getName();
         var account = accountRepository.findAccountByUserName(name)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-        if(!account.getRole().getRoleName().equals("MANAGER")){
+        if (!account.getRole().getRoleName().equals("MANAGER")) {
             throw new AppException(ErrorCode.INVALID_ROLE);
         }
 
@@ -232,7 +238,8 @@ public class EventServiceImpl implements EventService {
         int uId = appUtils.getAccountFromAuthentication().getAccountId();
         List<Event> events = eventRepository.findEventByOrganizerId(uId)
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
-        return modelMapper.map(events, new TypeToken<List<EventDTO>>() {}.getType());
+        return modelMapper.map(events, new TypeToken<List<EventDTO>>() {
+        }.getType());
     }
 
     @Override
@@ -240,7 +247,8 @@ public class EventServiceImpl implements EventService {
         int uId = appUtils.getAccountFromAuthentication().getAccountId();
         List<Event> events = eventRepository.findEventByOrganizerIdAndStatus(uId, status)
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
-        return modelMapper.map(events, new TypeToken<List<EventDTO>>() {}.getType());
+        return modelMapper.map(events, new TypeToken<List<EventDTO>>() {
+        }.getType());
     }
 
     @Override
@@ -249,9 +257,79 @@ public class EventServiceImpl implements EventService {
 
         List<Event> events = eventRepository.findEventsByCompany_CompanyId(companyId)
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
-        return modelMapper.map(events, new TypeToken<List<EventDTO>>() {}.getType());
+        return modelMapper.map(events, new TypeToken<List<EventDTO>>() {
+        }.getType());
 
     }
 
+    @Override
+    public int countTotalScheduledEvents() {
+        return Optional.of(eventRepository.countTotalScheduledEvents()).orElse(0);
+    }
 
+    @Override
+    public double getAverageTicketPrice() {
+        Double sum = eventRepository.getAverageTicketPrice();
+        return sum == null ? 0 : sum;
+    }
+
+    @Override
+    public Map<String, Double> getEventCategoryDistribution() {
+        List<Object[]> results = eventRepository.getEventCategoryDistribution();
+        Map<String, Double> distributionMap = new HashMap<>();
+
+        for (Object[] result : results) {
+            distributionMap.put((String) result[0], ((Number) result[1]).doubleValue());
+        }
+        return distributionMap;
+    }
+
+    @Override
+    public List<UpcomingEventDTO> getUpcomingEvents() {
+        List<Event> events = eventRepository.findScheduledEvents();
+        List<UpcomingEventDTO> upcomingEventDTOs = new ArrayList<>();
+
+        for (Event event : events) {
+            int eventId = event.getEventId();
+
+            int totalTicketsSold = ticketPurchaseRepository.countTotalTicketSold(eventId);
+
+            double totalRevenue = orderRepository.sumTotalTransaction(eventId);
+
+            UpcomingEventDTO dto = new UpcomingEventDTO();
+            dto.setEventName(event.getEventName());
+            dto.setTicketSold(totalTicketsSold);
+            dto.setRevenue(totalRevenue);
+
+            upcomingEventDTOs.add(dto);
+        }
+
+        return upcomingEventDTOs;
+    }
+
+    @Override
+    public List<UpcomingEventDTO> getTopPerformingEvents() {
+
+            List<Event> events = eventRepository.findScheduledEvents();
+            List<UpcomingEventDTO> upcomingEventDTOs = new ArrayList<>();
+
+            for (Event event : events) {
+                int eventId = event.getEventId();
+
+                int totalTicketsSold = ticketPurchaseRepository.countTotalTicketSold(eventId);
+
+                double totalRevenue = orderRepository.sumTotalTransaction(eventId);
+
+                UpcomingEventDTO dto = new UpcomingEventDTO();
+                dto.setEventName(event.getEventName());
+                dto.setTicketSold(totalTicketsSold);
+                dto.setRevenue(totalRevenue);
+
+                upcomingEventDTOs.add(dto);
+            }
+            // Sắp xếp danh sách theo revenue giảm dần
+            upcomingEventDTOs.sort((a, b) -> Double.compare(b.getRevenue(), a.getRevenue()));
+
+            return upcomingEventDTOs;
+    }
 }

@@ -2,6 +2,7 @@ package com.pse.tixclick.controller;
 
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.payload.dto.EventDTO;
+import com.pse.tixclick.payload.dto.UpcomingEventDTO;
 import com.pse.tixclick.payload.entity.entity_enum.EEventStatus;
 import com.pse.tixclick.payload.request.create.CreateEventRequest;
 import com.pse.tixclick.payload.request.update.UpdateEventRequest;
@@ -20,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 @RestController
@@ -312,6 +314,97 @@ public class EventController {
                 ApiResponse.<List<EventDTO>>builder()
                         .code(HttpStatus.OK.value())
                         .message("Get all events with company id: " + companyId + " successfully")
+                        .result(events)
+                        .build()
+        );
+    }
+
+    @GetMapping("/count/scheduled")
+    public ResponseEntity<ApiResponse<Integer>> countTotalScheduledEvents() {
+        try {
+            int count = eventService.countTotalScheduledEvents();
+            return ResponseEntity.ok(
+                    ApiResponse.<Integer>builder()
+                            .code(200)
+                            .message("Total Upcoming Events")
+                            .result(count)
+                            .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(400)
+                    .body(ApiResponse.<Integer>builder()
+                            .code(400)
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        }
+    }
+
+    @GetMapping("/average/price")
+    public ResponseEntity<ApiResponse<Double>> getAverageTicketPrice() {
+        try {
+            double average = eventService.getAverageTicketPrice();
+            return ResponseEntity.ok(
+                    ApiResponse.<Double>builder()
+                            .code(200)
+                            .message("Average Ticket Price")
+                            .result(average)
+                            .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(400)
+                    .body(ApiResponse.<Double>builder()
+                            .code(400)
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        }
+    }
+
+    @GetMapping("/category/distribution")
+    public ResponseEntity<Map<String, Double>> getEventCategoryDistribution() {
+        return ResponseEntity.ok(eventService.getEventCategoryDistribution());
+    }
+
+    @GetMapping("/upcoming")
+    public ResponseEntity<ApiResponse<List<UpcomingEventDTO>>> getUpcomingEvents() {
+        List<UpcomingEventDTO> events = eventService.getUpcomingEvents();
+
+        if (events.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.<List<UpcomingEventDTO>>builder()
+                            .code(HttpStatus.NOT_FOUND.value())
+                            .message("No upcoming events found")
+                            .result(null)
+                            .build());
+        }
+
+        return ResponseEntity.ok(
+                ApiResponse.<List<UpcomingEventDTO>>builder()
+                        .code(HttpStatus.OK.value())
+                        .message("Get all upcoming events successfully")
+                        .result(events)
+                        .build()
+        );
+    }
+
+    @GetMapping("/top-performing")
+    public ResponseEntity<ApiResponse<List<UpcomingEventDTO>>> getTopPerformingEvents() {
+        List<UpcomingEventDTO> events = eventService.getTopPerformingEvents();
+
+        if (events.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.<List<UpcomingEventDTO>>builder()
+                            .code(HttpStatus.NOT_FOUND.value())
+                            .message("No top performing events found")
+                            .result(null)
+                            .build());
+        }
+
+        return ResponseEntity.ok(
+                ApiResponse.<List<UpcomingEventDTO>>builder()
+                        .code(HttpStatus.OK.value())
+                        .message("Get all top performing events successfully")
                         .result(events)
                         .build()
         );

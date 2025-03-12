@@ -39,4 +39,19 @@ public interface AccountRepository extends JpaRepository<Account, Integer> {
     SELECT * FROM Account a WHERE a.account_id = (SELECT account_id FROM ManagerWithLeastVerifications);
 """, nativeQuery = true)
     Optional<Account> findManagerWithLeastVerifications();
+
+    @Query(value = "SELECT COUNT(*) FROM Account a WHERE a.role.roleId = 1")
+    int countTotalAdmins();
+
+    @Query(value = "SELECT COUNT(*) FROM Account a WHERE a.role.roleId = 2")
+    int countTotalBuyers();
+
+    @Query(value = "SELECT COUNT(*) FROM Account a WHERE a.role.roleId = 3")
+    int countTotalOrganizers();
+
+    @Query(value = "SELECT COUNT(*) FROM Account a WHERE a.role.roleId = 4")
+    int countTotalManagers();
+
+    @Query(value = "SELECT COUNT(*) FROM Account")
+    int countTotalAccounts();
 }

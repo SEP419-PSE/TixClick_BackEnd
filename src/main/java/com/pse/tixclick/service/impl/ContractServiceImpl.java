@@ -3,6 +3,7 @@ package com.pse.tixclick.service.impl;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.ContractDTO;
+import com.pse.tixclick.payload.dto.PaymentDTO;
 import com.pse.tixclick.payload.entity.company.Contract;
 import com.pse.tixclick.payload.entity.entity_enum.EEventStatus;
 import com.pse.tixclick.payload.request.create.CreateContractRequest;
@@ -16,8 +17,11 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @Transactional
@@ -29,6 +33,7 @@ public class ContractServiceImpl implements ContractService {
     EventRepository eventRepository;
     CompanyRepository companyRepository;
     ModelMapper modelMapper;
+
     @Override
     public ContractDTO createContract(CreateContractRequest request) {
         var context = SecurityContextHolder.getContext();
@@ -64,4 +69,11 @@ public class ContractServiceImpl implements ContractService {
 
         return modelMapper.map(newContract,ContractDTO.class);
     }
+
+    @Override
+    public List<ContractDTO> getAllContracts() {
+        List<Contract> contracts = contractRepository.findAll();
+        return contracts.stream()
+                .map(contract -> modelMapper.map(contract, ContractDTO.class))
+                .toList();    }
 }
