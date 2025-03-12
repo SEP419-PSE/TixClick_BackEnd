@@ -257,5 +257,14 @@ public class AuthenController {
     }
 
 
-
+    @PostMapping("/login_with_manager_and_admin")
+    public ResponseEntity<ApiResponse<TokenResponse>> loginWithManagerAndAdmin(@RequestBody LoginRequest loginRequest) {
+        TokenResponse tokenResponse = authenService.loginWithManagerAndAdmin(loginRequest);
+        ApiResponse<TokenResponse> apiResponse = ApiResponse.<TokenResponse>builder()
+                .code(HttpStatus.OK.value())
+                .message("Login successful")
+                .result(tokenResponse)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+    }
 }
