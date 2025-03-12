@@ -132,4 +132,24 @@ public class TicketPurchaseController {
                             .build());
         }
     }
+
+    @GetMapping("/tickets_sold_revenue_by_day/{day}")
+    public ResponseEntity<ApiResponse> getTicketsSoldAndRevenueByDay(@PathVariable int day) {
+        try {
+            return ResponseEntity.ok(
+                    ApiResponse.builder()
+                            .code(200)
+                            .message("Tickets sold and revenue by day")
+                            .result(ticketPurchaseService.getTicketsSoldAndRevenueByDay(day))
+                            .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(400)
+                    .body(ApiResponse.builder()
+                            .code(400)
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        }
+    }
 }
