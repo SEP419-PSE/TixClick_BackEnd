@@ -32,4 +32,7 @@ public interface AuthenService {
     TokenResponse signupAndLoginWithGitHub(@AuthenticationPrincipal OAuth2User principal);
 
     TokenResponse signupAndLoginWithFacebook(@AuthenticationPrincipal OAuth2User principal);
+
+    TokenResponse loginWithManagerAndAdmin(LoginRequest loginRequest);
+
 }
