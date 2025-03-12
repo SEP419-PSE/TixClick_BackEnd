@@ -78,13 +78,14 @@ public class CompanyServiceImpl implements CompanyService {
         createCompanyVerificationRequest.setStatus(EVerificationStatus.PENDING);
 
         var companyVerification = companyVerificationService.createCompanyVerification(createCompanyVerificationRequest);
-
-        String fullname = (account.getFirstName() != null ? account.getFirstName() : "") +
+        var companyManager = accountRepository.findById(companyVerification.getSubmitById())
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        String fullname = (companyManager.getFirstName() != null ? companyManager.getFirstName() : "") +
                 " " +
-                (account.getLastName() != null ? account.getLastName() : "");
+                (companyManager.getLastName() != null ? companyManager.getLastName() : "");
         fullname = fullname.trim(); // Loại bỏ khoảng trắng thừa nếu có
 
-        emailService.sendCompanyCreationRequestNotification(account.getEmail(), company.getCompanyName(), fullname);
+        emailService.sendCompanyCreationRequestNotification(companyManager.getEmail(), company.getCompanyName(), fullname);
 
         // Tạo đối tượng response
         return new CreateCompanyResponse(
