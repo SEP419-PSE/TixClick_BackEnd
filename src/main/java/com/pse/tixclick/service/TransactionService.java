@@ -7,6 +7,7 @@ import java.util.List;
 
 public interface TransactionService {
     double sumTotalTransaction();
+
     List<MonthlySalesReportDTO> getMonthlySalesReport();
 
     List<TransactionDTO> getTransactions();
