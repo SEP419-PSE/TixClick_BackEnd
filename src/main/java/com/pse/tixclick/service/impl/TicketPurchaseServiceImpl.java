@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Date;
@@ -181,5 +182,51 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
     @Override
     public int countTotalCheckins() {
         return Optional.of(checkinLogRepository.countTotalCheckins()).orElse(0);
+    }
+
+    @Override
+    public TicketsSoldAndRevenueDTO getTicketsSoldAndRevenueByDay(int days) {
+        List<Object[]> results = ticketPurchaseRepository.countTicketsSoldAndRevenueByDay(days);
+
+        if (results.isEmpty()) {
+            return new TicketsSoldAndRevenueDTO(days, 0, 0, 0, 0, 0);
+        }
+
+        double totalRevenue = 0;
+        int totalTicketsSold = 0;
+        int totalEvents = 0;
+
+        for (Object[] row : results) {
+            // row[0] là java.sql.Date, không phải số -> BỎ QUA nó
+            totalRevenue += ((Number) row[1]).doubleValue();
+            totalTicketsSold += ((Number) row[2]).intValue();
+            totalEvents += ((Number) row[3]).intValue();
+        }
+        LocalDate earliestDate = LocalDate.now().minusDays(30);
+
+        List<Object[]> results2 = ticketPurchaseRepository.countTicketsSoldAndRevenueByDayAfter(days, earliestDate);
+
+        double totalRevenue2 = 0;
+        int totalTicketsSold2 = 0;
+        int totalEvents2 = 0;
+
+        for (Object[] row : results2) {
+            // row[0] là java.sql.Date, không phải số -> BỎ QUA nó
+            totalRevenue2 += ((Number) row[1]).doubleValue();
+            totalTicketsSold2 += ((Number) row[2]).intValue();
+            totalEvents2 += ((Number) row[3]).intValue();
+        }
+        double avgDailyRevenue = totalRevenue / days;
+        double revenueGrowth = 0;
+
+        if (totalRevenue2 > 0) {
+            revenueGrowth = ((totalRevenue - totalRevenue2) / totalRevenue2) * 100;
+        } else if (totalRevenue > 0) {
+            revenueGrowth = 100;
+        } else {
+            revenueGrowth = 0;
+        }
+
+        return new TicketsSoldAndRevenueDTO(days, totalTicketsSold, totalRevenue, totalEvents, avgDailyRevenue, revenueGrowth);
     }
 }
