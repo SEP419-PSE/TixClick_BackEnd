@@ -374,7 +374,49 @@ public class AuthenServiceImpl implements AuthenService {// Để lưu thời gi
         }
     }
 
+    @Override
+    public TokenResponse loginWithManagerAndAdmin(LoginRequest loginRequest) {
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
 
+        // Kiểm tra người dùng có tồn tại không
+        var user = userRepository
+                .findAccountByUserName(loginRequest.getUserName())
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        if(!user.isActive()){
+            throw new AppException(ErrorCode.USER_NOT_ACTIVE);
+        }
+        // Kiểm tra mật khẩu hợp lệ
+        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        }
+        if(user.getRole().getRoleName().equals(ERole.BUYER) || user.getRole().getRoleName().equals(ERole.ORGANIZER)){
+            throw new AppException(ErrorCode.UNAUTHENTICATED_LOGIN);
+        }
+
+        String key = "REFRESH_TOKEN:" + user.getUserName();
+        // Xóa Refresh Token cũ trên Redis (nếu có)
+        if (stringRedisTemplate != null && user.getUserName() != null) {
+
+            stringRedisTemplate.delete(key);
+        }
+
+        // Tạo mới Access Token & Refresh Token
+        var tokenPair = jwt.generateTokens(user);
+
+        // Lưu Refresh Token vào Redis với thời gian hết hạn 7 ngày (1 tuần)
+        long expirationDays = 7; // 7 ngày
+        stringRedisTemplate.opsForValue().set(key, tokenPair.refreshToken().token(), expirationDays, TimeUnit.DAYS);
+
+
+
+        // Trả về TokenResponse chứa Access Token & Refresh Token
+        return TokenResponse.builder()
+                .accessToken(tokenPair.accessToken().token())
+                .refreshToken(tokenPair.refreshToken().token())
+                .status(user.isActive())
+                .roleName(String.valueOf(user.getRole().getRoleName()))
+                .build();    }
 
 
     public String generateOTP() {

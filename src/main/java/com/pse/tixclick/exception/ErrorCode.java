@@ -85,6 +85,7 @@ public enum ErrorCode {
     CHECKIN_LOG_NOT_FOUND(1075, "Không tìm thấy checkin log", HttpStatus.NOT_FOUND),
     CHECKIN_LOG_EXPIRED(1076, "Checkin log đã hết hạn", HttpStatus.BAD_REQUEST),
     CHECKIN_LOG_CHECKED_IN(1077, "Checkin log đã được check in", HttpStatus.BAD_REQUEST),
+    UNAUTHENTICATED_LOGIN(1078, "bạn không đủ quyền truy cập", HttpStatus.UNAUTHORIZED),
     ;
 
 
