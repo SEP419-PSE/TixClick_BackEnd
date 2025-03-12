@@ -211,4 +211,17 @@ public class AccountController {
 
         return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
     }
+
+    @GetMapping("/role-manager-admin")
+    public ResponseEntity<ApiResponse<List<AccountDTO>>> getAccountsByRoleManagerAndAdmin() {
+        List<AccountDTO> accountDTOS = accountService.getAccountsByRoleManagerAndAdmin();
+
+        ApiResponse<List<AccountDTO>> apiResponse = ApiResponse.<List<AccountDTO>>builder()
+                .code(HttpStatus.OK.value())
+                .message("Accounts retrieved successfully")
+                .result(accountDTOS)
+                .build();
+
+        return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+    }
 }
