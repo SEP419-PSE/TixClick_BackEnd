@@ -189,7 +189,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public List<EventDTO> getEventByStatus(String status) {
-        List<Event> events = eventRepository.findEventsByStatus(status)
+        List<Event> events = eventRepository.findEventsByStatus(EEventStatus.valueOf(status))
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
         return modelMapper.map(events, new TypeToken<List<EventDTO>>() {
         }.getType());
@@ -209,7 +209,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public List<EventDTO> getEventByCompleted() {
-        List<Event> events = eventRepository.findEventsByStatus("COMPLETED")
+        List<Event> events = eventRepository.findEventsByStatus(EEventStatus.valueOf("COMPLETED"))
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
         return modelMapper.map(events, new TypeToken<List<EventDTO>>() {
         }.getType());
@@ -245,7 +245,7 @@ public class EventServiceImpl implements EventService {
     @Override
     public List<EventDTO> getEventsByAccountIdAndStatus(String status) {
         int uId = appUtils.getAccountFromAuthentication().getAccountId();
-        List<Event> events = eventRepository.findEventByOrganizerIdAndStatus(uId, status)
+        List<Event> events = eventRepository.findEventByOrganizerIdAndStatus(uId, EEventStatus.valueOf(status))
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
         return modelMapper.map(events, new TypeToken<List<EventDTO>>() {
         }.getType());
