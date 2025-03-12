@@ -169,4 +169,12 @@ public class AccountServiceImpl implements AccountService {
         return Optional.of(accountRepository.countTotalAccounts()).orElse(0);
     }
 
+    @Override
+    public List<AccountDTO> getAccountsByRoleManagerAndAdmin() {
+        List<Account> accounts = accountRepository.findAccountsByRoleManagerAndAdmin();
+
+        return accounts.stream()
+                .map(account -> accountMapper.map(account, AccountDTO.class))
+                .toList();
+    }
 }
