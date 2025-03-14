@@ -89,8 +89,13 @@ public class CompanyServiceImpl implements CompanyService {
                 (companyManager.getLastName() != null ? companyManager.getLastName() : "");
         fullname = fullname.trim(); // Loại bỏ khoảng trắng thừa nếu có
         String notificationMessage = "Công ty mới cần duyệt: " + company.getCompanyName();
+        List<Account> managers = accountRepository.findAccountsByRole_RoleId(4);
+
         log.info("Sending notification to user: {}", companyManager.getUserName());
-        messagingTemplate.convertAndSendToUser(companyManager.getUserName(), "/queue/notifications", notificationMessage);
+        for (Account manager : managers) {
+            log.info("Sending notification to user: {}", manager.getUserName());
+            messagingTemplate.convertAndSendToUser(manager.getUserName(), "/queue/notifications", notificationMessage);
+        }
         emailService.sendCompanyCreationRequestNotification(companyManager.getEmail(), company.getCompanyName(), fullname);
 
         // Tạo đối tượng response
