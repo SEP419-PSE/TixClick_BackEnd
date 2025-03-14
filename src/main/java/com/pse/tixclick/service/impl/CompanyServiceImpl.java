@@ -25,8 +25,10 @@ import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.internal.bytebuddy.implementation.bytecode.Throw;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -39,6 +41,7 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 @RequiredArgsConstructor
+@Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class CompanyServiceImpl implements CompanyService {
     CompanyRepository companyRepository;
@@ -50,6 +53,7 @@ public class CompanyServiceImpl implements CompanyService {
     CloudinaryService cloudinary;
     CompanyVerificationRepository companyVerificationRepository;
     EmailService emailService;
+    SimpMessagingTemplate messagingTemplate;
     @Override
     public CreateCompanyResponse createCompany(CreateCompanyRequest createCompanyRequest, MultipartFile file) throws IOException, MessagingException {
         var context = SecurityContextHolder.getContext();
@@ -84,7 +88,9 @@ public class CompanyServiceImpl implements CompanyService {
                 " " +
                 (companyManager.getLastName() != null ? companyManager.getLastName() : "");
         fullname = fullname.trim(); // Loại bỏ khoảng trắng thừa nếu có
-
+        String notificationMessage = "Công ty mới cần duyệt: " + company.getCompanyName();
+        log.info("Sending notification to user: {}", companyManager.getUserName());
+        messagingTemplate.convertAndSendToUser(companyManager.getUserName(), "/queue/notifications", notificationMessage);
         emailService.sendCompanyCreationRequestNotification(companyManager.getEmail(), company.getCompanyName(), fullname);
 
         // Tạo đối tượng response
