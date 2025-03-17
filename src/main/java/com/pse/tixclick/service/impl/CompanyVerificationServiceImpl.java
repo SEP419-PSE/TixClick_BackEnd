@@ -107,6 +107,9 @@ public class CompanyVerificationServiceImpl implements CompanyVerificationServic
                 notification.setMessage("Your company has been approved");
                 notification.setCreatedDate(LocalDateTime.now());
                 notification.setRead(false);
+
+
+
                 notificationRepository.save(notification);
 
                 Member member = new Member();
@@ -118,7 +121,7 @@ public class CompanyVerificationServiceImpl implements CompanyVerificationServic
 
                 String fullName = company.getRepresentativeId().getFirstName() + " " + company.getRepresentativeId().getLastName();
 
-                emailService.sendAccountCreatedEmail(company.getRepresentativeId().getEmail(), company.getRepresentativeId().getUserName(), "123456", fullName);
+                emailService.sendAccountCreatedEmail(company.getRepresentativeId().getEmail(), usernameCompanyAccount, "123456", fullName);
 
                 company.setStatus(ECompanyStatus.ACTIVE);
                 break;
