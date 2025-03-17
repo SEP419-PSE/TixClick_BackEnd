@@ -1,6 +1,7 @@
 package com.pse.tixclick.config;
 
 import com.pse.tixclick.payload.dto.*;
+import com.pse.tixclick.payload.entity.Notification;
 import com.pse.tixclick.payload.entity.company.*;
 import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.entity.event.EventActivity;
@@ -82,7 +83,12 @@ public class ModelMapperConfig {
             }
         });
 
-
+        modelMapper.addMappings(new PropertyMap<Notification, NotificationDTO>() {
+            @Override
+            protected void configure() {
+                map().setAccountId(source.getAccount().getAccountId());
+            }
+        });
         return modelMapper;
     }
 }

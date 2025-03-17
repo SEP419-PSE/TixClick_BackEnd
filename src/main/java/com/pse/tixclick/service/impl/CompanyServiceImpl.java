@@ -8,6 +8,7 @@ import com.pse.tixclick.payload.dto.AccountDTO;
 import com.pse.tixclick.payload.dto.CompanyDTO;
 import com.pse.tixclick.payload.dto.CompanyDocumentDTO;
 import com.pse.tixclick.payload.entity.Account;
+import com.pse.tixclick.payload.entity.Notification;
 import com.pse.tixclick.payload.entity.company.Company;
 import com.pse.tixclick.payload.entity.company.CompanyVerification;
 import com.pse.tixclick.payload.entity.company.Member;
@@ -61,6 +62,7 @@ public class CompanyServiceImpl implements CompanyService {
     EmailService emailService;
     SimpMessagingTemplate messagingTemplate;
     CompanyDocumentService companyDocumentService;
+    NotificationRepository notificationRepository;
     @Override
     public CreateCompanyResponse createCompany(CreateCompanyRequest createCompanyRequest, MultipartFile file) throws IOException, MessagingException {
         var context = SecurityContextHolder.getContext();
@@ -337,16 +339,35 @@ public class CompanyServiceImpl implements CompanyService {
 
         var companyVerification = companyVerificationService.createCompanyVerification(createCompanyVerificationRequest);
 
-        // Gửi notification cho manager
-        List<Account> managers = accountRepository.findAccountsByRole_RoleId(4);
-        String notificationMessage = "Công ty mới cần duyệt: " + company.getCompanyName();
-        for (Account manager : managers) {
-            messagingTemplate.convertAndSendToUser(manager.getUserName(), "/queue/notifications", notificationMessage);
-        }
+
 
         // Gửi email cho manager chính
         var companyManager = accountRepository.findById(companyVerification.getSubmitById())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        String notificationMessage = "Công ty mới cần duyệt: " + company.getCompanyName();
+
+        messagingTemplate.convertAndSendToUser(companyManager.getUserName(), "/specific/messages", notificationMessage);
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+        int count = notificationRepository.countNotificationByAccountId(companyManager.getAccountId());
+        log.info("Count: {}", count);
+
+        if(count >= 10) {
+            Notification notification = notificationRepository.findTopByAccount_AccountIdOrderByCreatedDateAsc(companyManager.getAccountId())
+                    .orElseThrow(() -> new AppException(ErrorCode.NOTIFICATION_NOT_EXISTED));
+            notificationRepository.delete(notification);
+        }
+        Notification notification = new Notification();
+
+        notification.setAccount(companyManager);
+        notification.setMessage(notificationMessage);
+        notification.setRead(false);
+        notification.setCreatedDate(LocalDateTime.now());
+
+        notificationRepository.save(notification);
+
 
         String fullname = (companyManager.getFirstName() != null ? companyManager.getFirstName() : "") +
                 " " +
@@ -359,7 +380,7 @@ public class CompanyServiceImpl implements CompanyService {
         CreateCompanyDocumentRequest createCompanyDocumentRequest = new CreateCompanyDocumentRequest();
         createCompanyDocumentRequest.setCompanyId(company.getCompanyId());
         createCompanyDocumentRequest.setCompanyVerificationId(companyVerification.getCompanyVerificationId());
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
         createCompanyDocumentRequest.setUploadDate(LocalDateTime.now().format(formatter));
 
         List<CompanyDocumentDTO> companyDocumentDTOS = companyDocumentService.createCompanyDocument(createCompanyDocumentRequest, companyDocument);

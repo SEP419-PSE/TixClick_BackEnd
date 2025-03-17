@@ -4,6 +4,7 @@ import com.pse.tixclick.email.EmailService;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.CompanyVerificationDTO;
+import com.pse.tixclick.payload.entity.Notification;
 import com.pse.tixclick.payload.entity.company.CompanyAccount;
 import com.pse.tixclick.payload.entity.company.CompanyVerification;
 import com.pse.tixclick.payload.entity.company.Member;
@@ -21,6 +22,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.modelmapper.ModelMapper;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -41,6 +43,8 @@ public class CompanyVerificationServiceImpl implements CompanyVerificationServic
     MemberRepository memberRepository;
     EmailService emailService;
     AppUtils appUtils;
+    SimpMessagingTemplate simpMessagingTemplate;
+    NotificationRepository notificationRepository;
     @Override
     public CompanyVerificationDTO createCompanyVerification(CreateCompanyVerificationRequest createCompanyVerificationRequest) {
 
@@ -91,9 +95,19 @@ public class CompanyVerificationServiceImpl implements CompanyVerificationServic
                 companyAccount.setUsername(usernameCompanyAccount);
                 companyAccount.setPassword(new BCryptPasswordEncoder(10).encode("123456"));
 
+
+
                 companyAccountRepository.save(companyAccount);
 
+                simpMessagingTemplate.convertAndSendToUser(company.getRepresentativeId().getUserName(), "/specific/messages",
+                        "Your company has been approved");
 
+                Notification notification = new Notification();
+                notification.setAccount(company.getRepresentativeId());
+                notification.setMessage("Your company has been approved");
+                notification.setCreatedDate(LocalDateTime.now());
+                notification.setRead(false);
+                notificationRepository.save(notification);
 
                 Member member = new Member();
                 member.setCompany(company);
