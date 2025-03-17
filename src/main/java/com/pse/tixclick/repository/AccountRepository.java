@@ -70,6 +70,12 @@ public interface AccountRepository extends JpaRepository<Account, Integer> {
 """, nativeQuery = true)
     Optional<Account> findManagerWithLeastVerifications();
 
+<<<<<<< HEAD
+=======
+    @Query(value = "SELECT * FROM Account a WHERE a.role_id IN (1, 4)", nativeQuery = true)
+    List<Account> findAccountsByRoleManagerAndAdmin();
+
+>>>>>>> 5c25bc1d8e8cdcde11fe05694093d00a682068ed
 
     @Query(value = "SELECT COUNT(*) FROM Account a WHERE a.role.roleId = 1")
     int countTotalAdmins();

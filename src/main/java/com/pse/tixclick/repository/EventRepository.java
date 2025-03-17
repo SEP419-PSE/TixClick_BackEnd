@@ -1,5 +1,6 @@
 package com.pse.tixclick.repository;
 
+import com.pse.tixclick.payload.entity.entity_enum.EEventStatus;
 import com.pse.tixclick.payload.entity.event.Event;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -15,7 +16,7 @@ public interface EventRepository extends JpaRepository<Event,Integer> {
 
     Optional<Event> findEventByEventIdAndOrganizer_UserName(int eventId, String userName);
 
-    Optional<List<Event>> findEventsByStatus(String status);
+    Optional<List<Event>> findEventsByStatus(EEventStatus status);
 
     Optional<List<Event>> findEventsByStatusAndOrganizer_UserName(String status, String userName);
 
@@ -23,7 +24,7 @@ public interface EventRepository extends JpaRepository<Event,Integer> {
     Optional<List<Event>> findEventByOrganizerId(@Param("aId") int id);
 
     @Query("select e from Event e where e.organizer.accountId = :aId and e.status = :status")
-    Optional<List<Event>> findEventByOrganizerIdAndStatus(@Param("aId") int id, @Param("status") String status);
+    Optional<List<Event>> findEventByOrganizerIdAndStatus(@Param("aId") int id, @Param("status") EEventStatus status);
 
     @Query("SELECT COUNT(e) FROM Event e WHERE e.status = 'SCHEDULED'")
     int countTotalScheduledEvents();

@@ -26,4 +26,6 @@ public interface AccountService {
 
     int countTotalAccounts();
 
+    List<AccountDTO> getAccountsByRoleManagerAndAdmin();
+
 }
