@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.util.List;
 
 public interface CompanyDocumentService {
-    List<CompanyDocumentDTO> createCompanyDocument(CreateCompanyDocumentRequest createCompanyDocumentRequest, MultipartFile files) throws IOException;
+    List<CompanyDocumentDTO> createCompanyDocument(CreateCompanyDocumentRequest createCompanyDocumentRequest, List<MultipartFile> files) throws IOException;
 
     boolean deleteCompanyDocument(int companyDocumentId);
 }
