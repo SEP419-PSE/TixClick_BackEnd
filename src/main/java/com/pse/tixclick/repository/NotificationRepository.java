@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import javax.swing.text.html.Option;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -15,4 +16,6 @@ public interface NotificationRepository extends JpaRepository<Notification,Integ
     int countNotificationByAccountId(@Param("accountId") int accountId);
 
     Optional<Notification> findTopByAccount_AccountIdOrderByCreatedDateAsc(int accountId);
+
+    List<Notification> findNotificationsByAccount_UserName(String username);
 }
