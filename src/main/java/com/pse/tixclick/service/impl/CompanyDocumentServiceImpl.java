@@ -43,7 +43,7 @@ public class CompanyDocumentServiceImpl implements CompanyDocumentService {
     CloudinaryService cloudinary;
     CompanyVerificationRepository companyVerificationRepository;
     @Override
-    public List<CompanyDocumentDTO> createCompanyDocument(CreateCompanyDocumentRequest createCompanyDocumentRequest, MultipartFile files) throws IOException {
+    public List<CompanyDocumentDTO> createCompanyDocument(CreateCompanyDocumentRequest createCompanyDocumentRequest, List<MultipartFile> files) throws IOException {
         var context = SecurityContextHolder.getContext();
         String username = context.getAuthentication().getName();
 
@@ -58,21 +58,22 @@ public class CompanyDocumentServiceImpl implements CompanyDocumentService {
         final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-
+        for (MultipartFile file : files) {
+            try {
                 // Kiểm tra dung lượng file
-                if (files.getSize() > MAX_FILE_SIZE) {
+                if (file.getSize() > MAX_FILE_SIZE) {
                     throw new AppException(ErrorCode.FILE_TOO_LARGE);
                 }
 
                 // Upload file lên Cloudinary thông qua CloudinaryService
-                String fileURL = cloudinary.uploadDocumentToCloudinary(files);
+                String fileURL = cloudinary.uploadDocumentToCloudinary(file);
 
                 // Tạo đối tượng CompanyDocuments
                 var companyDocument = new CompanyDocuments();
                 companyDocument.setCompany(company);
-                companyDocument.setFileName(files.getOriginalFilename());
+                companyDocument.setFileName(file.getOriginalFilename());
                 companyDocument.setFileURL(fileURL);
-                companyDocument.setFileType(files.getContentType());
+                companyDocument.setFileType(file.getContentType());
                 companyDocument.setUploadDate(LocalDateTime.parse(createCompanyDocumentRequest.getUploadDate(), formatter));
                 companyDocument.setStatus(true);
                 // Lưu vào database
@@ -81,7 +82,10 @@ public class CompanyDocumentServiceImpl implements CompanyDocumentService {
                 // Chuyển đổi sang DTO và thêm vào danh sách
                 documentDTOList.add(modelMapper.map(companyDocument, CompanyDocumentDTO.class));
 
-
+            } catch (IOException e) {
+                throw new AppException(ErrorCode.FILE_UPLOAD_FAILED);
+            }
+        }
         companyVerification.setStatus(EVerificationStatus.REVIEWING);
         companyVerificationRepository.save(companyVerification);
         return documentDTOList;

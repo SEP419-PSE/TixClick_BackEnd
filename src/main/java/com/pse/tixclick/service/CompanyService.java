@@ -3,6 +3,7 @@ package com.pse.tixclick.service;
 import com.pse.tixclick.payload.dto.CompanyDTO;
 import com.pse.tixclick.payload.request.create.CreateCompanyRequest;
 import com.pse.tixclick.payload.request.update.UpdateCompanyRequest;
+import com.pse.tixclick.payload.response.CompanyAndDocumentResponse;
 import com.pse.tixclick.payload.response.CreateCompanyResponse;
 import com.pse.tixclick.payload.response.GetByCompanyResponse;
 import com.pse.tixclick.payload.response.GetByCompanyWithVerificationResponse;
@@ -29,5 +30,5 @@ public interface CompanyService {
 
     List<GetByCompanyWithVerificationResponse> getCompanysByManager();
 
-    CreateCompanyResponse createCompanyAndDocument(CreateCompanyRequest createCompanyRequest, MultipartFile logoURL, MultipartFile companyDocument) throws IOException, MessagingException;
+    CompanyAndDocumentResponse createCompanyAndDocument(CreateCompanyRequest createCompanyRequest, MultipartFile logoURL, List<MultipartFile> companyDocument) throws IOException, MessagingException;
 }

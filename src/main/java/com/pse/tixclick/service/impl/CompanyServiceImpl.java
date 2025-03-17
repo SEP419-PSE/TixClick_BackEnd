@@ -6,6 +6,7 @@ import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.AccountDTO;
 import com.pse.tixclick.payload.dto.CompanyDTO;
+import com.pse.tixclick.payload.dto.CompanyDocumentDTO;
 import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.company.Company;
 import com.pse.tixclick.payload.entity.company.CompanyVerification;
@@ -15,6 +16,7 @@ import com.pse.tixclick.payload.request.create.CreateCompanyDocumentRequest;
 import com.pse.tixclick.payload.request.create.CreateCompanyRequest;
 import com.pse.tixclick.payload.request.create.CreateCompanyVerificationRequest;
 import com.pse.tixclick.payload.request.update.UpdateCompanyRequest;
+import com.pse.tixclick.payload.response.CompanyAndDocumentResponse;
 import com.pse.tixclick.payload.response.CreateCompanyResponse;
 import com.pse.tixclick.payload.response.GetByCompanyResponse;
 import com.pse.tixclick.payload.response.GetByCompanyWithVerificationResponse;
@@ -305,7 +307,7 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     @Override
-    public CreateCompanyResponse createCompanyAndDocument(CreateCompanyRequest createCompanyRequest, MultipartFile logoURL, MultipartFile companyDocument) throws IOException, MessagingException {
+    public CompanyAndDocumentResponse createCompanyAndDocument(CreateCompanyRequest createCompanyRequest, MultipartFile logoURL, List<MultipartFile> companyDocument) throws IOException, MessagingException {
         var context = SecurityContextHolder.getContext();
         String name = context.getAuthentication().getName();
 
@@ -314,6 +316,7 @@ public class CompanyServiceImpl implements CompanyService {
 
         String logoCompany = cloudinary.uploadImageToCloudinary(logoURL);
 
+        // Create company
         Company company = new Company();
         company.setCompanyName(createCompanyRequest.getCompanyName());
         company.setDescription(createCompanyRequest.getDescription());
@@ -327,36 +330,42 @@ public class CompanyServiceImpl implements CompanyService {
         company.setStatus(ECompanyStatus.PENDING);
         companyRepository.save(company);
 
+        // Create verification
         CreateCompanyVerificationRequest createCompanyVerificationRequest = new CreateCompanyVerificationRequest();
         createCompanyVerificationRequest.setCompanyId(company.getCompanyId());
         createCompanyVerificationRequest.setStatus(EVerificationStatus.PENDING);
 
         var companyVerification = companyVerificationService.createCompanyVerification(createCompanyVerificationRequest);
+
+        // Gửi notification cho manager
+        List<Account> managers = accountRepository.findAccountsByRole_RoleId(4);
+        String notificationMessage = "Công ty mới cần duyệt: " + company.getCompanyName();
+        for (Account manager : managers) {
+            messagingTemplate.convertAndSendToUser(manager.getUserName(), "/queue/notifications", notificationMessage);
+        }
+
+        // Gửi email cho manager chính
         var companyManager = accountRepository.findById(companyVerification.getSubmitById())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
         String fullname = (companyManager.getFirstName() != null ? companyManager.getFirstName() : "") +
                 " " +
                 (companyManager.getLastName() != null ? companyManager.getLastName() : "");
-        fullname = fullname.trim(); // Loại bỏ khoảng trắng thừa nếu có
-        String notificationMessage = "Công ty mới cần duyệt: " + company.getCompanyName();
-        List<Account> managers = accountRepository.findAccountsByRole_RoleId(4);
+        fullname = fullname.trim();
 
-        log.info("Sending notification to user: {}", companyManager.getUserName());
-        for (Account manager : managers) {
-            log.info("Sending notification to user: {}", manager.getUserName());
-            messagingTemplate.convertAndSendToUser(manager.getUserName(), "/queue/notifications", notificationMessage);
-        }
         emailService.sendCompanyCreationRequestNotification(companyManager.getEmail(), company.getCompanyName(), fullname);
 
+        // Create documents
         CreateCompanyDocumentRequest createCompanyDocumentRequest = new CreateCompanyDocumentRequest();
         createCompanyDocumentRequest.setCompanyId(company.getCompanyId());
         createCompanyDocumentRequest.setCompanyVerificationId(companyVerification.getCompanyVerificationId());
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         createCompanyDocumentRequest.setUploadDate(LocalDateTime.now().format(formatter));
-        companyDocumentService.createCompanyDocument(createCompanyDocumentRequest, companyDocument);
 
-        // Tạo đối tượng response
-        return new CreateCompanyResponse(
+        List<CompanyDocumentDTO> companyDocumentDTOS = companyDocumentService.createCompanyDocument(createCompanyDocumentRequest, companyDocument);
+
+        // Chuẩn bị response
+        CreateCompanyResponse createCompanyResponse = new CreateCompanyResponse(
                 company.getCompanyId(),
                 company.getCompanyName(),
                 company.getCodeTax(),
@@ -370,7 +379,10 @@ public class CompanyServiceImpl implements CompanyService {
                 account.getAccountId(),
                 companyVerification.getCompanyVerificationId()
         );
+
+        return new CompanyAndDocumentResponse(createCompanyResponse, companyDocumentDTOS);
     }
+
 
 
 }
