@@ -232,4 +232,38 @@ public class CompanyController {
                             .build());
         }
     }
+
+    @PostMapping("/create-company-and-document")
+    public ResponseEntity<ApiResponse<CreateCompanyResponse>> createCompanyAndDocument(
+            @ModelAttribute CreateCompanyRequest createCompanyRequest,
+            @RequestParam("logoURL") MultipartFile logoURL,
+            @RequestParam("companyDocument") MultipartFile companyDocument
+    ) {
+        try {
+            CreateCompanyResponse companyDTO = companyService.createCompanyAndDocument(createCompanyRequest, logoURL, companyDocument);
+            return ResponseEntity.ok(
+                    ApiResponse.<CreateCompanyResponse>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Company created successfully")
+                            .result(companyDTO)
+                            .build()
+            );
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.<CreateCompanyResponse>builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<CreateCompanyResponse>builder()
+                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .message("File upload failed. Please try again.")
+                            .result(null)
+                            .build());
+        } catch (MessagingException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

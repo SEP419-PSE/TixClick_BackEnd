@@ -11,6 +11,7 @@ import com.pse.tixclick.payload.entity.company.Company;
 import com.pse.tixclick.payload.entity.company.CompanyVerification;
 import com.pse.tixclick.payload.entity.company.Member;
 import com.pse.tixclick.payload.entity.entity_enum.*;
+import com.pse.tixclick.payload.request.create.CreateCompanyDocumentRequest;
 import com.pse.tixclick.payload.request.create.CreateCompanyRequest;
 import com.pse.tixclick.payload.request.create.CreateCompanyVerificationRequest;
 import com.pse.tixclick.payload.request.update.UpdateCompanyRequest;
@@ -18,6 +19,7 @@ import com.pse.tixclick.payload.response.CreateCompanyResponse;
 import com.pse.tixclick.payload.response.GetByCompanyResponse;
 import com.pse.tixclick.payload.response.GetByCompanyWithVerificationResponse;
 import com.pse.tixclick.repository.*;
+import com.pse.tixclick.service.CompanyDocumentService;
 import com.pse.tixclick.service.CompanyService;
 import com.pse.tixclick.service.CompanyVerificationService;
 import jakarta.mail.MessagingException;
@@ -34,6 +36,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -54,6 +58,7 @@ public class CompanyServiceImpl implements CompanyService {
     CompanyVerificationRepository companyVerificationRepository;
     EmailService emailService;
     SimpMessagingTemplate messagingTemplate;
+    CompanyDocumentService companyDocumentService;
     @Override
     public CreateCompanyResponse createCompany(CreateCompanyRequest createCompanyRequest, MultipartFile file) throws IOException, MessagingException {
         var context = SecurityContextHolder.getContext();
@@ -299,6 +304,73 @@ public class CompanyServiceImpl implements CompanyService {
         }).collect(Collectors.toList());
     }
 
+    @Override
+    public CreateCompanyResponse createCompanyAndDocument(CreateCompanyRequest createCompanyRequest, MultipartFile logoURL, MultipartFile companyDocument) throws IOException, MessagingException {
+        var context = SecurityContextHolder.getContext();
+        String name = context.getAuthentication().getName();
+
+        var account = accountRepository.findAccountByUserName(name)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        String logoCompany = cloudinary.uploadImageToCloudinary(logoURL);
+
+        Company company = new Company();
+        company.setCompanyName(createCompanyRequest.getCompanyName());
+        company.setDescription(createCompanyRequest.getDescription());
+        company.setRepresentativeId(account);
+        company.setCodeTax(createCompanyRequest.getCodeTax());
+        company.setBankingCode(createCompanyRequest.getBankingCode());
+        company.setBankingName(createCompanyRequest.getBankingName());
+        company.setNationalId(createCompanyRequest.getNationalId());
+        company.setLogoURL(logoCompany);
+        company.setAddress(createCompanyRequest.getAddress());
+        company.setStatus(ECompanyStatus.PENDING);
+        companyRepository.save(company);
+
+        CreateCompanyVerificationRequest createCompanyVerificationRequest = new CreateCompanyVerificationRequest();
+        createCompanyVerificationRequest.setCompanyId(company.getCompanyId());
+        createCompanyVerificationRequest.setStatus(EVerificationStatus.PENDING);
+
+        var companyVerification = companyVerificationService.createCompanyVerification(createCompanyVerificationRequest);
+        var companyManager = accountRepository.findById(companyVerification.getSubmitById())
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        String fullname = (companyManager.getFirstName() != null ? companyManager.getFirstName() : "") +
+                " " +
+                (companyManager.getLastName() != null ? companyManager.getLastName() : "");
+        fullname = fullname.trim(); // Loại bỏ khoảng trắng thừa nếu có
+        String notificationMessage = "Công ty mới cần duyệt: " + company.getCompanyName();
+        List<Account> managers = accountRepository.findAccountsByRole_RoleId(4);
+
+        log.info("Sending notification to user: {}", companyManager.getUserName());
+        for (Account manager : managers) {
+            log.info("Sending notification to user: {}", manager.getUserName());
+            messagingTemplate.convertAndSendToUser(manager.getUserName(), "/queue/notifications", notificationMessage);
+        }
+        emailService.sendCompanyCreationRequestNotification(companyManager.getEmail(), company.getCompanyName(), fullname);
+
+        CreateCompanyDocumentRequest createCompanyDocumentRequest = new CreateCompanyDocumentRequest();
+        createCompanyDocumentRequest.setCompanyId(company.getCompanyId());
+        createCompanyDocumentRequest.setCompanyVerificationId(companyVerification.getCompanyVerificationId());
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        createCompanyDocumentRequest.setUploadDate(LocalDateTime.now().format(formatter));
+        companyDocumentService.createCompanyDocument(createCompanyDocumentRequest, companyDocument);
+
+        // Tạo đối tượng response
+        return new CreateCompanyResponse(
+                company.getCompanyId(),
+                company.getCompanyName(),
+                company.getCodeTax(),
+                company.getBankingName(),
+                company.getBankingCode(),
+                company.getNationalId(),
+                company.getLogoURL(),
+                company.getAddress(),
+                company.getDescription(),
+                company.getStatus().name(),
+                account.getAccountId(),
+                companyVerification.getCompanyVerificationId()
+        );
+    }
 
 
 }
