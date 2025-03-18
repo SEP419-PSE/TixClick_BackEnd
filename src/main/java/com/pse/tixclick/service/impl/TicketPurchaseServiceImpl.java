@@ -243,4 +243,36 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
 
         return new TicketsSoldAndRevenueDTO(days, totalTicketsSold, totalRevenue, totalEvents, avgDailyRevenue, revenueGrowth);
     }
+
+    @Override
+    public List<MyTicketDTO> getTicketPurchasesByAccount() {
+        List<TicketPurchase> ticketPurchases = ticketPurchaseRepository.getTicketPurchasesByAccount(appUtils.getAccountFromAuthentication().getAccountId());
+        List<MyTicketDTO> myTicketDTOS = ticketPurchases.stream()
+                .map(myTicket -> {
+                    MyTicketDTO myTicketDTO = modelMapper.map(myTicket, MyTicketDTO.class);
+
+                    if (myTicket.getEvent() != null) {
+                        myTicketDTO.setEventName(myTicket.getEvent().getEventName());
+                    }
+                    if (myTicket.getEventActivity() != null) {
+                        myTicketDTO.setEventDate(myTicket.getEventActivity().getDateEvent());
+                    }
+                    if (myTicket.getEventActivity() != null) {
+                        myTicketDTO.setEventStartTime(myTicket.getEventActivity().getStartTimeEvent());
+                    }
+                    if (myTicket.getEvent() != null) {
+                        myTicketDTO.setLocation(myTicket.getEvent().getLocation());
+                    }
+                    if (myTicket.getTicket() != null) {
+                        myTicketDTO.setPrice(myTicket.getTicket().getPrice());
+                    }
+                    if (myTicket.getTicket() != null) {
+                        myTicketDTO.setTicketType(myTicket.getTicket().getTicketName());
+                    }
+                    return myTicketDTO;
+                })
+                .collect(Collectors.toList());
+
+        return myTicketDTOS.isEmpty() ? null : myTicketDTOS;
+    }
 }
