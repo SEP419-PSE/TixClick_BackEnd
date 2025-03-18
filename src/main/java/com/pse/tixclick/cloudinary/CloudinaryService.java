@@ -67,7 +67,10 @@ public class CloudinaryService {
         return imageUrl.substring(startIndex, endIndex); // Trả về public_id
     }
 
-    public Map uploadFile(File file) throws IOException {
-        return cloudinary.uploader().upload(file, ObjectUtils.emptyMap());
+    public String uploadFile(File file) throws IOException {
+        Map response = cloudinary.uploader().upload(file, ObjectUtils.emptyMap());
+
+        // Lấy giá trị chính xác của URL từ Cloudinary
+        return (String) response.get("secure_url");
     }
 }

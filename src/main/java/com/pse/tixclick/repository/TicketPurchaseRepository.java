@@ -96,6 +96,4 @@ ORDER BY m.month;
     ORDER BY dr.order_date
     """, nativeQuery = true)
     List<Object[]> countTicketsSoldAndRevenueByDayAfter(@Param("date") int date, @Param("endDate") LocalDate endDate);
-
-
 }
