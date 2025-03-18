@@ -12,6 +12,7 @@ import com.pse.tixclick.payload.entity.payment.Voucher;
 import com.pse.tixclick.payload.entity.seatmap.Seat;
 import com.pse.tixclick.payload.entity.seatmap.Zone;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
+import com.pse.tixclick.payload.entity.ticket.TicketMapping;
 import com.pse.tixclick.payload.entity.ticket.TicketPurchase;
 import com.pse.tixclick.payload.request.create.CreateOrderRequest;
 import com.pse.tixclick.repository.*;
@@ -65,6 +66,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     VoucherRepository voucherRepository;
+
+    @Autowired
+    TicketMappingRepository ticketMappingRepository;
 
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
@@ -283,6 +287,13 @@ public class OrderServiceImpl implements OrderService {
                                 .findById(orderDetail.getTicketPurchase().getTicketPurchaseId())
                                 .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
 
+                        TicketMapping ticketMapping = ticketMappingRepository
+                                .findTicketMappingByTicketIdAndEventActivityId(ticketPurchase.getTicket().getTicketId(), ticketPurchase.getEventActivity().getEventActivityId())
+                                .orElseThrow(() -> new AppException(ErrorCode.TICKET_MAPPING_NOT_FOUND));
+
+                        ticketMapping.setQuantity(ticketMapping.getQuantity() + 1);
+                        ticketMappingRepository.save(ticketMapping);
+
                         Seat seat = seatRepository
                                 .findById(ticketPurchase.getSeat().getSeatId())
                                 .orElseThrow(() -> new AppException(ErrorCode.SEAT_NOT_FOUND));
@@ -327,6 +338,13 @@ public class OrderServiceImpl implements OrderService {
                     TicketPurchase ticketPurchase = ticketPurchaseRepository
                             .findById(orderDetail.getTicketPurchase().getTicketPurchaseId())
                             .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
+
+                    TicketMapping ticketMapping = ticketMappingRepository
+                            .findTicketMappingByTicketIdAndEventActivityId(ticketPurchase.getTicket().getTicketId(), ticketPurchase.getEventActivity().getEventActivityId())
+                            .orElseThrow(() -> new AppException(ErrorCode.TICKET_MAPPING_NOT_FOUND));
+
+                    ticketMapping.setQuantity(ticketMapping.getQuantity() + 1);
+                    ticketMappingRepository.save(ticketMapping);
 
                     Seat seat = seatRepository
                             .findById(ticketPurchase.getSeat().getSeatId())

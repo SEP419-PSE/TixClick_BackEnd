@@ -43,7 +43,7 @@ public class CompanyDocumentServiceImpl implements CompanyDocumentService {
     CloudinaryService cloudinary;
     CompanyVerificationRepository companyVerificationRepository;
     @Override
-    public List<CompanyDocumentDTO> createCompanyDocument(CreateCompanyDocumentRequest createCompanyDocumentRequest, List<MultipartFile> files) {
+    public List<CompanyDocumentDTO> createCompanyDocument(CreateCompanyDocumentRequest createCompanyDocumentRequest, List<MultipartFile> files) throws IOException {
         var context = SecurityContextHolder.getContext();
         String username = context.getAuthentication().getName();
 

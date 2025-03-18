@@ -5,6 +5,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.security.PrivateKey;
 import java.util.List;
 
 public interface ContractDocumentService {
@@ -22,5 +23,5 @@ public interface ContractDocumentService {
 
     List<ContractDocumentDTO> getContractDocumentsByCompany(int companyId);
 
-    File signPdf(String pdfUrl, String name) throws Exception;
+    String signPdf(int contractDocumentId) throws Exception;
 }

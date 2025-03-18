@@ -5,10 +5,7 @@ import com.pse.tixclick.payload.dto.CompanyDTO;
 import com.pse.tixclick.payload.request.create.CreateCompanyRequest;
 import com.pse.tixclick.payload.request.create.CreateEventRequest;
 import com.pse.tixclick.payload.request.update.UpdateCompanyRequest;
-import com.pse.tixclick.payload.response.ApiResponse;
-import com.pse.tixclick.payload.response.CreateCompanyResponse;
-import com.pse.tixclick.payload.response.GetByCompanyResponse;
-import com.pse.tixclick.payload.response.GetByCompanyWithVerificationResponse;
+import com.pse.tixclick.payload.response.*;
 import com.pse.tixclick.service.CompanyService;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
@@ -230,6 +227,40 @@ public class CompanyController {
                             .message("Internal server error")
                             .result(null)
                             .build());
+        }
+    }
+
+    @PostMapping("/create-company-and-document")
+    public ResponseEntity<ApiResponse<CompanyAndDocumentResponse>> createCompanyAndDocument(
+            @ModelAttribute CreateCompanyRequest createCompanyRequest,
+            @RequestParam("logoURL") MultipartFile logoURL,
+            @RequestParam("companyDocument") List<MultipartFile> companyDocument
+    ) {
+        try {
+            CompanyAndDocumentResponse companyDTO = companyService.createCompanyAndDocument(createCompanyRequest, logoURL, companyDocument);
+            return ResponseEntity.ok(
+                    ApiResponse.<CompanyAndDocumentResponse>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Company created successfully")
+                            .result(companyDTO)
+                            .build()
+            );
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.<CompanyAndDocumentResponse>builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<CompanyAndDocumentResponse>builder()
+                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .message("File upload failed. Please try again.")
+                            .result(null)
+                            .build());
+        } catch (MessagingException e) {
+            throw new RuntimeException(e);
         }
     }
 }

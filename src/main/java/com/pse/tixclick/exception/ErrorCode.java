@@ -86,6 +86,9 @@ public enum ErrorCode {
     CHECKIN_LOG_EXPIRED(1076, "Checkin log đã hết hạn", HttpStatus.BAD_REQUEST),
     CHECKIN_LOG_CHECKED_IN(1077, "Checkin log đã được check in", HttpStatus.BAD_REQUEST),
     UNAUTHENTICATED_LOGIN(1078, "bạn không đủ quyền truy cập", HttpStatus.UNAUTHORIZED),
+    NOTIFICATION_NOT_EXISTED(1079, "Notification không tồn tại", HttpStatus.NOT_FOUND),
+    TICKET_MAPPING_NOT_FOUND(1080, "Không tìm thấy ticket mapping", HttpStatus.NOT_FOUND),
+    TICKET_MAPPING_EMPTY(1081, "Ticket mapping đã hết", HttpStatus.BAD_REQUEST),
     ;
 
 

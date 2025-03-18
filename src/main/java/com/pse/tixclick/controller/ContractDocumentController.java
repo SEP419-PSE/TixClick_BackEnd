@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.security.PrivateKey;
 import java.util.List;
 
 @RestController
@@ -54,16 +55,9 @@ public class ContractDocumentController {
         }
     }
 
-    @PostMapping("/sign")
-    public String signPdf(@RequestParam String fileUrl, @RequestParam String name) {
-        try {
-            // Ký PDF
-            File signedPdf = contractDocumentService.signPdf(fileUrl, name);
-
-            return "File đã ký: " + signedPdf.getName();
-        } catch (Exception e) {
-            return "Lỗi: " + e.getMessage();
-        }
+    @PostMapping("/sign-and-upload/{contractDocumentId}")
+    public String signAndUploadPdf(@PathVariable int contractDocumentId) throws Exception {
+        return contractDocumentService.signPdf(contractDocumentId);
     }
 
     @GetMapping(value = "/get/{contractId}")

@@ -12,6 +12,7 @@ import com.pse.tixclick.payload.entity.event.EventActivity;
 import com.pse.tixclick.payload.entity.seatmap.Seat;
 import com.pse.tixclick.payload.entity.seatmap.Zone;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
+import com.pse.tixclick.payload.entity.ticket.TicketMapping;
 import com.pse.tixclick.payload.entity.ticket.TicketPurchase;
 import com.pse.tixclick.payload.request.create.CheckinRequest;
 import com.pse.tixclick.payload.request.create.CreateTicketPurchaseRequest;
@@ -72,6 +73,9 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
     @Autowired
     CheckinLogRepository checkinLogRepository;
 
+    @Autowired
+    TicketMappingRepository ticketMappingRepository;
+
 
     @Override
     public TicketPurchaseDTO createTicketPurchase(CreateTicketPurchaseRequest createTicketPurchaseRequest) {
@@ -80,6 +84,16 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
 
         Zone zone = zoneRepository.findById(createTicketPurchaseRequest.getZoneId())
                 .orElseThrow(() -> new AppException(ErrorCode.ZONE_NOT_FOUND));
+
+        TicketMapping ticketMapping = ticketMappingRepository
+                .findTicketMappingByTicketIdAndEventActivityId(createTicketPurchaseRequest.getTicketId(), createTicketPurchaseRequest.getEventActivityId())
+                .orElseThrow(() -> new AppException(ErrorCode.TICKET_MAPPING_NOT_FOUND));
+
+        if (ticketMapping.getQuantity() <= 0) {
+            throw new AppException(ErrorCode.TICKET_MAPPING_EMPTY);
+        }
+        ticketMapping.setQuantity(ticketMapping.getQuantity() - 1);
+        ticketMappingRepository.save(ticketMapping);
 
         if (zone.getAvailableQuantity() <= 0) {
             throw new AppException(ErrorCode.ZONE_FULL);
