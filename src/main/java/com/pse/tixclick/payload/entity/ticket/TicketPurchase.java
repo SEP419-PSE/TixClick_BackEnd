@@ -1,6 +1,7 @@
 package com.pse.tixclick.payload.entity.ticket;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.entity.event.EventActivity;
 import com.pse.tixclick.payload.entity.payment.OrderDetail;
@@ -50,6 +51,11 @@ public class TicketPurchase {
     @JoinColumn(name = "event_id", nullable = false)
     private Event event;
 
+    @ManyToOne
+    @JoinColumn(name = "account_id", nullable = false)
+    private Account account;
+
     @OneToMany(mappedBy = "ticketPurchase")
     private Collection<OrderDetail> orderDetails;
+
 }

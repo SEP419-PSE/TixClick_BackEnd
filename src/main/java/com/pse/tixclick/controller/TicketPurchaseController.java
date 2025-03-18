@@ -1,5 +1,7 @@
 package com.pse.tixclick.controller;
 
+import com.pse.tixclick.payload.dto.MyTicketDTO;
+import com.pse.tixclick.payload.dto.SeatDTO;
 import com.pse.tixclick.payload.dto.SeatMapDTO;
 import com.pse.tixclick.payload.dto.TicketPurchaseDTO;
 import com.pse.tixclick.payload.request.create.CreateSeatMapRequest;
@@ -14,6 +16,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/ticket-purchase")
@@ -146,6 +150,27 @@ public class TicketPurchaseController {
         } catch (Exception e) {
             return ResponseEntity.status(400)
                     .body(ApiResponse.builder()
+                            .code(400)
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        }
+    }
+
+    @GetMapping("/all_of_account")
+    public ResponseEntity<ApiResponse<List<MyTicketDTO>>> getAllTicketPurchaseByAccont() {
+        try {
+            List<MyTicketDTO> myTicketDTOS = ticketPurchaseService.getTicketPurchasesByAccount();
+            return ResponseEntity.ok(
+                    ApiResponse.<List<MyTicketDTO>>builder()
+                            .code(200)
+                            .message("Successfully fetched all Ticket Purchase by account")
+                            .result(myTicketDTOS)
+                            .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(400)
+                    .body(ApiResponse.<List<MyTicketDTO>>builder()
                             .code(400)
                             .message(e.getMessage())
                             .result(null)
