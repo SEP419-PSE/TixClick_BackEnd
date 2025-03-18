@@ -96,4 +96,8 @@ ORDER BY m.month;
     ORDER BY dr.order_date
     """, nativeQuery = true)
     List<Object[]> countTicketsSoldAndRevenueByDayAfter(@Param("date") int date, @Param("endDate") LocalDate endDate);
+
+    @Query(value = "SELECT tp FROM TicketPurchase tp WHERE tp.account.accountId = :accountId")
+    List<TicketPurchase> getTicketPurchasesByAccount(@Param("accountId") int accountId);
+
 }

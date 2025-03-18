@@ -1,5 +1,6 @@
 package com.pse.tixclick.service;
 
+import com.pse.tixclick.payload.dto.MyTicketDTO;
 import com.pse.tixclick.payload.dto.TicketPurchaseDTO;
 import com.pse.tixclick.payload.dto.TicketSalesResponse;
 import com.pse.tixclick.payload.dto.TicketsSoldAndRevenueDTO;
@@ -21,4 +22,5 @@ public interface TicketPurchaseService {
 
     TicketsSoldAndRevenueDTO getTicketsSoldAndRevenueByDay(int day);
 
+    List<MyTicketDTO> getTicketPurchasesByAccount();
 }

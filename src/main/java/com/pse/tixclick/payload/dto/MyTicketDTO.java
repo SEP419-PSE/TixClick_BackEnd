@@ -5,6 +5,7 @@ import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Getter
 @Setter
@@ -14,11 +15,9 @@ import java.time.LocalDateTime;
 public class MyTicketDTO {
     private String eventName;
     private LocalDate eventDate;
-    private LocalDateTime eventStartTime;
+    private LocalTime eventStartTime;
     private String location;
     private double price;
     private String seatCode;
-    private String status;
-    private String QRCode;
     private String ticketType;
 }
