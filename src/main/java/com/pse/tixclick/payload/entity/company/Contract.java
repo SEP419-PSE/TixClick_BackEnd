@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.Collection;
 import java.util.List;
 
 @Getter
@@ -41,5 +42,5 @@ public class Contract {
     private Company company;
 
     @OneToMany(mappedBy = "contract")
-    private List<ContractDetail> contractDetails;
+    private Collection<ContractDetail> contractDetails;
 }

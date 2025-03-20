@@ -3,6 +3,7 @@ package com.pse.tixclick.service.impl;
 import com.pse.tixclick.email.EmailService;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
+import com.pse.tixclick.payload.dto.ContractPaymentDTO;
 import com.pse.tixclick.payload.entity.company.ContractDetail;
 import com.pse.tixclick.payload.entity.entity_enum.EContractDetailStatus;
 import com.pse.tixclick.payload.entity.entity_enum.ETransactionType;
@@ -21,6 +22,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @Transactional
@@ -78,5 +81,30 @@ public class ContractPaymentServiceImpl implements ContractPaymentService {
         transactionRepository.save(transaction);
 
         return "Payment for Contract successful!";
+    }
+
+    @Override
+    public List<ContractPaymentDTO> getAllContractPaymentByContract(int contractId) {
+        List<ContractDetail> contractDetails = contractDetailRepository.findByContractId(contractId);
+        if (contractDetails.isEmpty()) {
+            throw new AppException(ErrorCode.CONTRACT_DETAIL_NOT_FOUND);
+        }
+
+        List<ContractPayment> contractPayments = new ArrayList<>();
+        for (ContractDetail detail : contractDetails) {
+            ContractPayment contractPayment = contractPaymentRepository
+                    .findByContractDetailId(detail.getContractDetailId())
+                    .orElseThrow(() -> new AppException(ErrorCode.CONTRACT_PAYMENT_NOT_FOUND));
+            contractPayments.add(contractPayment);
+        }
+
+        List<ContractPaymentDTO> contractPaymentDTOS = new ArrayList<>();
+        for (ContractPayment contractPayment : contractPayments) {
+            ContractPaymentDTO contractPaymentDTO = modelMapper.map(contractPayment, ContractPaymentDTO.class);
+            contractPaymentDTO.setContractDetailId(contractPayment.getContractDetail().getContractDetailId());
+            contractPaymentDTOS.add(contractPaymentDTO);
+        }
+
+        return contractPaymentDTOS;
     }
 }
