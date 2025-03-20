@@ -99,6 +99,18 @@ public class ContractDetailServiceImpl implements ContractDetailService {
         return contractDetailDTOList;
     }
 
+    @Override
+    public List<ContractDetailDTO> getAllContractDetailByContract(int contractId) {
+        List<ContractDetail> contractDetails = contractDetailRepository.findByContractId(contractId);
+        if(contractDetails.isEmpty()) {
+            throw new AppException(ErrorCode.CONTRACT_DETAIL_NOT_FOUND);
+        }
+
+        return contractDetails.stream()
+                .map(contractDetail -> modelMapper.map(contractDetail, ContractDetailDTO.class))
+                .toList();
+    }
+
 
     @Scheduled(cron = "0 0 0 * * ?")
     public void updateAmountOfContractPayment() throws MessagingException {
@@ -116,7 +128,10 @@ public class ContractDetailServiceImpl implements ContractDetailService {
                 if (threeDaysBefore.isEqual(LocalDate.now())) {
                     emailService.sendContractPaymentWarningToManager(contract.getAccount().getEmail(), contract.getCompany().getCompanyName(), newTotalAmount, contractDetail.getPayDate(), contract.getContractId(), contractDetail.getContractDetailId(), contractDetail.getContractDetailName(), contract.getEvent().getEventName());
                 }
-                ContractPayment contractPayment = contractPaymentRepository.findByContractDetailId(contractDetail.getContractDetailId());
+                ContractPayment contractPayment = contractPaymentRepository
+                        .findByContractDetailId(contractDetail.getContractDetailId())
+                        .orElseThrow(() -> new AppException(ErrorCode.CONTRACT_PAYMENT_NOT_FOUND));
+
                 contractPayment.setPaymentAmount(newTotalAmount);
                 contractPaymentRepository.save(contractPayment);
              }
