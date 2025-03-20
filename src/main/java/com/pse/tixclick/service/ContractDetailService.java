@@ -7,4 +7,6 @@ import java.util.List;
 
 public interface ContractDetailService {
     List<ContractDetailDTO> createContractDetail(List<CreateContractDetailRequest> createContractDetailRequests, int contractId);
+
+    List<ContractDetailDTO> getAllContractDetailByContract(int contractId);
 }

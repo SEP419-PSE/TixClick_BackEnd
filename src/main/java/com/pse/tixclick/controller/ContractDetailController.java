@@ -1,6 +1,7 @@
 package com.pse.tixclick.controller;
 
 import com.pse.tixclick.payload.dto.ContractDetailDTO;
+import com.pse.tixclick.payload.dto.MyTicketDTO;
 import com.pse.tixclick.payload.request.create.CreateContractDetailRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
 import com.pse.tixclick.service.ContractDetailService;
@@ -10,11 +11,9 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -35,6 +34,36 @@ public class ContractDetailController {
                     ApiResponse.<List<ContractDetailDTO>>builder()
                             .code(200)
                             .message("Contract Detail created successfully")
+                            .result(contractDetailDTOs)
+                            .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(400)
+                    .body(ApiResponse.<List<ContractDetailDTO>>builder()
+                            .code(400)
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        }
+    }
+
+    @GetMapping("/get/{contractId}")
+    public ResponseEntity<ApiResponse<List<ContractDetailDTO>>> getContractDetail(@PathVariable int contractId) {
+        try {
+            List<ContractDetailDTO> contractDetailDTOs = contractDetailService.getAllContractDetailByContract(contractId);
+
+            if (contractDetailDTOs == null || contractDetailDTOs.isEmpty()) {
+                return ResponseEntity.status(404)
+                        .body(ApiResponse.<List<ContractDetailDTO>>builder()
+                                .code(404)
+                                .message("No Contract Details found")
+                                .result(Collections.emptyList()) // Trả về danh sách rỗng thay vì null
+                                .build());
+            }
+            return ResponseEntity.ok(
+                    ApiResponse.<List<ContractDetailDTO>>builder()
+                            .code(200)
+                            .message("Contract Detail retrieved successfully")
                             .result(contractDetailDTOs)
                             .build()
             );

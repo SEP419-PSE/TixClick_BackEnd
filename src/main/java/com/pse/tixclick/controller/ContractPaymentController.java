@@ -1,5 +1,7 @@
 package com.pse.tixclick.controller;
 
+import com.pse.tixclick.payload.dto.ContractDetailDTO;
+import com.pse.tixclick.payload.dto.ContractPaymentDTO;
 import com.pse.tixclick.payload.dto.TicketPurchaseDTO;
 import com.pse.tixclick.payload.request.create.CreateTicketPurchaseRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
@@ -11,6 +13,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Collections;
+import java.util.List;
 
 @RestController
 @RequestMapping("/contract-payment")
@@ -36,6 +41,36 @@ public class ContractPaymentController {
                     .body(ApiResponse.<String>builder()
                             .code(400)
                             .message(e.getMessage())
+                            .build());
+        }
+    }
+
+    @GetMapping("/get/{contractId}")
+    public ResponseEntity<ApiResponse<List<ContractPaymentDTO>>> getContractPayment(@PathVariable int contractId) {
+        try {
+            List<ContractPaymentDTO> contractPaymentDTOs = contractPaymentService.getAllContractPaymentByContract(contractId);
+
+            if (contractPaymentDTOs == null || contractPaymentDTOs.isEmpty()) {
+                return ResponseEntity.status(404)
+                        .body(ApiResponse.<List<ContractPaymentDTO>>builder()
+                                .code(404)
+                                .message("No Contract Payments found")
+                                .result(Collections.emptyList()) // Trả về danh sách rỗng thay vì null
+                                .build());
+            }
+            return ResponseEntity.ok(
+                    ApiResponse.<List<ContractPaymentDTO>>builder()
+                            .code(200)
+                            .message("Contract Payment retrieved successfully")
+                            .result(contractPaymentDTOs)
+                            .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(400)
+                    .body(ApiResponse.<List<ContractPaymentDTO>>builder()
+                            .code(400)
+                            .message(e.getMessage())
+                            .result(null)
                             .build());
         }
     }
