@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -158,9 +159,19 @@ public class TicketPurchaseController {
     }
 
     @GetMapping("/all_of_account")
-    public ResponseEntity<ApiResponse<List<MyTicketDTO>>> getAllTicketPurchaseByAccont() {
+    public ResponseEntity<ApiResponse<List<MyTicketDTO>>> getAllTicketPurchaseByAccount() {
         try {
             List<MyTicketDTO> myTicketDTOS = ticketPurchaseService.getTicketPurchasesByAccount();
+
+            if (myTicketDTOS == null || myTicketDTOS.isEmpty()) {
+                return ResponseEntity.status(404)
+                        .body(ApiResponse.<List<MyTicketDTO>>builder()
+                                .code(404)
+                                .message("No ticket purchases found")
+                                .result(Collections.emptyList()) // Trả về danh sách rỗng thay vì null
+                                .build());
+            }
+
             return ResponseEntity.ok(
                     ApiResponse.<List<MyTicketDTO>>builder()
                             .code(200)
@@ -173,8 +184,9 @@ public class TicketPurchaseController {
                     .body(ApiResponse.<List<MyTicketDTO>>builder()
                             .code(400)
                             .message(e.getMessage())
-                            .result(null)
+                            .result(Collections.emptyList()) // Trả về danh sách rỗng thay vì null
                             .build());
         }
     }
+
 }

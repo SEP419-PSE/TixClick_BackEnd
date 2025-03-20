@@ -34,6 +34,9 @@ public class Transaction {
     private String type;
 
     @Column
+    private String status;
+
+    @Column
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime transactionDate;
 
@@ -42,7 +45,7 @@ public class Transaction {
     private Account account;
 
     @ManyToOne
-    @JoinColumn(name = "payment_id", nullable = false)
+    @JoinColumn(name = "payment_id")
     private Payment payment;
 
     @ManyToOne

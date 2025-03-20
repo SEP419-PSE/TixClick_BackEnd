@@ -1,6 +1,7 @@
 package com.pse.tixclick.repository;
 
 import com.pse.tixclick.payload.entity.payment.Transaction;
+import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -35,4 +36,12 @@ LEFT JOIN (
 ORDER BY m.month;
     """, nativeQuery = true)
     List<Object[]> getMonthlySalesReport();
+
+    @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t " +
+            "JOIN t.payment p " +
+            "JOIN p.order o " +
+            "JOIN o.orderDetails od " +
+            "JOIN od.ticketPurchase tp " +
+            "WHERE tp.event.eventId = :eventId")
+    Double getTotalAmountByEventId(@Param("eventId") int eventId);
 }

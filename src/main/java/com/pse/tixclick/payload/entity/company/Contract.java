@@ -6,6 +6,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.List;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -37,4 +39,7 @@ public class Contract {
     @ManyToOne
     @JoinColumn(name="company_id", nullable = false)
     private Company company;
+
+    @OneToMany(mappedBy = "contract")
+    private List<ContractDetail> contractDetails;
 }

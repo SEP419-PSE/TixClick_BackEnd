@@ -128,6 +128,7 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
         ticketPurchase.setTicket(ticket);
         ticketPurchase.setEvent(event);
         ticketPurchase.setQrCode(null);
+        ticketPurchase.setAccount(appUtils.getAccountFromAuthentication());
 
         ticketPurchase = ticketPurchaseRepository.save(ticketPurchase);
 
@@ -247,6 +248,9 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
     @Override
     public List<MyTicketDTO> getTicketPurchasesByAccount() {
         List<TicketPurchase> ticketPurchases = ticketPurchaseRepository.getTicketPurchasesByAccount(appUtils.getAccountFromAuthentication().getAccountId());
+        if (ticketPurchases.isEmpty()) {
+            return null;
+        }
         List<MyTicketDTO> myTicketDTOS = ticketPurchases.stream()
                 .map(myTicket -> {
                     MyTicketDTO myTicketDTO = modelMapper.map(myTicket, MyTicketDTO.class);
