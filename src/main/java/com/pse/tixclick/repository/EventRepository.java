@@ -44,6 +44,9 @@ public interface EventRepository extends JpaRepository<Event,Integer> {
     @Query(value = "SELECT e FROM Event e WHERE e.status = 'SCHEDULED'")
     List<Event> findScheduledEvents();
 
+    @Query(value = "SELECT e.eventId FROM Event e WHERE e.status = 'SCHEDULED'")
+    List<Integer> findScheduledEventIds();
+
     Optional<List<Event>> findEventsByCompany_CompanyId(int companyId);
 
     Optional<Event> findEventByEventIdAndCompany_RepresentativeId_UserName(int eventId, String userName);
