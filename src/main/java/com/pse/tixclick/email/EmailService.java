@@ -7,6 +7,9 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
 @Service
 public class EmailService {
     @Autowired
@@ -91,6 +94,35 @@ public class EmailService {
                 "</html>";
 
         sendNewMail(to, subject, body, fullname);
+    }
+
+    public void sendContractPaymentWarningToManager(String managerEmail, String companyName, double amount, LocalDate payDate, int contractId, int contractDetailId, String contractDetailName, String eventName) throws MessagingException {
+        String subject = "Payment Due Notification - Contract #" + contractId;
+
+        // Định dạng ngày
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+        String formattedPayDate = payDate.format(formatter);
+
+        String body = "<html>" +
+                "<body>" +
+                "<h2 style=\"color: #FF5733;\">Contract Payment Due</h2>" +
+                "<p>Dear Manager,</p>" +
+                "<p>The following contract is due for payment today:</p>" +
+                "<ul>" +
+                "<li><strong>Company Name:</strong> " + companyName + "</li>" +
+                "<li><strong>Contract ID:</strong> " + contractId + "</li>" +
+                "<li><strong>Event Name:</strong> " + eventName + "</li>" +
+                "<li><strong>Contract Detail Id:</strong> " + contractDetailId + "</li>" +
+                "<li><strong>Contract Detail Name:</strong> " + contractDetailName + "</li>" +
+                "<li><strong>Amount Due:</strong> $" + amount + "</li>" +
+                "<li><strong>Due Date:</strong> " + formattedPayDate + "</li>" +
+                "</ul>" +
+                "<p>Please ensure appropriate action is taken.</p>" +
+                "<p>Best regards,<br/>TixClick System</p>" +
+                "</body>" +
+                "</html>";
+
+        sendNewMail(managerEmail, subject, body, "Manager");
     }
 
 }

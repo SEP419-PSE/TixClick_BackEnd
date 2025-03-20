@@ -89,6 +89,7 @@ public enum ErrorCode {
     NOTIFICATION_NOT_EXISTED(1079, "Notification không tồn tại", HttpStatus.NOT_FOUND),
     TICKET_MAPPING_NOT_FOUND(1080, "Không tìm thấy ticket mapping", HttpStatus.NOT_FOUND),
     TICKET_MAPPING_EMPTY(1081, "Ticket mapping đã hết", HttpStatus.BAD_REQUEST),
+    CONTRACT_PAYMENT_NOT_FOUND(1082, "Không tìm thấy contract payment", HttpStatus.NOT_FOUND),
     ;
 
 

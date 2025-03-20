@@ -8,10 +8,7 @@ import com.pse.tixclick.payload.dto.TicketQrCodeDTO;
 import com.pse.tixclick.payload.dto.ZoneDTO;
 import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.CheckinLog;
-import com.pse.tixclick.payload.entity.entity_enum.ECheckinLogStatus;
-import com.pse.tixclick.payload.entity.entity_enum.EOrderStatus;
-import com.pse.tixclick.payload.entity.entity_enum.EPaymentStatus;
-import com.pse.tixclick.payload.entity.entity_enum.ETicketPurchaseStatus;
+import com.pse.tixclick.payload.entity.entity_enum.*;
 import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.entity.event.EventActivity;
 import com.pse.tixclick.payload.entity.payment.Order;
@@ -264,7 +261,9 @@ public class PaymentServiceImpl implements PaymentService {
             transaction.setDescription("Thanh toan don hang: " + orderCode);
             transaction.setAccount(account);
             transaction.setPayment(payment);
+            transaction.setStatus(ETransactionStatus.SUCCESS.name());
             transaction.setContractPayment(null);
+            transaction.setType(ETransactionType.DIRECT_PAYMENT.name());
             transactionRepository.save(transaction);
 
             return new PaymentResponse(status, "SUCCESSFUL", mapper.map(payment, PaymentResponse.class));
@@ -278,6 +277,10 @@ public class PaymentServiceImpl implements PaymentService {
                     .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
             order.setStatus(EOrderStatus.FAILURE.name());
             orderRepository.save(order);
+
+            Account account = accountRepository
+                    .findAccountByUserName(userName)
+                    .orElseThrow(() -> new AppException(ErrorCode.ACCOUNT_NOT_FOUND));
 
             List<OrderDetail> orderDetail = orderDetailRepository.findByOrderId(order.getOrderId());
             for(OrderDetail detail : orderDetail) {
@@ -304,6 +307,18 @@ public class PaymentServiceImpl implements PaymentService {
                 seatRepository.save(seat);
                 zoneRepository.save(zone);
                 ticketPurchaseRepository.save(ticketPurchase);
+
+                Transaction transaction = new Transaction();
+                transaction.setAmount(Double.valueOf(amount));
+                transaction.setTransactionCode(transactionNo);
+                transaction.setTransactionDate(LocalDateTime.now());
+                transaction.setDescription("Thanh toan don hang: " + orderCode);
+                transaction.setAccount(account);
+                transaction.setPayment(payment);
+                transaction.setStatus(ETransactionStatus.FAILED.name());
+                transaction.setContractPayment(null);
+                transaction.setType(ETransactionType.DIRECT_PAYMENT.name());
+                transactionRepository.save(transaction);
             }
             return new PaymentResponse(status, "CANCELLED", mapper.map(payment, PaymentResponse.class));
         }

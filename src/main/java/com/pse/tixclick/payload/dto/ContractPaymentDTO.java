@@ -1,42 +1,29 @@
-package com.pse.tixclick.payload.entity.payment;
+package com.pse.tixclick.payload.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.pse.tixclick.payload.entity.company.Contract;
 import com.pse.tixclick.payload.entity.company.ContractDetail;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
-
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Entity
-public class ContractPayment {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class ContractPaymentDTO {
     private int contractPaymentId;
 
-    @Column(nullable = false)
     private double paymentAmount;
 
-    @Column
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime paymentDate;
 
-    @Column(nullable = false)
     private String paymentMethod;
 
-    @Column(nullable = false)
     private String status;
 
-    @Column(nullable = false)
     private String note;
 
-    @OneToOne
-    @JoinColumn(name = "contract_detail_id", nullable = false)
-    private ContractDetail contractDetail;
+    private int contractDetailId;
 }
