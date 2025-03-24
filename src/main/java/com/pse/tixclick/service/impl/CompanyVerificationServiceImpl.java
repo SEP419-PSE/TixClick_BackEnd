@@ -21,6 +21,7 @@ import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -33,6 +34,7 @@ import java.util.List;
 @Service
 @Transactional
 @RequiredArgsConstructor
+@Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class CompanyVerificationServiceImpl implements CompanyVerificationService {
     CompanyVerificationRepository companyVerificationRepository;
@@ -95,6 +97,14 @@ public class CompanyVerificationServiceImpl implements CompanyVerificationServic
                 companyAccount.setUsername(usernameCompanyAccount);
                 companyAccount.setPassword(new BCryptPasswordEncoder(10).encode("123456"));
 
+                int count = notificationRepository.countNotificationByAccountId(company.getRepresentativeId().getUserName());
+                log.info("Count: {}", count);
+
+                if(count >= 10) {
+                    Notification notification = notificationRepository.findTopByAccount_AccountIdOrderByCreatedDateAsc(company.getRepresentativeId().getUserName())
+                            .orElseThrow(() -> new AppException(ErrorCode.NOTIFICATION_NOT_EXISTED));
+                    notificationRepository.delete(notification);
+                }
 
 
                 companyAccountRepository.save(companyAccount);

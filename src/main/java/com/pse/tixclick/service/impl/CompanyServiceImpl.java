@@ -101,10 +101,15 @@ public class CompanyServiceImpl implements CompanyService {
         List<Account> managers = accountRepository.findAccountsByRole_RoleId(4);
 
         log.info("Sending notification to user: {}", companyManager.getUserName());
-        for (Account manager : managers) {
-            log.info("Sending notification to user: {}", manager.getUserName());
-            messagingTemplate.convertAndSendToUser(manager.getUserName(), "/queue/notifications", notificationMessage);
-        }
+        messagingTemplate.convertAndSendToUser(companyManager.getUserName(), "/queue/notifications", notificationMessage);
+
+        Notification notification = new Notification();
+        notification.setAccount(companyManager);
+        notification.setMessage(notificationMessage);
+        notification.setRead(false);
+        notification.setCreatedDate(LocalDateTime.now());
+        notificationRepository.save(notification);
+
         emailService.sendCompanyCreationRequestNotification(companyManager.getEmail(), company.getCompanyName(), fullname);
 
         // Tạo đối tượng response
@@ -366,11 +371,11 @@ public class CompanyServiceImpl implements CompanyService {
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-        int count = notificationRepository.countNotificationByAccountId(companyManager.getAccountId());
+        int count = notificationRepository.countNotificationByAccountId(companyManager.getUserName());
         log.info("Count: {}", count);
 
         if(count >= 10) {
-            Notification notification = notificationRepository.findTopByAccount_AccountIdOrderByCreatedDateAsc(companyManager.getAccountId())
+            Notification notification = notificationRepository.findTopByAccount_AccountIdOrderByCreatedDateAsc(companyManager.getUserName())
                     .orElseThrow(() -> new AppException(ErrorCode.NOTIFICATION_NOT_EXISTED));
             notificationRepository.delete(notification);
         }
