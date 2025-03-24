@@ -375,7 +375,7 @@ public class CompanyServiceImpl implements CompanyService {
         log.info("Count: {}", count);
 
         if(count >= 10) {
-            Notification notification = notificationRepository.findTopByAccount_AccountIdOrderByCreatedDateAsc(companyManager.getUserName())
+            Notification notification = notificationRepository.findTopByAccount_UserNameOrderByCreatedDateAsc(companyManager.getUserName())
                     .orElseThrow(() -> new AppException(ErrorCode.NOTIFICATION_NOT_EXISTED));
             notificationRepository.delete(notification);
         }

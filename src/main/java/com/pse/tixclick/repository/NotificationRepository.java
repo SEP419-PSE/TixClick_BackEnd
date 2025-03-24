@@ -13,9 +13,9 @@ import java.util.Optional;
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification,Integer> {
     @Query("SELECT COUNT(n) FROM Notification n WHERE n.account.userName = :userName")
-    int countNotificationByAccountId(@Param("accountId") String userName);
+    int countNotificationByAccountId(@Param("userName") String userName);
 
-    Optional<Notification> findTopByAccount_AccountIdOrderByCreatedDateAsc(String userName);
+    Optional<Notification> findTopByAccount_UserNameOrderByCreatedDateAsc(String userName);
 
     List<Notification> findNotificationsByAccount_UserName(String username);
 }

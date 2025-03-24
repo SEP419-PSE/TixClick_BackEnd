@@ -101,7 +101,7 @@ public class CompanyVerificationServiceImpl implements CompanyVerificationServic
                 log.info("Count: {}", count);
 
                 if(count >= 10) {
-                    Notification notification = notificationRepository.findTopByAccount_AccountIdOrderByCreatedDateAsc(company.getRepresentativeId().getUserName())
+                    Notification notification = notificationRepository.findTopByAccount_UserNameOrderByCreatedDateAsc(company.getRepresentativeId().getUserName())
                             .orElseThrow(() -> new AppException(ErrorCode.NOTIFICATION_NOT_EXISTED));
                     notificationRepository.delete(notification);
                 }
