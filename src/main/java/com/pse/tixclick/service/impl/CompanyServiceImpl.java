@@ -265,7 +265,7 @@ public class CompanyServiceImpl implements CompanyService {
         Account account = accountRepository.findAccountByUserName(name)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-        List<Company> company = companyRepository.findCompaniesByRepresentativeId_UserName(name);
+        List<Company> company = companyRepository.findCompaniesByRepresentativeId_UserNameAndStatus(name, ECompanyStatus.ACTIVE);
         if(company.isEmpty()) {
             throw new AppException(ErrorCode.COMPANY_NOT_EXISTED);
         }
