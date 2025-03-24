@@ -43,7 +43,6 @@ import java.util.concurrent.TimeUnit;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Transactional
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AuthenServiceImpl implements AuthenService {// Để lưu thời gian hết hạ
 
@@ -60,41 +59,54 @@ public class AuthenServiceImpl implements AuthenService {// Để lưu thời gi
     @Autowired
     CompanyAccountRepository companyAccountRepository;
 
+
     @Value("${app.jwt-secret}")
     private String SIGNER_KEY;
+
     @Override
     public TokenResponse login(LoginRequest loginRequest) {
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
+        // Check user
 
-        // Kiểm tra người dùng có tồn tại không
+        try {
+            String pong = stringRedisTemplate.getConnectionFactory().getConnection().ping();
+            log.info("✅ Redis ping: {}", pong);
+        } catch (Exception e) {
+            log.error("❌ Redis connection failed: {}", e.getMessage(), e);
+        }
+
         var user = userRepository
                 .findAccountByUserName(loginRequest.getUserName())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-        if(!user.isActive()){
+        if (!user.isActive()) {
             throw new AppException(ErrorCode.USER_NOT_ACTIVE);
         }
-        // Kiểm tra mật khẩu hợp lệ
+
+        // Validate password
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
-        String key = "REFRESH_TOKEN:" + user.getUserName();
-        // Xóa Refresh Token cũ trên Redis (nếu có)
-        if (stringRedisTemplate != null && user.getUserName() != null) {
 
+        // Redis key
+        String key = "REFRESH_TOKEN:" + user.getUserName();
+
+        // Xóa token cũ trong Redis nếu có
+        if (Boolean.TRUE.equals(stringRedisTemplate.hasKey(key))) {
             stringRedisTemplate.delete(key);
+            log.info("Deleted key {} from Redis", key);
+        } else {
+            log.info("Key {} not found in Redis", key);
         }
 
-
-        // Tạo mới Access Token & Refresh Token
+        // Generate token mới
         var tokenPair = jwt.generateTokens(user);
+        String token = tokenPair.refreshToken().token();
+        // Lưu Refresh token vào Redis (7 ngày)
+        stringRedisTemplate.opsForValue()
+                .set(key, token, 7, TimeUnit.DAYS);
 
-        // Lưu Refresh Token vào Redis với thời gian hết hạn 7 ngày (1 tuần)
-        long expirationDays = 7; // 7 ngày
-        stringRedisTemplate.opsForValue().set(key, tokenPair.refreshToken().token(), expirationDays, TimeUnit.DAYS);
-
-
-        // Trả về TokenResponse chứa Access Token & Refresh Token
+        // Trả response
         return TokenResponse.builder()
                 .accessToken(tokenPair.accessToken().token())
                 .refreshToken(tokenPair.refreshToken().token())
@@ -102,7 +114,6 @@ public class AuthenServiceImpl implements AuthenService {// Để lưu thời gi
                 .roleName(String.valueOf(user.getRole().getRoleName()))
                 .build();
     }
-
 
 
     @Override
@@ -176,13 +187,10 @@ public class AuthenServiceImpl implements AuthenService {// Để lưu thời gi
     }
 
 
-
     @Override
     public boolean register(SignUpRequest signUpRequest) {
 
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
-
-
 
 
         // Kiểm tra xem username đã tồn tại chưa
@@ -210,36 +218,35 @@ public class AuthenServiceImpl implements AuthenService {// Để lưu thời gi
         return true;
     }
 
-        @Override
-        public void createAndSendOTP(String email) throws MessagingException {
-            // Kiểm tra người dùng có tồn tại không
-            var user = userRepository.findAccountByEmail(email)
-                    .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+    @Override
+    public void createAndSendOTP(String email) throws MessagingException {
+        // Kiểm tra người dùng có tồn tại không
+        var user = userRepository.findAccountByEmail(email)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-            if (user.isActive()) {
-                throw new AppException(ErrorCode.USER_ACTIVE);
-            }
-
-            // Kiểm tra xem OTP đã tồn tại trong Redis chưa
-            String existingOTP = stringRedisTemplate.opsForValue().get("OTP:" + email);
-            if (existingOTP != null) {
-                throw new AppException(ErrorCode.OTP_ALREADY_SENT);
-            }
-
-            // Tạo OTP mới
-            String otpCode = generateOTP();
-
-            // Lưu OTP vào Redis với thời gian hết hạn là 15 phút
-            String key = "OTP:" + email;
-            stringRedisTemplate.opsForValue().set(key, otpCode, 15, TimeUnit.MINUTES);
-
-// In ra log để kiểm tra key và value
-            String savedOtp = stringRedisTemplate.opsForValue().get(key);
-            System.out.println("🔹 OTP stored in Redis: Key = " + key + ", Value = " + savedOtp);
-
-            // Gửi OTP qua email
-            emailService.sendOTPtoActiveAccount(email, otpCode, user.getUserName());
+        if (user.isActive()) {
+            throw new AppException(ErrorCode.USER_ACTIVE);
         }
+
+        // Kiểm tra xem OTP đã tồn tại trong Redis chưa
+        String existingOTP = stringRedisTemplate.opsForValue().get("OTP:" + email);
+        if (existingOTP != null) {
+            throw new AppException(ErrorCode.OTP_ALREADY_SENT);
+        }
+
+        // Tạo OTP mới
+        String otpCode = generateOTP();
+
+        // Lưu OTP vào Redis với thời gian hết hạn là 15 phút
+        String key = "OTP:" + email;
+        stringRedisTemplate.opsForValue().set(key, otpCode, 15, TimeUnit.MINUTES);
+        // In ra log để kiểm tra key và value
+        String savedOtp = stringRedisTemplate.opsForValue().get(key);
+        System.out.println("🔹 OTP stored in Redis: Key = " + key + ", Value = " + savedOtp);
+
+        // Gửi OTP qua email
+        emailService.sendOTPtoActiveAccount(email, otpCode, user.getUserName());
+    }
 
 
     @Override
@@ -259,8 +266,6 @@ public class AuthenServiceImpl implements AuthenService {// Để lưu thời gi
         }
         return false;
     }
-
-
 
 
     @Override
@@ -326,7 +331,7 @@ public class AuthenServiceImpl implements AuthenService {// Để lưu thời gi
             String email = principal.getAttribute("email");
             String firstName = principal.getAttribute("given_name");  // Lấy first name
             String lastName = principal.getAttribute("family_name");
-            if (email == null ) {
+            if (email == null) {
                 throw new AppException(ErrorCode.FACEBOOK_LOGIN_FAILED);
             }
 
@@ -383,14 +388,14 @@ public class AuthenServiceImpl implements AuthenService {// Để lưu thời gi
                 .findAccountByUserName(loginRequest.getUserName())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-        if(!user.isActive()){
+        if (!user.isActive()) {
             throw new AppException(ErrorCode.USER_NOT_ACTIVE);
         }
         // Kiểm tra mật khẩu hợp lệ
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
-        if(user.getRole().getRoleName().equals(ERole.BUYER) || user.getRole().getRoleName().equals(ERole.ORGANIZER)){
+        if (user.getRole().getRoleName().equals(ERole.BUYER) || user.getRole().getRoleName().equals(ERole.ORGANIZER)) {
             throw new AppException(ErrorCode.UNAUTHENTICATED_LOGIN);
         }
 
@@ -409,14 +414,14 @@ public class AuthenServiceImpl implements AuthenService {// Để lưu thời gi
         stringRedisTemplate.opsForValue().set(key, tokenPair.refreshToken().token(), expirationDays, TimeUnit.DAYS);
 
 
-
         // Trả về TokenResponse chứa Access Token & Refresh Token
         return TokenResponse.builder()
                 .accessToken(tokenPair.accessToken().token())
                 .refreshToken(tokenPair.refreshToken().token())
                 .status(user.isActive())
                 .roleName(String.valueOf(user.getRole().getRoleName()))
-                .build();    }
+                .build();
+    }
 
 
     public String generateOTP() {

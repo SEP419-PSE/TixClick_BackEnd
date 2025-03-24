@@ -258,6 +258,21 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     @Override
+    public List<CompanyDTO>  getCompanyByAccountId() {
+        var context = SecurityContextHolder.getContext();
+        String name = context.getAuthentication().getName();
+
+        Account account = accountRepository.findAccountByUserName(name)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        List<Company> company = companyRepository.findCompaniesByRepresentativeId_UserName(name);
+        if(company.isEmpty()) {
+            throw new AppException(ErrorCode.COMPANY_NOT_EXISTED);
+        }
+        return company.stream().map(c -> modelMapper.map(c, CompanyDTO.class)).collect(Collectors.toList());
+    }
+
+    @Override
     public List<GetByCompanyWithVerificationResponse> getCompanysByManager() {
         var context = SecurityContextHolder.getContext();
         String userName = context.getAuthentication().getName();
