@@ -39,13 +39,33 @@ public class AuthenController {
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<TokenResponse>> login(@RequestBody LoginRequest loginRequest) {
-        TokenResponse tokenResponse = authenService.login(loginRequest);
-        ApiResponse<TokenResponse> apiResponse = ApiResponse.<TokenResponse>builder()
-                .code(HttpStatus.OK.value())
-                .message("Login successful")
-                .result(tokenResponse)
-                .build();
-        return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+
+        try
+        {
+            TokenResponse tokenResponse = authenService.login(loginRequest);
+            ApiResponse<TokenResponse> apiResponse = ApiResponse.<TokenResponse>builder()
+                    .code(HttpStatus.OK.value())
+                    .message("Login successful")
+                    .result(tokenResponse)
+                    .build();
+            return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+        } catch (AppException e) {
+            ApiResponse<TokenResponse> errorResponse = ApiResponse.<TokenResponse>builder()
+                    .code(e.getErrorCode().getCode())
+                    .message(e.getErrorCode().getMessage())
+                    .result(null)
+                    .build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        } catch (Exception e) {
+            ApiResponse<TokenResponse> errorResponse = ApiResponse.<TokenResponse>builder()
+                    .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .message("An error occurred during login")
+                    .result(null)
+                    .build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+
+
     }
 
     @PostMapping("/register")
