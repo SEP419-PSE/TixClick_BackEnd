@@ -15,4 +15,6 @@ public interface CompanyRepository extends JpaRepository<Company,Integer> {
     Optional<Company> findCompanyByCompanyId(int companyId);
 
     List<Company> findCompaniesByRepresentativeId_UserNameAndStatus(String userName, ECompanyStatus status);
+
+    boolean existsByRepresentativeId_UserName(String userName);
 }

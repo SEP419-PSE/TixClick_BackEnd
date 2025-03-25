@@ -8,6 +8,7 @@ import com.pse.tixclick.payload.entity.Role;
 import com.pse.tixclick.payload.request.create.CreateAccountRequest;
 import com.pse.tixclick.payload.request.update.UpdateAccountRequest;
 import com.pse.tixclick.repository.AccountRepository;
+import com.pse.tixclick.repository.CompanyRepository;
 import com.pse.tixclick.repository.RoleRepository;
 import com.pse.tixclick.service.AccountService;
 import jakarta.transaction.Transactional;
@@ -37,6 +38,8 @@ public class AccountServiceImpl implements AccountService {
     private RoleRepository roleRepository;
     @Autowired
     private ModelMapper accountMapper;
+    @Autowired
+    private CompanyRepository companyRepository;
 
     @Override
     public boolean changePasswordWithOtp(String email, String newPassword, String oldPassword) {
@@ -176,5 +179,17 @@ public class AccountServiceImpl implements AccountService {
         return accounts.stream()
                 .map(account -> accountMapper.map(account, AccountDTO.class))
                 .toList();
+    }
+
+    @Override
+    public boolean isAccountHaveCompany() {
+        try {
+            var context = SecurityContextHolder.getContext();
+            String userName = context.getAuthentication().getName();
+
+            return companyRepository.existsByRepresentativeId_UserName(userName);
+        } catch (Exception e) {
+            return false;
+        }
     }
 }
