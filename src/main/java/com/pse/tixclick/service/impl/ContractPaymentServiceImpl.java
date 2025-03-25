@@ -1,5 +1,7 @@
 package com.pse.tixclick.service.impl;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pse.tixclick.email.EmailService;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
@@ -9,6 +11,7 @@ import com.pse.tixclick.payload.entity.entity_enum.EContractDetailStatus;
 import com.pse.tixclick.payload.entity.entity_enum.ETransactionType;
 import com.pse.tixclick.payload.entity.payment.ContractPayment;
 import com.pse.tixclick.payload.entity.payment.Transaction;
+import com.pse.tixclick.payment.CassoService;
 import com.pse.tixclick.repository.*;
 import com.pse.tixclick.service.ContractPaymentService;
 import com.pse.tixclick.utils.AppUtils;
@@ -18,11 +21,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 @Service
@@ -54,33 +60,77 @@ public class ContractPaymentServiceImpl implements ContractPaymentService {
     @Autowired
     ModelMapper modelMapper;
 
+    @Autowired
+    CassoService cassoService;
 
+    @Autowired
+    AccountRepository accountRepository;
 
     @Override
-    public String payContractPayment(int contractPaymentId) {
-        ContractPayment contractPayment = contractPaymentRepository
-                .findById(contractPaymentId)
-                .orElseThrow(() -> new AppException(ErrorCode.CONTRACT_PAYMENT_NOT_FOUND));
+    public String payContractPayment(String transactionCode, int paymentId) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonResponse = cassoService.getTransactions(null, 1, 10, "DESC");
+        HashMap<String, JsonNode> transactionMap = new HashMap<>();
 
-        contractPayment.setStatus(EContractDetailStatus.PAID.name());
-        contractPayment.setPaymentDate(LocalDateTime.now());
-        contractPaymentRepository.save(contractPayment);
+        try {
+            JsonNode root = objectMapper.readTree(jsonResponse);
+            if (root.has("data") && root.get("data").has("records")) {
+                JsonNode records = root.get("data").get("records");
+                for (JsonNode record : records) {
+                    String description = record.get("description").asText();
+                    int index = description.indexOf("Ma GD");
 
-        ContractDetail contractDetail = contractDetailRepository
-                .findByContractPaymentId(contractPaymentId);
-        contractDetail.setStatus(EContractDetailStatus.PAID.name());
-        contractDetailRepository.save(contractDetail);
+                    if (index != -1) {
+                        // Lấy phần sau "Ma GD", chỉ giữ lại mã giao dịch sau "ACSP/"
+                        String extractedCode = description.substring(index).replaceAll(".*ACSP/\\s*", "").trim();
 
-        Transaction transaction = new Transaction();
-        transaction.setAmount(contractPayment.getPaymentAmount());
-        transaction.setDescription("Payment for " + contractDetail.getContractDetailName());
-        transaction.setTransactionDate(LocalDateTime.now());
-        transaction.setContractPayment(contractPayment);
-        transaction.setAccount(appUtils.getAccountFromAuthentication());
-        transaction.setType(ETransactionType.CONTRACT_PAYMENT.name());
-        transactionRepository.save(transaction);
+                        // In ra log để kiểm tra dữ liệu có đúng không
+                        System.out.println("Extracted Code: '" + extractedCode + "'");
 
-        return "Payment for Contract successful!";
+                        transactionMap.put(extractedCode, record);
+                    }
+                }
+
+                // Chuẩn hóa transactionCode để so sánh
+                transactionCode = transactionCode.trim();
+
+                ContractPayment contractPayment = contractPaymentRepository.findById(paymentId)
+                        .orElseThrow(() -> new AppException(ErrorCode.CONTRACT_PAYMENT_NOT_FOUND));
+
+                var context = SecurityContextHolder.getContext();
+                String userName = context.getAuthentication().getName();
+
+                var account = accountRepository.findAccountByUserName(userName)
+                        .orElseThrow(() -> new AppException(ErrorCode.ACCOUNT_NOT_FOUND));
+
+                if (transactionMap.containsKey(transactionCode)) {
+                    JsonNode matchedTransaction = transactionMap.get(transactionCode);
+                    double amount = matchedTransaction.get("amount").asDouble();
+                    String description = matchedTransaction.get("description").asText();
+
+                    // Lưu vào database
+                    Transaction transaction = new Transaction();
+                    transaction.setAmount(amount);
+                    transaction.setDescription(description);
+                    transaction.setTransactionCode(transactionCode);
+                    transaction.setType("PAYMENT");
+                    transaction.setStatus("SUCCESS");
+                    transaction.setTransactionDate(LocalDateTime.now());
+                    transaction.setContractPayment(contractPayment);
+                    transaction.setAccount(account);
+                    transactionRepository.save(transaction);
+
+                    return "{\"message\": \"Transaction saved successfully\", \"transactionCode\": \"" + transactionCode + "\"}";
+                } else {
+                    return "{\"error\": \"Transaction not found\", \"transactionCode\": \"" + transactionCode + "\"}";
+                }
+            } else {
+                return "{\"error\": \"No data received from Casso API\"}";
+            }
+        } catch (IOException e) {
+            return "{\"error\": \"Exception occurred\", \"message\": \"" + e.getMessage() + "\"}";
+        }
+
     }
 
     @Override
