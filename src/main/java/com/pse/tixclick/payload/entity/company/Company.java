@@ -46,7 +46,7 @@ public class Company {
     @Enumerated(EnumType.STRING)
     ECompanyStatus status;
 
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name = "representative_id", nullable = false)
     private Account representativeId;
 

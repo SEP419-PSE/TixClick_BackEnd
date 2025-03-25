@@ -1,5 +1,6 @@
 package com.pse.tixclick.payload.entity;
 
+import com.pse.tixclick.payload.entity.company.Company;
 import com.pse.tixclick.payload.entity.company.Contract;
 import com.pse.tixclick.payload.entity.payment.Order;
 import com.pse.tixclick.payload.entity.payment.Payment;
@@ -57,26 +58,32 @@ public class Account {
     @JoinColumn(name = "role_id", nullable = false)
     Role role;
 
-    @OneToMany(mappedBy = "account")
-    Collection<Member> members;
+    @OneToMany(mappedBy = "account", fetch = FetchType.LAZY)
+    private Collection<Member> members;
 
-    @OneToMany(mappedBy = "account")
-    Collection<Order> orders;
+    @OneToMany(mappedBy = "account", fetch = FetchType.LAZY)
+    private Collection<Order> orders;
 
-    @OneToMany(mappedBy = "account")
-    Collection<Payment> payments;
+    @OneToMany(mappedBy = "account", fetch = FetchType.LAZY)
+    private Collection<Payment> payments;
 
-    @OneToMany(mappedBy = "account")
-    Collection<Transaction> transactions;
+    @OneToMany(mappedBy = "account", fetch = FetchType.LAZY)
+    private Collection<Transaction> transactions;
 
-    @OneToOne(mappedBy = "account")
+    @OneToOne(mappedBy = "account", fetch = FetchType.LAZY)
     private Contract contract;
 
-    @OneToMany(mappedBy = "account")
+    @OneToMany(mappedBy = "account", fetch = FetchType.LAZY)
     private Collection<Voucher> vouchers;
 
-    @OneToMany(mappedBy = "account")
+    @OneToMany(mappedBy = "account", fetch = FetchType.LAZY)
     private Collection<Ticket> tickets;
 
-    @OneToMany(mappedBy = "account")
-    private Collection<TicketPurchase> ticketPurchases;}
+    @OneToMany(mappedBy = "account", fetch = FetchType.LAZY)
+    private Collection<TicketPurchase> ticketPurchases;
+
+    @OneToOne(mappedBy = "representativeId", fetch = FetchType.LAZY) // ✅ mappedBy phải trùng tên field bên Company
+    private Company company;
+
+
+}

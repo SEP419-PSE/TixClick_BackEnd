@@ -44,6 +44,6 @@ public class ContractDetail {
     @JoinColumn(name="contract_id", nullable = false)
     private Contract contract;
 
-    @OneToOne(mappedBy = "contractDetail")
+    @OneToOne(mappedBy = "contractDetail", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private ContractPayment contractPayment;
 }
