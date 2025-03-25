@@ -39,6 +39,7 @@ import vn.payos.type.PaymentData;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Date;
@@ -49,8 +50,8 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Transactional
 public class PaymentServiceImpl implements PaymentService {
-    private static final int QR_CODE_WIDTH = 400;
-    private static final int QR_CODE_HEIGHT = 400;
+    private static final int QR_CODE_WIDTH = 600;
+    private static final int QR_CODE_HEIGHT = 600;
 
     @Autowired
     PayOSUtils payOSUtils;
@@ -330,6 +331,11 @@ public class PaymentServiceImpl implements PaymentService {
         return payments.stream()
                 .map(payment -> mapper.map(payment, PaymentDTO.class))
                 .toList();
+    }
+
+    @Override
+    public String testQR(TicketQrCodeDTO ticketQrCodeDTO) {
+        return generateQRCode(ticketQrCodeDTO);
     }
 
     private String generateQRCode(TicketQrCodeDTO ticketQrCodeDTO) {

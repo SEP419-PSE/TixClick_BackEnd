@@ -1,8 +1,11 @@
 package com.pse.tixclick.payload.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.springframework.cglib.core.Local;
 
+import java.time.LocalDate;
 import java.util.Date;
 
 @Getter
@@ -18,6 +21,7 @@ public class TicketQrCodeDTO {
     private String seat_row_number;
     private String seat_column_number;
     private String account_name;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private Date purchase_date;
     private String phone;
     private int checkin_Log_id;

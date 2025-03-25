@@ -3,6 +3,7 @@ package com.pse.tixclick.controller;
 import com.pse.tixclick.payload.dto.OrderDTO;
 import com.pse.tixclick.payload.dto.PaymentDTO;
 import com.pse.tixclick.payload.dto.SeatDTO;
+import com.pse.tixclick.payload.dto.TicketQrCodeDTO;
 import com.pse.tixclick.payload.request.create.CreateOrderRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
 import com.pse.tixclick.payload.response.PayOSResponse;
@@ -47,8 +48,8 @@ public class PaymentController {
 
     @GetMapping("/payos_call_back")
     public void payOSCallbackHandler(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String url = "https://tixclick.site/payment-return";
-        String urlFail = "https://tixclick.site/payment-return";
+        String url = "http://tixclick.site/payment-return";
+        String urlFail = "http://tixclick.site/payment-return";
 
         PaymentResponse payment = paymentService.handleCallbackPayOS(request);
         if (payment.getCode().equals("00")) {
@@ -72,6 +73,27 @@ public class PaymentController {
         } catch (Exception e) {
             return ResponseEntity.status(400)
                     .body(ApiResponse.<List<PaymentDTO>>builder()
+                            .code(400)
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        }
+    }
+
+    @PostMapping("/test-qr")
+    public ResponseEntity<ApiResponse<String>> testQR(@RequestBody TicketQrCodeDTO ticketQrCodeDTO){
+        try {
+            String qr = paymentService.testQR(ticketQrCodeDTO);
+            return ResponseEntity.ok(
+                    ApiResponse.<String>builder()
+                            .code(200)
+                            .message("Successfully fetched all payments")
+                            .result(qr)
+                            .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(400)
+                    .body(ApiResponse.<String>builder()
                             .code(400)
                             .message(e.getMessage())
                             .result(null)
