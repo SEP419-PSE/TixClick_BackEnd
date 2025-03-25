@@ -261,6 +261,7 @@ public class AuthenServiceImpl implements AuthenService {// Để lưu thời gi
             Account user = userRepository.findAccountByEmail(email)
                     .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
             user.setActive(true);
+            userRepository.save(user);
             stringRedisTemplate.delete("OTP:" + email);
             return true;
         }
