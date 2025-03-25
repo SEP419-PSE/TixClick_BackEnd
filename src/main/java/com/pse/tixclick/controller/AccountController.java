@@ -225,46 +225,5 @@ public class AccountController {
         return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
     }
 
-    @GetMapping("/is-have-company")
-    public ResponseEntity<ApiResponse<Boolean>> isAccountHaveCompany() {
 
-        try {
-            boolean isHaveCompany = accountService.isAccountHaveCompany();
-            if(isHaveCompany == true){
-                ApiResponse<Boolean> apiResponse = ApiResponse.<Boolean>builder()
-                        .code(HttpStatus.OK.value())
-                        .message("Company status retrieved successfully")
-                        .result(isHaveCompany)
-                        .build();
-                return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
-            }else {
-                ApiResponse<Boolean> apiResponse = ApiResponse.<Boolean>builder()
-                        .code(HttpStatus.OK.value())
-                        .message("Account does not have company")
-                        .result(isHaveCompany)
-                        .build();
-                return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
-            }
-
-
-
-        }catch (AppException e) {
-            ApiResponse<Boolean> errorResponse = ApiResponse.<Boolean>builder()
-                    .code(HttpStatus.BAD_REQUEST.value())
-                    .message(e.getMessage()) // Error message from service
-                    .result(false)
-                    .build();
-
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
-        } catch (Exception e) {
-            // General exception handler for unforeseen errors
-            ApiResponse<Boolean> errorResponse = ApiResponse.<Boolean>builder()
-                    .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                    .message("An unexpected error occurred.")
-                    .result(false)
-                    .build();
-
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
-        }
-    }
 }

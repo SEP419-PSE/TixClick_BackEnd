@@ -181,15 +181,5 @@ public class AccountServiceImpl implements AccountService {
                 .toList();
     }
 
-    @Override
-    public boolean isAccountHaveCompany() {
-        try {
-            var context = SecurityContextHolder.getContext();
-            String userName = context.getAuthentication().getName();
 
-            return companyRepository.existsByRepresentativeId_UserName(userName);
-        } catch (Exception e) {
-            return false;
-        }
-    }
 }

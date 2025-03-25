@@ -28,6 +28,5 @@ public interface AccountService {
 
     List<AccountDTO> getAccountsByRoleManagerAndAdmin();
 
-    boolean isAccountHaveCompany();
 
 }
