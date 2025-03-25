@@ -1,6 +1,7 @@
 package com.pse.tixclick.service;
 
 import com.pse.tixclick.payload.dto.PaymentDTO;
+import com.pse.tixclick.payload.dto.TicketQrCodeDTO;
 import com.pse.tixclick.payload.response.PayOSResponse;
 import com.pse.tixclick.payload.response.PaymentResponse;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,4 +17,6 @@ public interface PaymentService
     PaymentResponse handleCallbackPayOS(HttpServletRequest request);
 
     List<PaymentDTO> getAllPayments();
+
+    String testQR(TicketQrCodeDTO ticketQrCodeDTO);
 }

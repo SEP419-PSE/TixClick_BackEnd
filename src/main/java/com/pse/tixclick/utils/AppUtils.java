@@ -79,7 +79,6 @@ public class AppUtils {
                 BufferedImage bufferedImage = MatrixToImageWriter.toBufferedImage(bitMatrix);
                 ImageIO.write(bufferedImage, "png", out);
 
-                result.append("data:image/png;base64,");
                 result.append(new String(Base64.getEncoder().encode(out.toByteArray())));
             }catch (Exception e){
                 e.printStackTrace();

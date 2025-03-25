@@ -28,6 +28,9 @@ public interface CompanyService {
 
     GetByCompanyResponse getCompanyById(int id);
 
+    List<CompanyDTO> getCompanyByAccountId();
+
+
     List<GetByCompanyWithVerificationResponse> getCompanysByManager();
 
     CompanyAndDocumentResponse createCompanyAndDocument(CreateCompanyRequest createCompanyRequest, MultipartFile logoURL, List<MultipartFile> companyDocument) throws IOException, MessagingException;
