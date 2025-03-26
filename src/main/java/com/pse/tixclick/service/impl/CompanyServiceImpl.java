@@ -91,7 +91,7 @@ public class CompanyServiceImpl implements CompanyService {
 
         var companyVerification = companyVerificationService.createCompanyVerification(createCompanyVerificationRequest);
         var companyManager = accountRepository.findById(companyVerification.getSubmitById())
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_MANAGER_IN_DATABASE));
         String fullname = (companyManager.getFirstName() != null ? companyManager.getFirstName() : "") +
                 " " +
                 (companyManager.getLastName() != null ? companyManager.getLastName() : "");

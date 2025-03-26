@@ -3,10 +3,7 @@ package com.pse.tixclick.service;
 import com.pse.tixclick.payload.dto.CompanyDTO;
 import com.pse.tixclick.payload.request.create.CreateCompanyRequest;
 import com.pse.tixclick.payload.request.update.UpdateCompanyRequest;
-import com.pse.tixclick.payload.response.CompanyAndDocumentResponse;
-import com.pse.tixclick.payload.response.CreateCompanyResponse;
-import com.pse.tixclick.payload.response.GetByCompanyResponse;
-import com.pse.tixclick.payload.response.GetByCompanyWithVerificationResponse;
+import com.pse.tixclick.payload.response.*;
 import jakarta.mail.MessagingException;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -35,4 +32,6 @@ public interface CompanyService {
 
     CompanyAndDocumentResponse createCompanyAndDocument(CreateCompanyRequest createCompanyRequest, MultipartFile logoURL, List<MultipartFile> companyDocument) throws IOException, MessagingException;
     CompanyDTO isAccountHaveCompany();
+
+
 }

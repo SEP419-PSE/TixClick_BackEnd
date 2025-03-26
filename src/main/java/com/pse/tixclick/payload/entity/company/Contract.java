@@ -20,6 +20,9 @@ public class Contract {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int contractId;
 
+    @Column
+    private String contractName;
+
     @Column(nullable = false)
     private double totalAmount;
 

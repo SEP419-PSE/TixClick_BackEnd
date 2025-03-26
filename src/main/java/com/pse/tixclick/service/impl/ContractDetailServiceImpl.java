@@ -9,6 +9,7 @@ import com.pse.tixclick.payload.entity.company.ContractDetail;
 import com.pse.tixclick.payload.entity.entity_enum.EContractDetailStatus;
 import com.pse.tixclick.payload.entity.payment.ContractPayment;
 import com.pse.tixclick.payload.request.create.CreateContractDetailRequest;
+import com.pse.tixclick.payload.response.QRCompanyResponse;
 import com.pse.tixclick.repository.*;
 import com.pse.tixclick.service.ContractDetailService;
 import com.pse.tixclick.utils.AppUtils;
@@ -26,6 +27,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 @Service
 @Transactional
@@ -72,6 +74,7 @@ public class ContractDetailServiceImpl implements ContractDetailService {
             contractDetail.setAmount(createContractDetailRequest.getContractDetailAmount());
             contractDetail.setPayDate(createContractDetailRequest.getContractDetailPayDate());
             contractDetail.setContract(contract);
+            contractDetail.setContractDetailCode(createContractDetailRequest.getContractDetailCode());
             contractDetail.setStatus(EContractDetailStatus.PENDING.name());
             contractDetail.setPercentage(createContractDetailRequest.getContractDetailPercentage());
             contractDetail = contractDetailRepository.save(contractDetail);
@@ -87,6 +90,7 @@ public class ContractDetailServiceImpl implements ContractDetailService {
             ContractDetailDTO contractDetailDTO = new ContractDetailDTO();
             contractDetailDTO.setContractDetailId(contractDetail.getContractDetailId());
             contractDetailDTO.setContractName(contractDetail.getContractDetailName());
+            contractDetailDTO.setContractCode(contractDetail.getContractDetailCode());
             contractDetailDTO.setContractDescription(contractDetail.getDescription());
             contractDetailDTO.setContractAmount(contractDetail.getAmount());
             contractDetailDTO.setContractPayDate(contractDetail.getPayDate());
@@ -110,6 +114,51 @@ public class ContractDetailServiceImpl implements ContractDetailService {
                 .map(contractDetail -> modelMapper.map(contractDetail, ContractDetailDTO.class))
                 .toList();
     }
+
+    @Override
+    public QRCompanyResponse getQRCompany(int contractDetailId) {
+        var contractDetail = contractDetailRepository.findById(contractDetailId)
+                .orElseThrow(() -> new AppException(ErrorCode.CONTRACT_NOT_FOUND));
+
+        var contract = contractDetail.getContract();
+        if (contract == null) {
+            throw new AppException(ErrorCode.CONTRACT_NOT_FOUND);
+        }
+
+        var company = contract.getCompany();
+        if (company == null) {
+            throw new AppException(ErrorCode.COMPANY_NOT_FOUND);
+        }
+
+        // Kiểm tra các giá trị không được null
+        if (contractDetail.getContractDetailCode() == null) {
+            throw new AppException(ErrorCode.CONTRACT_DETAIL_CODE_NOT_FOUND);
+        }
+
+        if (contract.getContractName() == null) {
+            throw new AppException(ErrorCode.CONTRACT_NAME_NOT_FOUND);
+        }
+
+        if (company.getBankingName() == null) {
+            throw new AppException(ErrorCode.BANKING_NAME_NOT_FOUND);
+        }
+
+        if (company.getBankingCode() == null) {
+            throw new AppException(ErrorCode.BANKING_CODE_NOT_FOUND);
+        }
+
+        String description = String.format("TIXCLICK %s - THANH TOAN HOP DONG %s",
+                contractDetail.getContractDetailCode(), contract.getContractName());
+
+        return QRCompanyResponse.builder()
+                .bankID(company.getBankingName())
+                .accountID(company.getBankingCode())
+                .amount(contractDetail.getAmount()) // Đảm bảo amount hợp lệ
+                .description(description)
+                .build();
+    }
+
+
 
 
     @Scheduled(cron = "0 0 0 * * ?")

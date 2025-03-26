@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 public class TicketDTO {
     int ticketId;
     String ticketName;
-    int quantity;
+    String ticketCode;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     LocalDateTime createdDate;

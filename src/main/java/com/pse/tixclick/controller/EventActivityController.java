@@ -2,6 +2,7 @@ package com.pse.tixclick.controller;
 
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.payload.dto.EventActivityDTO;
+import com.pse.tixclick.payload.request.CreateEventActivityAndTicketRequest;
 import com.pse.tixclick.payload.request.create.CreateEventActivityRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
 import com.pse.tixclick.service.EventActivityService;
@@ -13,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -24,33 +26,33 @@ import java.util.List;
 public class EventActivityController {
     EventActivityService eventActivityService;
 
-    @PostMapping("/create")
-    public ResponseEntity<ApiResponse<EventActivityDTO>> createEventActivity(@RequestBody CreateEventActivityRequest eventActivityRequest) {
-        try {
-            EventActivityDTO eventActivityDTO = eventActivityService.createEventActivity(eventActivityRequest);
-            return ResponseEntity.ok(
-                    ApiResponse.<EventActivityDTO>builder()
-                            .code(HttpStatus.OK.value())
-                            .message("Event activity created successfully")
-                            .result(eventActivityDTO)
-                            .build()
-            );
-        } catch (AppException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST.value())
-                    .body(ApiResponse.<EventActivityDTO>builder()
-                            .code(HttpStatus.BAD_REQUEST.value())
-                            .message(e.getMessage())
-                            .result(null)
-                            .build());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST.value())
-                    .body(ApiResponse.<EventActivityDTO>builder()
-                            .code(HttpStatus.BAD_REQUEST.value())
-                            .message(e.getMessage())
-                            .result(null)
-                            .build());
-        }
-    }
+//    @PostMapping("/create")
+//    public ResponseEntity<ApiResponse<EventActivityDTO>> createEventActivity(@RequestBody CreateEventActivityRequest eventActivityRequest) {
+//        try {
+//            EventActivityDTO eventActivityDTO = eventActivityService.createEventActivity(eventActivityRequest);
+//            return ResponseEntity.ok(
+//                    ApiResponse.<EventActivityDTO>builder()
+//                            .code(HttpStatus.OK.value())
+//                            .message("Event activity created successfully")
+//                            .result(eventActivityDTO)
+//                            .build()
+//            );
+//        } catch (AppException e) {
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST.value())
+//                    .body(ApiResponse.<EventActivityDTO>builder()
+//                            .code(HttpStatus.BAD_REQUEST.value())
+//                            .message(e.getMessage())
+//                            .result(null)
+//                            .build());
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST.value())
+//                    .body(ApiResponse.<EventActivityDTO>builder()
+//                            .code(HttpStatus.BAD_REQUEST.value())
+//                            .message(e.getMessage())
+//                            .result(null)
+//                            .build());
+//        }
+//    }
 
     @PutMapping("/update/{id}")
     public ResponseEntity<ApiResponse<EventActivityDTO>> updateEventActivity(@RequestBody CreateEventActivityRequest eventActivityRequest, @PathVariable int id) {
@@ -115,5 +117,34 @@ public class EventActivityController {
         }
     }
 
+
+    @PostMapping("/create")
+    public ResponseEntity<ApiResponse<List<CreateEventActivityAndTicketRequest>>> createEventActivityAndTicket(
+            @RequestBody List<CreateEventActivityAndTicketRequest> requestList) {
+        try {
+            List<CreateEventActivityAndTicketRequest> savedRequests = eventActivityService.createEventActivityAndTicket(requestList);
+            return ResponseEntity.ok(
+                    ApiResponse.<List<CreateEventActivityAndTicketRequest>>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Event activity and ticket created successfully")
+                            .result(savedRequests)
+                            .build()
+            );
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.<List<CreateEventActivityAndTicketRequest>>builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .result(Collections.emptyList()) // Trả về danh sách rỗng thay vì null
+                            .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<List<CreateEventActivityAndTicketRequest>>builder()
+                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value()) // Sửa thành 500
+                            .message("Internal server error: " + e.getMessage())
+                            .result(Collections.emptyList()) // Trả về danh sách rỗng thay vì null
+                            .build());
+        }
+    }
 
 }

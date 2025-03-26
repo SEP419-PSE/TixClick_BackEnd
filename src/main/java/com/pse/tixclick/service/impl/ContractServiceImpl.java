@@ -7,6 +7,7 @@ import com.pse.tixclick.payload.dto.PaymentDTO;
 import com.pse.tixclick.payload.entity.company.Contract;
 import com.pse.tixclick.payload.entity.entity_enum.EEventStatus;
 import com.pse.tixclick.payload.request.create.CreateContractRequest;
+import com.pse.tixclick.payload.response.QRCompanyResponse;
 import com.pse.tixclick.repository.AccountRepository;
 import com.pse.tixclick.repository.CompanyRepository;
 import com.pse.tixclick.repository.ContractRepository;
@@ -76,4 +77,6 @@ public class ContractServiceImpl implements ContractService {
         return contracts.stream()
                 .map(contract -> modelMapper.map(contract, ContractDTO.class))
                 .toList();    }
+
+
 }

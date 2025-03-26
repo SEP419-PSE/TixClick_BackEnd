@@ -25,8 +25,8 @@ public class Ticket {
     @Column(columnDefinition = "NVARCHAR(255)")
     String ticketName;
 
-    @Column
-    int quantity;
+    @Column(columnDefinition = "NVARCHAR(255)",unique = true)
+    String ticketCode;
 
     @Column
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

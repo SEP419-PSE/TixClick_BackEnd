@@ -12,6 +12,7 @@ import java.time.LocalDate;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CreateContractDetailRequest {
     String contractDetailName;
+    String contractDetailCode;
     String contractDetailDescription;
     double contractDetailAmount;
     LocalDate contractDetailPayDate;

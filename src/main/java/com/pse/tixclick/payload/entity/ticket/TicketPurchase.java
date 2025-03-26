@@ -31,6 +31,9 @@ public class TicketPurchase {
     @Column(nullable = false)
     private String status;
 
+    @Column
+    private Integer quantity;
+
     @ManyToOne
     @JoinColumn(name="zone_id", nullable = false)
     private Zone zone;

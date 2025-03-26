@@ -40,7 +40,6 @@ public class TicketServiceImpl implements TicketService {
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
         var ticket = new Ticket();
         ticket.setTicketName(ticketDTO.getTicketName());
-        ticket.setQuantity(ticketDTO.getQuantity());
         ticket.setCreatedDate(ticketDTO.getCreatedDate());
         ticket.setPrice(ticketDTO.getPrice());
         ticket.setMinQuantity(ticketDTO.getMinQuantity());

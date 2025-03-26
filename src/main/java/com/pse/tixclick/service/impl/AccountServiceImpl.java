@@ -32,15 +32,10 @@ import java.util.Optional;
 @Slf4j
 @Transactional
 public class AccountServiceImpl implements AccountService {
-    @Autowired
-    private AccountRepository accountRepository;
-    @Autowired
-    private RoleRepository roleRepository;
-    @Autowired
-    private ModelMapper accountMapper;
-    @Autowired
-    private CompanyRepository companyRepository;
-
+    private final AccountRepository accountRepository;
+    private final RoleRepository roleRepository;
+    private final ModelMapper accountMapper;
+    private final CompanyRepository companyRepository;
     @Override
     public boolean changePasswordWithOtp(String email, String newPassword, String oldPassword) {
         // Retrieve the account based on the email

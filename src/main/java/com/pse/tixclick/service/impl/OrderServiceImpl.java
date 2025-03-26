@@ -86,10 +86,10 @@ public class OrderServiceImpl implements OrderService {
 
         double totalAmount = 0;
         Set<Integer> ticketPurchaseIds = new HashSet<>();
+        int quantity = 0;
 
         for (TicketOrderDTO ticketOrderDTO : createOrderRequest.getTicketOrderDTOS()) {
             int ticketPurchaseId = ticketOrderDTO.getTicketPurchaseId();
-            int quantity = ticketOrderDTO.getQuantity();
 
             if (!ticketPurchaseIds.add(ticketPurchaseId)) {
                 throw new AppException(ErrorCode.DUPLICATE_TICKET_PURCHASE);
@@ -101,6 +101,8 @@ public class OrderServiceImpl implements OrderService {
             if(ticketPurchase.getStatus().equals(ETicketPurchaseStatus.EXPIRED.name())) {
                 throw new AppException(ErrorCode.TICKET_PURCHASE_EXPIRED);
             }
+
+            quantity = ticketPurchase.getQuantity();
 
             Ticket ticket = ticketRepository.findById(ticketPurchase.getTicket().getTicketId())
                     .orElseThrow(() -> new AppException(ErrorCode.TICKET_NOT_FOUND));
@@ -134,8 +136,8 @@ public class OrderServiceImpl implements OrderService {
         order.setTotalAmount(totalAmount);
         orderRepository.save(order);
 
-        final int orderId = order.getOrderId();
-        CompletableFuture.runAsync(() -> scheduleStatusUpdate(LocalDateTime.now(), orderId));
+//        final int orderId = order.getOrderId();
+//        CompletableFuture.runAsync(() -> scheduleStatusUpdate(LocalDateTime.now(), orderId));
 
         return mapper.map(order, OrderDTO.class);
     }
