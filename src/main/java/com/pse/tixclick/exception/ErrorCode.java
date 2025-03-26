@@ -98,6 +98,8 @@ public enum ErrorCode {
     QR_CODE_NOT_FOUND(1084, "Không tìm thấy qr code", HttpStatus.NOT_FOUND),
     ACTIVITY_EXISTED(1085, "Hoạt động đã tồn tại", HttpStatus.BAD_REQUEST),
     NOT_MANAGER_IN_DATABASE(1086, "Không tìm thấy quản lý trong cơ sở dữ liệu", HttpStatus.NOT_FOUND),
+    TICKET_MAPPING_NOT_ENOUGH(1085, "Ticket mapping không đủ", HttpStatus.BAD_REQUEST),
+
     ;
 
 

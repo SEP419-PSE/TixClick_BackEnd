@@ -10,6 +10,4 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class TicketOrderDTO {
     private int ticketPurchaseId;
-
-    private int quantity;
 }

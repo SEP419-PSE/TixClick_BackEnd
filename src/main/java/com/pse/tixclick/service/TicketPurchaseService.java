@@ -3,11 +3,12 @@ package com.pse.tixclick.service;
 import com.pse.tixclick.payload.dto.*;
 import com.pse.tixclick.payload.request.create.CheckinRequest;
 import com.pse.tixclick.payload.request.create.CreateTicketPurchaseRequest;
+import com.pse.tixclick.payload.request.create.ListTicketPurchaseRequest;
 
 import java.util.List;
 
 public interface TicketPurchaseService {
-    TicketPurchaseDTO createTicketPurchase(CreateTicketPurchaseRequest createTicketPurchaseRequest);
+    List<TicketPurchaseDTO> createTicketPurchase(ListTicketPurchaseRequest createTicketPurchaseRequest);
 
     String checkinTicketPurchase(int checkinId);
 
