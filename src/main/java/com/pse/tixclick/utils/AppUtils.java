@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
+import com.pse.tixclick.payload.dto.TicketQrCodeDTO;
 import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.repository.*;
 import jakarta.persistence.EntityNotFoundException;
@@ -20,6 +21,9 @@ import org.springframework.stereotype.Component;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
 
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
@@ -27,6 +31,8 @@ import java.io.ByteArrayOutputStream;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.concurrent.ScheduledFuture;
+
+import static javax.crypto.Cipher.SECRET_KEY;
 
 @RequiredArgsConstructor
 @Component
@@ -43,7 +49,8 @@ public class AppUtils {
     @Autowired
     private final ZoneRepository zoneRepository;
 
-
+    private static final String AES_ALGORITHM = "AES";
+    private static final String SECRET_KEY = "0123456789abcdef";
 
 
     public Account getAccountFromAuthentication(){
@@ -87,7 +94,28 @@ public class AppUtils {
         return result.toString();
     }
 
+    public static String encrypt(String data) throws Exception {
+        SecretKey secretKey = new SecretKeySpec(SECRET_KEY.getBytes(), AES_ALGORITHM);
+        Cipher cipher = Cipher.getInstance(AES_ALGORITHM);
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+        byte[] encryptedBytes = cipher.doFinal(data.getBytes());
+        return Base64.getEncoder().encodeToString(encryptedBytes);
+    }
 
+    public static TicketQrCodeDTO decryptQrCode(String encryptedData) {
+        try {
+            byte[] decodedBytes = Base64.getMimeDecoder().decode(encryptedData.trim());
+            SecretKey secretKey = new SecretKeySpec(SECRET_KEY.getBytes(), AES_ALGORITHM);
+            Cipher cipher = Cipher.getInstance(AES_ALGORITHM);
+            cipher.init(Cipher.DECRYPT_MODE, secretKey);
+            byte[] decryptedBytes = cipher.doFinal(decodedBytes);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.readValue(new String(decryptedBytes), TicketQrCodeDTO.class);
+        } catch (Exception e) {
+            throw new RuntimeException("Invalid QR Code format");  // Tạo exception riêng
+        }
+    }
 
 
 }
