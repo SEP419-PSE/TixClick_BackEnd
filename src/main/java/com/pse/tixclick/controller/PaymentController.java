@@ -47,7 +47,7 @@ public class PaymentController {
     }
 
     @GetMapping("/payos_call_back")
-    public void payOSCallbackHandler(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    public void payOSCallbackHandler(HttpServletRequest request, HttpServletResponse response) throws Exception {
         String url = "http://tixclick.site/payment-return";
         String urlFail = "http://tixclick.site/payment-return";
 

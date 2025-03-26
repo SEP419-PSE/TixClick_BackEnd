@@ -16,7 +16,6 @@ import com.pse.tixclick.payload.response.IntrospectResponse;
 import com.pse.tixclick.payload.response.RefreshTokenResponse;
 import com.pse.tixclick.payload.response.TokenResponse;
 import com.pse.tixclick.repository.AccountRepository;
-import com.pse.tixclick.repository.CompanyAccountRepository;
 import com.pse.tixclick.repository.RoleRepository;
 import com.pse.tixclick.service.AuthenService;
 import jakarta.mail.MessagingException;
@@ -26,18 +25,15 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.text.ParseException;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -56,8 +52,7 @@ public class AuthenServiceImpl implements AuthenService {// Để lưu thời gi
     RoleRepository roleRepository;
     @Autowired
     EmailService emailService;
-    @Autowired
-    CompanyAccountRepository companyAccountRepository;
+
 
 
     @Value("${app.jwt-secret}")
@@ -261,6 +256,7 @@ public class AuthenServiceImpl implements AuthenService {// Để lưu thời gi
             Account user = userRepository.findAccountByEmail(email)
                     .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
             user.setActive(true);
+            userRepository.save(user);
             stringRedisTemplate.delete("OTP:" + email);
             return true;
         }

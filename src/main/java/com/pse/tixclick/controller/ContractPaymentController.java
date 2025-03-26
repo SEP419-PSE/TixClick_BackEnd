@@ -1,9 +1,8 @@
 package com.pse.tixclick.controller;
 
-import com.pse.tixclick.payload.dto.ContractDetailDTO;
+import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.payload.dto.ContractPaymentDTO;
-import com.pse.tixclick.payload.dto.TicketPurchaseDTO;
-import com.pse.tixclick.payload.request.create.CreateTicketPurchaseRequest;
+import com.pse.tixclick.payload.request.ContractPaymentRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
 import com.pse.tixclick.service.ContractPaymentService;
 import lombok.AccessLevel;
@@ -11,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,24 +26,36 @@ public class ContractPaymentController {
     @Autowired
     ContractPaymentService contractPaymentService;
 
-    @PostMapping("/pay/{id}")
-    public ResponseEntity<ApiResponse<String>> payContract(@PathVariable int id) {
+    @GetMapping("/pay")
+    public ResponseEntity<ApiResponse<ContractPaymentRequest>> payContractPayment(
+            @RequestParam String transactionCode,
+            @RequestParam int paymentId) {
         try {
-            String message = contractPaymentService.payContractPayment(id);
+            ContractPaymentRequest response = contractPaymentService.getContractPayment(transactionCode, paymentId);
             return ResponseEntity.ok(
-                    ApiResponse.<String>builder()
-                            .code(200)
-                            .message(message)
+                    ApiResponse.<ContractPaymentRequest>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Contract Payment processed successfully")
+                            .result(response)
                             .build()
             );
-        } catch (Exception e) {
-            return ResponseEntity.status(400)
-                    .body(ApiResponse.<String>builder()
-                            .code(400)
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.<ContractPaymentRequest>builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
                             .message(e.getMessage())
+                            .result(null)
+                            .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<ContractPaymentRequest>builder()
+                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .message("Internal server error")
+                            .result(null)
                             .build());
         }
     }
+
 
     @GetMapping("/get/{contractId}")
     public ResponseEntity<ApiResponse<List<ContractPaymentDTO>>> getContractPayment(@PathVariable int contractId) {

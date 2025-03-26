@@ -5,7 +5,6 @@ import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.CompanyVerificationDTO;
 import com.pse.tixclick.payload.entity.Notification;
-import com.pse.tixclick.payload.entity.company.CompanyAccount;
 import com.pse.tixclick.payload.entity.company.CompanyVerification;
 import com.pse.tixclick.payload.entity.company.Member;
 import com.pse.tixclick.payload.entity.entity_enum.EStatus;
@@ -41,7 +40,6 @@ public class CompanyVerificationServiceImpl implements CompanyVerificationServic
     CompanyRepository companyRepository;
     AccountRepository accountRepository;
     ModelMapper modelMapper;
-    CompanyAccountRepository companyAccountRepository;
     MemberRepository memberRepository;
     EmailService emailService;
     AppUtils appUtils;
@@ -85,17 +83,10 @@ public class CompanyVerificationServiceImpl implements CompanyVerificationServic
         switch (status) {
             case APPROVED:
 
-                CompanyAccount companyAccount = new CompanyAccount();
-                companyAccount.setCompany(company);
-                companyAccount.setAccount(company.getRepresentativeId());
 
-                String baseUsername = (company.getCompanyName() != null)
-                        ? company.getCompanyName().trim().toLowerCase()
-                        : "defaultcompany";
-                String usernameCompanyAccount = appUtils.generateUniqueUsername(baseUsername);
 
-                companyAccount.setUsername(usernameCompanyAccount);
-                companyAccount.setPassword(new BCryptPasswordEncoder(10).encode("123456"));
+
+
 
                 int count = notificationRepository.countNotificationByAccountId(company.getRepresentativeId().getUserName());
                 log.info("Count: {}", count);
@@ -107,7 +98,6 @@ public class CompanyVerificationServiceImpl implements CompanyVerificationServic
                 }
 
 
-                companyAccountRepository.save(companyAccount);
 
                 simpMessagingTemplate.convertAndSendToUser(company.getRepresentativeId().getUserName(), "/specific/messages",
                         "Your company has been approved");
@@ -131,7 +121,7 @@ public class CompanyVerificationServiceImpl implements CompanyVerificationServic
 
                 String fullName = company.getRepresentativeId().getFirstName() + " " + company.getRepresentativeId().getLastName();
 
-                emailService.sendAccountCreatedEmail(company.getRepresentativeId().getEmail(), usernameCompanyAccount, "123456", fullName);
+                emailService.sendAccountCreatedEmail(company.getRepresentativeId().getEmail(), company.getRepresentativeId().getUserName(), "123456", fullName);
 
                 company.setStatus(ECompanyStatus.ACTIVE);
                 break;

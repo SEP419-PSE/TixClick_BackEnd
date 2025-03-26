@@ -54,7 +54,6 @@ public class CompanyServiceImpl implements CompanyService {
     CompanyRepository companyRepository;
     AccountRepository accountRepository;
     MemberRepository memberRepository;
-    CompanyAccountRepository companyAccountRepository;
     ModelMapper modelMapper;
     CompanyVerificationService companyVerificationService;
     CloudinaryService cloudinary;
@@ -424,6 +423,19 @@ public class CompanyServiceImpl implements CompanyService {
         return new CompanyAndDocumentResponse(createCompanyResponse, companyDocumentDTOS);
     }
 
+    @Override
+    public CompanyDTO isAccountHaveCompany() {
+        var context = SecurityContextHolder.getContext();
+        String name = context.getAuthentication().getName();
+        var account = accountRepository.findAccountByUserName(name)
+                .orElseThrow(()-> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        var company = companyRepository.findCompanyByRepresentativeId_UserName(name);
+        if(company.isEmpty()) {
+            throw new AppException(ErrorCode.COMPANY_NOT_EXISTED);
+        }
+        return modelMapper.map(company.get(), CompanyDTO.class);
+    }
 
 
 }

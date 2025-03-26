@@ -174,7 +174,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public PaymentResponse handleCallbackPayOS(HttpServletRequest request) {
+    public PaymentResponse handleCallbackPayOS(HttpServletRequest request) throws Exception {
         String status = request.getParameter("status");
         String code = request.getParameter("code");
         String orderId = request.getParameter("orderId");
@@ -334,17 +334,18 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public String testQR(TicketQrCodeDTO ticketQrCodeDTO) {
+    public String testQR(TicketQrCodeDTO ticketQrCodeDTO) throws Exception {
         return generateQRCode(ticketQrCodeDTO);
     }
 
-    private String generateQRCode(TicketQrCodeDTO ticketQrCodeDTO) {
+    private String generateQRCode(TicketQrCodeDTO ticketQrCodeDTO) throws Exception {
         String dataTransfer = AppUtils.transferToString(ticketQrCodeDTO);
-        return AppUtils.generateQRCode(dataTransfer, QR_CODE_WIDTH, QR_CODE_HEIGHT);
+        String encryptedData = AppUtils.encrypt(dataTransfer); // Mã hóa dữ liệu
+        return AppUtils.generateQRCode(encryptedData, QR_CODE_WIDTH, QR_CODE_HEIGHT);
     }
 
     private String getBaseUrl(HttpServletRequest request) {
-        return "https://tixclick.site";
+        return "http://tixclick.site";
     }
 
     private Date setTransactionDateFromPayDate(String payDate) {

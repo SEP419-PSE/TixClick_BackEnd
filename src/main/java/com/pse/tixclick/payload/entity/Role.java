@@ -22,6 +22,6 @@ public class Role {
     @Column
     ERole roleName;
 
-    @OneToMany(mappedBy = "role")
+    @OneToMany(mappedBy = "role", fetch = FetchType.LAZY)
     Collection<Account> accounts;
 }

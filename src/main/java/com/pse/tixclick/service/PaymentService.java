@@ -14,9 +14,9 @@ public interface PaymentService
 
     PayOSResponse createPaymentLink(int orderId, HttpServletRequest request) throws Exception;
 
-    PaymentResponse handleCallbackPayOS(HttpServletRequest request);
+    PaymentResponse handleCallbackPayOS(HttpServletRequest request) throws Exception;
 
     List<PaymentDTO> getAllPayments();
 
-    String testQR(TicketQrCodeDTO ticketQrCodeDTO);
+    String testQR(TicketQrCodeDTO ticketQrCodeDTO) throws Exception;
 }
