@@ -54,7 +54,6 @@ public class CompanyServiceImpl implements CompanyService {
     CompanyRepository companyRepository;
     AccountRepository accountRepository;
     MemberRepository memberRepository;
-    CompanyAccountRepository companyAccountRepository;
     ModelMapper modelMapper;
     CompanyVerificationService companyVerificationService;
     CloudinaryService cloudinary;
