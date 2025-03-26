@@ -12,7 +12,7 @@ import java.io.IOException;
 public class CassoService {
     private static final String BASE_URL = "https://oauth.casso.vn/v2/transactions";
     // Nếu dùng API key, chỉ cần cung cấp API key của bạn
-    private static final String API_KEY = "AK_CS.4a06e950096111f097089522635f3f80.ZlcJyHDN1dmBr45YYPQLxvbyK54hNoLu2qMlL8IfAz7RHqhQul1RjKG1fqzT9bN8h89ZgQov";
+    private static final String API_KEY = "AK_CS.83a937100a0311f097089522635f3f80.ZUb6UX88cOujGZ6YiBSkaNWphE44ykGxv73RrQx9vye2Jwd2xjJNpkQAFiWSsIRJcAJVLLbj";
 
     private final OkHttpClient client = new OkHttpClient();
 

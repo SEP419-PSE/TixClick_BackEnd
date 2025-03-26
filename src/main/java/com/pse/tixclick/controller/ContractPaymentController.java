@@ -1,10 +1,8 @@
 package com.pse.tixclick.controller;
 
 import com.pse.tixclick.exception.AppException;
-import com.pse.tixclick.payload.dto.ContractDetailDTO;
 import com.pse.tixclick.payload.dto.ContractPaymentDTO;
-import com.pse.tixclick.payload.dto.TicketPurchaseDTO;
-import com.pse.tixclick.payload.request.create.CreateTicketPurchaseRequest;
+import com.pse.tixclick.payload.request.ContractPaymentRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
 import com.pse.tixclick.service.ContractPaymentService;
 import lombok.AccessLevel;
@@ -29,13 +27,13 @@ public class ContractPaymentController {
     ContractPaymentService contractPaymentService;
 
     @GetMapping("/pay")
-    public ResponseEntity<ApiResponse<String>> payContractPayment(
+    public ResponseEntity<ApiResponse<ContractPaymentRequest>> payContractPayment(
             @RequestParam String transactionCode,
             @RequestParam int paymentId) {
         try {
-            String response = contractPaymentService.payContractPayment(transactionCode, paymentId);
+            ContractPaymentRequest response = contractPaymentService.getContractPayment(transactionCode, paymentId);
             return ResponseEntity.ok(
-                    ApiResponse.<String>builder()
+                    ApiResponse.<ContractPaymentRequest>builder()
                             .code(HttpStatus.OK.value())
                             .message("Contract Payment processed successfully")
                             .result(response)
@@ -43,14 +41,14 @@ public class ContractPaymentController {
             );
         } catch (AppException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.<String>builder()
+                    .body(ApiResponse.<ContractPaymentRequest>builder()
                             .code(HttpStatus.BAD_REQUEST.value())
                             .message(e.getMessage())
                             .result(null)
                             .build());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.<String>builder()
+                    .body(ApiResponse.<ContractPaymentRequest>builder()
                             .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .message("Internal server error")
                             .result(null)

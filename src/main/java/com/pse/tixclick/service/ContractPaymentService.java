@@ -1,11 +1,14 @@
 package com.pse.tixclick.service;
 
 import com.pse.tixclick.payload.dto.ContractPaymentDTO;
+import com.pse.tixclick.payload.request.ContractPaymentRequest;
 
 import java.util.List;
 
 public interface ContractPaymentService {
-    String payContractPayment(String transactionCode, int paymentId);
+    ContractPaymentRequest getContractPayment(String transactionCode, int paymentId);
 
     List<ContractPaymentDTO> getAllContractPaymentByContract(int contractId);
+
+
 }

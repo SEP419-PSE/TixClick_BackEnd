@@ -11,6 +11,7 @@ import com.pse.tixclick.payload.entity.entity_enum.EContractDetailStatus;
 import com.pse.tixclick.payload.entity.entity_enum.ETransactionType;
 import com.pse.tixclick.payload.entity.payment.ContractPayment;
 import com.pse.tixclick.payload.entity.payment.Transaction;
+import com.pse.tixclick.payload.request.ContractPaymentRequest;
 import com.pse.tixclick.payment.CassoService;
 import com.pse.tixclick.repository.*;
 import com.pse.tixclick.service.ContractPaymentService;
@@ -67,7 +68,7 @@ public class ContractPaymentServiceImpl implements ContractPaymentService {
     AccountRepository accountRepository;
 
     @Override
-    public String payContractPayment(String transactionCode, int paymentId) {
+    public ContractPaymentRequest getContractPayment(String transactionCode, int paymentId) {
         ObjectMapper objectMapper = new ObjectMapper();
         String jsonResponse = cassoService.getTransactions(null, 1, 10, "DESC");
         HashMap<String, JsonNode> transactionMap = new HashMap<>();
@@ -76,22 +77,15 @@ public class ContractPaymentServiceImpl implements ContractPaymentService {
             JsonNode root = objectMapper.readTree(jsonResponse);
             if (root.has("data") && root.get("data").has("records")) {
                 JsonNode records = root.get("data").get("records");
+
                 for (JsonNode record : records) {
                     String description = record.get("description").asText();
-                    int index = description.indexOf("Ma GD");
+                    String extractedCode = description.length() >= 5 ? description.substring(0, 5) : description;
 
-                    if (index != -1) {
-                        // Lấy phần sau "Ma GD", chỉ giữ lại mã giao dịch sau "ACSP/"
-                        String extractedCode = description.substring(index).replaceAll(".*ACSP/\\s*", "").trim();
-
-                        // In ra log để kiểm tra dữ liệu có đúng không
-                        System.out.println("Extracted Code: '" + extractedCode + "'");
-
-                        transactionMap.put(extractedCode, record);
-                    }
+                    System.out.println("Extracted Code: '" + extractedCode + "'");
+                    transactionMap.put(extractedCode, record);
                 }
 
-                // Chuẩn hóa transactionCode để so sánh
                 transactionCode = transactionCode.trim();
 
                 ContractPayment contractPayment = contractPaymentRepository.findById(paymentId)
@@ -108,6 +102,9 @@ public class ContractPaymentServiceImpl implements ContractPaymentService {
                     double amount = matchedTransaction.get("amount").asDouble();
                     String description = matchedTransaction.get("description").asText();
 
+
+                    contractPayment.setStatus("PAID");
+                    contractPaymentRepository.save(contractPayment);
                     // Lưu vào database
                     Transaction transaction = new Transaction();
                     transaction.setAmount(amount);
@@ -120,18 +117,20 @@ public class ContractPaymentServiceImpl implements ContractPaymentService {
                     transaction.setAccount(account);
                     transactionRepository.save(transaction);
 
-                    return "{\"message\": \"Transaction saved successfully\", \"transactionCode\": \"" + transactionCode + "\"}";
+                    // Tự động chuyển hướng sang trang success
+                    return new ContractPaymentRequest(transactionCode, true);
                 } else {
-                    return "{\"error\": \"Transaction not found\", \"transactionCode\": \"" + transactionCode + "\"}";
+                    return new ContractPaymentRequest(transactionCode, false);
                 }
             } else {
-                return "{\"error\": \"No data received from Casso API\"}";
+                return new ContractPaymentRequest(transactionCode, false);
             }
         } catch (IOException e) {
-            return "{\"error\": \"Exception occurred\", \"message\": \"" + e.getMessage() + "\"}";
+            return new ContractPaymentRequest(transactionCode, false);
         }
-
     }
+
+
 
     @Override
     public List<ContractPaymentDTO> getAllContractPaymentByContract(int contractId) {
