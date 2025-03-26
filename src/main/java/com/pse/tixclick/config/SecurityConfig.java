@@ -109,7 +109,7 @@ public class SecurityConfig {
         return new OidcClientInitiatedLogoutSuccessHandler(clientRegistrationRepository);
     }
 
-//    @Bean
+    //    @Bean
 //    public CorsConfigurationSource corsConfigurationSource() {
 //        CorsConfiguration configuration = new CorsConfiguration();
 //        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173")); // React frontend
@@ -124,15 +124,11 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList(
-                "http://localhost:5173",  // React frontend
-                "http://localhost:8080",  // Nếu backend chạy trên port khác
-                "*"  // Cho phép tất cả các origin (chỉ dùng trong development)
-        ));
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173", "http://localhost:8080")); // Không dùng "*"
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
-        configuration.setExposedHeaders(Arrays.asList("Authorization")); // Nếu cần expose headers
+        configuration.setExposedHeaders(Arrays.asList("Authorization"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
