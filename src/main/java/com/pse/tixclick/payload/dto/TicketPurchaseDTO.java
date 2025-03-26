@@ -30,4 +30,6 @@ public class TicketPurchaseDTO {
     private int ticketId;
 
     private int eventId;
+
+    private int quantity;
 }

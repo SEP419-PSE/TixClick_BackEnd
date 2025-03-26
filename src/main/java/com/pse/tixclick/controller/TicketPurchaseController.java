@@ -3,6 +3,7 @@ package com.pse.tixclick.controller;
 import com.pse.tixclick.payload.dto.*;
 import com.pse.tixclick.payload.request.create.CreateSeatMapRequest;
 import com.pse.tixclick.payload.request.create.CreateTicketPurchaseRequest;
+import com.pse.tixclick.payload.request.create.ListTicketPurchaseRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
 import com.pse.tixclick.service.OrderService;
 import com.pse.tixclick.service.TicketPurchaseService;
@@ -32,11 +33,11 @@ public class TicketPurchaseController {
 
 
     @PostMapping("/create")
-    public ResponseEntity<ApiResponse<TicketPurchaseDTO>> createTicketPurchase(@RequestBody CreateTicketPurchaseRequest createTicketPurchaseRequest) {
+    public ResponseEntity<ApiResponse<List<TicketPurchaseDTO>>> createTicketPurchase(@RequestBody ListTicketPurchaseRequest createTicketPurchaseRequest) {
         try {
-            TicketPurchaseDTO ticketPurchaseDTO1 = ticketPurchaseService.createTicketPurchase(createTicketPurchaseRequest);
+            List<TicketPurchaseDTO> ticketPurchaseDTO1 = ticketPurchaseService.createTicketPurchase(createTicketPurchaseRequest);
             return ResponseEntity.ok(
-                    ApiResponse.<TicketPurchaseDTO>builder()
+                    ApiResponse.<List<TicketPurchaseDTO>>builder()
                             .code(200)
                             .message("Ticket Purchase created successfully")
                             .result(ticketPurchaseDTO1)
@@ -44,7 +45,7 @@ public class TicketPurchaseController {
             );
         } catch (Exception e) {
             return ResponseEntity.status(400)
-                    .body(ApiResponse.<TicketPurchaseDTO>builder()
+                    .body(ApiResponse.<List<TicketPurchaseDTO>>builder()
                             .code(400)
                             .message(e.getMessage())
                             .result(null)
