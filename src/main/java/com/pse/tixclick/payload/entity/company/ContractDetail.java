@@ -25,6 +25,9 @@ public class ContractDetail {
     private String contractDetailName;
 
     @Column
+    private String contractDetailCode;
+
+    @Column
     private String description;
 
     @Column

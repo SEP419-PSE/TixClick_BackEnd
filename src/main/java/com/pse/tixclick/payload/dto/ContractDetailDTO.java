@@ -19,6 +19,8 @@ public class ContractDetailDTO {
 
     private String contractName;
 
+    private String contractCode;
+
     private String contractDescription;
 
     private double contractAmount;

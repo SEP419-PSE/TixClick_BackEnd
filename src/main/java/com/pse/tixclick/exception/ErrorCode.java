@@ -91,6 +91,10 @@ public enum ErrorCode {
     TICKET_MAPPING_EMPTY(1081, "Ticket mapping đã hết", HttpStatus.BAD_REQUEST),
     CONTRACT_PAYMENT_NOT_FOUND(1082, "Không tìm thấy contract payment", HttpStatus.NOT_FOUND),
     CONTRACT_DETAIL_NOT_FOUND(1083, "Không tìm thấy contract detail", HttpStatus.NOT_FOUND),
+    CONTRACT_DETAIL_CODE_NOT_FOUND(1084, "Không tìm thấy contract detail code", HttpStatus.NOT_FOUND),
+    CONTRACT_NAME_NOT_FOUND(1085, "Không tìm thấy contract name", HttpStatus.NOT_FOUND),
+    BANKING_NAME_NOT_FOUND(1086, "Không tìm thấy banking name", HttpStatus.NOT_FOUND),
+    BANKING_CODE_NOT_FOUND(1087, "Không tìm thấy banking code", HttpStatus.NOT_FOUND),
     ;
 
 
