@@ -4,6 +4,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Getter
@@ -12,20 +13,28 @@ import java.time.LocalTime;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class EventActivityDTO {
+    int eventActivityId;
 
-    int Id;
     String activityName;
 
     @JsonFormat(pattern = "yyyy-MM-dd")
-    LocalDate date;
+    LocalDate dateEvent;
 
     @JsonFormat(pattern = "HH:mm:ss")
-    LocalTime startTime;
+    LocalTime startTimeEvent;
 
     @JsonFormat(pattern = "HH:mm:ss")
-    LocalTime endTime;
+    LocalTime endTimeEvent;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    LocalDateTime startTicketSale;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    LocalDateTime endTicketSale;
+
+    int seatMapId;
 
     int eventId;
-    int seatmapId;
+
     int createdBy;
 }

@@ -21,12 +21,13 @@ import java.util.Date;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
+@Builder
 public class EventActivity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     int eventActivityId;
 
-    @Column(columnDefinition = "NVARCHAR(255)")
+    @Column(columnDefinition = "NVARCHAR(255)", unique = true)
     String activityName;
 
     @Column
@@ -50,7 +51,7 @@ public class EventActivity {
     LocalDateTime endTicketSale;
 
     @ManyToOne
-    @JoinColumn(name = "seatmap_id", nullable = false)
+    @JoinColumn(name = "seatmap_id")
     SeatMap seatMap;
 
     @ManyToOne

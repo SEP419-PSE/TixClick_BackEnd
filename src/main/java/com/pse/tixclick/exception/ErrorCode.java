@@ -96,6 +96,8 @@ public enum ErrorCode {
     BANKING_NAME_NOT_FOUND(1086, "Không tìm thấy banking name", HttpStatus.NOT_FOUND),
     BANKING_CODE_NOT_FOUND(1087, "Không tìm thấy banking code", HttpStatus.NOT_FOUND),
     QR_CODE_NOT_FOUND(1084, "Không tìm thấy qr code", HttpStatus.NOT_FOUND),
+    ACTIVITY_EXISTED(1085, "Hoạt động đã tồn tại", HttpStatus.BAD_REQUEST),
+    NOT_MANAGER_IN_DATABASE(1086, "Không tìm thấy quản lý trong cơ sở dữ liệu", HttpStatus.NOT_FOUND),
     ;
 
 
