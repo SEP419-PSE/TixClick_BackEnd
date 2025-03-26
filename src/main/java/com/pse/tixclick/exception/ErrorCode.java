@@ -91,6 +91,7 @@ public enum ErrorCode {
     TICKET_MAPPING_EMPTY(1081, "Ticket mapping đã hết", HttpStatus.BAD_REQUEST),
     CONTRACT_PAYMENT_NOT_FOUND(1082, "Không tìm thấy contract payment", HttpStatus.NOT_FOUND),
     CONTRACT_DETAIL_NOT_FOUND(1083, "Không tìm thấy contract detail", HttpStatus.NOT_FOUND),
+    QR_CODE_NOT_FOUND(1084, "Không tìm thấy qr code", HttpStatus.NOT_FOUND),
     ;
 
 

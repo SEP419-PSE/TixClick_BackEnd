@@ -1,9 +1,6 @@
 package com.pse.tixclick.controller;
 
-import com.pse.tixclick.payload.dto.MyTicketDTO;
-import com.pse.tixclick.payload.dto.SeatDTO;
-import com.pse.tixclick.payload.dto.SeatMapDTO;
-import com.pse.tixclick.payload.dto.TicketPurchaseDTO;
+import com.pse.tixclick.payload.dto.*;
 import com.pse.tixclick.payload.request.create.CreateSeatMapRequest;
 import com.pse.tixclick.payload.request.create.CreateTicketPurchaseRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
@@ -189,4 +186,15 @@ public class TicketPurchaseController {
         }
     }
 
+    @PostMapping("/decrypt_qr_code")
+    public ResponseEntity<ApiResponse<TicketQrCodeDTO>> decryptQrCode(@RequestBody String qrCode) throws Exception {
+        TicketQrCodeDTO qr = ticketPurchaseService.decryptQrCode(qrCode);
+        return ResponseEntity.ok(
+                ApiResponse.<TicketQrCodeDTO>builder()
+                        .code(200)
+                        .message("Successfully decrypted qr code")
+                        .result(qr)
+                        .build()
+        );
+    }
 }
