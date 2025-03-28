@@ -42,9 +42,6 @@ public class Zone {
     private int quantity;
 
     @Column
-    private int availableQuantity;
-
-    @Column
     private String rows;
 
     @Column
@@ -74,8 +71,8 @@ public class Zone {
     private Ticket ticket;
 
     @OneToMany(mappedBy = "zone", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Collection<TicketPurchase> ticketPurchases;
+    private List<Seat> seats;
 
     @OneToMany(mappedBy = "zone", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Seat> seats;
+    private Collection<ZoneActivity> zoneActivities;
 }
