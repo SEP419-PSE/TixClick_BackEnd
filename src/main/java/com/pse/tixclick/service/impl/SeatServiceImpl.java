@@ -57,7 +57,6 @@ public class SeatServiceImpl implements SeatService {
         seat.setCreatedDate(LocalDateTime.now());
         seat.setUpdatedDate(null);
         seat.setZone(zone);
-        seat.setStatus(true);
 
         seatRepository.save(seat);
         return mapper.map(seat, SeatDTO.class);
@@ -117,11 +116,11 @@ public class SeatServiceImpl implements SeatService {
 
     @Override
     public void deleteSeat(int seatId) {
-        Seat seat = seatRepository
-                .findById(seatId)
-                .orElseThrow(() -> new AppException(ErrorCode.SEAT_NOT_FOUND));
-
-        seat.setStatus(false);
-        seatRepository.save(seat);
+//        Seat seat = seatRepository
+//                .findById(seatId)
+//                .orElseThrow(() -> new AppException(ErrorCode.SEAT_NOT_FOUND));
+//
+//        seat.setStatus(false);
+//        seatRepository.save(seat);
     }
 }

@@ -15,8 +15,7 @@ import com.pse.tixclick.payload.entity.payment.Order;
 import com.pse.tixclick.payload.entity.payment.OrderDetail;
 import com.pse.tixclick.payload.entity.payment.Payment;
 import com.pse.tixclick.payload.entity.payment.Transaction;
-import com.pse.tixclick.payload.entity.seatmap.Seat;
-import com.pse.tixclick.payload.entity.seatmap.Zone;
+import com.pse.tixclick.payload.entity.seatmap.*;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
 import com.pse.tixclick.payload.entity.ticket.TicketPurchase;
 import com.pse.tixclick.payload.response.PayOSResponse;
@@ -97,6 +96,15 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Autowired
     EventRepository eventRepository;
+
+    @Autowired
+    ActivityAssignmentRepository activityAssignmentRepository;
+
+    @Autowired
+    ZoneActivityRepository zoneActivityRepository;
+
+    @Autowired
+    SeatActivityRepository seatActivityRepository;
 
 
     @Override
@@ -205,8 +213,12 @@ public class PaymentServiceImpl implements PaymentService {
                         .findById(detail.getTicketPurchase().getTicketPurchaseId())
                         .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
 
+                ActivityAssignment activityAssignment = activityAssignmentRepository
+                        .findActivityAssignmentByTicketPurchaseAndReserved(ticketPurchase.getTicketPurchaseId())
+                        .orElseThrow(() -> new AppException(ErrorCode.ACTIVITY_ASSIGNMENT_NOT_FOUND));
+
                 EventActivity eventActivity = eventActivityRepository
-                        .findById(ticketPurchase.getEventActivity().getEventActivityId())
+                        .findById(activityAssignment.getEventActivity().getEventActivityId())
                         .orElseThrow(() -> new AppException(ErrorCode.EVENT_ACTIVITY_NOT_FOUND));
 
                 Ticket ticket = ticketRepository
@@ -218,11 +230,15 @@ public class PaymentServiceImpl implements PaymentService {
                         .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
 
                 Seat seat = seatRepository
-                        .findById(ticketPurchase.getSeat().getSeatId())
+                        .findById(activityAssignment.getSeatActivity().getSeat().getSeatId())
                         .orElseThrow(() -> new AppException(ErrorCode.SEAT_NOT_FOUND));
 
+                SeatActivity seatActivity = seatActivityRepository
+                        .findByEventActivityIdAndSeatId(activityAssignment.getZoneActivity().getEventActivity().getEventActivityId(), activityAssignment.getSeatActivity().getSeat().getSeatId())
+                        .orElseThrow(() -> new AppException(ErrorCode.SEAT_ACTIVITY_NOT_FOUND));
+
                 Zone zone = zoneRepository
-                        .findById(ticketPurchase.getZone().getZoneId())
+                        .findById(activityAssignment.getZoneActivity().getZone().getZoneId())
                         .orElseThrow(() -> new AppException(ErrorCode.ZONE_NOT_FOUND));
 
                 CheckinLog checkinLog = new CheckinLog();
@@ -250,6 +266,12 @@ public class PaymentServiceImpl implements PaymentService {
                 ticketPurchase.setStatus(ETicketPurchaseStatus.PURCHASED.name());
                 ticketPurchase.setQrCode(qrCode);
                 ticketPurchaseRepository.save(ticketPurchase);
+
+                activityAssignment.setStatus(EActivityAssignmentStatus.SOLD.name());
+                activityAssignmentRepository.save(activityAssignment);
+
+                seatActivity.setStatus(ESeatActivityStatus.SOLD.name());
+                seatActivityRepository.save(seatActivity);
             }
 
             order.setStatus(EOrderStatus.SUCCESSFUL.name());
@@ -289,24 +311,34 @@ public class PaymentServiceImpl implements PaymentService {
                         .findById(detail.getTicketPurchase().getTicketPurchaseId())
                         .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
                 ticketPurchase.setStatus(ETicketPurchaseStatus.CANCELLED.name());
-                Seat seat = seatRepository
-                        .findById(ticketPurchase.getSeat().getSeatId())
-                        .orElseThrow(() -> new AppException(ErrorCode.SEAT_NOT_FOUND));
-                seat.setStatus(true);
+
+                ActivityAssignment activityAssignment = activityAssignmentRepository
+                        .findActivityAssignmentByTicketPurchaseAndReserved(ticketPurchase.getTicketPurchaseId())
+                        .orElseThrow(() -> new AppException(ErrorCode.ACTIVITY_ASSIGNMENT_NOT_FOUND));
+
+                SeatActivity seatActivity = seatActivityRepository
+                        .findByEventActivityIdAndSeatId(activityAssignment.getZoneActivity().getEventActivity().getEventActivityId(), activityAssignment.getSeatActivity().getSeat().getSeatId())
+                        .orElseThrow(() -> new AppException(ErrorCode.SEAT_ACTIVITY_NOT_FOUND));
+
+                seatActivity.setStatus(ESeatActivityStatus.AVAILABLE.name());
+
+                ZoneActivity zoneActivity = zoneActivityRepository
+                        .findByEventActivityIdAndZoneId(activityAssignment.getZoneActivity().getEventActivity().getEventActivityId(), activityAssignment.getZoneActivity().getZone().getZoneId())
+                        .orElseThrow(() -> new AppException(ErrorCode.ZONE_ACTIVITY_NOT_FOUND));
 
                 Zone zone = zoneRepository
-                        .findById(ticketPurchase.getZone().getZoneId())
+                        .findById(activityAssignment.getZoneActivity().getZone().getZoneId())
                         .orElseThrow(() -> new AppException(ErrorCode.ZONE_NOT_FOUND));
 
-                if (zone.getAvailableQuantity() < 1) {
-                    zone.setAvailableQuantity(zone.getAvailableQuantity() + 1);
+                if (activityAssignment.getZoneActivity().getAvailableQuantity() <= 0) {
+                    zoneActivity.setAvailableQuantity(zoneActivity.getAvailableQuantity() + ticketPurchase.getQuantity());
                     zone.setStatus(true);
                 } else {
-                    zone.setAvailableQuantity(zone.getAvailableQuantity() + 1);
+                    zoneActivity.setAvailableQuantity(zoneActivity.getAvailableQuantity() + ticketPurchase.getQuantity());
                 }
 
-                seatRepository.save(seat);
                 zoneRepository.save(zone);
+                zoneActivityRepository.save(zoneActivity);
                 ticketPurchaseRepository.save(ticketPurchase);
 
                 Transaction transaction = new Transaction();

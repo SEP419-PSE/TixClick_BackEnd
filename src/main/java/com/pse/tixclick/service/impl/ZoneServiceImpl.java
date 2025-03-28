@@ -72,7 +72,7 @@ public class ZoneServiceImpl implements ZoneService {
         zone.setSeatMap(seatMap);
         zone.setColumns(createZoneRequest.getColumns());
         zone.setRows(createZoneRequest.getRows());
-        zone.setAvailableQuantity(createZoneRequest.getAvailableQuantity());
+//        zone.setAvailableQuantity(createZoneRequest.getAvailableQuantity());
         zone.setHeight(createZoneRequest.getHeight());
         zone.setWidth(createZoneRequest.getWidth());
         zone.setQuantity(createZoneRequest.getQuantity());
@@ -92,7 +92,7 @@ public class ZoneServiceImpl implements ZoneService {
                 .orElseThrow(() -> new AppException(ErrorCode.ZONE_NOT_FOUND));
 
         zone.setZoneName(updateZoneRequest.getZoneName());
-        zone.setAvailableQuantity(updateZoneRequest.getAvailableQuantity());
+//        zone.setAvailableQuantity(updateZoneRequest.getAvailableQuantity());
         zone.setQuantity(updateZoneRequest.getQuantity());
         zone.setRows(updateZoneRequest.getRows());
         zone.setColumns(updateZoneRequest.getColumns());

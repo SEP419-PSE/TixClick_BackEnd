@@ -36,9 +36,6 @@ public class Seat {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updatedDate;
 
-    @Column
-    private boolean status;
-
     @ManyToOne
     @JoinColumn(name="zone_id", nullable = false)
     private Zone zone;
@@ -48,5 +45,5 @@ public class Seat {
     private Ticket ticket;
 
     @OneToMany(mappedBy = "seat")
-    private Collection<TicketPurchase> ticketPurchases;
+    private Collection<SeatActivity> seatActivities;
 }
