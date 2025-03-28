@@ -5,6 +5,7 @@ import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.entity.event.EventActivity;
 import com.pse.tixclick.payload.entity.payment.OrderDetail;
+import com.pse.tixclick.payload.entity.seatmap.ActivityAssignment;
 import com.pse.tixclick.payload.entity.seatmap.Seat;
 import com.pse.tixclick.payload.entity.seatmap.Zone;
 import jakarta.persistence.*;
@@ -25,7 +26,7 @@ public class TicketPurchase {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int ticketPurchaseId;
 
-    @Column(nullable = false, columnDefinition = "NVARCHAR(MAX)")
+    @Column(columnDefinition = "NVARCHAR(MAX)")
     private String qrCode;
 
     @Column(nullable = false)
@@ -33,18 +34,6 @@ public class TicketPurchase {
 
     @Column
     private Integer quantity;
-
-    @ManyToOne
-    @JoinColumn(name="zone_id", nullable = false)
-    private Zone zone;
-
-    @ManyToOne
-    @JoinColumn(name="seat_id")
-    private Seat seat;
-
-    @ManyToOne
-    @JoinColumn(name="event_activity_id", nullable = false)
-    private EventActivity eventActivity;
 
     @ManyToOne
     @JoinColumn(name="ticket_id", nullable = false)
@@ -60,5 +49,8 @@ public class TicketPurchase {
 
     @OneToMany(mappedBy = "ticketPurchase")
     private Collection<OrderDetail> orderDetails;
+
+    @OneToMany(mappedBy = "ticketPurchase")
+    private Collection<ActivityAssignment> activityAssignments;
 
 }

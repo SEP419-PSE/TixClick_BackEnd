@@ -144,110 +144,112 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public List<Order_OrderDetailDTO> getAllOrderOfUser() {
-        Account account = appUtils.getAccountFromAuthentication();
-        List<Order> orders = orderRepository.findByAccountId(account.getAccountId());
-
-        return orders.stream()
-                .map(order -> {
-                    Order_OrderDetailDTO dto = mapper.map(order, Order_OrderDetailDTO.class);
-
-                    List<OrderDetail> orderDetails = orderDetailRepository.findByOrderId(order.getOrderId());
-                    if (!orderDetails.isEmpty()) {
-                        List<OrderDetailDTO> orderDetailDTOs = orderDetails.stream()
-                                .map(orderDetail -> {
-                                    OrderDetailDTO orderDetailDTO = mapper.map(orderDetail, OrderDetailDTO.class);
-
-                                    if (orderDetail.getTicketPurchase() != null) {
-                                        TicketPurchase ticketPurchase = orderDetail.getTicketPurchase();
-                                        TicketPurchaseDTO ticketPurchaseDTO = new TicketPurchaseDTO();
-
-                                        ticketPurchaseDTO.setTicketPurchaseId(ticketPurchase.getTicketPurchaseId());
-                                        ticketPurchaseDTO.setQrCode(ticketPurchase.getQrCode());
-                                        ticketPurchaseDTO.setStatus(ticketPurchase.getStatus());
-
-                                        if (ticketPurchase.getTicket() != null) {
-                                            ticketPurchaseDTO.setTicketId(ticketPurchase.getTicket().getTicketId());
-                                        }
-
-                                        if (ticketPurchase.getEventActivity() != null) {
-                                            ticketPurchaseDTO.setEventActivityId(ticketPurchase.getEventActivity().getEventActivityId());
-                                        }
-
-                                        if (ticketPurchase.getZone() != null) {
-                                            ticketPurchaseDTO.setZoneId(ticketPurchase.getZone().getZoneId());
-                                        }
-
-                                        if (ticketPurchase.getSeat() != null) {
-                                            ticketPurchaseDTO.setSeatId(ticketPurchase.getSeat().getSeatId());
-                                        }
-
-                                        if (ticketPurchase.getEvent() != null) {
-                                            ticketPurchaseDTO.setEventId(ticketPurchase.getEvent().getEventId());
-                                        }
-                                        orderDetailDTO.setTicketPurchaseDTO(ticketPurchaseDTO);
-                                    }
-                                    return orderDetailDTO;
-                                })
-                                .collect(Collectors.toList());
-                        dto.setOrderDetail(orderDetailDTOs);
-                    }
-                    return dto;
-                })
-                .toList();
+//        Account account = appUtils.getAccountFromAuthentication();
+//        List<Order> orders = orderRepository.findByAccountId(account.getAccountId());
+//
+//        return orders.stream()
+//                .map(order -> {
+//                    Order_OrderDetailDTO dto = mapper.map(order, Order_OrderDetailDTO.class);
+//
+//                    List<OrderDetail> orderDetails = orderDetailRepository.findByOrderId(order.getOrderId());
+//                    if (!orderDetails.isEmpty()) {
+//                        List<OrderDetailDTO> orderDetailDTOs = orderDetails.stream()
+//                                .map(orderDetail -> {
+//                                    OrderDetailDTO orderDetailDTO = mapper.map(orderDetail, OrderDetailDTO.class);
+//
+//                                    if (orderDetail.getTicketPurchase() != null) {
+//                                        TicketPurchase ticketPurchase = orderDetail.getTicketPurchase();
+//                                        TicketPurchaseDTO ticketPurchaseDTO = new TicketPurchaseDTO();
+//
+//                                        ticketPurchaseDTO.setTicketPurchaseId(ticketPurchase.getTicketPurchaseId());
+//                                        ticketPurchaseDTO.setQrCode(ticketPurchase.getQrCode());
+//                                        ticketPurchaseDTO.setStatus(ticketPurchase.getStatus());
+//
+//                                        if (ticketPurchase.getTicket() != null) {
+//                                            ticketPurchaseDTO.setTicketId(ticketPurchase.getTicket().getTicketId());
+//                                        }
+//
+//                                        if (ticketPurchase.getEventActivity() != null) {
+//                                            ticketPurchaseDTO.setEventActivityId(ticketPurchase.getEventActivity().getEventActivityId());
+//                                        }
+//
+//                                        if (ticketPurchase.getZone() != null) {
+//                                            ticketPurchaseDTO.setZoneId(ticketPurchase.getZone().getZoneId());
+//                                        }
+//
+//                                        if (ticketPurchase.getSeat() != null) {
+//                                            ticketPurchaseDTO.setSeatId(ticketPurchase.getSeat().getSeatId());
+//                                        }
+//
+//                                        if (ticketPurchase.getEvent() != null) {
+//                                            ticketPurchaseDTO.setEventId(ticketPurchase.getEvent().getEventId());
+//                                        }
+//                                        orderDetailDTO.setTicketPurchaseDTO(ticketPurchaseDTO);
+//                                    }
+//                                    return orderDetailDTO;
+//                                })
+//                                .collect(Collectors.toList());
+//                        dto.setOrderDetail(orderDetailDTOs);
+//                    }
+//                    return dto;
+//                })
+//                .toList();
+        return null;
     }
 
     @Override
     public List<Order_OrderDetailDTO> getOrderStatusOfUser(String status) {
-        Account account = appUtils.getAccountFromAuthentication();
-        List<Order> orders = orderRepository.findByStatusOfAccount(account.getAccountId(), status);
-
-        return orders.stream()
-                .map(order -> {
-                    Order_OrderDetailDTO dto = mapper.map(order, Order_OrderDetailDTO.class);
-
-                    List<OrderDetail> orderDetails = orderDetailRepository.findByOrderId(order.getOrderId());
-                    if (!orderDetails.isEmpty()) {
-                        List<OrderDetailDTO> orderDetailDTOs = orderDetails.stream()
-                                .map(orderDetail -> {
-                                    OrderDetailDTO orderDetailDTO = mapper.map(orderDetail, OrderDetailDTO.class);
-
-                                    if (orderDetail.getTicketPurchase() != null) {
-                                        TicketPurchase ticketPurchase = orderDetail.getTicketPurchase();
-                                        TicketPurchaseDTO ticketPurchaseDTO = new TicketPurchaseDTO();
-
-                                        ticketPurchaseDTO.setTicketPurchaseId(ticketPurchase.getTicketPurchaseId());
-                                        ticketPurchaseDTO.setQrCode(ticketPurchase.getQrCode());
-                                        ticketPurchaseDTO.setStatus(ticketPurchase.getStatus());
-
-                                        if (ticketPurchase.getTicket() != null) {
-                                            ticketPurchaseDTO.setTicketId(ticketPurchase.getTicket().getTicketId());
-                                        }
-
-                                        if (ticketPurchase.getEventActivity() != null) {
-                                            ticketPurchaseDTO.setEventActivityId(ticketPurchase.getEventActivity().getEventActivityId());
-                                        }
-
-                                        if (ticketPurchase.getZone() != null) {
-                                            ticketPurchaseDTO.setZoneId(ticketPurchase.getZone().getZoneId());
-                                        }
-
-                                        if (ticketPurchase.getSeat() != null) {
-                                            ticketPurchaseDTO.setSeatId(ticketPurchase.getSeat().getSeatId());
-                                        }
-
-                                        if (ticketPurchase.getEvent() != null) {
-                                            ticketPurchaseDTO.setEventId(ticketPurchase.getEvent().getEventId());
-                                        }
-                                        orderDetailDTO.setTicketPurchaseDTO(ticketPurchaseDTO);
-                                    }
-                                    return orderDetailDTO;
-                                })
-                                .collect(Collectors.toList());
-                        dto.setOrderDetail(orderDetailDTOs);
-                    }
-                    return dto;
-                })
-                .toList();
+//        Account account = appUtils.getAccountFromAuthentication();
+//        List<Order> orders = orderRepository.findByStatusOfAccount(account.getAccountId(), status);
+//
+//        return orders.stream()
+//                .map(order -> {
+//                    Order_OrderDetailDTO dto = mapper.map(order, Order_OrderDetailDTO.class);
+//
+//                    List<OrderDetail> orderDetails = orderDetailRepository.findByOrderId(order.getOrderId());
+//                    if (!orderDetails.isEmpty()) {
+//                        List<OrderDetailDTO> orderDetailDTOs = orderDetails.stream()
+//                                .map(orderDetail -> {
+//                                    OrderDetailDTO orderDetailDTO = mapper.map(orderDetail, OrderDetailDTO.class);
+//
+//                                    if (orderDetail.getTicketPurchase() != null) {
+//                                        TicketPurchase ticketPurchase = orderDetail.getTicketPurchase();
+//                                        TicketPurchaseDTO ticketPurchaseDTO = new TicketPurchaseDTO();
+//
+//                                        ticketPurchaseDTO.setTicketPurchaseId(ticketPurchase.getTicketPurchaseId());
+//                                        ticketPurchaseDTO.setQrCode(ticketPurchase.getQrCode());
+//                                        ticketPurchaseDTO.setStatus(ticketPurchase.getStatus());
+//
+//                                        if (ticketPurchase.getTicket() != null) {
+//                                            ticketPurchaseDTO.setTicketId(ticketPurchase.getTicket().getTicketId());
+//                                        }
+//
+//                                        if (ticketPurchase.getEventActivity() != null) {
+//                                            ticketPurchaseDTO.setEventActivityId(ticketPurchase.getEventActivity().getEventActivityId());
+//                                        }
+//
+//                                        if (ticketPurchase.getZone() != null) {
+//                                            ticketPurchaseDTO.setZoneId(ticketPurchase.getZone().getZoneId());
+//                                        }
+//
+//                                        if (ticketPurchase.getSeat() != null) {
+//                                            ticketPurchaseDTO.setSeatId(ticketPurchase.getSeat().getSeatId());
+//                                        }
+//
+//                                        if (ticketPurchase.getEvent() != null) {
+//                                            ticketPurchaseDTO.setEventId(ticketPurchase.getEvent().getEventId());
+//                                        }
+//                                        orderDetailDTO.setTicketPurchaseDTO(ticketPurchaseDTO);
+//                                    }
+//                                    return orderDetailDTO;
+//                                })
+//                                .collect(Collectors.toList());
+//                        dto.setOrderDetail(orderDetailDTOs);
+//                    }
+//                    return dto;
+//                })
+//                .toList();
+        return null;
     }
 
     private String orderCodeAutomationCreating() {
@@ -263,115 +265,115 @@ public class OrderServiceImpl implements OrderService {
         return accountId + date  + uniqueId;
     }
 
-    @Async
-    public void scheduleStatusUpdate(LocalDateTime startTime, int orderId) {
-        LocalDateTime currentTime = LocalDateTime.now();
-        long delay = java.time.Duration.between(currentTime, startTime.plusMinutes(15)).toSeconds();
-
-        if (delay > 0) {
-            scheduler.schedule(() -> {
-                Order order = orderRepository
-                        .findById(orderId)
-                        .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
-                if (order.getStatus().equals(EOrderStatus.SUCCESSFUL.name())) {
-                    return;
-                }
-                if (order.getStatus().equals(EOrderStatus.FAILURE.name())) {
-                    return;
-                }
-                if (order.getStatus().equals(EOrderStatus.EXPIRED.name())) {
-                    return;
-                }
-                if (order.getStatus().equals(EOrderStatus.PENDING.name())) {
-                    List<OrderDetail> orderDetails = orderDetailRepository.findByOrderId(orderId);
-                    for (OrderDetail orderDetail : orderDetails) {
-                        TicketPurchase ticketPurchase = ticketPurchaseRepository
-                                .findById(orderDetail.getTicketPurchase().getTicketPurchaseId())
-                                .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
-
-                        TicketMapping ticketMapping = ticketMappingRepository
-                                .findTicketMappingByTicketIdAndEventActivityId(ticketPurchase.getTicket().getTicketId(), ticketPurchase.getEventActivity().getEventActivityId())
-                                .orElseThrow(() -> new AppException(ErrorCode.TICKET_MAPPING_NOT_FOUND));
-
-                        ticketMapping.setQuantity(ticketMapping.getQuantity() + 1);
-                        ticketMappingRepository.save(ticketMapping);
-
-                        Seat seat = seatRepository
-                                .findById(ticketPurchase.getSeat().getSeatId())
-                                .orElseThrow(() -> new AppException(ErrorCode.SEAT_NOT_FOUND));
-                        seat.setStatus(true);
-
-                        Zone zone = zoneRepository
-                                .findById(ticketPurchase.getZone().getZoneId())
-                                .orElseThrow(() -> new AppException(ErrorCode.ZONE_NOT_FOUND));
-
-                        if (zone.getAvailableQuantity() < 1) {
-                            zone.setAvailableQuantity(zone.getAvailableQuantity() + 1);
-                            zone.setStatus(true);
-                        } else {
-                            zone.setAvailableQuantity(zone.getAvailableQuantity() + 1);
-                        }
-                        ticketPurchase.setStatus(ETicketPurchaseStatus.EXPIRED.name());
-
-                        ticketPurchaseRepository.save(ticketPurchase);
-                        seatRepository.save(seat);
-                        zoneRepository.save(zone);
-                    }
-                    order.setStatus(EOrderStatus.EXPIRED.name());
-                    orderRepository.save(order);
-                }
-            }, delay, java.util.concurrent.TimeUnit.SECONDS);
-        } else {
-            Order order = orderRepository
-                    .findById(orderId)
-                    .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
-            if (order.getStatus().equals(EOrderStatus.SUCCESSFUL.name())) {
-                return;
-            }
-            if (order.getStatus().equals(EOrderStatus.FAILURE.name())) {
-                return;
-            }
-            if (order.getStatus().equals(EOrderStatus.EXPIRED.name())) {
-                return;
-            }
-            if (order.getStatus().equals(EOrderStatus.PENDING.name())) {
-                List<OrderDetail> orderDetails = orderDetailRepository.findByOrderId(orderId);
-                for (OrderDetail orderDetail : orderDetails) {
-                    TicketPurchase ticketPurchase = ticketPurchaseRepository
-                            .findById(orderDetail.getTicketPurchase().getTicketPurchaseId())
-                            .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
-
-                    TicketMapping ticketMapping = ticketMappingRepository
-                            .findTicketMappingByTicketIdAndEventActivityId(ticketPurchase.getTicket().getTicketId(), ticketPurchase.getEventActivity().getEventActivityId())
-                            .orElseThrow(() -> new AppException(ErrorCode.TICKET_MAPPING_NOT_FOUND));
-
-                    ticketMapping.setQuantity(ticketMapping.getQuantity() + 1);
-                    ticketMappingRepository.save(ticketMapping);
-
-                    Seat seat = seatRepository
-                            .findById(ticketPurchase.getSeat().getSeatId())
-                            .orElseThrow(() -> new AppException(ErrorCode.SEAT_NOT_FOUND));
-                    seat.setStatus(true);
-
-                    Zone zone = zoneRepository
-                            .findById(ticketPurchase.getZone().getZoneId())
-                            .orElseThrow(() -> new AppException(ErrorCode.ZONE_NOT_FOUND));
-
-                    if (zone.getAvailableQuantity() < 1) {
-                        zone.setAvailableQuantity(zone.getAvailableQuantity() + 1);
-                        zone.setStatus(true);
-                    } else {
-                        zone.setAvailableQuantity(zone.getAvailableQuantity() + 1);
-                    }
-                    ticketPurchase.setStatus(ETicketPurchaseStatus.EXPIRED.name());
-
-                    ticketPurchaseRepository.save(ticketPurchase);
-                    seatRepository.save(seat);
-                    zoneRepository.save(zone);
-                }
-                order.setStatus(EOrderStatus.EXPIRED.name());
-                orderRepository.save(order);
-            }
-        }
-    }
+//    @Async
+//    public void scheduleStatusUpdate(LocalDateTime startTime, int orderId) {
+//        LocalDateTime currentTime = LocalDateTime.now();
+//        long delay = java.time.Duration.between(currentTime, startTime.plusMinutes(15)).toSeconds();
+//
+//        if (delay > 0) {
+//            scheduler.schedule(() -> {
+//                Order order = orderRepository
+//                        .findById(orderId)
+//                        .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+//                if (order.getStatus().equals(EOrderStatus.SUCCESSFUL.name())) {
+//                    return;
+//                }
+//                if (order.getStatus().equals(EOrderStatus.FAILURE.name())) {
+//                    return;
+//                }
+//                if (order.getStatus().equals(EOrderStatus.EXPIRED.name())) {
+//                    return;
+//                }
+//                if (order.getStatus().equals(EOrderStatus.PENDING.name())) {
+//                    List<OrderDetail> orderDetails = orderDetailRepository.findByOrderId(orderId);
+//                    for (OrderDetail orderDetail : orderDetails) {
+//                        TicketPurchase ticketPurchase = ticketPurchaseRepository
+//                                .findById(orderDetail.getTicketPurchase().getTicketPurchaseId())
+//                                .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
+//
+//                        TicketMapping ticketMapping = ticketMappingRepository
+//                                .findTicketMappingByTicketIdAndEventActivityId(ticketPurchase.getTicket().getTicketId(), ticketPurchase.getEventActivity().getEventActivityId())
+//                                .orElseThrow(() -> new AppException(ErrorCode.TICKET_MAPPING_NOT_FOUND));
+//
+//                        ticketMapping.setQuantity(ticketMapping.getQuantity() + 1);
+//                        ticketMappingRepository.save(ticketMapping);
+//
+//                        Seat seat = seatRepository
+//                                .findById(ticketPurchase.getSeat().getSeatId())
+//                                .orElseThrow(() -> new AppException(ErrorCode.SEAT_NOT_FOUND));
+//                        seat.setStatus(true);
+//
+//                        Zone zone = zoneRepository
+//                                .findById(ticketPurchase.getZone().getZoneId())
+//                                .orElseThrow(() -> new AppException(ErrorCode.ZONE_NOT_FOUND));
+//
+//                        if (zone.getAvailableQuantity() < 1) {
+//                            zone.setAvailableQuantity(zone.getAvailableQuantity() + 1);
+//                            zone.setStatus(true);
+//                        } else {
+//                            zone.setAvailableQuantity(zone.getAvailableQuantity() + 1);
+//                        }
+//                        ticketPurchase.setStatus(ETicketPurchaseStatus.EXPIRED.name());
+//
+//                        ticketPurchaseRepository.save(ticketPurchase);
+//                        seatRepository.save(seat);
+//                        zoneRepository.save(zone);
+//                    }
+//                    order.setStatus(EOrderStatus.EXPIRED.name());
+//                    orderRepository.save(order);
+//                }
+//            }, delay, java.util.concurrent.TimeUnit.SECONDS);
+//        } else {
+//            Order order = orderRepository
+//                    .findById(orderId)
+//                    .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+//            if (order.getStatus().equals(EOrderStatus.SUCCESSFUL.name())) {
+//                return;
+//            }
+//            if (order.getStatus().equals(EOrderStatus.FAILURE.name())) {
+//                return;
+//            }
+//            if (order.getStatus().equals(EOrderStatus.EXPIRED.name())) {
+//                return;
+//            }
+//            if (order.getStatus().equals(EOrderStatus.PENDING.name())) {
+//                List<OrderDetail> orderDetails = orderDetailRepository.findByOrderId(orderId);
+//                for (OrderDetail orderDetail : orderDetails) {
+//                    TicketPurchase ticketPurchase = ticketPurchaseRepository
+//                            .findById(orderDetail.getTicketPurchase().getTicketPurchaseId())
+//                            .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
+//
+//                    TicketMapping ticketMapping = ticketMappingRepository
+//                            .findTicketMappingByTicketIdAndEventActivityId(ticketPurchase.getTicket().getTicketId(), ticketPurchase.getEventActivity().getEventActivityId())
+//                            .orElseThrow(() -> new AppException(ErrorCode.TICKET_MAPPING_NOT_FOUND));
+//
+//                    ticketMapping.setQuantity(ticketMapping.getQuantity() + 1);
+//                    ticketMappingRepository.save(ticketMapping);
+//
+//                    Seat seat = seatRepository
+//                            .findById(ticketPurchase.getSeat().getSeatId())
+//                            .orElseThrow(() -> new AppException(ErrorCode.SEAT_NOT_FOUND));
+//                    seat.setStatus(true);
+//
+//                    Zone zone = zoneRepository
+//                            .findById(ticketPurchase.getZone().getZoneId())
+//                            .orElseThrow(() -> new AppException(ErrorCode.ZONE_NOT_FOUND));
+//
+//                    if (zone.getAvailableQuantity() < 1) {
+//                        zone.setAvailableQuantity(zone.getAvailableQuantity() + 1);
+//                        zone.setStatus(true);
+//                    } else {
+//                        zone.setAvailableQuantity(zone.getAvailableQuantity() + 1);
+//                    }
+//                    ticketPurchase.setStatus(ETicketPurchaseStatus.EXPIRED.name());
+//
+//                    ticketPurchaseRepository.save(ticketPurchase);
+//                    seatRepository.save(seat);
+//                    zoneRepository.save(zone);
+//                }
+//                order.setStatus(EOrderStatus.EXPIRED.name());
+//                orderRepository.save(order);
+//            }
+//        }
+//    }
 }

@@ -99,7 +99,10 @@ public enum ErrorCode {
     ACTIVITY_EXISTED(1085, "Hoạt động đã tồn tại", HttpStatus.BAD_REQUEST),
     NOT_MANAGER_IN_DATABASE(1086, "Không tìm thấy quản lý trong cơ sở dữ liệu", HttpStatus.NOT_FOUND),
     TICKET_MAPPING_NOT_ENOUGH(1085, "Ticket mapping không đủ", HttpStatus.BAD_REQUEST),
-
+    ZONE_NOT_ENOUGH(1086, "Zone không đủ", HttpStatus.BAD_REQUEST),
+    ACTIVITY_ASSIGNMENT_NOT_FOUND(1087, "Không tìm thấy activity assignment", HttpStatus.NOT_FOUND),
+    ZONE_ACTIVITY_NOT_FOUND(1088, "Không tìm thấy zone activity", HttpStatus.NOT_FOUND),
+    SEAT_ACTIVITY_NOT_FOUND(1089, "Không tìm thấy seat activity", HttpStatus.NOT_FOUND),
     ;
 
 
