@@ -2,7 +2,10 @@ package com.pse.tixclick.payload.entity.event;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.pse.tixclick.payload.entity.Account;
+import com.pse.tixclick.payload.entity.seatmap.ActivityAssignment;
+import com.pse.tixclick.payload.entity.seatmap.SeatActivity;
 import com.pse.tixclick.payload.entity.seatmap.SeatMap;
+import com.pse.tixclick.payload.entity.seatmap.ZoneActivity;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
 import com.pse.tixclick.payload.entity.ticket.TicketPurchase;
 import jakarta.persistence.*;
@@ -61,4 +64,13 @@ public class EventActivity {
     @ManyToOne
     @JoinColumn(name = "created_by", nullable = false)
     Account createdBy;
+
+    @OneToMany(mappedBy = "eventActivity")
+    Collection<ActivityAssignment> activityAssignments;
+
+    @OneToMany(mappedBy = "eventActivity")
+    Collection<ZoneActivity> zoneActivities;
+
+    @OneToMany(mappedBy = "eventActivity")
+    Collection<SeatActivity> seatActivities;
 }
