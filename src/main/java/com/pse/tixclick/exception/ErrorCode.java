@@ -103,6 +103,7 @@ public enum ErrorCode {
     ACTIVITY_ASSIGNMENT_NOT_FOUND(1087, "Không tìm thấy activity assignment", HttpStatus.NOT_FOUND),
     ZONE_ACTIVITY_NOT_FOUND(1088, "Không tìm thấy zone activity", HttpStatus.NOT_FOUND),
     SEAT_ACTIVITY_NOT_FOUND(1089, "Không tìm thấy seat activity", HttpStatus.NOT_FOUND),
+    SEAT_SOLD_OUT(1090, "Ghế đã bán", HttpStatus.BAD_REQUEST),
     ;
 
 
