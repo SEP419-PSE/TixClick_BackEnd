@@ -1,6 +1,7 @@
 package com.pse.tixclick.payload.entity.seatmap;
 
 import com.pse.tixclick.payload.entity.event.EventActivity;
+import com.pse.tixclick.payload.entity.ticket.TicketPurchase;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -31,7 +32,7 @@ public class ZoneActivity {
     private EventActivity eventActivity;
 
     @OneToMany(mappedBy = "zoneActivity")
-    private Collection<ActivityAssignment> activityAssignments;
+    private Collection<TicketPurchase> ticketPurchases;
 
     @OneToMany(mappedBy = "zoneActivity")
     private Collection<SeatActivity> seatActivities;
