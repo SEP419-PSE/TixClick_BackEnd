@@ -2,7 +2,6 @@ package com.pse.tixclick.payload.entity.event;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.pse.tixclick.payload.entity.Account;
-import com.pse.tixclick.payload.entity.seatmap.ActivityAssignment;
 import com.pse.tixclick.payload.entity.seatmap.SeatActivity;
 import com.pse.tixclick.payload.entity.seatmap.SeatMap;
 import com.pse.tixclick.payload.entity.seatmap.ZoneActivity;
@@ -66,7 +65,7 @@ public class EventActivity {
     Account createdBy;
 
     @OneToMany(mappedBy = "eventActivity")
-    Collection<ActivityAssignment> activityAssignments;
+    Collection<TicketPurchase> ticketPurchases;
 
     @OneToMany(mappedBy = "eventActivity")
     Collection<ZoneActivity> zoneActivities;

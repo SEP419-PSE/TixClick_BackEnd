@@ -5,9 +5,7 @@ import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.entity.event.EventActivity;
 import com.pse.tixclick.payload.entity.payment.OrderDetail;
-import com.pse.tixclick.payload.entity.seatmap.ActivityAssignment;
-import com.pse.tixclick.payload.entity.seatmap.Seat;
-import com.pse.tixclick.payload.entity.seatmap.Zone;
+import com.pse.tixclick.payload.entity.seatmap.*;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -36,6 +34,14 @@ public class TicketPurchase {
     private Integer quantity;
 
     @ManyToOne
+    @JoinColumn(name = "seat_activity_id")
+    private SeatActivity seatActivity;
+
+    @ManyToOne
+    @JoinColumn(name = "zone_activity_id")
+    private ZoneActivity zoneActivity;
+
+    @ManyToOne
     @JoinColumn(name="ticket_id", nullable = false)
     private Ticket ticket;
 
@@ -47,10 +53,10 @@ public class TicketPurchase {
     @JoinColumn(name = "account_id", nullable = false)
     private Account account;
 
+    @ManyToOne
+    @JoinColumn(name = "event_activity_id", nullable = false)
+    private EventActivity eventActivity;
+
     @OneToMany(mappedBy = "ticketPurchase")
     private Collection<OrderDetail> orderDetails;
-
-    @OneToMany(mappedBy = "ticketPurchase")
-    private Collection<ActivityAssignment> activityAssignments;
-
 }
