@@ -11,4 +11,8 @@ public interface TransactionService {
     List<MonthlySalesReportDTO> getMonthlySalesReport();
 
     List<TransactionDTO> getTransactions();
+
+    double totalTransaction();
+
+    double totalCommission();
 }

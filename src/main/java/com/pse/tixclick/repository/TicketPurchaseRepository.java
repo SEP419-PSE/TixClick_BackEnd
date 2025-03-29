@@ -1,5 +1,6 @@
 package com.pse.tixclick.repository;
 
+import com.pse.tixclick.payload.entity.entity_enum.ETicketPurchaseStatus;
 import com.pse.tixclick.payload.entity.ticket.TicketPurchase;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -100,5 +101,7 @@ ORDER BY m.month;
 
     @Query(value = "SELECT tp FROM TicketPurchase tp WHERE tp.account.accountId = :accountId")
     List<TicketPurchase> getTicketPurchasesByAccount(@Param("accountId") int accountId);
+
+    int countTicketPurchasesByStatus(ETicketPurchaseStatus status);
 
 }

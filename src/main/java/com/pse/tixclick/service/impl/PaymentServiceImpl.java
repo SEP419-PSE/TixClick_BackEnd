@@ -256,7 +256,7 @@ public class PaymentServiceImpl implements PaymentService {
                 ticketQrCodeDTO.setCheckin_Log_id(checkinLog.getCheckinId());
 
                 String qrCode = generateQRCode(ticketQrCodeDTO);
-                ticketPurchase.setStatus(ETicketPurchaseStatus.PURCHASED.name());
+                ticketPurchase.setStatus(ETicketPurchaseStatus.PURCHASED);
                 ticketPurchase.setQrCode(qrCode);
                 ticketPurchaseRepository.save(ticketPurchase);
 
@@ -300,7 +300,7 @@ public class PaymentServiceImpl implements PaymentService {
                 TicketPurchase ticketPurchase = ticketPurchaseRepository
                         .findById(detail.getTicketPurchase().getTicketPurchaseId())
                         .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
-                ticketPurchase.setStatus(ETicketPurchaseStatus.CANCELLED.name());
+                ticketPurchase.setStatus(ETicketPurchaseStatus.CANCELLED);
 
                 SeatActivity seatActivity = seatActivityRepository
                         .findByEventActivityIdAndSeatId(ticketPurchase.getZoneActivity().getEventActivity().getEventActivityId(), ticketPurchase.getSeatActivity().getSeat().getSeatId())

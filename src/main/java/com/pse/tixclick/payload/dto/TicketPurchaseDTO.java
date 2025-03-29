@@ -1,5 +1,6 @@
 package com.pse.tixclick.payload.dto;
 
+import com.pse.tixclick.payload.entity.entity_enum.ETicketPurchaseStatus;
 import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.entity.event.EventActivity;
 import com.pse.tixclick.payload.entity.seatmap.Seat;
@@ -19,7 +20,7 @@ public class TicketPurchaseDTO {
 
     private String qrCode;
 
-    private String status;
+    private ETicketPurchaseStatus status;
 
     private int zoneId;
 

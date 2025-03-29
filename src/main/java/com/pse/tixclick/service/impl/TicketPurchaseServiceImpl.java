@@ -98,7 +98,7 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
             if(createTicketPurchaseRequest1.getSeatId() == 0 && createTicketPurchaseRequest1.getZoneId() != 0){
                 //Tạo TicketPurchase trước
                 TicketPurchase ticketPurchase = new TicketPurchase();
-                ticketPurchase.setStatus(ETicketPurchaseStatus.PENDING.name());
+                ticketPurchase.setStatus(ETicketPurchaseStatus.PENDING);
 
                 Ticket ticket = ticketRepository.findById(createTicketPurchaseRequest1.getTicketId())
                         .orElseThrow(() -> new AppException(ErrorCode.TICKET_NOT_FOUND));
@@ -172,7 +172,7 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
             // Trường hợp có ghế và có zone
             if(createTicketPurchaseRequest1.getZoneId() != 0 && createTicketPurchaseRequest1.getSeatId() != 0){
                 TicketPurchase ticketPurchase = new TicketPurchase();
-                ticketPurchase.setStatus(ETicketPurchaseStatus.PENDING.name());
+                ticketPurchase.setStatus(ETicketPurchaseStatus.PENDING);
 
                 Ticket ticket = ticketRepository.findById(createTicketPurchaseRequest1.getTicketId())
                         .orElseThrow(() -> new AppException(ErrorCode.TICKET_NOT_FOUND));
@@ -261,7 +261,7 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
             // Trường hợp không ghế và không zone
             if(createTicketPurchaseRequest1.getZoneId() == 0 && createTicketPurchaseRequest1.getSeatId() == 0){
                 TicketPurchase ticketPurchase = new TicketPurchase();
-                ticketPurchase.setStatus(ETicketPurchaseStatus.PENDING.name());
+                ticketPurchase.setStatus(ETicketPurchaseStatus.PENDING);
 
                 EventActivity eventActivity = eventActivityRepository.findById(createTicketPurchaseRequest1.getEventActivityId())
                         .orElseThrow(() -> new AppException(ErrorCode.EVENT_ACTIVITY_NOT_FOUND));
@@ -352,7 +352,7 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
                             } else {
                                 zoneActivity.setAvailableQuantity(zoneActivity.getAvailableQuantity() + ticketPurchase.getQuantity());
                             }
-                            ticketPurchase.setStatus(ETicketPurchaseStatus.EXPIRED.name());
+                            ticketPurchase.setStatus(ETicketPurchaseStatus.EXPIRED);
 
                             ticketPurchaseRepository.save(ticketPurchase);
                             zoneRepository.save(zone);
@@ -389,7 +389,7 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
                                 zoneActivity.setAvailableQuantity(zoneActivity.getAvailableQuantity() + ticketPurchase.getQuantity());
                             }
 
-                            ticketPurchase.setStatus(ETicketPurchaseStatus.EXPIRED.name());
+                            ticketPurchase.setStatus(ETicketPurchaseStatus.EXPIRED);
 
                             ticketPurchaseRepository.save(ticketPurchase);
                             zoneRepository.save(zone);
@@ -405,7 +405,7 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
                             ticketMapping.setQuantity(ticketMapping.getQuantity() + ticketPurchase.getQuantity());
                             ticketMappingRepository.save(ticketMapping);
 
-                            ticketPurchase.setStatus(ETicketPurchaseStatus.EXPIRED.name());
+                            ticketPurchase.setStatus(ETicketPurchaseStatus.EXPIRED);
 
                             ticketPurchaseRepository.save(ticketPurchase);
                         }
@@ -441,7 +441,7 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
                         } else {
                             zoneActivity.setAvailableQuantity(zoneActivity.getAvailableQuantity() + ticketPurchase.getQuantity());
                         }
-                        ticketPurchase.setStatus(ETicketPurchaseStatus.EXPIRED.name());
+                        ticketPurchase.setStatus(ETicketPurchaseStatus.EXPIRED);
 
                         ticketPurchaseRepository.save(ticketPurchase);
                         zoneRepository.save(zone);
@@ -478,7 +478,7 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
                             zoneActivity.setAvailableQuantity(zoneActivity.getAvailableQuantity() + ticketPurchase.getQuantity());
                         }
 
-                        ticketPurchase.setStatus(ETicketPurchaseStatus.EXPIRED.name());
+                        ticketPurchase.setStatus(ETicketPurchaseStatus.EXPIRED);
 
                         ticketPurchaseRepository.save(ticketPurchase);
                         zoneRepository.save(zone);
@@ -494,7 +494,7 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
                         ticketMapping.setQuantity(ticketMapping.getQuantity() + ticketPurchase.getQuantity());
                         ticketMappingRepository.save(ticketMapping);
 
-                        ticketPurchase.setStatus(ETicketPurchaseStatus.EXPIRED.name());
+                        ticketPurchase.setStatus(ETicketPurchaseStatus.EXPIRED);
 
                         ticketPurchaseRepository.save(ticketPurchase);
                     }
@@ -530,7 +530,7 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
             throw new AppException(ErrorCode.CHECKIN_LOG_EXPIRED);
         }
 
-        ticketPurchase.setStatus(ETicketPurchaseStatus.CHECKED_IN.name());
+        ticketPurchase.setStatus(ETicketPurchaseStatus.CHECKED_IN);
         ticketPurchaseRepository.save(ticketPurchase);
         checkinLogRepository.save(checkinLog);
         return "Checkin successful";
@@ -645,5 +645,11 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
             throw new AppException(ErrorCode.QR_CODE_NOT_FOUND);
         }
         return ticketQrCodeDTO;
+    }
+
+    @Override
+    public int countTicketPurchaseStatusByPurchased() {
+        var count = ticketPurchaseRepository.countTicketPurchasesByStatus(ETicketPurchaseStatus.PURCHASED);
+        return count;
     }
 }

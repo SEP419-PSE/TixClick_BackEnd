@@ -23,4 +23,6 @@ public interface TicketPurchaseService {
     List<MyTicketDTO> getTicketPurchasesByAccount();
 
     TicketQrCodeDTO decryptQrCode(String qrCode) throws Exception;
+
+    int countTicketPurchaseStatusByPurchased();
 }
