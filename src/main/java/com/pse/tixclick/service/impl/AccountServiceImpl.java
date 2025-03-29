@@ -10,6 +10,7 @@ import com.pse.tixclick.payload.request.update.UpdateAccountRequest;
 import com.pse.tixclick.payload.response.SearchAccountResponse;
 import com.pse.tixclick.repository.AccountRepository;
 import com.pse.tixclick.repository.CompanyRepository;
+import com.pse.tixclick.repository.MemberRepository;
 import com.pse.tixclick.repository.RoleRepository;
 import com.pse.tixclick.service.AccountService;
 import jakarta.transaction.Transactional;
@@ -37,6 +38,7 @@ public class AccountServiceImpl implements AccountService {
     private final RoleRepository roleRepository;
     private final ModelMapper accountMapper;
     private final CompanyRepository companyRepository;
+    private final MemberRepository memberRepository;
     @Override
     public boolean changePasswordWithOtp(String email, String newPassword, String oldPassword) {
         // Retrieve the account based on the email
@@ -230,6 +232,21 @@ public class AccountServiceImpl implements AccountService {
     public SearchAccountResponse searchAccount(String email) {
         Account account = accountRepository.findAccountByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        return SearchAccountResponse.builder()
+                .userName(account.getUserName())
+                .email(account.getEmail())
+                .firstName(account.getFirstName())
+                .lastName(account.getLastName())
+                .avatar(account.getAvatarURL())
+                .build();
+    }
+
+    @Override
+    public SearchAccountResponse searchAccountWithCompany(String email) {
+        Account account = accountRepository.findAccountByEmail(email)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
 
         return SearchAccountResponse.builder()
                 .userName(account.getUserName())

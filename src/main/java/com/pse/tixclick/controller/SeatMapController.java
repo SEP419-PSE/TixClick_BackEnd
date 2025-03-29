@@ -141,4 +141,25 @@ public class SeatMapController {
         }
     }
 
+    @GetMapping("/sections/{eventId}")
+    public ResponseEntity<ApiResponse<List<SectionRequest>>> getSectionsByEventId(@PathVariable int eventId) {
+        List<SectionRequest> sectionRequests = seatMapService.getSectionsByEventId(eventId);
+
+        if (sectionRequests.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.<List<SectionRequest>>builder()
+                            .code(HttpStatus.NOT_FOUND.value())
+                            .message("No sections found")
+                            .result(null)
+                            .build());
+        }
+
+        return ResponseEntity.ok(
+                ApiResponse.<List<SectionRequest>>builder()
+                        .code(HttpStatus.OK.value())
+                        .message("Get all sections successfully")
+                        .result(sectionRequests)
+                        .build()
+        );
+    }
 }

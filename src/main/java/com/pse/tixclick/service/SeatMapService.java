@@ -1,6 +1,7 @@
 package com.pse.tixclick.service;
 
 import com.pse.tixclick.payload.dto.SeatMapDTO;
+import com.pse.tixclick.payload.request.SeatRequest;
 import com.pse.tixclick.payload.request.SectionRequest;
 import com.pse.tixclick.payload.request.create.CreateSeatMapRequest;
 import com.pse.tixclick.payload.request.update.UpdateSeatMapRequest;
@@ -20,5 +21,8 @@ public interface SeatMapService {
     SeatMapDTO updateSeatMap(UpdateSeatMapRequest updateSeatMapRequest, int seatMapId);
 
     List<SectionRequest> designZone(List<SectionRequest> sectionResponse, int eventId);
+
+    List<SectionRequest> getSectionsByEventId(int eventId);
+    List<SeatRequest> getSeatsByZoneId(int zoneId);
 
 }

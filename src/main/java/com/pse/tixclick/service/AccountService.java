@@ -34,4 +34,5 @@ public interface AccountService {
 
     SearchAccountResponse searchAccount(String email);
 
+    SearchAccountResponse searchAccountWithCompany(String email);
 }

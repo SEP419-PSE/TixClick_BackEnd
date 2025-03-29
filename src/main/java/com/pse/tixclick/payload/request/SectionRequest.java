@@ -2,6 +2,7 @@ package com.pse.tixclick.payload.request;
 
 import com.pse.tixclick.payload.response.SeatResponse;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -10,6 +11,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class SectionRequest {
     private String id;
     private String name;

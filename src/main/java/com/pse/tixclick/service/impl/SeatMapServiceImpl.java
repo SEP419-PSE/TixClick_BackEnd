@@ -237,7 +237,56 @@ public class SeatMapServiceImpl implements SeatMapService {
         return sectionRequests;
     }
 
+    @Override
+    public List<SectionRequest> getSectionsByEventId(int eventId) {
+        var seatMap = seatMapRepository.findSeatMapByEvent_EventId(eventId)
+                .orElseThrow(() -> new AppException(ErrorCode.SEATMAP_NOT_FOUND));
 
+        // Lấy danh sách các Zone thuộc SeatMap
+        List<Zone> zones = zoneRepository.findBySeatMapId(seatMap.getSeatMapId());
+
+        // Nếu không có zone nào, trả về danh sách rỗng
+        if (zones.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // Chuyển đổi Zone entity thành SectionRequest DTO, bao gồm danh sách ghế
+        return zones.stream().map(zone -> SectionRequest.builder()
+                .id(String.valueOf(zone.getZoneId()))
+                .name(zone.getZoneName())
+                .rows(Integer.parseInt(zone.getRows()))
+                .columns(Integer.parseInt(zone.getColumns()))
+                .x(Integer.parseInt(zone.getXPosition()))
+                .y(Integer.parseInt(zone.getYPosition()))
+                .width(Integer.parseInt(zone.getWidth()))
+                .height(Integer.parseInt(zone.getHeight()))
+                .capacity(zone.getQuantity())
+                .type(zone.getZoneType().getTypeName().name()) // Lấy tên enum ZoneType
+                .priceId(zone.getTicket() != null ? zone.getTicket().getTicketCode() : null)
+                .seats(getSeatsByZoneId(zone.getZoneId())) // Gọi hàm lấy danh sách ghế
+                .build()
+        ).collect(Collectors.toList());
+
+    }
+
+    @Override
+    public List<SeatRequest> getSeatsByZoneId(int zoneId) {
+        List<Seat> seats = seatRepository.findSeatsByZone_ZoneId(zoneId);
+
+        // Nếu không có ghế nào, trả về danh sách rỗng
+        if (seats.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // Chuyển đổi từ Seat entity sang SeatRequest DTO
+        return seats.stream().map(seat -> SeatRequest.builder()
+                .id(seat.getSeatName())
+                .row(seat.getRowNumber())
+                .column(seat.getColumnNumber())
+                .seatTypeId(seat.getTicket() != null ? seat.getTicket().getTicketCode() : null)
+                .build()
+        ).collect(Collectors.toList());
+    }
 
 
 }
