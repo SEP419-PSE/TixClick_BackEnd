@@ -105,6 +105,8 @@ public enum ErrorCode {
     SEAT_ACTIVITY_NOT_FOUND(1089, "Không tìm thấy seat activity", HttpStatus.NOT_FOUND),
     SEAT_SOLD_OUT(1090, "Ghế đã bán", HttpStatus.BAD_REQUEST),
     INVALID_PIN_CODE(1091, "Mã PIN không hợp lệ", HttpStatus.BAD_REQUEST),
+    MANAGER_NOT_FOUND(1092, "Không tìm thấy manager phù hợp", HttpStatus.NOT_FOUND),
+    TICKET_EXISTED(1093, "Vé đã tồn tại", HttpStatus.BAD_REQUEST),
     ;
 
 

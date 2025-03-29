@@ -3,8 +3,10 @@ package com.pse.tixclick.service.impl;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.TicketDTO;
+import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
 import com.pse.tixclick.payload.request.TicketRequest;
+import com.pse.tixclick.payload.request.create.CreateTickeSeatMaptRequest;
 import com.pse.tixclick.payload.request.create.CreateTicketRequest;
 import com.pse.tixclick.payload.request.update.UpdateTicketRequest;
 import com.pse.tixclick.repository.AccountRepository;
@@ -93,6 +95,37 @@ public class TicketServiceImpl implements TicketService {
                 .orElseThrow(() -> new AppException(ErrorCode.TICKET_NOT_FOUND));
         ticketRepository.delete(ticket);
         return getAllTicketByEventId(ticket.getEvent().getEventId());
+    }
+
+    @Override
+    public List<TicketRequest> createTicketSeatMap(CreateTickeSeatMaptRequest request) {
+        var context = SecurityContextHolder.getContext();
+        String name = context.getAuthentication().getName();
+        Account account = accountRepository.findAccountByUserName(name)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        ticketRepository.findTicketByTicketCode(request.getId()).ifPresent(ticket -> {
+            throw new AppException(ErrorCode.TICKET_EXISTED);
+        });
+
+        var event = eventRepository.findEventByEventId(request.getEventId())
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+
+        Ticket newTicket = new Ticket();
+        newTicket.setMinQuantity(request.getMinQuantity());
+        newTicket.setMaxQuantity(request.getMaxQuantity());
+        newTicket.setPrice(request.getPrice());
+        newTicket.setTicketName(request.getName());
+        newTicket.setSeatBackgroundColor(request.getColor());
+        newTicket.setTextColor(request.getTextColor());
+        newTicket.setEvent(event);
+        newTicket.setAccount(account);
+        newTicket.setTicketCode(request.getId());
+        newTicket.setCreatedDate(LocalDateTime.now());
+
+        ticketRepository.save(newTicket);
+
+        // Trả về danh sách vé sau khi thêm mới
+        return getAllTicketByEventId(event.getEventId());
     }
 
 }

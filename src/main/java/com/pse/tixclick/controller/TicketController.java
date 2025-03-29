@@ -3,6 +3,7 @@ package com.pse.tixclick.controller;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.payload.dto.TicketDTO;
 import com.pse.tixclick.payload.request.TicketRequest;
+import com.pse.tixclick.payload.request.create.CreateTickeSeatMaptRequest;
 import com.pse.tixclick.payload.request.create.CreateTicketRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
 import com.pse.tixclick.service.TicketService;
@@ -116,4 +117,33 @@ public class TicketController {
         }
     }
 
+    @PostMapping("/create-ticket-seat-map")
+    public ResponseEntity<ApiResponse<List<TicketRequest>>> createTicketSeatMap(@RequestBody CreateTickeSeatMaptRequest request) {
+        try {
+            List<TicketRequest> tickets = ticketService.createTicketSeatMap(request);
+            return ResponseEntity.ok(
+                    ApiResponse.<List<TicketRequest>>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Ticket seat map created successfully")
+                            .result(tickets)
+                            .build()
+            );
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                    ApiResponse.<List<TicketRequest>>builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .result(null)
+                            .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    ApiResponse.<List<TicketRequest>>builder()
+                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .message("Error creating ticket seat map: " + e.getMessage())
+                            .result(null)
+                            .build()
+            );
+        }
+    }
 }
