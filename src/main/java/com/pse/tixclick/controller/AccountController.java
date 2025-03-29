@@ -5,6 +5,7 @@ import com.pse.tixclick.payload.dto.AccountDTO;
 import com.pse.tixclick.payload.request.create.CreateAccountRequest;
 import com.pse.tixclick.payload.request.update.UpdateAccountRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
+import com.pse.tixclick.payload.response.SearchAccountResponse;
 import com.pse.tixclick.service.AccountService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -453,6 +454,33 @@ public class AccountController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
         } catch (Exception e) {
             ApiResponse<String> errorResponse = ApiResponse.<String>builder()
+                    .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .message("An unexpected error occurred.")
+                    .result(null)
+                    .build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+
+    @GetMapping("/search-account")
+    public ResponseEntity<ApiResponse<SearchAccountResponse>> searchAccount(@RequestParam String email) {
+        try{
+            SearchAccountResponse searchAccountResponse = accountService.searchAccount(email);
+            ApiResponse<SearchAccountResponse> apiResponse = ApiResponse.<SearchAccountResponse>builder()
+                    .code(HttpStatus.OK.value())
+                    .message("Account retrieved successfully")
+                    .result(searchAccountResponse)
+                    .build();
+            return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+        } catch (AppException e) {
+            ApiResponse<SearchAccountResponse> errorResponse = ApiResponse.<SearchAccountResponse>builder()
+                    .code(HttpStatus.BAD_REQUEST.value())
+                    .message(e.getMessage())
+                    .result(null)
+                    .build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        } catch (Exception e) {
+            ApiResponse<SearchAccountResponse> errorResponse = ApiResponse.<SearchAccountResponse>builder()
                     .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .message("An unexpected error occurred.")
                     .result(null)

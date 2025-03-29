@@ -7,6 +7,7 @@ import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.Role;
 import com.pse.tixclick.payload.request.create.CreateAccountRequest;
 import com.pse.tixclick.payload.request.update.UpdateAccountRequest;
+import com.pse.tixclick.payload.response.SearchAccountResponse;
 import com.pse.tixclick.repository.AccountRepository;
 import com.pse.tixclick.repository.CompanyRepository;
 import com.pse.tixclick.repository.RoleRepository;
@@ -223,6 +224,20 @@ public class AccountServiceImpl implements AccountService {
 
         return "Login successful.";
 
+    }
+
+    @Override
+    public SearchAccountResponse searchAccount(String email) {
+        Account account = accountRepository.findAccountByEmail(email)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        return SearchAccountResponse.builder()
+                .userName(account.getUserName())
+                .email(account.getEmail())
+                .firstName(account.getFirstName())
+                .lastName(account.getLastName())
+                .avatar(account.getAvatarURL())
+                .build();
     }
 
 
