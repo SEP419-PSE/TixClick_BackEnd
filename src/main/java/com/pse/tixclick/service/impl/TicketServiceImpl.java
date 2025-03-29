@@ -99,7 +99,7 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
-    public List<TicketRequest> createTicketSeatMap(List<CreateTickeSeatMaptRequest> requests) {
+    public List<TicketRequest> createTicketSeatMap(CreateTickeSeatMaptRequest requests) {
         List<Ticket> newTickets = new ArrayList<>();
         var context = SecurityContextHolder.getContext();
         String name = context.getAuthentication().getName();

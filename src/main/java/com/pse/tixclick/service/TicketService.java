@@ -17,5 +17,5 @@ public interface TicketService {
 
     List<TicketRequest> deleteTicket(String ticketCode);
 
-    List<TicketRequest> createTicketSeatMap(List<CreateTickeSeatMaptRequest> request);
+    List<TicketRequest> createTicketSeatMap(CreateTickeSeatMaptRequest request);
 }
