@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -83,10 +84,10 @@ public class TicketServiceImpl implements TicketService {
     public List<TicketRequest> getAllTicketByEventId(int eventId) {
         List<Ticket> tickets = ticketRepository.findTicketsByEvent_EventId(eventId);
 
-        // Nếu danh sách trống, trả về null
         if (tickets.isEmpty()) {
-            return null;
+            return Collections.emptyList();
         }
+
 
         return tickets.stream().map(ticket -> TicketRequest.builder()
                 .id(ticket.getTicketCode())

@@ -53,9 +53,9 @@ public class TicketController {
         try {
             List<TicketRequest> tickets = ticketService.getAllTicketByEventId(eventId);
             if (tickets.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                return ResponseEntity.status(HttpStatus.OK).body(
                         ApiResponse.<List<TicketRequest>>builder()
-                                .code(HttpStatus.NOT_FOUND.value())
+                                .code(HttpStatus.OK.value())
                                 .message("No tickets found for this event")
                                 .result(Collections.emptyList())
                                 .build()
