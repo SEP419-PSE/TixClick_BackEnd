@@ -104,6 +104,7 @@ public enum ErrorCode {
     ZONE_ACTIVITY_NOT_FOUND(1088, "Không tìm thấy zone activity", HttpStatus.NOT_FOUND),
     SEAT_ACTIVITY_NOT_FOUND(1089, "Không tìm thấy seat activity", HttpStatus.NOT_FOUND),
     SEAT_SOLD_OUT(1090, "Ghế đã bán", HttpStatus.BAD_REQUEST),
+    INVALID_PIN_CODE(1091, "Mã PIN không hợp lệ", HttpStatus.BAD_REQUEST),
     ;
 
 

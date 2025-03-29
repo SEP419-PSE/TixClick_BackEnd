@@ -68,18 +68,36 @@ public class AccountController {
 
     @GetMapping("/my-profile")
     public ResponseEntity<ApiResponse<AccountDTO>> getProfile() {
-        // Lấy thông tin tài khoản từ service
-        AccountDTO accountDTO = accountService.myProfile();
+        try{
+            // Gọi service để lấy thông tin tài khoản của người dùng hiện tại
+            AccountDTO accountDTO = accountService.myProfile();
 
-        // Tạo phản hồi API
-        ApiResponse<AccountDTO> apiResponse = ApiResponse.<AccountDTO>builder()
-                .code(HttpStatus.OK.value())
-                .message("Profile retrieved successfully")
-                .result(accountDTO)
-                .build();
+            // Tạo phản hồi API
+            ApiResponse<AccountDTO> apiResponse = ApiResponse.<AccountDTO>builder()
+                    .code(HttpStatus.OK.value())
+                    .message("Profile retrieved successfully")
+                    .result(accountDTO)
+                    .build();
 
-        // Trả về thông tin tài khoản với mã HTTP 200
-        return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+            return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+
+        } catch (AppException e) {
+            ApiResponse<AccountDTO> errorResponse = ApiResponse.<AccountDTO>builder()
+                    .code(HttpStatus.BAD_REQUEST.value())
+                    .message(e.getMessage()) // Lỗi từ service
+                    .result(null)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        } catch (Exception e) {
+            ApiResponse<AccountDTO> errorResponse = ApiResponse.<AccountDTO>builder()
+                    .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .message("An unexpected error occurred.")
+                    .result(null)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
     }
 
     @PutMapping("/update-profile")
@@ -105,6 +123,14 @@ public class AccountController {
                     .build();
 
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        } catch (Exception e) {
+            ApiResponse<AccountDTO> errorResponse = ApiResponse.<AccountDTO>builder()
+                    .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .message("An unexpected error occurred.")
+                    .result(null)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
 
@@ -131,99 +157,307 @@ public class AccountController {
                     .build();
 
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        } catch (Exception e) {
+            ApiResponse<AccountDTO> errorResponse = ApiResponse.<AccountDTO>builder()
+                    .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .message("An unexpected error occurred.")
+                    .result(null)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
 
     @GetMapping("/all")
     public ResponseEntity<ApiResponse<List<AccountDTO>>> getAllAccounts() {
-        List<AccountDTO> accountDTOS = accountService.getAllAccount();
+        try{
+            // Gọi service để lấy danh sách tất cả tài khoản
+            List<AccountDTO> accountDTOS = accountService.getAllAccount();
 
-        ApiResponse<List<AccountDTO>> apiResponse = ApiResponse.<List<AccountDTO>>builder()
-                .code(HttpStatus.OK.value())
-                .message("All accounts retrieved successfully")
-                .result(accountDTOS)
-                .build();
+            // Tạo phản hồi API
+            ApiResponse<List<AccountDTO>> apiResponse = ApiResponse.<List<AccountDTO>>builder()
+                    .code(HttpStatus.OK.value())
+                    .message("Accounts retrieved successfully")
+                    .result(accountDTOS)
+                    .build();
 
-        return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+            return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+
+        } catch (AppException e) {
+            ApiResponse<List<AccountDTO>> errorResponse = ApiResponse.<List<AccountDTO>>builder()
+                    .code(HttpStatus.BAD_REQUEST.value())
+                    .message(e.getMessage()) // Lỗi từ service
+                    .result(null)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        } catch (Exception e) {
+            ApiResponse<List<AccountDTO>> errorResponse = ApiResponse.<List<AccountDTO>>builder()
+                    .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .message("An unexpected error occurred.")
+                    .result(null)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
     }
 
     @GetMapping("/count-buyers")
     public ResponseEntity<ApiResponse<Integer>> countBuyers() {
-        int count = accountService.countTotalBuyers();
+        try{
+            // Gọi service để lấy số lượng người mua
+            int count = accountService.countTotalBuyers();
 
-        ApiResponse<Integer> apiResponse = ApiResponse.<Integer>builder()
-                .code(HttpStatus.OK.value())
-                .message("Buyers count retrieved successfully")
-                .result(count)
-                .build();
+            // Tạo phản hồi API
+            ApiResponse<Integer> apiResponse = ApiResponse.<Integer>builder()
+                    .code(HttpStatus.OK.value())
+                    .message("Buyers count retrieved successfully")
+                    .result(count)
+                    .build();
 
-        return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+            return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+
+        } catch (AppException e) {
+            ApiResponse<Integer> errorResponse = ApiResponse.<Integer>builder()
+                    .code(HttpStatus.BAD_REQUEST.value())
+                    .message(e.getMessage()) // Lỗi từ service
+                    .result(null)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        } catch (Exception e) {
+            ApiResponse<Integer> errorResponse = ApiResponse.<Integer>builder()
+                    .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .message("An unexpected error occurred.")
+                    .result(null)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
     }
 
     @GetMapping("/count-admins")
     public ResponseEntity<ApiResponse<Integer>> countAdmins() {
-        int count = accountService.countTotalAdmins();
+        try{
+            // Gọi service để lấy số lượng quản trị viên
+            int count = accountService.countTotalAdmins();
 
-        ApiResponse<Integer> apiResponse = ApiResponse.<Integer>builder()
-                .code(HttpStatus.OK.value())
-                .message("Admins count retrieved successfully")
-                .result(count)
-                .build();
+            // Tạo phản hồi API
+            ApiResponse<Integer> apiResponse = ApiResponse.<Integer>builder()
+                    .code(HttpStatus.OK.value())
+                    .message("Admins count retrieved successfully")
+                    .result(count)
+                    .build();
 
-        return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+            return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+
+        } catch (AppException e) {
+            ApiResponse<Integer> errorResponse = ApiResponse.<Integer>builder()
+                    .code(HttpStatus.BAD_REQUEST.value())
+                    .message(e.getMessage()) // Lỗi từ service
+                    .result(null)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        } catch (Exception e) {
+            ApiResponse<Integer> errorResponse = ApiResponse.<Integer>builder()
+                    .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .message("An unexpected error occurred.")
+                    .result(null)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
     }
 
     @GetMapping("/count-organizers")
     public ResponseEntity<ApiResponse<Integer>> countOrganizers() {
-        int count = accountService.countTotalOrganizers();
+        try{
+            // Gọi service để lấy số lượng tổ chức viên
+            int count = accountService.countTotalOrganizers();
 
-        ApiResponse<Integer> apiResponse = ApiResponse.<Integer>builder()
-                .code(HttpStatus.OK.value())
-                .message("Organizers count retrieved successfully")
-                .result(count)
-                .build();
+            // Tạo phản hồi API
+            ApiResponse<Integer> apiResponse = ApiResponse.<Integer>builder()
+                    .code(HttpStatus.OK.value())
+                    .message("Organizers count retrieved successfully")
+                    .result(count)
+                    .build();
 
-        return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+            return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+
+        } catch (AppException e) {
+            ApiResponse<Integer> errorResponse = ApiResponse.<Integer>builder()
+                    .code(HttpStatus.BAD_REQUEST.value())
+                    .message(e.getMessage()) // Lỗi từ service
+                    .result(null)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        } catch (Exception e) {
+            ApiResponse<Integer> errorResponse = ApiResponse.<Integer>builder()
+                    .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .message("An unexpected error occurred.")
+                    .result(null)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
     }
 
     @GetMapping("/count-managers")
     public ResponseEntity<ApiResponse<Integer>> countManagers() {
-        int count = accountService.countTotalManagers();
+       try{
+            // Gọi service để lấy số lượng quản lý viên
+            int count = accountService.countTotalManagers();
 
-        ApiResponse<Integer> apiResponse = ApiResponse.<Integer>builder()
-                .code(HttpStatus.OK.value())
-                .message("Managers count retrieved successfully")
-                .result(count)
-                .build();
+            // Tạo phản hồi API
+            ApiResponse<Integer> apiResponse = ApiResponse.<Integer>builder()
+                    .code(HttpStatus.OK.value())
+                    .message("Managers count retrieved successfully")
+                    .result(count)
+                    .build();
 
-        return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+            return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+
+        } catch (AppException e) {
+            ApiResponse<Integer> errorResponse = ApiResponse.<Integer>builder()
+                    .code(HttpStatus.BAD_REQUEST.value())
+                    .message(e.getMessage()) // Lỗi từ service
+                    .result(null)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        } catch (Exception e) {
+            ApiResponse<Integer> errorResponse = ApiResponse.<Integer>builder()
+                    .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .message("An unexpected error occurred.")
+                    .result(null)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+       }
     }
 
     @GetMapping("/count-accounts")
     public ResponseEntity<ApiResponse<Integer>> countAccounts() {
-        int count = accountService.countTotalAccounts();
+        try{
+            // Gọi service để lấy số lượng tài khoản
+            int count = accountService.countTotalAccounts();
 
-        ApiResponse<Integer> apiResponse = ApiResponse.<Integer>builder()
-                .code(HttpStatus.OK.value())
-                .message("Accounts count retrieved successfully")
-                .result(count)
-                .build();
+            // Tạo phản hồi API
+            ApiResponse<Integer> apiResponse = ApiResponse.<Integer>builder()
+                    .code(HttpStatus.OK.value())
+                    .message("Accounts count retrieved successfully")
+                    .result(count)
+                    .build();
 
-        return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+            return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+
+        } catch (AppException e) {
+            ApiResponse<Integer> errorResponse = ApiResponse.<Integer>builder()
+                    .code(HttpStatus.BAD_REQUEST.value())
+                    .message(e.getMessage()) // Lỗi từ service
+                    .result(null)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        } catch (Exception e) {
+            ApiResponse<Integer> errorResponse = ApiResponse.<Integer>builder()
+                    .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .message("An unexpected error occurred.")
+                    .result(null)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
     }
 
     @GetMapping("/role-manager-admin")
     public ResponseEntity<ApiResponse<List<AccountDTO>>> getAccountsByRoleManagerAndAdmin() {
-        List<AccountDTO> accountDTOS = accountService.getAccountsByRoleManagerAndAdmin();
+        try{
+            // Gọi service để lấy danh sách tài khoản theo vai trò quản lý viên và quản trị viên
+            List<AccountDTO> accountDTOS = accountService.getAccountsByRoleManagerAndAdmin();
 
-        ApiResponse<List<AccountDTO>> apiResponse = ApiResponse.<List<AccountDTO>>builder()
-                .code(HttpStatus.OK.value())
-                .message("Accounts retrieved successfully")
-                .result(accountDTOS)
-                .build();
+            // Tạo phản hồi API
+            ApiResponse<List<AccountDTO>> apiResponse = ApiResponse.<List<AccountDTO>>builder()
+                    .code(HttpStatus.OK.value())
+                    .message("Accounts retrieved successfully")
+                    .result(accountDTOS)
+                    .build();
 
-        return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+            return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+
+        } catch (AppException e) {
+            ApiResponse<List<AccountDTO>> errorResponse = ApiResponse.<List<AccountDTO>>builder()
+                    .code(HttpStatus.BAD_REQUEST.value())
+                    .message(e.getMessage()) // Lỗi từ service
+                    .result(null)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        } catch (Exception e) {
+            ApiResponse<List<AccountDTO>> errorResponse = ApiResponse.<List<AccountDTO>>builder()
+                    .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .message("An unexpected error occurred.")
+                    .result(null)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
     }
 
+    @PostMapping("/register-pin-code")
+    public ResponseEntity<ApiResponse<String>> registerPinCode(@RequestParam String pinCode) {
+       try{
+              String pin = accountService.registerPinCode(pinCode);
+              ApiResponse<String> apiResponse = ApiResponse.<String>builder()
+                     .code(HttpStatus.OK.value())
+                     .message("Pin code registered successfully")
+                     .result(pin)
+                     .build();
+              return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+         } catch (AppException e) {
+              ApiResponse<String> errorResponse = ApiResponse.<String>builder()
+                     .code(HttpStatus.BAD_REQUEST.value())
+                     .message(e.getMessage())
+                     .result(null)
+                     .build();
+              return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+       } catch (Exception e) {
+              ApiResponse<String> errorResponse = ApiResponse.<String>builder()
+                     .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                     .message("An unexpected error occurred.")
+                     .result(null)
+                     .build();
+              return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+       }
 
+    }
+
+    @PostMapping("/login-with-pin-code")
+    public ResponseEntity<ApiResponse<String>> loginWithPinCode(@RequestParam String pinCode) {
+        try{
+            String pin = accountService.loginWithPinCode(pinCode);
+            ApiResponse<String> apiResponse = ApiResponse.<String>builder()
+                    .code(HttpStatus.OK.value())
+                    .message("Login with pin code successfully")
+                    .result(pin)
+                    .build();
+            return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+        } catch (AppException e) {
+            ApiResponse<String> errorResponse = ApiResponse.<String>builder()
+                    .code(HttpStatus.BAD_REQUEST.value())
+                    .message(e.getMessage())
+                    .result(null)
+                    .build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        } catch (Exception e) {
+            ApiResponse<String> errorResponse = ApiResponse.<String>builder()
+                    .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .message("An unexpected error occurred.")
+                    .result(null)
+                    .build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
 }

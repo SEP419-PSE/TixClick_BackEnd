@@ -28,5 +28,6 @@ public interface AccountService {
 
     List<AccountDTO> getAccountsByRoleManagerAndAdmin();
 
-
+    String registerPinCode(String pinCode);
+    String loginWithPinCode(String pinCode);
 }

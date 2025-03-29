@@ -176,5 +176,54 @@ public class AccountServiceImpl implements AccountService {
                 .toList();
     }
 
+    @Override
+    public String registerPinCode(String pinCode) {
+        // Kiểm tra tính hợp lệ của mã PIN (phải có đúng 6 chữ số)
+        if (pinCode == null || !pinCode.matches("\\d{6}")) {
+            throw new AppException(ErrorCode.INVALID_PIN_CODE);
+        }
+
+        // Lấy thông tin user từ context
+        var context = SecurityContextHolder.getContext();
+        String userName = context.getAuthentication().getName();
+
+        Account user = accountRepository.findAccountByUserName(userName)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        if(user.getPinCode() != null && !user.getPinCode().isEmpty()) {
+            throw new AppException(ErrorCode.INVALID_PIN_CODE);
+        }
+        // Mã hóa PIN bằng BCrypt
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        String hashedPin = passwordEncoder.encode(pinCode);
+
+        user.setPinCode(hashedPin);
+        accountRepository.save(user);
+
+        return "PIN code registered successfully.";
+    }
+
+    @Override
+    public String loginWithPinCode(String pinCode) {
+        var context = SecurityContextHolder.getContext();
+        String userName = context.getAuthentication().getName();
+
+        Account user = accountRepository.findAccountByUserName(userName)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        if(user.getPinCode() == null || user.getPinCode().isEmpty()) {
+            throw new AppException(ErrorCode.INVALID_PIN_CODE);
+        }
+
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        boolean isPinValid = passwordEncoder.matches(pinCode, user.getPinCode());
+        if (!isPinValid) {
+            throw new AppException(ErrorCode.INVALID_PIN_CODE);
+        }
+
+        return "Login successful.";
+
+    }
+
 
 }
