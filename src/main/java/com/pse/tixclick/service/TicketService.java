@@ -18,4 +18,6 @@ public interface TicketService {
     List<TicketRequest> deleteTicket(String ticketCode);
 
     List<TicketRequest> createTicketSeatMap(CreateTickeSeatMaptRequest request);
+
+    List<TicketRequest> updateTicketSeatMap(CreateTickeSeatMaptRequest request);
 }

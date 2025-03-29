@@ -14,6 +14,7 @@ import com.pse.tixclick.repository.EventActivityRepository;
 import com.pse.tixclick.repository.EventRepository;
 import com.pse.tixclick.repository.TicketRepository;
 import com.pse.tixclick.service.TicketService;
+import com.pse.tixclick.utils.AppUtils;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +38,7 @@ public class TicketServiceImpl implements TicketService {
     TicketRepository ticketRepository;
     ModelMapper modelMapper;
     EventRepository eventRepository;
+    AppUtils appUtils;
     @Override
     public TicketDTO createTicket(CreateTicketRequest ticketDTO) {
         var context = SecurityContextHolder.getContext();
@@ -80,6 +82,12 @@ public class TicketServiceImpl implements TicketService {
     @Override
     public List<TicketRequest> getAllTicketByEventId(int eventId) {
         List<Ticket> tickets = ticketRepository.findTicketsByEvent_EventId(eventId);
+
+        // Nếu danh sách trống, trả về null
+        if (tickets.isEmpty()) {
+            return null;
+        }
+
         return tickets.stream().map(ticket -> TicketRequest.builder()
                 .id(ticket.getTicketCode())
                 .name(ticket.getTicketName())
@@ -89,6 +97,7 @@ public class TicketServiceImpl implements TicketService {
                 .build()
         ).collect(Collectors.toList());
     }
+
 
     @Override
     public List<TicketRequest> deleteTicket(String ticketCode) {
@@ -132,6 +141,47 @@ public class TicketServiceImpl implements TicketService {
         // Chuyển đổi thành DTO để trả về
         return getAllTicketByEventId(event.getEventId());
     }
+
+    @Override
+    public List<TicketRequest> updateTicketSeatMap(CreateTickeSeatMaptRequest request) {
+        var context = SecurityContextHolder.getContext();
+        String name = context.getAuthentication().getName();
+        var account = accountRepository.findAccountByUserName(name)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        var ticket = ticketRepository.findTicketByTicketCode(request.getId())
+                .orElseThrow(() -> new AppException(ErrorCode.TICKET_NOT_FOUND));
+
+        // Chỉ cập nhật nếu giá trị hợp lệ
+        if (request.getMinQuantity() > 0) {
+            ticket.setMinQuantity(request.getMinQuantity());
+        }
+        if (request.getMaxQuantity() > 0) {
+            ticket.setMaxQuantity(request.getMaxQuantity());
+        }
+        if (request.getPrice() > 0) {
+            ticket.setPrice(request.getPrice());
+        }
+        if (appUtils.isValidString(request.getName())) {
+            ticket.setTicketName(request.getName());
+        }
+        if (appUtils.isValidString(request.getColor())) {
+            ticket.setSeatBackgroundColor(request.getColor());
+        }
+        if (appUtils.isValidString(request.getTextColor())) {
+            ticket.setTextColor(request.getTextColor());
+        }
+
+        ticket.setAccount(account);
+        ticket.setCreatedDate(LocalDateTime.now()); // Cập nhật thời gian
+
+        ticketRepository.save(ticket);
+
+        return getAllTicketByEventId(ticket.getEvent().getEventId());
+    }
+
+    // Hàm kiểm tra string hợp lệ (không null, không rỗng, không phải "0", không phải "null")
+
 
 
 
