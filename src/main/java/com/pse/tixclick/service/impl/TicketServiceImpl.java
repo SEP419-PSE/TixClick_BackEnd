@@ -23,6 +23,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -98,34 +99,45 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
-    public List<TicketRequest> createTicketSeatMap(CreateTickeSeatMaptRequest request) {
+    public List<TicketRequest> createTicketSeatMap(List<CreateTickeSeatMaptRequest> requests) {
+        List<Ticket> newTickets = new ArrayList<>();
         var context = SecurityContextHolder.getContext();
         String name = context.getAuthentication().getName();
-        Account account = accountRepository.findAccountByUserName(name)
+        var account = accountRepository.findAccountByUserName(name)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-        ticketRepository.findTicketByTicketCode(request.getId()).ifPresent(ticket -> {
-            throw new AppException(ErrorCode.TICKET_EXISTED);
-        });
+        for (CreateTickeSeatMaptRequest request : requests) {
+            // Kiểm tra ticketCode đã tồn tại chưa
+            if (ticketRepository.findTicketByTicketCode(request.getId()).isPresent()) {
+                throw new AppException(ErrorCode.TICKET_EXISTED);
+            }
 
-        var event = eventRepository.findEventByEventId(request.getEventId())
-                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+            var event = eventRepository.findEventByEventId(request.getEventId())
+                    .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
 
-        Ticket newTicket = new Ticket();
-        newTicket.setMinQuantity(request.getMinQuantity());
-        newTicket.setMaxQuantity(request.getMaxQuantity());
-        newTicket.setPrice(request.getPrice());
-        newTicket.setTicketName(request.getName());
-        newTicket.setSeatBackgroundColor(request.getColor());
-        newTicket.setTextColor(request.getTextColor());
-        newTicket.setEvent(event);
-        newTicket.setAccount(account);
-        newTicket.setTicketCode(request.getId());
-        newTicket.setCreatedDate(LocalDateTime.now());
+            // Tạo vé mới
+            Ticket newTicket = new Ticket();
+            newTicket.setMinQuantity(request.getMinQuantity());
+            newTicket.setMaxQuantity(request.getMaxQuantity());
+            newTicket.setPrice(request.getPrice());
+            newTicket.setTicketName(request.getName());
+            newTicket.setSeatBackgroundColor(request.getColor());
+            newTicket.setTextColor(request.getTextColor());
+            newTicket.setEvent(event);
+            newTicket.setAccount(account);
+            newTicket.setTicketCode(request.getId());
+            newTicket.setCreatedDate(LocalDateTime.now()); // Thời gian tạo vé
 
-        ticketRepository.save(newTicket);
+            newTickets.add(newTicket);
+        }
 
-        // Trả về danh sách vé sau khi thêm mới
-        return getAllTicketByEventId(event.getEventId());
+        // Lưu tất cả vé mới vào database một lần để tối ưu hiệu suất
+        ticketRepository.saveAll(newTickets);
+
+        // Lấy danh sách tất cả vé của sự kiện sau khi thêm mới
+        return getAllTicketByEventId(requests.get(0).getEventId());
     }
+
+
+
 
 }

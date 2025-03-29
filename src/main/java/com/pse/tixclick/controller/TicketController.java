@@ -118,7 +118,7 @@ public class TicketController {
     }
 
     @PostMapping("/create-ticket-seat-map")
-    public ResponseEntity<ApiResponse<List<TicketRequest>>> createTicketSeatMap(@RequestBody CreateTickeSeatMaptRequest request) {
+    public ResponseEntity<ApiResponse<List<TicketRequest>>> createTicketSeatMap(@RequestBody List<CreateTickeSeatMaptRequest> request) {
         try {
             List<TicketRequest> tickets = ticketService.createTicketSeatMap(request);
             return ResponseEntity.ok(
