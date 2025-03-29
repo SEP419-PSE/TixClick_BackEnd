@@ -2,6 +2,7 @@ package com.pse.tixclick.controller;
 
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.payload.dto.TicketDTO;
+import com.pse.tixclick.payload.request.TicketRequest;
 import com.pse.tixclick.payload.request.create.CreateTicketRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
 import com.pse.tixclick.service.TicketService;
@@ -12,6 +13,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Collections;
+import java.util.List;
 
 @RestController
 @RequestMapping("/ticket")
@@ -42,4 +46,44 @@ public class TicketController {
                             .build());
         }
     }
+
+    @GetMapping("/get-tickets-by-event-id/{eventId}")
+    public ResponseEntity<ApiResponse<List<TicketRequest>>> getTicketsByEventId(@PathVariable int eventId) {
+        try {
+            List<TicketRequest> tickets = ticketService.getAllTicketByEventId(eventId);
+            if (tickets.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                        ApiResponse.<List<TicketRequest>>builder()
+                                .code(HttpStatus.NOT_FOUND.value())
+                                .message("No tickets found for this event")
+                                .result(Collections.emptyList())
+                                .build()
+                );
+            }
+            return ResponseEntity.ok(
+                    ApiResponse.<List<TicketRequest>>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Tickets retrieved successfully")
+                            .result(tickets)
+                            .build()
+            );
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                    ApiResponse.<List<TicketRequest>>builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .result(null)
+                            .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    ApiResponse.<List<TicketRequest>>builder()
+                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .message("Error retrieving tickets: " + e.getMessage())
+                            .result(null)
+                            .build()
+            );
+        }
+    }
+
 }

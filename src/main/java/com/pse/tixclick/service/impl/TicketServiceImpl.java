@@ -4,6 +4,7 @@ import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.TicketDTO;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
+import com.pse.tixclick.payload.request.TicketRequest;
 import com.pse.tixclick.payload.request.create.CreateTicketRequest;
 import com.pse.tixclick.payload.request.update.UpdateTicketRequest;
 import com.pse.tixclick.repository.AccountRepository;
@@ -20,6 +21,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -69,6 +72,19 @@ public class TicketServiceImpl implements TicketService {
 
 
     return null;
+    }
+
+    @Override
+    public List<TicketRequest> getAllTicketByEventId(int eventId) {
+        List<Ticket> tickets = ticketRepository.findTicketsByEvent_EventId(eventId);
+        return tickets.stream().map(ticket -> TicketRequest.builder()
+                .id(ticket.getTicketCode())
+                .name(ticket.getTicketName())
+                .color(ticket.getSeatBackgroundColor())
+                .textColor(ticket.getTextColor())
+                .price(ticket.getPrice())
+                .build()
+        ).collect(Collectors.toList());
     }
 
 }
