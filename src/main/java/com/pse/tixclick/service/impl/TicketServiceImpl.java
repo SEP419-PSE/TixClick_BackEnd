@@ -19,6 +19,8 @@ import org.modelmapper.ModelMapper;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -40,7 +42,8 @@ public class TicketServiceImpl implements TicketService {
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
         var ticket = new Ticket();
         ticket.setTicketName(ticketDTO.getTicketName());
-        ticket.setCreatedDate(ticketDTO.getCreatedDate());
+        ticket.setTicketCode(ticketDTO.getTicketCode());    
+        ticket.setCreatedDate(LocalDateTime.now());
         ticket.setPrice(ticketDTO.getPrice());
         ticket.setMinQuantity(ticketDTO.getMinQuantity());
         ticket.setMaxQuantity(ticketDTO.getMaxQuantity());

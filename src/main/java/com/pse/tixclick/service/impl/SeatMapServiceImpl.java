@@ -1,8 +1,11 @@
 package com.pse.tixclick.service.impl;
 
+import com.pse.tixclick.payload.entity.entity_enum.ZoneTypeEnum;
 import com.pse.tixclick.payload.entity.seatmap.Seat;
 import com.pse.tixclick.payload.entity.seatmap.Zone;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
+import com.pse.tixclick.payload.request.SeatRequest;
+import com.pse.tixclick.payload.request.SectionRequest;
 import com.pse.tixclick.payload.response.SeatResponse;
 import com.pse.tixclick.payload.response.SectionResponse;
 import com.pse.tixclick.repository.*;
@@ -28,8 +31,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -151,73 +155,89 @@ public class SeatMapServiceImpl implements SeatMapService {
     }
 
     @Override
-    public List<SectionResponse> designZone(List<SectionResponse> sectionResponse, int eventId) {
+    public List<SectionRequest> designZone(List<SectionRequest> sectionRequests, int eventId) {
         var event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
 
-        Optional<SeatMap> seatmapOpt = seatMapRepository.findSeatMapByEvent_EventId(eventId);
-
-        if (seatmapOpt.isPresent()) {
-            SeatMap seatMap = seatmapOpt.get(); // Lấy SeatMap từ Optional
-
-            // Lấy danh sách zone thuộc seatMap
+        seatMapRepository.findSeatMapByEvent_EventId(eventId).ifPresent(seatMap -> {
             List<Zone> zones = zoneRepository.findBySeatMapId(seatMap.getSeatMapId());
 
-            if (!zones.isEmpty()) { // Nếu có zones thì tiếp tục xóa
-                // Xóa tất cả seats trước
-                for (Zone zone : zones) {
-                    List<Seat> seats = seatRepository.findSeatsByZone_ZoneId(zone.getZoneId());
-                    if (!seats.isEmpty()) {
-                        for (Seat seat : seats) {
-                            seatRepository.delete(seat);
-                            log.info("Deleted seat: {}", seat.getSeatId());
-                        }
-                    }
-                    for (Zone zoneDelete : zones) {
-                        zoneRepository.delete(zoneDelete);
-                        log.info("Deleted zone: {}", zoneDelete.getZoneId());
-                    }
-                }
-
-                // Cuối cùng, xóa seatMap
-                seatMapRepository.delete(seatMap);
-                seatMapRepository.flush(); // Đảm bảo xóa ngay
-                log.info("Deleted seatMap: {}", seatMap.getSeatMapName());
+            if (!zones.isEmpty()) {
+                List<Integer> zoneIds = zones.stream().map(Zone::getZoneId).collect(Collectors.toList());
+                seatRepository.deleteSeatsByZoneIds(zoneIds);
+                zoneRepository.deleteAll(zones);
+                zoneRepository.flush(); // Đẩy thay đổi xuống DB ngay
             }
 
-            // Tạo mới SeatMap
-            SeatMap newSeatMap = new SeatMap();
-            newSeatMap.setEvent(event);
-            seatMapRepository.save(newSeatMap);
+            seatMapRepository.delete(seatMap);
+            seatMapRepository.flush(); // Đẩy thay đổi xuống DB ngay
+        });
 
-            // Duyệt qua danh sách SectionResponse để tạo Zone và Seat
-            for (SectionResponse section : sectionResponse) {
-                var zoneType = zoneTypeRepository.findById(section.getZoneTypeId())
-                        .orElseThrow(() -> new AppException(ErrorCode.ZONE_TYPE_NOT_FOUND));
+        SeatMap newSeatMap = new SeatMap();
+        newSeatMap.setEvent(event);
+        seatMapRepository.saveAndFlush(newSeatMap); // Lưu ngay lập tức
 
-                Zone zone = new Zone();
-                zone.setSeatMap(newSeatMap);
-                zone.setZoneName(section.getName());
-                zone.setZoneType(zoneType);
-                zoneRepository.save(zone);
 
-                // Tạo danh sách ghế cho Zone
-                for (SeatResponse seatDto : section.getSeats()) {
-                    var price = ticketRepository.findById(seatDto.getTicketId())
-                            .orElseThrow(() -> new AppException(ErrorCode.TICKET_NOT_FOUND));
+        Map<String, Ticket> ticketCache = ticketRepository.findAll().stream()
+                .collect(Collectors.toMap(Ticket::getTicketCode, Function.identity()));
 
-                    Seat seat = new Seat();
-                    seat.setZone(zone);
-                    seat.setRowNumber(seatDto.getRowNumber());
-                    seat.setColumnNumber(seatDto.getColumnNumber());
-                    seat.setTicket(price);
-                    seatRepository.save(seat);
-                }
+        for (SectionRequest sectionRequest : sectionRequests) {
+            ZoneTypeEnum zoneTypeEnum = Arrays.stream(ZoneTypeEnum.values())
+                    .filter(e -> e.name().equalsIgnoreCase(sectionRequest.getType()))
+                    .findFirst()
+                    .orElseThrow(() -> new AppException(ErrorCode.ZONE_TYPE_NOT_FOUND));
+
+            var zoneType = zoneTypeRepository.findZoneTypeByTypeName(zoneTypeEnum)
+                    .orElseThrow(() -> new AppException(ErrorCode.ZONE_TYPE_NOT_FOUND));
+
+            Zone zone = new Zone();
+            zone.setSeatMap(newSeatMap);
+            zone.setZoneName(sectionRequest.getName());
+            zone.setZoneType(zoneType);
+            zone.setXPosition(String.valueOf(sectionRequest.getX()));
+            zone.setRows(String.valueOf(sectionRequest.getRows()));
+            zone.setColumns(String.valueOf(sectionRequest.getColumns()));
+            zone.setYPosition(String.valueOf(sectionRequest.getY()));
+            zone.setWidth(String.valueOf(sectionRequest.getWidth()));
+            zone.setHeight(String.valueOf(sectionRequest.getHeight()));
+            zone.setStatus(true);
+            zone.setCreatedDate(LocalDateTime.now());
+
+            int quantity = ZoneTypeEnum.SEATED.equals(zoneTypeEnum)
+                    ? sectionRequest.getRows() * sectionRequest.getColumns()
+                    : sectionRequest.getCapacity();
+            zone.setQuantity(quantity);
+
+            if (!ZoneTypeEnum.SEATED.equals(zoneTypeEnum)) {
+                Ticket ticket = ticketCache.get(sectionRequest.getPriceId());
+                if (ticket == null) throw new AppException(ErrorCode.TICKET_NOT_FOUND);
+                zone.setTicket(ticket);
             }
 
+            zoneRepository.save(zone);
 
+            List<Seat> seats = new ArrayList<>();
+            for (SeatRequest seatDto : sectionRequest.getSeats()) {
+                Ticket price = ticketCache.get(seatDto.getSeatTypeId());
+                if (price == null) throw new AppException(ErrorCode.TICKET_NOT_FOUND);
+
+                Seat seat = new Seat();
+                seat.setZone(zone);
+                seat.setRowNumber(seatDto.getRow());
+                seat.setColumnNumber(seatDto.getColumn());
+                seat.setTicket(price);
+                seat.setSeatName(seatDto.getId());
+                seat.setCreatedDate(LocalDateTime.now());
+
+                seats.add(seat);
+            }
+            seatRepository.saveAll(seats);
         }
-        return sectionResponse;
+
+        return sectionRequests;
     }
+
+
+
 
 }

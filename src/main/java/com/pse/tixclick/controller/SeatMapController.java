@@ -5,6 +5,7 @@ import com.pse.tixclick.payload.dto.EventActivityDTO;
 import com.pse.tixclick.payload.dto.EventDTO;
 import com.pse.tixclick.payload.dto.SeatMapDTO;
 import com.pse.tixclick.payload.dto.TicketDTO;
+import com.pse.tixclick.payload.request.SectionRequest;
 import com.pse.tixclick.payload.request.create.CreateSeatMapRequest;
 import com.pse.tixclick.payload.request.create.CreateTicketRequest;
 import com.pse.tixclick.payload.request.update.UpdateSeatMapRequest;
@@ -113,11 +114,11 @@ public class SeatMapController {
     }
 
     @PostMapping("/design-seatmap")
-    public ResponseEntity<ApiResponse<List<SectionResponse>>> designZone(@RequestBody List<SectionResponse> sectionResponse, @RequestParam int eventId) {
+    public ResponseEntity<ApiResponse<List<SectionRequest>>> designZone(@RequestBody List<SectionRequest> sectionResponse, @RequestParam int eventId) {
         try {
-            List<SectionResponse> sectionResponses = seatMapService.designZone(sectionResponse, eventId);
+            List<SectionRequest> sectionResponses = seatMapService.designZone(sectionResponse, eventId);
             return ResponseEntity.ok(
-                    ApiResponse.<List<SectionResponse>>builder()
+                    ApiResponse.<List<SectionRequest>>builder()
                             .code(200)
                             .message("Zone designed successfully")
                             .result(sectionResponses)
@@ -125,14 +126,14 @@ public class SeatMapController {
             );
         } catch (AppException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST.value())
-                    .body(ApiResponse.<List<SectionResponse>>builder()
+                    .body(ApiResponse.<List<SectionRequest>>builder()
                             .code(HttpStatus.BAD_REQUEST.value())
                             .message(e.getMessage())
                             .result(null)
                             .build());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST.value())
-                    .body(ApiResponse.<List<SectionResponse>>builder()
+                    .body(ApiResponse.<List<SectionRequest>>builder()
                             .code(HttpStatus.BAD_REQUEST.value())
                             .message(e.getMessage())
                             .result(null)

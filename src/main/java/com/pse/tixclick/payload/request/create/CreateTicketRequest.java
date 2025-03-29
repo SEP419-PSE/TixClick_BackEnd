@@ -14,9 +14,8 @@ import java.time.LocalDateTime;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CreateTicketRequest {
     String ticketName;
+    String ticketCode;
     int quantity;
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    LocalDateTime createdDate;
     double price;
     int minQuantity;
     int maxQuantity;

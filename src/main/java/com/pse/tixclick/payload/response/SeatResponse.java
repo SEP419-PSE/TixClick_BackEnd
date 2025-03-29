@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class SeatResponse {
     private int seatId;
+    private String seatName;
 
     private String rowNumber;
 
@@ -18,10 +19,8 @@ public class SeatResponse {
 
     private LocalDateTime createdDate;
 
-    private LocalDateTime updatedDate;
-
     private boolean status;
 
-    private int ticketId;
+    private String ticketId;
 
 }
