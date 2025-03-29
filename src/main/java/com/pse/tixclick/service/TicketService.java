@@ -13,4 +13,6 @@ public interface TicketService {
     TicketDTO updateTicket(UpdateTicketRequest ticketDTO, int ticketId);
 
     List<TicketRequest> getAllTicketByEventId(int eventId);
+
+    List<TicketRequest> deleteTicket(String ticketCode);
 }

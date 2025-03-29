@@ -87,4 +87,12 @@ public class TicketServiceImpl implements TicketService {
         ).collect(Collectors.toList());
     }
 
+    @Override
+    public List<TicketRequest> deleteTicket(String ticketCode) {
+        var ticket = ticketRepository.findTicketByTicketCode(ticketCode)
+                .orElseThrow(() -> new AppException(ErrorCode.TICKET_NOT_FOUND));
+        ticketRepository.delete(ticket);
+        return getAllTicketByEventId(ticket.getEvent().getEventId());
+    }
+
 }

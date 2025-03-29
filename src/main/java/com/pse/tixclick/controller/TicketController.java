@@ -86,4 +86,34 @@ public class TicketController {
         }
     }
 
+    @DeleteMapping("/delete/{ticketCode}")
+    public ResponseEntity<ApiResponse<List<TicketRequest>>> deleteTicket(@PathVariable String ticketCode) {
+        try {
+            List<TicketRequest> tickets = ticketService.deleteTicket(ticketCode);
+            return ResponseEntity.ok(
+                    ApiResponse.<List<TicketRequest>>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Ticket deleted successfully")
+                            .result(tickets)
+                            .build()
+            );
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                    ApiResponse.<List<TicketRequest>>builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .result(null)
+                            .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    ApiResponse.<List<TicketRequest>>builder()
+                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .message("Error deleting ticket: " + e.getMessage())
+                            .result(null)
+                            .build()
+            );
+        }
+    }
+
 }
