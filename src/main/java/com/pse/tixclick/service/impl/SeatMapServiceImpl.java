@@ -192,6 +192,7 @@ public class SeatMapServiceImpl implements SeatMapService {
                     .orElseThrow(() -> new AppException(ErrorCode.ZONE_TYPE_NOT_FOUND));
 
             Zone zone = new Zone();
+            zone.setZoneCode(sectionRequest.getId());
             zone.setSeatMap(newSeatMap);
             zone.setZoneName(sectionRequest.getName());
             zone.setZoneType(zoneType);
@@ -335,20 +336,14 @@ public class SeatMapServiceImpl implements SeatMapService {
     }
 
     @Override
-    public List<SectionResponse> deleteZone(int zoneId) {
-        var zone = zoneRepository.findById(zoneId)
+    public List<SectionResponse> deleteZone(List<SectionRequest> sectionResponse,String zoneId,int eventId) {
+        designZone(sectionResponse,eventId);
+        Zone zone = zoneRepository.findZoneByZoneCode(zoneId)
                 .orElseThrow(() -> new AppException(ErrorCode.ZONE_NOT_FOUND));
-
-        List<Seat> seats = seatRepository.findSeatsByZone_ZoneId(zoneId);
-
-        if (!seats.isEmpty()) {
-            seatRepository.deleteAll(seats);
-        }
-
         zoneRepository.delete(zone);
 
-        int eventId = zone.getSeatMap().getEvent().getEventId();
         return getSectionsByEventId(eventId);
+
     }
 
 

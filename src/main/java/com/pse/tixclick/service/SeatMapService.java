@@ -26,5 +26,5 @@ public interface SeatMapService {
     List<SectionResponse> getSectionsByEventId(int eventId);
     List<SeatResponse> getSeatsByZoneId(int zoneId);
 
-    List<SectionResponse> deleteZone(int zoneId);
+    List<SectionResponse> deleteZone(List<SectionRequest> sectionResponse,String zoneId, int eventId);
 }

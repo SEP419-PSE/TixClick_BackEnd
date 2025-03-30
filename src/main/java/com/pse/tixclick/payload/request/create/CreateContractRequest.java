@@ -13,6 +13,5 @@ public class CreateContractRequest {
     double totalAmount;
     String commission;
     String contractType;
-    int accountId;
     int eventId;
 }

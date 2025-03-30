@@ -165,10 +165,10 @@ public class SeatMapController {
         );
     }
 
-    @DeleteMapping("/sections/{zoneId}")
-    public ResponseEntity<ApiResponse<List<SectionResponse>>> deleteZone(@PathVariable int zoneId) {
+    @DeleteMapping("/zones/{zoneId}/events/{eventId}")
+    public ResponseEntity<ApiResponse<List<SectionResponse>>> deleteZone(@PathVariable String zoneId, @PathVariable int eventId,@RequestBody List<SectionRequest> sectionResponse) {
         try {
-            List<SectionResponse> sectionRequests = seatMapService.deleteZone(zoneId);
+            List<SectionResponse> sectionRequests = seatMapService.deleteZone(sectionResponse, zoneId, eventId);
             if(sectionRequests.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.OK)
                         .body(ApiResponse.<List<SectionResponse>>builder()

@@ -23,6 +23,9 @@ public class Zone {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int zoneId;
 
+    @Column(columnDefinition = "NVARCHAR(255)",unique = true)
+    private String zoneCode;
+
     @Column(columnDefinition = "NVARCHAR(255)")
     private String zoneName;
 
