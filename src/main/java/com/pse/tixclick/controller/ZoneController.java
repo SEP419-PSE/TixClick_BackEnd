@@ -135,27 +135,6 @@ public class ZoneController {
         }
     }
 
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<ApiResponse<List<SectionRequest>>> deleteZone(@PathVariable int id) {
-        try {
-            List<SectionRequest> sectionRequests = zoneService.deleteZone(id);
 
-            return ResponseEntity.ok(
-                    ApiResponse.<List<SectionRequest>>builder()
-                            .code(HttpStatus.OK.value())
-                            .message("Zone deleted successfully")
-                            .result(sectionRequests != null ? sectionRequests : Collections.emptyList())
-                            .build()
-            );
-        } catch (AppException e) {
-            return ResponseEntity.badRequest().body(
-                    ApiResponse.<List<SectionRequest>>builder()
-                            .code(HttpStatus.BAD_REQUEST.value())
-                            .message(e.getMessage())
-                            .result(Collections.emptyList())
-                            .build()
-            );
-        }
-    }
 
 }

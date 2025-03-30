@@ -116,11 +116,11 @@ public class SeatMapController {
     }
 
     @PostMapping("/design-seatmap")
-    public ResponseEntity<ApiResponse<List<SectionRequest>>> designZone(@RequestBody List<SectionRequest> sectionResponse, @RequestParam int eventId) {
+    public ResponseEntity<ApiResponse<List<SectionResponse>>> designZone(@RequestBody List<SectionRequest> sectionResponse, @RequestParam int eventId) {
         try {
-            List<SectionRequest> sectionResponses = seatMapService.designZone(sectionResponse, eventId);
+            List<SectionResponse> sectionResponses = seatMapService.designZone(sectionResponse, eventId);
             return ResponseEntity.ok(
-                    ApiResponse.<List<SectionRequest>>builder()
+                    ApiResponse.<List<SectionResponse>>builder()
                             .code(200)
                             .message("Zone designed successfully")
                             .result(sectionResponses)
@@ -128,14 +128,14 @@ public class SeatMapController {
             );
         } catch (AppException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST.value())
-                    .body(ApiResponse.<List<SectionRequest>>builder()
+                    .body(ApiResponse.<List<SectionResponse>>builder()
                             .code(HttpStatus.BAD_REQUEST.value())
                             .message(e.getMessage())
                             .result(null)
                             .build());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST.value())
-                    .body(ApiResponse.<List<SectionRequest>>builder()
+                    .body(ApiResponse.<List<SectionResponse>>builder()
                             .code(HttpStatus.BAD_REQUEST.value())
                             .message(e.getMessage())
                             .result(null)
@@ -144,12 +144,12 @@ public class SeatMapController {
     }
 
     @GetMapping("/sections/{eventId}")
-    public ResponseEntity<ApiResponse<List<SectionRequest>>> getSectionsByEventId(@PathVariable int eventId) {
-        List<SectionRequest> sectionRequests = seatMapService.getSectionsByEventId(eventId);
+    public ResponseEntity<ApiResponse<List<SectionResponse>>> getSectionsByEventId(@PathVariable int eventId) {
+        List<SectionResponse> sectionRequests = seatMapService.getSectionsByEventId(eventId);
 
         if (sectionRequests.isEmpty()) {
             return ResponseEntity.status(HttpStatus.OK)
-                    .body(ApiResponse.<List<SectionRequest>>builder()
+                    .body(ApiResponse.<List<SectionResponse>>builder()
                             .code(HttpStatus.OK.value())
                             .message("No sections found")
                             .result(Collections.emptyList())
@@ -157,7 +157,7 @@ public class SeatMapController {
         }
 
         return ResponseEntity.ok(
-                ApiResponse.<List<SectionRequest>>builder()
+                ApiResponse.<List<SectionResponse>>builder()
                         .code(HttpStatus.OK.value())
                         .message("Get all sections successfully")
                         .result(sectionRequests)
@@ -166,19 +166,19 @@ public class SeatMapController {
     }
 
     @DeleteMapping("/sections/{zoneId}")
-    public ResponseEntity<ApiResponse<List<SectionRequest>>> deleteZone(@PathVariable int zoneId) {
+    public ResponseEntity<ApiResponse<List<SectionResponse>>> deleteZone(@PathVariable int zoneId) {
         try {
-            List<SectionRequest> sectionRequests = seatMapService.deleteZone(zoneId);
+            List<SectionResponse> sectionRequests = seatMapService.deleteZone(zoneId);
             if(sectionRequests.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.OK)
-                        .body(ApiResponse.<List<SectionRequest>>builder()
+                        .body(ApiResponse.<List<SectionResponse>>builder()
                                 .code(HttpStatus.OK.value())
                                 .message("No sections found")
                                 .result(Collections.emptyList())
                                 .build());
             }
             return ResponseEntity.ok(
-                    ApiResponse.<List<SectionRequest>>builder()
+                    ApiResponse.<List<SectionResponse>>builder()
                             .code(HttpStatus.OK.value())
                             .message("Zone deleted successfully")
                             .result(sectionRequests != null ? sectionRequests : Collections.emptyList())
@@ -186,18 +186,18 @@ public class SeatMapController {
             );
         } catch (AppException e) {
             return ResponseEntity.badRequest().body(
-                    ApiResponse.<List<SectionRequest>>builder()
+                    ApiResponse.<List<SectionResponse>>builder()
                             .code(HttpStatus.BAD_REQUEST.value())
                             .message(e.getMessage())
-                            .result(Collections.emptyList())
+                            .result(null)
                             .build()
             );
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST.value())
-                    .body(ApiResponse.<List<SectionRequest>>builder()
+                    .body(ApiResponse.<List<SectionResponse>>builder()
                             .code(HttpStatus.BAD_REQUEST.value())
                             .message(e.getMessage())
-                            .result(Collections.emptyList())
+                            .result(null)
                             .build());
         }
     }

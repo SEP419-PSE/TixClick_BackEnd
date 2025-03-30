@@ -23,6 +23,5 @@ public interface ZoneService{
 
     List<ZoneDTO> getZonesByType(int type);
 
-    List<SectionRequest> deleteZone(int zoneId);
 
 }

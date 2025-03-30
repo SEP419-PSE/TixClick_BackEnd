@@ -155,7 +155,7 @@ public class SeatMapServiceImpl implements SeatMapService {
     }
 
     @Override
-    public List<SectionRequest> designZone(List<SectionRequest> sectionRequests, int eventId) {
+    public List<SectionResponse> designZone(List<SectionRequest> sectionRequests, int eventId) {
         var event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
 
@@ -163,23 +163,24 @@ public class SeatMapServiceImpl implements SeatMapService {
             List<Zone> zones = zoneRepository.findBySeatMapId(seatMap.getSeatMapId());
 
             if (!zones.isEmpty()) {
-                List<Integer> zoneIds = zones.stream().map(Zone::getZoneId).collect(Collectors.toList());
+                List<Integer> zoneIds = zones.stream().map(Zone::getZoneId).toList();
                 seatRepository.deleteSeatsByZoneIds(zoneIds);
                 zoneRepository.deleteAll(zones);
-                zoneRepository.flush(); // Đẩy thay đổi xuống DB ngay
+                zoneRepository.flush();
             }
 
             seatMapRepository.delete(seatMap);
-            seatMapRepository.flush(); // Đẩy thay đổi xuống DB ngay
+            seatMapRepository.flush();
         });
 
         SeatMap newSeatMap = new SeatMap();
         newSeatMap.setEvent(event);
-        seatMapRepository.saveAndFlush(newSeatMap); // Lưu ngay lập tức
-
+        seatMapRepository.saveAndFlush(newSeatMap);
 
         Map<String, Ticket> ticketCache = ticketRepository.findAll().stream()
                 .collect(Collectors.toMap(Ticket::getTicketCode, Function.identity()));
+
+        List<SectionResponse> sectionResponses = new ArrayList<>();
 
         for (SectionRequest sectionRequest : sectionRequests) {
             ZoneTypeEnum zoneTypeEnum = Arrays.stream(ZoneTypeEnum.values())
@@ -208,37 +209,66 @@ public class SeatMapServiceImpl implements SeatMapService {
                     : sectionRequest.getCapacity();
             zone.setQuantity(quantity);
 
+            Ticket ticket = ticketCache.get(sectionRequest.getPriceId());
+            double price = (ticket != null) ? ticket.getPrice() : 0;
             if (!ZoneTypeEnum.SEATED.equals(zoneTypeEnum)) {
-                Ticket ticket = ticketCache.get(sectionRequest.getPriceId());
                 if (ticket == null) throw new AppException(ErrorCode.TICKET_NOT_FOUND);
                 zone.setTicket(ticket);
             }
 
             zoneRepository.save(zone);
 
+            List<SeatResponse> seatResponses = new ArrayList<>();
             List<Seat> seats = new ArrayList<>();
             for (SeatRequest seatDto : sectionRequest.getSeats()) {
-                Ticket price = ticketCache.get(seatDto.getSeatTypeId());
-                if (price == null) throw new AppException(ErrorCode.TICKET_NOT_FOUND);
+                Ticket seatTicket = ticketCache.get(seatDto.getSeatTypeId());
+                if (seatTicket == null) throw new AppException(ErrorCode.TICKET_NOT_FOUND);
 
                 Seat seat = new Seat();
                 seat.setZone(zone);
                 seat.setRowNumber(seatDto.getRow());
                 seat.setColumnNumber(seatDto.getColumn());
-                seat.setTicket(price);
+                seat.setTicket(seatTicket);
                 seat.setSeatName(seatDto.getId());
                 seat.setCreatedDate(LocalDateTime.now());
-
+                seat.setStatus(true);
                 seats.add(seat);
-            }
+
+                SeatResponse seatResponse = new SeatResponse();
+                seatResponse.setId(seatDto.getId());
+                seatResponse.setRow(seatDto.getRow());
+                seatResponse.setColumn(seatDto.getColumn());
+                seatResponse.setSeatTypeId(seatTicket.getTicketCode());
+                seatResponse.setStatus(seat.isStatus());
+                seatResponses.add(seatResponse);            }
             seatRepository.saveAll(seats);
+
+            SectionResponse sectionResponse = SectionResponse.builder()
+                    .id(String.valueOf(zone.getZoneId()))
+                    .name(zone.getZoneName())
+                    .rows(Integer.parseInt(zone.getRows()))
+                    .columns(Integer.parseInt(zone.getColumns()))
+                    .x(Integer.parseInt(zone.getXPosition()))
+                    .y(Integer.parseInt(zone.getYPosition()))
+                    .width(Integer.parseInt(zone.getWidth()))
+                    .height(Integer.parseInt(zone.getHeight()))
+                    .capacity(zone.getQuantity())
+                    .type(zone.getZoneType().getTypeName().name())
+                    .priceId(zone.getTicket() != null ? zone.getTicket().getTicketCode() : null)
+                    .price(price)
+                    .seats(seatResponses)
+                    .isSave(zone.isStatus())
+                    .build();
+
+            sectionResponses.add(sectionResponse);
         }
 
-        return sectionRequests;
+        return sectionResponses;
     }
 
+
     @Override
-    public List<SectionRequest> getSectionsByEventId(int eventId) {
+    public List<SectionResponse> getSectionsByEventId(int eventId) {
         var seatMap = seatMapRepository.findSeatMapByEvent_EventId(eventId);
         if (seatMap.isEmpty()) {
             return Collections.emptyList();
@@ -264,7 +294,7 @@ public class SeatMapServiceImpl implements SeatMapService {
                         .orElse(0.0); // Nếu không tìm thấy ticket thì để giá 0
             }
 
-            return SectionRequest.builder()
+            return SectionResponse.builder()
                     .id(String.valueOf(zone.getZoneId()))
                     .name(zone.getZoneName())
                     .rows(Integer.parseInt(zone.getRows()))
@@ -278,13 +308,14 @@ public class SeatMapServiceImpl implements SeatMapService {
                     .priceId(ticketCode) // Ticket Code của vé
                     .price(price) // Giá tiền lấy từ ticket
                     .seats(getSeatsByZoneId(zone.getZoneId())) // Gọi hàm lấy danh sách ghế
+                    .isSave(zone.isStatus())
                     .build();
         }).collect(Collectors.toList());
     }
 
 
     @Override
-    public List<SeatRequest> getSeatsByZoneId(int zoneId) {
+    public List<SeatResponse> getSeatsByZoneId(int zoneId) {
         List<Seat> seats = seatRepository.findSeatsByZone_ZoneId(zoneId);
 
         // Nếu không có ghế nào, trả về danh sách rỗng
@@ -293,17 +324,18 @@ public class SeatMapServiceImpl implements SeatMapService {
         }
 
         // Chuyển đổi từ Seat entity sang SeatRequest DTO
-        return seats.stream().map(seat -> SeatRequest.builder()
+        return seats.stream().map(seat -> SeatResponse.builder()
                 .id(seat.getSeatName())
                 .row(seat.getRowNumber())
                 .column(seat.getColumnNumber())
                 .seatTypeId(seat.getTicket() != null ? seat.getTicket().getTicketCode() : null)
+                .status(seat.isStatus())
                 .build()
         ).collect(Collectors.toList());
     }
 
     @Override
-    public List<SectionRequest> deleteZone(int zoneId) {
+    public List<SectionResponse> deleteZone(int zoneId) {
         var zone = zoneRepository.findById(zoneId)
                 .orElseThrow(() -> new AppException(ErrorCode.ZONE_NOT_FOUND));
 

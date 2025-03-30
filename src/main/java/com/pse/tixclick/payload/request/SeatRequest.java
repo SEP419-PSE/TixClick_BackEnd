@@ -20,4 +20,6 @@ public class SeatRequest {
 
     private String seatTypeId;
 
+
+
 }

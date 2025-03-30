@@ -1,26 +1,22 @@
 package com.pse.tixclick.payload.response;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class SeatResponse {
-    private int seatId;
-    private String seatName;
+    private String id;
 
-    private String rowNumber;
+    private String row;
 
-    private String columnNumber;
+    private String column;
 
-    private LocalDateTime createdDate;
+    private String seatTypeId;
 
     private boolean status;
-
-    private String ticketId;
-
 }

@@ -5,6 +5,7 @@ import com.pse.tixclick.payload.request.SeatRequest;
 import com.pse.tixclick.payload.request.SectionRequest;
 import com.pse.tixclick.payload.request.create.CreateSeatMapRequest;
 import com.pse.tixclick.payload.request.update.UpdateSeatMapRequest;
+import com.pse.tixclick.payload.response.SeatResponse;
 import com.pse.tixclick.payload.response.SectionResponse;
 
 import java.util.List;
@@ -20,10 +21,10 @@ public interface SeatMapService {
 
     SeatMapDTO updateSeatMap(UpdateSeatMapRequest updateSeatMapRequest, int seatMapId);
 
-    List<SectionRequest> designZone(List<SectionRequest> sectionResponse, int eventId);
+    List<SectionResponse> designZone(List<SectionRequest> sectionResponse, int eventId);
 
-    List<SectionRequest> getSectionsByEventId(int eventId);
-    List<SeatRequest> getSeatsByZoneId(int zoneId);
+    List<SectionResponse> getSectionsByEventId(int eventId);
+    List<SeatResponse> getSeatsByZoneId(int zoneId);
 
-    List<SectionRequest> deleteZone(int zoneId);
+    List<SectionResponse> deleteZone(int zoneId);
 }
