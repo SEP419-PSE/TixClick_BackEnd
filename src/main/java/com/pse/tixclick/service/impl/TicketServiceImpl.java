@@ -27,6 +27,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -115,33 +116,45 @@ public class TicketServiceImpl implements TicketService {
         var account = accountRepository.findAccountByUserName(name)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-        // Kiểm tra ticketCode đã tồn tại chưa
-        if (ticketRepository.findTicketByTicketCode(request.getId()).isPresent()) {
-            throw new AppException(ErrorCode.TICKET_EXISTED);
-        }
-
         var event = eventRepository.findEventByEventId(request.getEventId())
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
 
-        // Tạo vé mới
-        Ticket newTicket = new Ticket();
-        newTicket.setMinQuantity(request.getMinQuantity());
-        newTicket.setMaxQuantity(request.getMaxQuantity());
-        newTicket.setPrice(request.getPrice());
-        newTicket.setTicketName(request.getName());
-        newTicket.setSeatBackgroundColor(request.getColor());
-        newTicket.setTextColor(request.getTextColor());
-        newTicket.setEvent(event);
-        newTicket.setAccount(account);
-        newTicket.setTicketCode(request.getId());
-        newTicket.setCreatedDate(LocalDateTime.now()); // Thời gian tạo vé
+        // Kiểm tra ticketCode đã tồn tại chưa
+        Optional<Ticket> existingTicket = ticketRepository.findTicketByTicketCode(request.getId());
 
-        // Lưu vào database
-        ticketRepository.save(newTicket);
+        if (existingTicket.isPresent()) {
+            // ✅ Nếu vé đã tồn tại, cập nhật thông tin mới
+            Ticket ticketToUpdate = existingTicket.get();
+            ticketToUpdate.setMinQuantity(request.getMinQuantity());
+            ticketToUpdate.setMaxQuantity(request.getMaxQuantity());
+            ticketToUpdate.setPrice(request.getPrice());
+            ticketToUpdate.setTicketName(request.getName());
+            ticketToUpdate.setSeatBackgroundColor(request.getColor());
+            ticketToUpdate.setTextColor(request.getTextColor());
+            ticketToUpdate.setCreatedDate(LocalDateTime.now()); // Cập nhật thời gian sửa đổi
 
-        // Chuyển đổi thành DTO để trả về
+            ticketRepository.save(ticketToUpdate);
+        } else {
+            // ✅ Nếu chưa có vé, tạo mới
+            Ticket newTicket = new Ticket();
+            newTicket.setMinQuantity(request.getMinQuantity());
+            newTicket.setMaxQuantity(request.getMaxQuantity());
+            newTicket.setPrice(request.getPrice());
+            newTicket.setTicketName(request.getName());
+            newTicket.setSeatBackgroundColor(request.getColor());
+            newTicket.setTextColor(request.getTextColor());
+            newTicket.setEvent(event);
+            newTicket.setAccount(account);
+            newTicket.setTicketCode(request.getId());
+            newTicket.setCreatedDate(LocalDateTime.now()); // Thời gian tạo vé
+
+            ticketRepository.save(newTicket);
+        }
+
+        // Trả về danh sách vé sau khi cập nhật/tạo mới
         return getAllTicketByEventId(event.getEventId());
     }
+
 
     @Override
     public List<TicketRequest> updateTicketSeatMap(CreateTickeSeatMaptRequest request) {
