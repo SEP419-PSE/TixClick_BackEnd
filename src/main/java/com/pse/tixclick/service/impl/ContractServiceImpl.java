@@ -1,5 +1,6 @@
 package com.pse.tixclick.service.impl;
 
+import com.pse.tixclick.email.EmailService;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.ContractDTO;
@@ -20,7 +21,9 @@ import com.pse.tixclick.payload.request.create.CreateContractRequest;
 import com.pse.tixclick.payload.response.QRCompanyResponse;
 import com.pse.tixclick.repository.*;
 import com.pse.tixclick.service.ContractService;
+import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
+import jakarta.validation.constraints.Email;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -48,6 +51,7 @@ public class ContractServiceImpl implements ContractService {
     SeatActivityRepository seatActivityRepository;
     ZoneRepository zoneRepository;
     SeatRepository seatRepository;
+    EmailService emailService;
 
     @Override
     public ContractDTO createContract(CreateContractRequest request) {
@@ -107,7 +111,7 @@ public class ContractServiceImpl implements ContractService {
     }
 
     @Override
-    public String approveContract(int contractVerificationId, EVerificationStatus status) {
+    public String approveContract(int contractVerificationId, EVerificationStatus status) throws MessagingException {
         var context = SecurityContextHolder.getContext();
         String userName = context.getAuthentication().getName();
         var account = accountRepository.findAccountByUserName(userName)
@@ -129,6 +133,15 @@ public class ContractServiceImpl implements ContractService {
 
         switch (status) {
             case APPROVED:
+                String fullName = contractVerification.getContract().getCompany().getRepresentativeId().getFirstName() + " " +
+                        contractVerification.getContract().getCompany().getRepresentativeId().getLastName();
+
+                emailService.sendEventStartNotification(
+                        contractVerification.getContract().getCompany().getRepresentativeId().getEmail(),
+                        contractVerification.getContract().getEvent().getEventName(),
+                        fullName
+                );
+
                 contractVerification.setStatus(EVerificationStatus.APPROVED);
                 contractVerificationRepository.save(contractVerification);
 

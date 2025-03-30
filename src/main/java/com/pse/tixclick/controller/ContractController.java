@@ -2,6 +2,7 @@ package com.pse.tixclick.controller;
 
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.payload.dto.ContractDTO;
+import com.pse.tixclick.payload.entity.entity_enum.EVerificationStatus;
 import com.pse.tixclick.payload.request.create.CreateContractRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
 import com.pse.tixclick.service.ContractService;
@@ -66,6 +67,36 @@ public class ContractController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.<List<ContractDTO>>builder()
+                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .message("Internal Server Error: " + e.getMessage())
+                            .result(null)
+                            .build());
+        }
+    }
+
+    @PutMapping("/approve")
+    public ResponseEntity<ApiResponse<String>> approveContract(
+            @RequestParam int contractVerificationId,
+            @RequestParam EVerificationStatus status) {
+        try {
+            String result = contractService.approveContract(contractVerificationId, status);
+            return ResponseEntity.ok(
+                    ApiResponse.<String>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Contract approved successfully")
+                            .result(result)
+                            .build()
+            );
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.<String>builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<String>builder()
                             .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .message("Internal Server Error: " + e.getMessage())
                             .result(null)
