@@ -15,4 +15,5 @@ public interface SeatMapRepository extends JpaRepository<SeatMap,Integer> {
     Optional<SeatMap> findSeatMapByEvent(@Param("eId") int eventId);
 
     Optional<SeatMap> findSeatMapByEvent_EventId(int eventId);
+
 }
