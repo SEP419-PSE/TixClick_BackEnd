@@ -302,5 +302,22 @@ public class SeatMapServiceImpl implements SeatMapService {
         ).collect(Collectors.toList());
     }
 
+    @Override
+    public List<SectionRequest> deleteZone(int zoneId) {
+        var zone = zoneRepository.findById(zoneId)
+                .orElseThrow(() -> new AppException(ErrorCode.ZONE_NOT_FOUND));
+
+        List<Seat> seats = seatRepository.findSeatsByZone_ZoneId(zoneId);
+
+        if (!seats.isEmpty()) {
+            seatRepository.deleteAll(seats);
+        }
+
+        zoneRepository.delete(zone);
+
+        int eventId = zone.getSeatMap().getEvent().getEventId();
+        return getSectionsByEventId(eventId);
+    }
+
 
 }

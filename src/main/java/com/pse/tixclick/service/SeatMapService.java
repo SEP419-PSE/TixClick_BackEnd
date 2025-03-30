@@ -25,4 +25,5 @@ public interface SeatMapService {
     List<SectionRequest> getSectionsByEventId(int eventId);
     List<SeatRequest> getSeatsByZoneId(int zoneId);
 
+    List<SectionRequest> deleteZone(int zoneId);
 }

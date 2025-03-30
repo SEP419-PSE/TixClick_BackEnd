@@ -164,4 +164,42 @@ public class SeatMapController {
                         .build()
         );
     }
+
+    @DeleteMapping("/sections/{zoneId}")
+    public ResponseEntity<ApiResponse<List<SectionRequest>>> deleteZone(@PathVariable int zoneId) {
+        try {
+            List<SectionRequest> sectionRequests = seatMapService.deleteZone(zoneId);
+            if(sectionRequests.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.OK)
+                        .body(ApiResponse.<List<SectionRequest>>builder()
+                                .code(HttpStatus.OK.value())
+                                .message("No sections found")
+                                .result(Collections.emptyList())
+                                .build());
+            }
+            return ResponseEntity.ok(
+                    ApiResponse.<List<SectionRequest>>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Zone deleted successfully")
+                            .result(sectionRequests != null ? sectionRequests : Collections.emptyList())
+                            .build()
+            );
+        } catch (AppException e) {
+            return ResponseEntity.badRequest().body(
+                    ApiResponse.<List<SectionRequest>>builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .result(Collections.emptyList())
+                            .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST.value())
+                    .body(ApiResponse.<List<SectionRequest>>builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .result(Collections.emptyList())
+                            .build());
+        }
+    }
+
 }
