@@ -252,24 +252,36 @@ public class SeatMapServiceImpl implements SeatMapService {
             return Collections.emptyList();
         }
 
-        // Chuyển đổi Zone entity thành SectionRequest DTO, bao gồm danh sách ghế
-        return zones.stream().map(zone -> SectionRequest.builder()
-                .id(String.valueOf(zone.getZoneId()))
-                .name(zone.getZoneName())
-                .rows(Integer.parseInt(zone.getRows()))
-                .columns(Integer.parseInt(zone.getColumns()))
-                .x(Integer.parseInt(zone.getXPosition()))
-                .y(Integer.parseInt(zone.getYPosition()))
-                .width(Integer.parseInt(zone.getWidth()))
-                .height(Integer.parseInt(zone.getHeight()))
-                .capacity(zone.getQuantity())
-                .type(zone.getZoneType().getTypeName().name()) // Lấy tên enum ZoneType
-                .priceId(zone.getTicket() != null ? zone.getTicket().getTicketCode() : null)
-                .seats(getSeatsByZoneId(zone.getZoneId())) // Gọi hàm lấy danh sách ghế
-                .build()
-        ).collect(Collectors.toList());
+        // Chuyển đổi Zone entity thành SectionRequest DTO, bao gồm danh sách ghế và giá vé
+        return zones.stream().map(zone -> {
+            String ticketCode = (zone.getTicket() != null) ? zone.getTicket().getTicketCode() : null;
 
+            // 🔥 Lấy giá tiền từ ticketCode
+            double price = 0; // Mặc định nếu không có vé thì giá là 0
+            if (ticketCode != null) {
+                price = ticketRepository.findTicketByTicketCode(ticketCode)
+                        .map(Ticket::getPrice)
+                        .orElse(0.0); // Nếu không tìm thấy ticket thì để giá 0
+            }
+
+            return SectionRequest.builder()
+                    .id(String.valueOf(zone.getZoneId()))
+                    .name(zone.getZoneName())
+                    .rows(Integer.parseInt(zone.getRows()))
+                    .columns(Integer.parseInt(zone.getColumns()))
+                    .x(Integer.parseInt(zone.getXPosition()))
+                    .y(Integer.parseInt(zone.getYPosition()))
+                    .width(Integer.parseInt(zone.getWidth()))
+                    .height(Integer.parseInt(zone.getHeight()))
+                    .capacity(zone.getQuantity())
+                    .type(zone.getZoneType().getTypeName().name()) // Lấy tên enum ZoneType
+                    .priceId(ticketCode) // Ticket Code của vé
+                    .price(price) // Giá tiền lấy từ ticket
+                    .seats(getSeatsByZoneId(zone.getZoneId())) // Gọi hàm lấy danh sách ghế
+                    .build();
+        }).collect(Collectors.toList());
     }
+
 
     @Override
     public List<SeatRequest> getSeatsByZoneId(int zoneId) {

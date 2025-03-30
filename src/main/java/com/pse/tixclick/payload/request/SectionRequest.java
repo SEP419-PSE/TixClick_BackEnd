@@ -25,5 +25,6 @@ public class SectionRequest {
     private int capacity;
     private String type;
     private String priceId;
+    private double price;
 
 }
