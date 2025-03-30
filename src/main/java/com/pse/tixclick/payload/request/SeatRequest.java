@@ -18,8 +18,6 @@ public class SeatRequest {
 
     private String column;
 
-    private boolean status;
-
     private String seatTypeId;
 
 }
