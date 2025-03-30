@@ -239,11 +239,13 @@ public class SeatMapServiceImpl implements SeatMapService {
 
     @Override
     public List<SectionRequest> getSectionsByEventId(int eventId) {
-        var seatMap = seatMapRepository.findSeatMapByEvent_EventId(eventId)
-                .orElseThrow(() -> new AppException(ErrorCode.SEATMAP_NOT_FOUND));
+        var seatMap = seatMapRepository.findSeatMapByEvent_EventId(eventId);
+        if (seatMap.isEmpty()) {
+            return Collections.emptyList();
+        }
 
         // Lấy danh sách các Zone thuộc SeatMap
-        List<Zone> zones = zoneRepository.findBySeatMapId(seatMap.getSeatMapId());
+        List<Zone> zones = zoneRepository.findBySeatMapId(seatMap.get().getSeatMapId());
 
         // Nếu không có zone nào, trả về danh sách rỗng
         if (zones.isEmpty()) {

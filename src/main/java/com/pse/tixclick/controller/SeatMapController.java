@@ -18,6 +18,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -146,11 +148,11 @@ public class SeatMapController {
         List<SectionRequest> sectionRequests = seatMapService.getSectionsByEventId(eventId);
 
         if (sectionRequests.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            return ResponseEntity.status(HttpStatus.OK)
                     .body(ApiResponse.<List<SectionRequest>>builder()
-                            .code(HttpStatus.NOT_FOUND.value())
+                            .code(HttpStatus.OK.value())
                             .message("No sections found")
-                            .result(null)
+                            .result(Collections.emptyList())
                             .build());
         }
 
