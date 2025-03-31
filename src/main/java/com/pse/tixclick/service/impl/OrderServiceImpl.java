@@ -98,8 +98,14 @@ public class OrderServiceImpl implements OrderService {
             TicketPurchase ticketPurchase = ticketPurchaseRepository
                     .findById(ticketPurchaseId)
                     .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
-            if(ticketPurchase.getStatus().equals(ETicketPurchaseStatus.EXPIRED.name())) {
+            if(ticketPurchase.getStatus().equals(ETicketPurchaseStatus.EXPIRED)) {
                 throw new AppException(ErrorCode.TICKET_PURCHASE_EXPIRED);
+            }
+            if(ticketPurchase.getStatus().equals(ETicketPurchaseStatus.CHECKED_IN)) {
+                throw new AppException(ErrorCode.TICKET_PURCHASE_CHECKED_IN);
+            }
+            if (ticketPurchase.getStatus().equals(ETicketPurchaseStatus.CANCELLED)) {
+                throw new AppException(ErrorCode.TICKET_PURCHASE_CANCELLED);
             }
 
             quantity = ticketPurchase.getQuantity();

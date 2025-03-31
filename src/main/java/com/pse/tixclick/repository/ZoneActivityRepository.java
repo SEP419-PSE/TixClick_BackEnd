@@ -16,4 +16,6 @@ public interface ZoneActivityRepository extends JpaRepository<ZoneActivity, Inte
 
     List<ZoneActivity> findZoneActivitiesByEventActivity_EventActivityId(int eventActivityId);
 
+    @Query("SELECT z FROM ZoneActivity z WHERE z.zone.zoneId = :zoneId")
+    List<ZoneActivity> findByZoneId(@Param("zoneId") int zoneId);
 }

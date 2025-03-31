@@ -17,6 +17,7 @@ import com.pse.tixclick.payload.entity.payment.Payment;
 import com.pse.tixclick.payload.entity.payment.Transaction;
 import com.pse.tixclick.payload.entity.seatmap.*;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
+import com.pse.tixclick.payload.entity.ticket.TicketMapping;
 import com.pse.tixclick.payload.entity.ticket.TicketPurchase;
 import com.pse.tixclick.payload.response.PayOSResponse;
 import com.pse.tixclick.payload.response.PaymentResponse;
@@ -38,6 +39,8 @@ import vn.payos.type.PaymentData;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -103,6 +106,9 @@ public class PaymentServiceImpl implements PaymentService {
     @Autowired
     SeatActivityRepository seatActivityRepository;
 
+    @Autowired
+    TicketMappingRepository ticketMappingRepository;
+
 
     @Override
     public PayOSResponse changeOrderStatusPayOs(int orderId) {
@@ -110,7 +116,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public PayOSResponse createPaymentLink(int orderId, HttpServletRequest request) throws Exception {
+    public PayOSResponse createPaymentLink(int orderId, long expiredTime, HttpServletRequest request) throws Exception {
         ObjectMapper objectMapper = new ObjectMapper();
 
         Order order = orderRepository
@@ -148,8 +154,9 @@ public class PaymentServiceImpl implements PaymentService {
                 "&userName=" + account.getUserName() +
                 "&amount=" + itemData.getPrice() +
                 "&name=" + itemData.getName();
-
+        long expiredAt = Instant.now().getEpochSecond() + expiredTime;
         PaymentData paymentData = PaymentData.builder()
+                .expiredAt(expiredAt)
                 .orderCode(orderCode)
                 .amount(totalAmount)
                 .description("Thanh toán đơn hàng")
@@ -199,6 +206,9 @@ public class PaymentServiceImpl implements PaymentService {
                     .findById(Integer.valueOf(orderId))
                     .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
 
+            order.setStatus(EOrderStatus.SUCCESSFUL.name());
+            orderRepository.save(order);
+
             Account account = accountRepository
                     .findAccountByUserName(userName)
                     .orElseThrow(() -> new AppException(ErrorCode.ACCOUNT_NOT_FOUND));
@@ -209,6 +219,73 @@ public class PaymentServiceImpl implements PaymentService {
                 TicketPurchase ticketPurchase = ticketPurchaseRepository
                         .findById(detail.getTicketPurchase().getTicketPurchaseId())
                         .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
+                //Kiểm tra trạng thái của ticketPurchase xem thanh toán hay huỷ nếu không thì đi xuống dưới
+                if (ticketPurchase.getStatus().equals(ETicketPurchaseStatus.PENDING)) {
+                    //Nếu không ghế và có zone
+                    if(ticketPurchase.getSeatActivity() == null && ticketPurchase.getZoneActivity() != null){
+                        //kiểm tra Zone
+                        ZoneActivity zoneActivity = zoneActivityRepository
+                                .findByEventActivityIdAndZoneId(ticketPurchase.getZoneActivity().getEventActivity().getEventActivityId(), ticketPurchase.getZoneActivity().getZone().getZoneId())
+                                .orElseThrow(() -> new AppException(ErrorCode.ZONE_ACTIVITY_NOT_FOUND));
+
+                        Zone zone = zoneRepository
+                                .findById(ticketPurchase.getZoneActivity().getZone().getZoneId())
+                                .orElseThrow(() -> new AppException(ErrorCode.ZONE_NOT_FOUND));
+
+                        List<ZoneActivity> zoneActivities = zoneActivityRepository
+                                .findByZoneId(ticketPurchase.getZoneActivity().getZone().getZoneId());
+                        boolean allZoneUnavailable = zoneActivities.stream()
+                                .allMatch(zoneActivity1 -> zoneActivity.getAvailableQuantity() == 0);
+                        if (allZoneUnavailable) {
+                            zone.setStatus(false);
+                        }
+
+                        zoneRepository.save(zone);
+                        zoneActivityRepository.save(zoneActivity);
+                    }
+
+                    //Nếu có ghế và có zone
+                    if(ticketPurchase.getZoneActivity() != null && ticketPurchase.getSeatActivity() != null){
+                        //kiểm tra Zone
+                        ZoneActivity zoneActivity = zoneActivityRepository
+                                .findByEventActivityIdAndZoneId(ticketPurchase.getZoneActivity().getEventActivity().getEventActivityId(), ticketPurchase.getZoneActivity().getZone().getZoneId())
+                                .orElseThrow(() -> new AppException(ErrorCode.ZONE_ACTIVITY_NOT_FOUND));
+
+                        Zone zone = zoneRepository
+                                .findById(ticketPurchase.getZoneActivity().getZone().getZoneId())
+                                .orElseThrow(() -> new AppException(ErrorCode.ZONE_NOT_FOUND));
+
+                        List<ZoneActivity> zoneActivities = zoneActivityRepository
+                                .findByZoneId(ticketPurchase.getZoneActivity().getZone().getZoneId());
+                        boolean allZoneUnavailable = zoneActivities.stream()
+                                .allMatch(zoneActivity1 -> zoneActivity.getAvailableQuantity() == 0);
+                        if (allZoneUnavailable) {
+                            zone.setStatus(false);
+                        }
+
+                        //Kiểm tra Seat
+                        SeatActivity seatActivity = seatActivityRepository
+                                .findByEventActivityIdAndSeatId(ticketPurchase.getSeatActivity().getEventActivity().getEventActivityId(), ticketPurchase.getSeatActivity().getSeat().getSeatId())
+                                .orElseThrow(() -> new AppException(ErrorCode.SEAT_ACTIVITY_NOT_FOUND));
+
+                        Seat seat = seatRepository
+                                .findById(ticketPurchase.getSeatActivity().getSeat().getSeatId())
+                                .orElseThrow(() -> new AppException(ErrorCode.SEAT_NOT_FOUND));
+
+                        seatActivity.setStatus(ESeatActivityStatus.SOLD.name());
+                        seatActivityRepository.save(seatActivity);
+
+                        List<SeatActivity> seatActivities = seatActivityRepository.findBySeatId(ticketPurchase.getSeatActivity().getSeat().getSeatId());
+                        boolean allSeatUnavailable = seatActivities.stream()
+                                .allMatch(seatActivity1 -> seatActivity.getStatus().equals(ESeatActivityStatus.SOLD.name()));
+                        if (allSeatUnavailable) {
+                            seat.setStatus(false);
+                        }
+
+                        seatRepository.save(seat);
+                        zoneRepository.save(zone);
+                    }
+                }
 
                 EventActivity eventActivity = eventActivityRepository
                         .findById(ticketPurchase.getEventActivity().getEventActivityId())
@@ -221,18 +298,6 @@ public class PaymentServiceImpl implements PaymentService {
                 Event event = eventRepository
                         .findById(ticketPurchase.getEvent().getEventId())
                         .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
-
-                Seat seat = seatRepository
-                        .findById(ticketPurchase.getSeatActivity().getSeat().getSeatId())
-                        .orElseThrow(() -> new AppException(ErrorCode.SEAT_NOT_FOUND));
-
-                SeatActivity seatActivity = seatActivityRepository
-                        .findByEventActivityIdAndSeatId(ticketPurchase.getZoneActivity().getEventActivity().getEventActivityId(), ticketPurchase.getSeatActivity().getSeat().getSeatId())
-                        .orElseThrow(() -> new AppException(ErrorCode.SEAT_ACTIVITY_NOT_FOUND));
-
-                Zone zone = zoneRepository
-                        .findById(ticketPurchase.getZoneActivity().getZone().getZoneId())
-                        .orElseThrow(() -> new AppException(ErrorCode.ZONE_NOT_FOUND));
 
                 CheckinLog checkinLog = new CheckinLog();
                 checkinLog.setCheckinTime(null);
@@ -248,24 +313,20 @@ public class PaymentServiceImpl implements PaymentService {
                 ticketQrCodeDTO.setPurchase_date(new Date());
                 ticketQrCodeDTO.setEvent_name(event.getEventName());
                 ticketQrCodeDTO.setActivity_name(eventActivity.getActivityName());
-                ticketQrCodeDTO.setZone_name(zone.getZoneName());
-                ticketQrCodeDTO.setSeat_row_number(seat.getRowNumber());
-                ticketQrCodeDTO.setSeat_column_number(seat.getColumnNumber());
+                ticketQrCodeDTO.setTicket_code(ticketPurchase.getSeatActivity().getSeat().getSeatName());
+                ticketQrCodeDTO.setZone_name(ticketPurchase.getZoneActivity().getZone().getZoneName());
+                ticketQrCodeDTO.setSeat_row_number(ticketPurchase.getSeatActivity().getSeat().getRowNumber());
+                ticketQrCodeDTO.setSeat_column_number(ticketPurchase.getSeatActivity().getSeat().getColumnNumber());
                 ticketQrCodeDTO.setAccount_name(account.getUserName());
+                ticketQrCodeDTO.setEmail(account.getEmail());
                 ticketQrCodeDTO.setPhone(account.getPhone());
                 ticketQrCodeDTO.setCheckin_Log_id(checkinLog.getCheckinId());
 
                 String qrCode = generateQRCode(ticketQrCodeDTO);
+
                 ticketPurchase.setStatus(ETicketPurchaseStatus.PURCHASED);
-                ticketPurchase.setQrCode(qrCode);
                 ticketPurchaseRepository.save(ticketPurchase);
-
-                seatActivity.setStatus(ESeatActivityStatus.SOLD.name());
-                seatActivityRepository.save(seatActivity);
             }
-
-            order.setStatus(EOrderStatus.SUCCESSFUL.name());
-            orderRepository.save(order);
 
             Transaction transaction = new Transaction();
             transaction.setAmount(Double.valueOf(amount));
@@ -288,6 +349,7 @@ public class PaymentServiceImpl implements PaymentService {
             Order order = orderRepository
                     .findById(Integer.valueOf(orderId))
                     .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+
             order.setStatus(EOrderStatus.FAILURE.name());
             orderRepository.save(order);
 
@@ -300,45 +362,125 @@ public class PaymentServiceImpl implements PaymentService {
                 TicketPurchase ticketPurchase = ticketPurchaseRepository
                         .findById(detail.getTicketPurchase().getTicketPurchaseId())
                         .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
-                ticketPurchase.setStatus(ETicketPurchaseStatus.CANCELLED);
+                //Kiểm tra trạng thái của ticketPurchase xem thanh toán hay huỷ nếu không thì đi xuống dưới
+                if (ticketPurchase.getStatus().equals(ETicketPurchaseStatus.PENDING)) {
+                    //Nếu không ghế và có zone
+                    if(ticketPurchase.getSeatActivity() == null && ticketPurchase.getZoneActivity() != null){
+                        TicketMapping ticketMapping = ticketMappingRepository
+                                .findTicketMappingByTicketIdAndEventActivityId(ticketPurchase.getTicket().getTicketId(), ticketPurchase.getEventActivity().getEventActivityId())
+                                .orElseThrow(() -> new AppException(ErrorCode.TICKET_MAPPING_NOT_FOUND));
 
-                SeatActivity seatActivity = seatActivityRepository
-                        .findByEventActivityIdAndSeatId(ticketPurchase.getZoneActivity().getEventActivity().getEventActivityId(), ticketPurchase.getSeatActivity().getSeat().getSeatId())
-                        .orElseThrow(() -> new AppException(ErrorCode.SEAT_ACTIVITY_NOT_FOUND));
+                        ticketMapping.setQuantity(ticketMapping.getQuantity() + ticketPurchase.getQuantity());
+                        ticketMappingRepository.save(ticketMapping);
 
-                seatActivity.setStatus(ESeatActivityStatus.AVAILABLE.name());
+                        //kiểm tra Zone
+                        ZoneActivity zoneActivity = zoneActivityRepository
+                                .findByEventActivityIdAndZoneId(ticketPurchase.getZoneActivity().getEventActivity().getEventActivityId(), ticketPurchase.getZoneActivity().getZone().getZoneId())
+                                .orElseThrow(() -> new AppException(ErrorCode.ZONE_ACTIVITY_NOT_FOUND));
 
-                ZoneActivity zoneActivity = zoneActivityRepository
-                        .findByEventActivityIdAndZoneId(ticketPurchase.getZoneActivity().getEventActivity().getEventActivityId(), ticketPurchase.getZoneActivity().getZone().getZoneId())
-                        .orElseThrow(() -> new AppException(ErrorCode.ZONE_ACTIVITY_NOT_FOUND));
+                        Zone zone = zoneRepository
+                                .findById(ticketPurchase.getZoneActivity().getZone().getZoneId())
+                                .orElseThrow(() -> new AppException(ErrorCode.ZONE_NOT_FOUND));
 
-                Zone zone = zoneRepository
-                        .findById(ticketPurchase.getZoneActivity().getZone().getZoneId())
-                        .orElseThrow(() -> new AppException(ErrorCode.ZONE_NOT_FOUND));
+                        zoneActivity.setAvailableQuantity(zoneActivity.getAvailableQuantity() + ticketPurchase.getQuantity());
+                        zoneActivityRepository.save(zoneActivity);
 
-                if (ticketPurchase.getZoneActivity().getAvailableQuantity() <= 0) {
-                    zoneActivity.setAvailableQuantity(zoneActivity.getAvailableQuantity() + ticketPurchase.getQuantity());
-                    zone.setStatus(true);
-                } else {
-                    zoneActivity.setAvailableQuantity(zoneActivity.getAvailableQuantity() + ticketPurchase.getQuantity());
+                        List<ZoneActivity> zoneActivities = zoneActivityRepository
+                                .findByZoneId(ticketPurchase.getZoneActivity().getZone().getZoneId());
+                        boolean allZoneUnavailable = zoneActivities.stream()
+                                .allMatch(zoneActivity1 -> zoneActivity.getAvailableQuantity() == 0);
+                        if (!allZoneUnavailable) {
+                            zone.setStatus(true);
+                        }
+
+                        ticketPurchase.setStatus(ETicketPurchaseStatus.CANCELLED);
+
+                        ticketPurchaseRepository.save(ticketPurchase);
+                        zoneRepository.save(zone);
+                    }
+
+                    //Nếu có ghế và có zone
+                    if(ticketPurchase.getZoneActivity() != null && ticketPurchase.getSeatActivity() != null){
+                        TicketMapping ticketMapping = ticketMappingRepository
+                                .findTicketMappingByTicketIdAndEventActivityId(ticketPurchase.getTicket().getTicketId(), ticketPurchase.getEventActivity().getEventActivityId())
+                                .orElseThrow(() -> new AppException(ErrorCode.TICKET_MAPPING_NOT_FOUND));
+
+                        ticketMapping.setQuantity(ticketMapping.getQuantity() + ticketPurchase.getQuantity());
+                        ticketMappingRepository.save(ticketMapping);
+
+                        //kiểm tra Zone
+                        ZoneActivity zoneActivity = zoneActivityRepository
+                                .findByEventActivityIdAndZoneId(ticketPurchase.getZoneActivity().getEventActivity().getEventActivityId(), ticketPurchase.getZoneActivity().getZone().getZoneId())
+                                .orElseThrow(() -> new AppException(ErrorCode.ZONE_ACTIVITY_NOT_FOUND));
+
+                        Zone zone = zoneRepository
+                                .findById(ticketPurchase.getZoneActivity().getZone().getZoneId())
+                                .orElseThrow(() -> new AppException(ErrorCode.ZONE_NOT_FOUND));
+
+                        zoneActivity.setAvailableQuantity(zoneActivity.getAvailableQuantity() + ticketPurchase.getQuantity());
+                        zoneActivityRepository.save(zoneActivity);
+
+                        List<ZoneActivity> zoneActivities = zoneActivityRepository
+                                .findByZoneId(ticketPurchase.getZoneActivity().getZone().getZoneId());
+                        boolean allZoneUnavailable = zoneActivities.stream()
+                                .allMatch(zoneActivity1 -> zoneActivity.getAvailableQuantity() == 0);
+                        if (!allZoneUnavailable) {
+                            zone.setStatus(true);
+                        }
+
+                        //Kiểm tra Seat
+                        SeatActivity seatActivity = seatActivityRepository
+                                .findByEventActivityIdAndSeatId(ticketPurchase.getSeatActivity().getEventActivity().getEventActivityId(), ticketPurchase.getSeatActivity().getSeat().getSeatId())
+                                .orElseThrow(() -> new AppException(ErrorCode.SEAT_ACTIVITY_NOT_FOUND));
+
+                        Seat seat = seatRepository
+                                .findById(ticketPurchase.getSeatActivity().getSeat().getSeatId())
+                                .orElseThrow(() -> new AppException(ErrorCode.SEAT_NOT_FOUND));
+
+                        seatActivity.setStatus(ESeatActivityStatus.AVAILABLE.name());
+                        seatActivityRepository.save(seatActivity);
+
+                        List<SeatActivity> seatActivities = seatActivityRepository.findBySeatId(ticketPurchase.getSeatActivity().getSeat().getSeatId());
+                        boolean allSeatUnavailable = seatActivities.stream()
+                                .allMatch(seatActivity1 -> seatActivity.getStatus().equals(ESeatActivityStatus.SOLD.name()));
+                        if (!allSeatUnavailable) {
+                            seat.setStatus(true);
+                        }
+
+                        ticketPurchase.setStatus(ETicketPurchaseStatus.CANCELLED);
+
+                        seatRepository.save(seat);
+                        ticketPurchaseRepository.save(ticketPurchase);
+                        zoneRepository.save(zone);
+                    }
+
+                    //Nếu không ghế và không zone
+                    if(ticketPurchase.getZoneActivity() == null && ticketPurchase.getSeatActivity() == null){
+                        TicketMapping ticketMapping = ticketMappingRepository
+                                .findTicketMappingByTicketIdAndEventActivityId(ticketPurchase.getTicket().getTicketId(), ticketPurchase.getEventActivity().getEventActivityId())
+                                .orElseThrow(() -> new AppException(ErrorCode.TICKET_MAPPING_NOT_FOUND));
+
+                        ticketMapping.setQuantity(ticketMapping.getQuantity() + ticketPurchase.getQuantity());
+                        ticketMappingRepository.save(ticketMapping);
+
+                        ticketPurchase.setStatus(ETicketPurchaseStatus.CANCELLED);
+
+                        ticketPurchaseRepository.save(ticketPurchase);
+                    }
                 }
-
-                zoneRepository.save(zone);
-                zoneActivityRepository.save(zoneActivity);
-                ticketPurchaseRepository.save(ticketPurchase);
-
-                Transaction transaction = new Transaction();
-                transaction.setAmount(Double.valueOf(amount));
-                transaction.setTransactionCode(transactionNo);
-                transaction.setTransactionDate(LocalDateTime.now());
-                transaction.setDescription("Thanh toan don hang: " + orderCode);
-                transaction.setAccount(account);
-                transaction.setPayment(payment);
-                transaction.setStatus(ETransactionStatus.FAILED.name());
-                transaction.setContractPayment(null);
-                transaction.setType(ETransactionType.DIRECT_PAYMENT.name());
-                transactionRepository.save(transaction);
             }
+
+            Transaction transaction = new Transaction();
+            transaction.setAmount(Double.valueOf(amount));
+            transaction.setTransactionCode(transactionNo);
+            transaction.setTransactionDate(LocalDateTime.now());
+            transaction.setDescription("Thanh toan don hang: " + orderCode);
+            transaction.setAccount(account);
+            transaction.setPayment(payment);
+            transaction.setStatus(ETransactionStatus.FAILED.name());
+            transaction.setContractPayment(null);
+            transaction.setType(ETransactionType.DIRECT_PAYMENT.name());
+            transactionRepository.save(transaction);
             return new PaymentResponse(status, "CANCELLED", mapper.map(payment, PaymentResponse.class));
         }
     }
