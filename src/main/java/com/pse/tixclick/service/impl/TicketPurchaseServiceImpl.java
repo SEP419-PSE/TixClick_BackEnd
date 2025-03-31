@@ -89,6 +89,13 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
 
     @Override
     public List<TicketPurchaseDTO> createTicketPurchase(ListTicketPurchaseRequest createTicketPurchaseRequest) {
+        if(appUtils.getAccountFromAuthentication() == null){
+            throw new AppException(ErrorCode.NEEDED_LOGIN);
+        }
+        else if (appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.BUYER)) {
+            throw new AppException(ErrorCode.NOT_PERMISSION);
+        }
+
         List<TicketPurchaseDTO> ticketPurchaseDTOList = new ArrayList<>();
 
         List<Integer> listTicketPurchase_id = new ArrayList<>();
@@ -102,6 +109,15 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
 
                 Ticket ticket = ticketRepository.findById(createTicketPurchaseRequest1.getTicketId())
                         .orElseThrow(() -> new AppException(ErrorCode.TICKET_NOT_FOUND));
+
+                int quantity = createTicketPurchaseRequest1.getQuantity();
+
+                int minQuantity = ticket.getMinQuantity();
+                int maxQuantity = ticket.getMaxQuantity();
+
+                if (quantity < minQuantity || quantity > maxQuantity) {
+                    throw new AppException(ErrorCode.INVALID_QUANTITY);
+                }
 
                 Event event = eventRepository.findById(createTicketPurchaseRequest1.getEventId())
                         .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
@@ -639,7 +655,7 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
     }
 
     @Override
-    public TicketQrCodeDTO decryptQrCode(String qrCode) throws Exception {
+    public TicketQrCodeDTO decryptQrCode(String qrCode){
         TicketQrCodeDTO ticketQrCodeDTO = AppUtils.decryptQrCode(qrCode);
         if (ticketQrCodeDTO == null) {
             throw new AppException(ErrorCode.QR_CODE_NOT_FOUND);

@@ -116,11 +116,11 @@ public class SeatServiceImpl implements SeatService {
 
     @Override
     public void deleteSeat(int seatId) {
-//        Seat seat = seatRepository
-//                .findById(seatId)
-//                .orElseThrow(() -> new AppException(ErrorCode.SEAT_NOT_FOUND));
-//
-//        seat.setStatus(false);
-//        seatRepository.save(seat);
+        Seat seat = seatRepository
+                .findById(seatId)
+                .orElseThrow(() -> new AppException(ErrorCode.SEAT_NOT_FOUND));
+
+        seat.setStatus(false);
+        seatRepository.save(seat);
     }
 }

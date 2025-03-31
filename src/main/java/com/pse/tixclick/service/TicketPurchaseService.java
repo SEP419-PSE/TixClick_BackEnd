@@ -22,7 +22,7 @@ public interface TicketPurchaseService {
 
     List<MyTicketDTO> getTicketPurchasesByAccount();
 
-    TicketQrCodeDTO decryptQrCode(String qrCode) throws Exception;
+    TicketQrCodeDTO decryptQrCode(String qrCode);
 
     int countTicketPurchaseStatusByPurchased();
 }
