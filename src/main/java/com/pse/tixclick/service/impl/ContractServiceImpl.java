@@ -74,10 +74,7 @@ public class ContractServiceImpl implements ContractService {
         var company = companyRepository.findCompanyByCompanyId(event.getCompany().getCompanyId())
                 .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_FOUND));
 
-        // 🔹 Kiểm tra xem đã có hợp đồng cho event này chưa
-        if (contractRepository.existsByEvent(event)) {
-            throw new AppException(ErrorCode.CONTRACT_ALREADY_EXISTS);
-        }
+
 
         // 🔹 Log để kiểm tra dữ liệu trước khi lưu
         System.out.println("Creating contract for eventId: " + event.getEventId());
