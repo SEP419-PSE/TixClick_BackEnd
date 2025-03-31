@@ -8,10 +8,7 @@ import com.pse.tixclick.payload.dto.PaymentDTO;
 import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.company.Contract;
 import com.pse.tixclick.payload.entity.company.ContractVerification;
-import com.pse.tixclick.payload.entity.entity_enum.EEventStatus;
-import com.pse.tixclick.payload.entity.entity_enum.ERole;
-import com.pse.tixclick.payload.entity.entity_enum.EVerificationStatus;
-import com.pse.tixclick.payload.entity.entity_enum.ZoneTypeEnum;
+import com.pse.tixclick.payload.entity.entity_enum.*;
 import com.pse.tixclick.payload.entity.event.EventActivity;
 import com.pse.tixclick.payload.entity.seatmap.Seat;
 import com.pse.tixclick.payload.entity.seatmap.SeatActivity;
@@ -75,8 +72,17 @@ public class ContractServiceImpl implements ContractService {
         var company = companyRepository.findCompanyByCompanyId(event.getCompany().getCompanyId())
                 .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_FOUND));
 
-        // Tạo và lưu hợp đồng trước
+        // 🔹 Kiểm tra xem đã có hợp đồng cho event này chưa
+        if (contractRepository.existsByEvent(event)) {
+            throw new AppException(ErrorCode.CONTRACT_ALREADY_EXISTS);
+        }
+
+        // 🔹 Log để kiểm tra dữ liệu trước khi lưu
+        System.out.println("Creating contract for eventId: " + event.getEventId());
+
+        // 📝 Tạo và lưu hợp đồng
         Contract newContract = new Contract();
+        newContract.setContractName(request.getContractName());
         newContract.setContractType(request.getContractType());
         newContract.setEvent(event);
         newContract.setAccount(manager);
@@ -84,10 +90,10 @@ public class ContractServiceImpl implements ContractService {
         newContract.setCommission(request.getCommission());
         newContract.setTotalAmount(request.getTotalAmount());
 
-        // Lưu contract trước để có ID
-        newContract = contractRepository.save(newContract);
+        // 🔹 Lưu contract trước để có ID
+        contractRepository.saveAndFlush(newContract);
 
-        // Tạo ContractVerification sau khi Contract đã có ID
+        // 📝 Tạo ContractVerification sau khi Contract đã có ID
         ContractVerification contractVerification = new ContractVerification();
         contractVerification.setContract(newContract);
         contractVerification.setAccount(manager);
@@ -186,7 +192,7 @@ public class ContractServiceImpl implements ContractService {
                             seatActivity.setSeat(seat);
                             seatActivity.setZoneActivity(zoneActivity);
                             seatActivity.setEventActivity(eventActivity);
-                            seatActivity.setStatus("AVAILABLE"); // Trạng thái mặc định
+                            seatActivity.setStatus(String.valueOf(ESeatActivityStatus.AVAILABLE)); // Trạng thái mặc định
                             seatActivities.add(seatActivity);
                         }
 

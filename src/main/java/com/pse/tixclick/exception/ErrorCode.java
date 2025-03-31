@@ -111,6 +111,9 @@ public enum ErrorCode {
     CONTRACT_VERIFICATION_NOT_PENDING(1095, "Contract verification không ở trạng thái pending", HttpStatus.BAD_REQUEST),
     SEAT_MAP_NOT_FOUND(1096, "Không tìm thấy seat map", HttpStatus.NOT_FOUND),
     NEEDED_LOGIN(1097, "Bạn cần đăng nhập", HttpStatus.UNAUTHORIZED),
+    CONTRACT_ALREADY_EXISTS(1098, "Contract đã tồn tại", HttpStatus.BAD_REQUEST),
+    TICKET_PURCHASE_CANCELLED(1098, "Ticket purchase đã bị hủy", HttpStatus.BAD_REQUEST),
+    ORDER_PENDING(1099, "Order đang chờ xử lý", HttpStatus.BAD_REQUEST),
     ;
 
 

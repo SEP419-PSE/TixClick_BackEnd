@@ -32,7 +32,7 @@ public class Contract {
     @Column(nullable = false)
     private String contractType;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name="manager_id", nullable = false)
     private Account account;
 

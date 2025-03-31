@@ -1,8 +1,9 @@
 package com.pse.tixclick.service.impl;
 
+import com.pse.tixclick.payload.entity.entity_enum.ESeatActivityStatus;
 import com.pse.tixclick.payload.entity.entity_enum.ZoneTypeEnum;
-import com.pse.tixclick.payload.entity.seatmap.Seat;
-import com.pse.tixclick.payload.entity.seatmap.Zone;
+import com.pse.tixclick.payload.entity.event.EventActivity;
+import com.pse.tixclick.payload.entity.seatmap.*;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
 import com.pse.tixclick.payload.request.SeatRequest;
 import com.pse.tixclick.payload.request.SectionRequest;
@@ -16,8 +17,6 @@ import com.pse.tixclick.payload.dto.BackgroundDTO;
 import com.pse.tixclick.payload.dto.EventDTO;
 import com.pse.tixclick.payload.dto.SeatMapDTO;
 import com.pse.tixclick.payload.entity.event.Event;
-import com.pse.tixclick.payload.entity.seatmap.Background;
-import com.pse.tixclick.payload.entity.seatmap.SeatMap;
 import com.pse.tixclick.payload.request.create.CreateSeatMapRequest;
 import com.pse.tixclick.payload.request.update.UpdateSeatMapRequest;
 import com.pse.tixclick.service.SeatMapService;
@@ -68,6 +67,14 @@ public class SeatMapServiceImpl implements SeatMapService {
     @Autowired
     TicketRepository ticketRepository;
 
+    @Autowired
+    EventActivityRepository eventActivityRepository;
+
+    @Autowired
+    ZoneActivityRepository zoneActivityRepository;
+
+    @Autowired
+    SeatActivityRepository seatActivityRepository;
     @Override
     public SeatMapDTO createSeatMap(CreateSeatMapRequest createSeatMapRequest) {
         SeatMap seatMap = new SeatMap();
@@ -346,5 +353,73 @@ public class SeatMapServiceImpl implements SeatMapService {
 
     }
 
+    @Override
+    public List<SectionResponse> getSections(int eventId, int eventActivityId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+        EventActivity eventActivity = eventActivityRepository.findById(eventActivityId)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_ACTIVITY_NOT_FOUND));
+
+        List<ZoneActivity> zoneActivityList = zoneActivityRepository.findZoneActivitiesByEventActivity_EventActivityId(eventActivityId);
+        if (zoneActivityList.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<SectionResponse> sectionResponses = new ArrayList<>();
+
+        for (ZoneActivity zoneActivity : zoneActivityList) {
+            Zone zone = zoneActivity.getZone();
+            ZoneTypeEnum zoneTypeEnum = zone.getZoneType().getTypeName();
+            List<SeatActivity> seatActivityList = new ArrayList<>();
+
+            if (ZoneTypeEnum.SEATED.equals(zoneTypeEnum)) {
+                seatActivityList = seatActivityRepository.findSeatActivitiesByZoneActivity_ZoneActivityId(zoneActivity.getZoneActivityId());
+            }
+
+            List<SeatResponse> seatResponses = new ArrayList<>();
+            int availableSeatsCount = 0;
+
+            for (SeatActivity seatActivity : seatActivityList) {
+                Seat seat = seatActivity.getSeat();
+                SeatResponse seatResponse = new SeatResponse();
+                seatResponse.setId(seat.getSeatName());
+                seatResponse.setRow(seat.getRowNumber());
+                seatResponse.setColumn(seat.getColumnNumber());
+                seatResponse.setSeatTypeId(seat.getTicket().getTicketCode());
+
+                if (seatActivity.getStatus().equals(ESeatActivityStatus.SOLD.name())) {
+                    seatResponse.setStatus(false);
+                } else if (ESeatActivityStatus.valueOf(seatActivity.getStatus()) == ESeatActivityStatus.AVAILABLE) {
+                    seatResponse.setStatus(true);
+                    availableSeatsCount++;
+                } else if (seatActivity.getStatus().equals(ESeatActivityStatus.PENDING.name())) {
+                    seatResponse.setStatus(false);
+                }
+
+
+                seatResponses.add(seatResponse);
+            }
+
+            SectionResponse sectionResponse = SectionResponse.builder()
+                    .id(String.valueOf(zone.getZoneId()))
+                    .name(zone.getZoneName())
+                    .rows(Integer.parseInt(zone.getRows()))
+                    .columns(Integer.parseInt(zone.getColumns()))
+                    .x(Integer.parseInt(zone.getXPosition()))
+                    .y(Integer.parseInt(zone.getYPosition()))
+                    .width(Integer.parseInt(zone.getWidth()))
+                    .height(Integer.parseInt(zone.getHeight()))
+                    .capacity(availableSeatsCount)
+                    .type(zoneTypeEnum.name())
+                    .priceId(zone.getTicket() != null ? zone.getTicket().getTicketCode() : null)
+                    .price(zone.getTicket() != null ? zone.getTicket().getPrice() : 0)
+                    .seats(seatResponses)
+                    .isSave(zone.isStatus())
+                    .build();
+
+            sectionResponses.add(sectionResponse);
+        }
+        return sectionResponses;
+    }
 
 }
