@@ -409,4 +409,32 @@ public class EventController {
                         .build()
         );
     }
+
+    @GetMapping("/request-approval/{eventId}")
+    public ResponseEntity<ApiResponse<String>> sentRequestForApproval(@PathVariable int eventId) {
+        try {
+            String message = eventService.sentRequestForApproval(eventId);
+            return ResponseEntity.ok(
+                    ApiResponse.<String>builder()
+                            .code(HttpStatus.OK.value())
+                            .message(message)
+                            .result(message)
+                            .build()
+            );
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.<String>builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<String>builder()
+                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .message("An error occurred while sending request for approval")
+                            .result(null)
+                            .build());
+        }
+    }
 }

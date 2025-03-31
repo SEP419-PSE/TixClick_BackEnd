@@ -9,6 +9,7 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CreateContractRequest {
+    int contractId;
     String contractName;
     double totalAmount;
     String commission;

@@ -141,4 +141,20 @@ public class EmailService {
 
         sendNewMail(to, subject, body, fullname);
     }
+    @Async
+    public void sendEventApprovalRequest(String to, String eventName, String creatorName) throws MessagingException {
+        String subject = "Event Approval Required - TixClick";
+        String body = "<html>" +
+                "<body>" +
+                "<h2 style=\"color: #0D6EFD;\">Event Approval Request</h2>" +
+                "<p>Dear Manager,</p>" +
+                "<p>The event <strong>" + eventName + "</strong> created by <strong>" + creatorName + "</strong> is pending approval.</p>" +
+                "<p>Please review and approve the event at your earliest convenience.</p>" +
+                "<p>Thank you for managing events on TixClick!</p>" +
+                "<p>Best regards,<br/>TixClick Team</p>" +
+                "</body>" +
+                "</html>";
+        sendNewMail(to, subject, body, "Manager");
+    }
+
 }

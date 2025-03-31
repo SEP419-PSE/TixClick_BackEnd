@@ -61,11 +61,13 @@ public class ContractServiceImpl implements ContractService {
         if (manager.getRole().getRoleName() != ERole.MANAGER) {
             throw new AppException(ErrorCode.USER_NOT_MANAGER);
         }
+        var contract = contractRepository.findById(request.getContractId())
+                .orElseThrow(() -> new AppException(ErrorCode.CONTRACT_NOT_FOUND));
 
         var event = eventRepository.findEventByEventId(request.getEventId())
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
 
-        if (event.getStatus() != EEventStatus.PENDING) {
+        if (event.getStatus() != EEventStatus.PENDING_APPROVAL) {
             throw new AppException(ErrorCode.STATUS_NOT_CORRECT);
         }
 
@@ -81,21 +83,21 @@ public class ContractServiceImpl implements ContractService {
         System.out.println("Creating contract for eventId: " + event.getEventId());
 
         // 📝 Tạo và lưu hợp đồng
-        Contract newContract = new Contract();
-        newContract.setContractName(request.getContractName());
-        newContract.setContractType(request.getContractType());
-        newContract.setEvent(event);
-        newContract.setAccount(manager);
-        newContract.setCompany(company);
-        newContract.setCommission(request.getCommission());
-        newContract.setTotalAmount(request.getTotalAmount());
+
+        contract.setContractName(request.getContractName());
+        contract.setContractType(request.getContractType());
+        contract.setEvent(event);
+        contract.setAccount(manager);
+        contract.setCompany(company);
+        contract.setCommission(request.getCommission());
+        contract.setTotalAmount(request.getTotalAmount());
 
         // 🔹 Lưu contract trước để có ID
-        contractRepository.saveAndFlush(newContract);
+        contractRepository.saveAndFlush(contract);
 
         // 📝 Tạo ContractVerification sau khi Contract đã có ID
         ContractVerification contractVerification = new ContractVerification();
-        contractVerification.setContract(newContract);
+        contractVerification.setContract(contract);
         contractVerification.setAccount(manager);
         contractVerification.setStatus(EVerificationStatus.PENDING);
         contractVerification.setVerifyDate(null);
@@ -103,7 +105,7 @@ public class ContractServiceImpl implements ContractService {
 
         contractVerificationRepository.save(contractVerification);
 
-        return modelMapper.map(newContract, ContractDTO.class);
+        return modelMapper.map(contract, ContractDTO.class);
     }
 
 
@@ -200,6 +202,8 @@ public class ContractServiceImpl implements ContractService {
                         seatActivityRepository.saveAll(seatActivities);
                     }
                 }
+
+                event.setStatus(EEventStatus.SCHEDULED);
 
                 return "Contract approved successfully";
 

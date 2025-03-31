@@ -1,10 +1,12 @@
 package com.pse.tixclick.payload.entity.entity_enum;
 
 public enum EEventStatus {
-    COMPLETED,
-    CANCELLED,
-    EXPIRED,
-    PENDING,
+    DRAFT,
     SCHEDULED,
-    DRAFT
+    ON_GOING,
+    COMPLETED,
+    SOLD_OUT,
+    PENDING_APPROVAL,
+    REJECTED,
+    PENDING
 }
