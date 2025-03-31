@@ -113,6 +113,8 @@ public enum ErrorCode {
     NEEDED_LOGIN(1097, "Bạn cần đăng nhập", HttpStatus.UNAUTHORIZED),
     CONTRACT_ALREADY_EXISTS(1098, "Contract đã tồn tại", HttpStatus.BAD_REQUEST),
     INVALID_EVENT_STATUS(1099, "Tình trạng sự kiện không hợp lệ", HttpStatus.BAD_REQUEST),
+    TICKET_PURCHASE_CANCELLED(1098, "Ticket purchase đã bị hủy", HttpStatus.BAD_REQUEST),
+    ORDER_PENDING(1099, "Order đang chờ xử lý", HttpStatus.BAD_REQUEST),
     ;
 
 

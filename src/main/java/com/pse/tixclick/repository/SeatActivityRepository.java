@@ -16,4 +16,7 @@ public interface SeatActivityRepository extends JpaRepository<SeatActivity, Inte
     Optional<SeatActivity> findByEventActivityIdAndSeatId(@Param("id") int id, @Param("seatId") int seatId);
 
     List<SeatActivity> findSeatActivitiesByZoneActivity_ZoneActivityId(int zoneActivityId);
+
+    @Query("SELECT s FROM SeatActivity s WHERE s.seat.seatId = :seatId")
+    List<SeatActivity> findBySeatId(@Param("seatId") int seatId);
 }
