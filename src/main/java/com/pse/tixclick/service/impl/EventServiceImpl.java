@@ -5,6 +5,7 @@ import com.pse.tixclick.email.EmailService;
 import com.pse.tixclick.payload.dto.EventActivityDTO;
 import com.pse.tixclick.payload.dto.UpcomingEventDTO;
 import com.pse.tixclick.payload.entity.Account;
+import com.pse.tixclick.payload.entity.company.Company;
 import com.pse.tixclick.payload.entity.company.Contract;
 import com.pse.tixclick.payload.entity.event.EventActivity;
 import com.pse.tixclick.payload.entity.seatmap.SeatMap;
@@ -403,25 +404,21 @@ public class EventServiceImpl implements EventService {
         Event event = eventRepository.findEventByEventId(eventId)
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
 
-        // Sử dụng ModelMapper để chuyển đổi từ EventActivity sang EventActivityDTO
+        // Dùng ModelMapper để map sang DTO
         List<EventActivityDTO> eventActivityDTOList = event.getEventActivities().stream()
                 .map(activity -> modelMapper.map(activity, EventActivityDTO.class))
                 .collect(Collectors.toList());
-        // Lấy giá vé thấp nhất của event
+
+        // Lấy công ty của sự kiện
+        Company company = event.getCompany();
+
+        // Lấy giá vé thấp nhất
         double minPrice = ticketRepository.findMinTicketByEvent_EventId(eventId)
                 .map(Ticket::getPrice)
                 .orElse(0.0);
-        AtomicBoolean isHaveSeatMap = new AtomicBoolean(true);
 
-        SeatMap seatMap = seatMapRepository.findSeatMapByEvent_EventId(event.getEventId())
-                .orElseGet(() -> {
-                    isHaveSeatMap.set(false);
-                    return null;
-                });
-        if(seatMap != null){
-            isHaveSeatMap.set(true);
-        }
-
+        // Kiểm tra xem sự kiện có seat map không
+        boolean isHaveSeatMap = seatMapRepository.findSeatMapByEvent_EventId(eventId).isPresent();
 
         return new EventDetailForConsumer(
                 event.getEventName(),
@@ -429,13 +426,15 @@ public class EventServiceImpl implements EventService {
                 event.getLocationName(),
                 event.getLogoURL(),
                 event.getBannerURL(),
+                company != null ? company.getLogoURL() : null,  // URL logo của công ty
+                company != null ? company.getCompanyName() : null, // Tên công ty
+                company != null ? company.getDescription() : null, // Mô tả công ty
                 event.getStatus().name(),
                 event.getTypeEvent(),
                 event.getDescription(),
                 event.getCategory().getCategoryName(),
-                event.getOrganizer().getAccountId(),
                 eventActivityDTOList,
-                isHaveSeatMap.get(),
+                isHaveSeatMap,
                 minPrice
         );
     }

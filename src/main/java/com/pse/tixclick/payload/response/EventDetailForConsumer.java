@@ -16,11 +16,13 @@ public class EventDetailForConsumer {
     String locationName;
     String logoURL;
     String bannerURL;
+    String companyURL;
+    String companyName;
+    String descriptionCompany;
     String status;
     String typeEvent;
     String description;
     String categoryId;
-    int organizerId;
    List<EventActivityDTO> eventActivityDTOList;
    boolean isHaveSeatMap;
    double price;
