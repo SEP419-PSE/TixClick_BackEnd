@@ -17,8 +17,8 @@ public class TicketQrCodeDTO {
     private String event_name;
     private String activity_name;
     private String ticket_name;
-    private String ticket_code;
     private String zone_name;
+    private String seat_code;
     private String seat_row_number;
     private String seat_column_number;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
