@@ -565,38 +565,46 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
 
     @Override
     public List<MyTicketDTO> getTicketPurchasesByAccount() {
-        List<TicketPurchase> ticketPurchases = ticketPurchaseRepository.getTicketPurchasesByAccount(appUtils.getAccountFromAuthentication().getAccountId());
+        List<TicketPurchase> ticketPurchases = ticketPurchaseRepository
+                .getTicketPurchasesByAccount(appUtils.getAccountFromAuthentication().getAccountId());
+
         if (ticketPurchases.isEmpty()) {
             return null;
         }
+
         List<MyTicketDTO> myTicketDTOS = ticketPurchases.stream()
+                .filter(ticketPurchase -> ticketPurchase.getStatus().equals(ETicketPurchaseStatus.PURCHASED))
                 .map(myTicket -> {
-                    MyTicketDTO myTicketDTO = modelMapper.map(myTicket, MyTicketDTO.class);
+                    MyTicketDTO myTicketDTO = new MyTicketDTO();
 
                     if (myTicket.getEvent() != null) {
                         myTicketDTO.setEventName(myTicket.getEvent().getEventName());
-                    }
-//                    if (myTicket.getActivityAssignments() != null) {
-//                        myTicketDTO.setEventDate(myTicket.getEventActivity().getDateEvent());
-//                    }
-//                    if (myTicket.getEventActivity() != null) {
-//                        myTicketDTO.setEventStartTime(myTicket.getEventActivity().getStartTimeEvent());
-//                    }
-                    if (myTicket.getEvent() != null) {
                         myTicketDTO.setLocation(myTicket.getEvent().getLocation());
+                    }
+                    if (myTicket.getEventActivity() != null) {
+                        myTicketDTO.setEventDate(myTicket.getEventActivity().getDateEvent());
+                        myTicketDTO.setEventStartTime(myTicket.getEventActivity().getStartTimeEvent());
                     }
                     if (myTicket.getTicket() != null) {
                         myTicketDTO.setPrice(myTicket.getTicket().getPrice());
-                    }
-                    if (myTicket.getTicket() != null) {
                         myTicketDTO.setTicketType(myTicket.getTicket().getTicketName());
                     }
+                    if (myTicket.getZoneActivity() != null && myTicket.getZoneActivity().getZone() != null) {
+                        myTicketDTO.setZoneName(myTicket.getZoneActivity().getZone().getZoneName());
+                    }
+                    if (myTicket.getSeatActivity() != null && myTicket.getSeatActivity().getSeat() != null) {
+                        myTicketDTO.setSeatCode(myTicket.getSeatActivity().getSeat().getSeatName());
+                    }
+
+                    myTicketDTO.setQuantity(myTicket.getQuantity());
+                    myTicketDTO.setQrCode(myTicket.getQrCode());
                     return myTicketDTO;
                 })
                 .collect(Collectors.toList());
 
         return myTicketDTOS.isEmpty() ? null : myTicketDTOS;
     }
+
 
     @Override
     public TicketQrCodeDTO decryptQrCode(String qrCode){

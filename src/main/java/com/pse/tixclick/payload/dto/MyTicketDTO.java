@@ -20,4 +20,7 @@ public class MyTicketDTO {
     private double price;
     private String seatCode;
     private String ticketType;
+    private String qrCode;
+    private String zoneName;
+    private int quantity;
 }
