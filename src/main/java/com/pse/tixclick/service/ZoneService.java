@@ -17,8 +17,6 @@ public interface ZoneService{
 
     List<ZoneDTO> getAllZones();
 
-
-
     List<ZoneDTO> getZonesBySeatMap(int seatMapId);
 
     List<ZoneDTO> getZonesByType(int type);

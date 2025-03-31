@@ -110,6 +110,7 @@ public enum ErrorCode {
     CONTRACT_VERIFICATION_NOT_FOUND(1094, "Không tìm thấy contract verification", HttpStatus.NOT_FOUND),
     CONTRACT_VERIFICATION_NOT_PENDING(1095, "Contract verification không ở trạng thái pending", HttpStatus.BAD_REQUEST),
     SEAT_MAP_NOT_FOUND(1096, "Không tìm thấy seat map", HttpStatus.NOT_FOUND),
+    NEEDED_LOGIN(1097, "Bạn cần đăng nhập", HttpStatus.UNAUTHORIZED),
     ;
 
 
