@@ -7,6 +7,7 @@ import com.pse.tixclick.payload.entity.entity_enum.EEventStatus;
 import com.pse.tixclick.payload.request.create.CreateEventRequest;
 import com.pse.tixclick.payload.request.update.UpdateEventRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
+import com.pse.tixclick.payload.response.EventDetailForConsumer;
 import com.pse.tixclick.payload.response.EventForConsumerResponse;
 import com.pse.tixclick.payload.response.EventResponse;
 import com.pse.tixclick.service.EventService;
@@ -461,4 +462,32 @@ public class EventController {
         );
     }
 
+
+    @GetMapping("/consumer/{eventId}")
+    public ResponseEntity<ApiResponse<EventDetailForConsumer>> getEventDetailForConsumer(@PathVariable int eventId) {
+        try {
+            EventDetailForConsumer event = eventService.getEventDetailForConsumer(eventId);
+            return ResponseEntity.ok(
+                    ApiResponse.<EventDetailForConsumer>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Get event detail for consumer successfully")
+                            .result(event)
+                            .build()
+            );
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.<EventDetailForConsumer>builder()
+                            .code(HttpStatus.NOT_FOUND.value())
+                            .message("Event not found with id: " + eventId)
+                            .result(null)
+                            .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<EventDetailForConsumer>builder()
+                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .message("An error occurred while retrieving the event detail for consumer")
+                            .result(null)
+                            .build());
+        }
+    }
 }

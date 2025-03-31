@@ -2,9 +2,14 @@ package com.pse.tixclick.service.impl;
 
 import com.pse.tixclick.cloudinary.CloudinaryService;
 import com.pse.tixclick.email.EmailService;
+import com.pse.tixclick.payload.dto.EventActivityDTO;
 import com.pse.tixclick.payload.dto.UpcomingEventDTO;
 import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.company.Contract;
+import com.pse.tixclick.payload.entity.event.EventActivity;
+import com.pse.tixclick.payload.entity.seatmap.SeatMap;
+import com.pse.tixclick.payload.entity.ticket.Ticket;
+import com.pse.tixclick.payload.response.EventDetailForConsumer;
 import com.pse.tixclick.payload.response.EventForConsumerResponse;
 import com.pse.tixclick.payload.response.EventResponse;
 import com.pse.tixclick.repository.*;
@@ -32,6 +37,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 @Service
@@ -48,6 +54,8 @@ public class EventServiceImpl implements EventService {
     SimpMessagingTemplate messagingTemplate;
     ContractRepository contractRepository;
     EmailService emailService;
+    TicketRepository ticketRepository;
+    SeatMapRepository seatMapRepository;
 
     @Autowired
     AppUtils appUtils;
@@ -87,6 +95,7 @@ public class EventServiceImpl implements EventService {
         event.setDescription(request.getDescription());
         event.setCategory(category);
         event.setLocationName(request.getLocationName());
+        event.setLocation(request.getLocation());
         event.setStatus(EEventStatus.DRAFT);
         event.setLogoURL(logocode);
         event.setBannerURL(bannercode);
@@ -388,6 +397,49 @@ public class EventServiceImpl implements EventService {
                 ))
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public EventDetailForConsumer getEventDetailForConsumer(int eventId) {
+        Event event = eventRepository.findEventByEventId(eventId)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+
+        // Sử dụng ModelMapper để chuyển đổi từ EventActivity sang EventActivityDTO
+        List<EventActivityDTO> eventActivityDTOList = event.getEventActivities().stream()
+                .map(activity -> modelMapper.map(activity, EventActivityDTO.class))
+                .collect(Collectors.toList());
+        // Lấy giá vé thấp nhất của event
+        double minPrice = ticketRepository.findMinTicketByEvent_EventId(eventId)
+                .map(Ticket::getPrice)
+                .orElse(0.0);
+        AtomicBoolean isHaveSeatMap = new AtomicBoolean(true);
+
+        SeatMap seatMap = seatMapRepository.findSeatMapByEvent_EventId(event.getEventId())
+                .orElseGet(() -> {
+                    isHaveSeatMap.set(false);
+                    return null;
+                });
+        if(seatMap != null){
+            isHaveSeatMap.set(true);
+        }
+
+
+        return new EventDetailForConsumer(
+                event.getEventName(),
+                event.getLocation(),
+                event.getLocationName(),
+                event.getLogoURL(),
+                event.getBannerURL(),
+                event.getStatus().name(),
+                event.getTypeEvent(),
+                event.getDescription(),
+                event.getCategory().getCategoryName(),
+                event.getOrganizer().getAccountId(),
+                eventActivityDTOList,
+                isHaveSeatMap.get(),
+                minPrice
+        );
+    }
+
 
 
 

@@ -5,6 +5,7 @@ import com.pse.tixclick.payload.dto.UpcomingEventDTO;
 import com.pse.tixclick.payload.entity.entity_enum.EEventStatus;
 import com.pse.tixclick.payload.request.create.CreateEventRequest;
 import com.pse.tixclick.payload.request.update.UpdateEventRequest;
+import com.pse.tixclick.payload.response.EventDetailForConsumer;
 import com.pse.tixclick.payload.response.EventForConsumerResponse;
 import com.pse.tixclick.payload.response.EventResponse;
 import jakarta.mail.MessagingException;
@@ -53,5 +54,7 @@ public interface EventService {
     String sentRequestForApproval(int eventId) throws MessagingException;
 
     List<EventForConsumerResponse> getEventsForConsumerByStatusScheduled();
+
+    EventDetailForConsumer getEventDetailForConsumer(int eventId);
 
 }
