@@ -7,6 +7,8 @@ import com.pse.tixclick.payload.entity.entity_enum.EEventStatus;
 import com.pse.tixclick.payload.request.create.CreateEventRequest;
 import com.pse.tixclick.payload.request.update.UpdateEventRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
+import com.pse.tixclick.payload.response.EventDetailForConsumer;
+import com.pse.tixclick.payload.response.EventForConsumerResponse;
 import com.pse.tixclick.payload.response.EventResponse;
 import com.pse.tixclick.service.EventService;
 import lombok.extern.slf4j.Slf4j;
@@ -167,7 +169,7 @@ public class EventController {
     }
 
     @GetMapping("/status/{status}")
-    public ResponseEntity<ApiResponse<List<EventDTO>>> getEventByStatus(@PathVariable String status) {
+    public ResponseEntity<ApiResponse<List<EventDTO>>> getEventByStatus(@PathVariable EEventStatus status) {
         List<EventDTO> events = eventService.getEventByStatus(status);
 
         if (events.isEmpty()) {
@@ -408,5 +410,84 @@ public class EventController {
                         .result(events)
                         .build()
         );
+    }
+
+    @GetMapping("/request-approval/{eventId}")
+    public ResponseEntity<ApiResponse<String>> sentRequestForApproval(@PathVariable int eventId) {
+        try {
+            String message = eventService.sentRequestForApproval(eventId);
+            return ResponseEntity.ok(
+                    ApiResponse.<String>builder()
+                            .code(HttpStatus.OK.value())
+                            .message(message)
+                            .result(message)
+                            .build()
+            );
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.<String>builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<String>builder()
+                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .message("An error occurred while sending request for approval")
+                            .result(null)
+                            .build());
+        }
+    }
+
+    @GetMapping("/consumer/scheduled")
+    public ResponseEntity<ApiResponse<List<EventForConsumerResponse>>> getEventsForConsumerByStatusScheduled() {
+        List<EventForConsumerResponse> events = eventService.getEventsForConsumerByStatusScheduled();
+
+        if (events.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.<List<EventForConsumerResponse>>builder()
+                            .code(HttpStatus.NOT_FOUND.value())
+                            .message("No scheduled events found")
+                            .result(null)
+                            .build());
+        }
+
+        return ResponseEntity.ok(
+                ApiResponse.<List<EventForConsumerResponse>>builder()
+                        .code(HttpStatus.OK.value())
+                        .message("Get all scheduled events successfully")
+                        .result(events)
+                        .build()
+        );
+    }
+
+
+    @GetMapping("/consumer/{eventId}")
+    public ResponseEntity<ApiResponse<EventDetailForConsumer>> getEventDetailForConsumer(@PathVariable int eventId) {
+        try {
+            EventDetailForConsumer event = eventService.getEventDetailForConsumer(eventId);
+            return ResponseEntity.ok(
+                    ApiResponse.<EventDetailForConsumer>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Get event detail for consumer successfully")
+                            .result(event)
+                            .build()
+            );
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.<EventDetailForConsumer>builder()
+                            .code(HttpStatus.NOT_FOUND.value())
+                            .message("Event not found with id: " + eventId)
+                            .result(null)
+                            .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<EventDetailForConsumer>builder()
+                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .message("An error occurred while retrieving the event detail for consumer")
+                            .result(null)
+                            .build());
+        }
     }
 }

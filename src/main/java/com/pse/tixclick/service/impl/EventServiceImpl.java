@@ -1,7 +1,17 @@
 package com.pse.tixclick.service.impl;
 
 import com.pse.tixclick.cloudinary.CloudinaryService;
+import com.pse.tixclick.email.EmailService;
+import com.pse.tixclick.payload.dto.EventActivityDTO;
 import com.pse.tixclick.payload.dto.UpcomingEventDTO;
+import com.pse.tixclick.payload.entity.Account;
+import com.pse.tixclick.payload.entity.company.Company;
+import com.pse.tixclick.payload.entity.company.Contract;
+import com.pse.tixclick.payload.entity.event.EventActivity;
+import com.pse.tixclick.payload.entity.seatmap.SeatMap;
+import com.pse.tixclick.payload.entity.ticket.Ticket;
+import com.pse.tixclick.payload.response.EventDetailForConsumer;
+import com.pse.tixclick.payload.response.EventForConsumerResponse;
 import com.pse.tixclick.payload.response.EventResponse;
 import com.pse.tixclick.repository.*;
 import com.pse.tixclick.utils.AppUtils;
@@ -14,6 +24,7 @@ import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.request.create.CreateEventRequest;
 import com.pse.tixclick.payload.request.update.UpdateEventRequest;
 import com.pse.tixclick.service.EventService;
+import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -21,11 +32,13 @@ import lombok.experimental.FieldDefaults;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 @Service
@@ -39,6 +52,12 @@ public class EventServiceImpl implements EventService {
     AccountRepository accountRepository;
     CloudinaryService cloudinary;
     CompanyRepository companyRepository;
+    SimpMessagingTemplate messagingTemplate;
+    ContractRepository contractRepository;
+    EmailService emailService;
+    TicketRepository ticketRepository;
+    SeatMapRepository seatMapRepository;
+
     @Autowired
     AppUtils appUtils;
 
@@ -77,7 +96,8 @@ public class EventServiceImpl implements EventService {
         event.setDescription(request.getDescription());
         event.setCategory(category);
         event.setLocationName(request.getLocationName());
-        event.setStatus(EEventStatus.PENDING);
+        event.setLocation(request.getLocation());
+        event.setStatus(EEventStatus.DRAFT);
         event.setLogoURL(logocode);
         event.setBannerURL(bannercode);
         event.setOrganizer(organnizer);
@@ -150,7 +170,7 @@ public class EventServiceImpl implements EventService {
     public boolean deleteEvent(int id) {
         var event = eventRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
-        event.setStatus(EEventStatus.CANCELLED);
+        event.setStatus(EEventStatus.REJECTED);
         return true;
     }
 
@@ -188,8 +208,8 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public List<EventDTO> getEventByStatus(String status) {
-        List<Event> events = eventRepository.findEventsByStatus(EEventStatus.valueOf(status))
+    public List<EventDTO> getEventByStatus(EEventStatus status) {
+        List<Event> events = eventRepository.findEventsByStatus(status)
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
         return modelMapper.map(events, new TypeToken<List<EventDTO>>() {
         }.getType());
@@ -332,4 +352,94 @@ public class EventServiceImpl implements EventService {
 
             return upcomingEventDTOs;
     }
+
+    @Override
+    public String sentRequestForApproval(int eventId) throws MessagingException {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+
+        if (event.getStatus() != EEventStatus.DRAFT && event.getStatus() != EEventStatus.PENDING_APPROVAL
+                && event.getStatus() != EEventStatus.REJECTED) {
+            throw new AppException(ErrorCode.INVALID_EVENT_STATUS);
+        }
+
+        event.setStatus(EEventStatus.PENDING_APPROVAL);
+        eventRepository.save(event);
+        Account manager = accountRepository.findManagerWithLeastVerifications()
+                .orElseThrow(() -> new AppException(ErrorCode.MANAGER_NOT_FOUND));
+
+        Contract contract = new Contract();
+        contract.setEvent(event);
+        contract.setCompany(event.getCompany());
+        contract.setAccount(manager);
+        contract.setTotalAmount(0);
+        contract.setCommission("0");
+        contract.setContractType("STANDARD");
+        contract.setContractName("Hợp đồng cho sự kiện " + event.getEventName());
+        contractRepository.save(contract);
+        String fullName = event.getOrganizer().getFirstName() + " " + event.getOrganizer().getLastName();
+        emailService.sendEventApprovalRequest(manager.getEmail(), event.getEventName(), fullName);
+
+        messagingTemplate.convertAndSendToUser(manager.getUserName(),"/queue/notifications", "Có sự kiện mới cần duyệt");
+        return "Yêu cầu đã được gửi";
+
+    }
+
+    @Override
+    public List<EventForConsumerResponse> getEventsForConsumerByStatusScheduled() {
+        List<Event> events = eventRepository.findEventsByStatus(EEventStatus.SCHEDULED)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+
+        return events.stream()
+                .map(event -> new EventForConsumerResponse(
+                        event.getBannerURL(),
+                        event.getEventId(),
+                        event.getLogoURL()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public EventDetailForConsumer getEventDetailForConsumer(int eventId) {
+        Event event = eventRepository.findEventByEventId(eventId)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+
+        // Dùng ModelMapper để map sang DTO
+        List<EventActivityDTO> eventActivityDTOList = event.getEventActivities().stream()
+                .map(activity -> modelMapper.map(activity, EventActivityDTO.class))
+                .collect(Collectors.toList());
+
+        // Lấy công ty của sự kiện
+        Company company = event.getCompany();
+
+        // Lấy giá vé thấp nhất
+        double minPrice = ticketRepository.findMinTicketByEvent_EventId(eventId)
+                .map(Ticket::getPrice)
+                .orElse(0.0);
+
+        // Kiểm tra xem sự kiện có seat map không
+        boolean isHaveSeatMap = seatMapRepository.findSeatMapByEvent_EventId(eventId).isPresent();
+
+        return new EventDetailForConsumer(
+                event.getEventName(),
+                event.getLocation(),
+                event.getLocationName(),
+                event.getLogoURL(),
+                event.getBannerURL(),
+                company != null ? company.getLogoURL() : null,  // URL logo của công ty
+                company != null ? company.getCompanyName() : null, // Tên công ty
+                company != null ? company.getDescription() : null, // Mô tả công ty
+                event.getStatus().name(),
+                event.getTypeEvent(),
+                event.getDescription(),
+                event.getCategory().getCategoryName(),
+                eventActivityDTOList,
+                isHaveSeatMap,
+                minPrice
+        );
+    }
+
+
+
+
 }

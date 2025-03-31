@@ -313,8 +313,8 @@ public class PaymentServiceImpl implements PaymentService {
                 ticketQrCodeDTO.setPurchase_date(new Date());
                 ticketQrCodeDTO.setEvent_name(event.getEventName());
                 ticketQrCodeDTO.setActivity_name(eventActivity.getActivityName());
-                ticketQrCodeDTO.setTicket_code(ticketPurchase.getSeatActivity().getSeat().getSeatName());
                 ticketQrCodeDTO.setZone_name(ticketPurchase.getZoneActivity().getZone().getZoneName());
+                ticketQrCodeDTO.setSeat_code(ticketPurchase.getSeatActivity().getSeat().getSeatName());
                 ticketQrCodeDTO.setSeat_row_number(ticketPurchase.getSeatActivity().getSeat().getRowNumber());
                 ticketQrCodeDTO.setSeat_column_number(ticketPurchase.getSeatActivity().getSeat().getColumnNumber());
                 ticketQrCodeDTO.setAccount_name(account.getUserName());
@@ -324,6 +324,7 @@ public class PaymentServiceImpl implements PaymentService {
 
                 String qrCode = generateQRCode(ticketQrCodeDTO);
 
+                ticketPurchase.setQrCode(qrCode);
                 ticketPurchase.setStatus(ETicketPurchaseStatus.PURCHASED);
                 ticketPurchaseRepository.save(ticketPurchase);
             }
