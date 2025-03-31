@@ -5,6 +5,7 @@ import com.pse.tixclick.email.EmailService;
 import com.pse.tixclick.payload.dto.UpcomingEventDTO;
 import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.company.Contract;
+import com.pse.tixclick.payload.response.EventForConsumerResponse;
 import com.pse.tixclick.payload.response.EventResponse;
 import com.pse.tixclick.repository.*;
 import com.pse.tixclick.utils.AppUtils;
@@ -197,8 +198,8 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public List<EventDTO> getEventByStatus(String status) {
-        List<Event> events = eventRepository.findEventsByStatus(EEventStatus.valueOf(status))
+    public List<EventDTO> getEventByStatus(EEventStatus status) {
+        List<Event> events = eventRepository.findEventsByStatus(status)
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
         return modelMapper.map(events, new TypeToken<List<EventDTO>>() {
         }.getType());
@@ -373,4 +374,21 @@ public class EventServiceImpl implements EventService {
         return "Yêu cầu đã được gửi";
 
     }
+
+    @Override
+    public List<EventForConsumerResponse> getEventsForConsumerByStatusScheduled() {
+        List<Event> events = eventRepository.findEventsByStatus(EEventStatus.SCHEDULED)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+
+        return events.stream()
+                .map(event -> new EventForConsumerResponse(
+                        event.getBannerURL(),
+                        event.getEventId(),
+                        event.getLogoURL()
+                ))
+                .collect(Collectors.toList());
+    }
+
+
+
 }

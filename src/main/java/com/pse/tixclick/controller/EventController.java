@@ -7,6 +7,7 @@ import com.pse.tixclick.payload.entity.entity_enum.EEventStatus;
 import com.pse.tixclick.payload.request.create.CreateEventRequest;
 import com.pse.tixclick.payload.request.update.UpdateEventRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
+import com.pse.tixclick.payload.response.EventForConsumerResponse;
 import com.pse.tixclick.payload.response.EventResponse;
 import com.pse.tixclick.service.EventService;
 import lombok.extern.slf4j.Slf4j;
@@ -167,7 +168,7 @@ public class EventController {
     }
 
     @GetMapping("/status/{status}")
-    public ResponseEntity<ApiResponse<List<EventDTO>>> getEventByStatus(@PathVariable String status) {
+    public ResponseEntity<ApiResponse<List<EventDTO>>> getEventByStatus(@PathVariable EEventStatus status) {
         List<EventDTO> events = eventService.getEventByStatus(status);
 
         if (events.isEmpty()) {
@@ -437,4 +438,27 @@ public class EventController {
                             .build());
         }
     }
+
+    @GetMapping("/consumer/scheduled")
+    public ResponseEntity<ApiResponse<List<EventForConsumerResponse>>> getEventsForConsumerByStatusScheduled() {
+        List<EventForConsumerResponse> events = eventService.getEventsForConsumerByStatusScheduled();
+
+        if (events.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.<List<EventForConsumerResponse>>builder()
+                            .code(HttpStatus.NOT_FOUND.value())
+                            .message("No scheduled events found")
+                            .result(null)
+                            .build());
+        }
+
+        return ResponseEntity.ok(
+                ApiResponse.<List<EventForConsumerResponse>>builder()
+                        .code(HttpStatus.OK.value())
+                        .message("Get all scheduled events successfully")
+                        .result(events)
+                        .build()
+        );
+    }
+
 }
