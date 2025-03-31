@@ -15,6 +15,7 @@ import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.List;
 
 @Getter
 @Setter
@@ -73,8 +74,8 @@ public class Account {
     @OneToMany(mappedBy = "account", fetch = FetchType.LAZY)
     private Collection<Transaction> transactions;
 
-    @OneToOne(mappedBy = "account", fetch = FetchType.LAZY)
-    private Contract contract;
+    @OneToMany(mappedBy = "account", fetch = FetchType.LAZY)
+    private List<Contract> contracts;
 
     @OneToMany(mappedBy = "account", fetch = FetchType.LAZY)
     private Collection<Voucher> vouchers;
