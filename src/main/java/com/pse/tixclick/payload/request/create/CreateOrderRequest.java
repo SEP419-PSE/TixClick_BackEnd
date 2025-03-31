@@ -14,5 +14,7 @@ import java.util.List;
 public class CreateOrderRequest {
     private List<TicketOrderDTO> ticketOrderDTOS;
 
+    private long expiredTime;
+
     private String voucherCode;
 }
