@@ -2,6 +2,7 @@ package com.pse.tixclick.service;
 
 import com.pse.tixclick.payload.dto.ZoneDTO;
 import com.pse.tixclick.payload.entity.seatmap.Zone;
+import com.pse.tixclick.payload.request.SectionRequest;
 import com.pse.tixclick.payload.request.create.CreateZoneRequest;
 import com.pse.tixclick.payload.request.update.UpdateZoneRequest;
 import com.pse.tixclick.payload.response.SectionResponse;
@@ -16,10 +17,9 @@ public interface ZoneService{
 
     List<ZoneDTO> getAllZones();
 
-    void deleteZone(int zoneId);
-
     List<ZoneDTO> getZonesBySeatMap(int seatMapId);
 
     List<ZoneDTO> getZonesByType(int type);
+
 
 }

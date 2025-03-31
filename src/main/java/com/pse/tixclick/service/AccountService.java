@@ -3,6 +3,7 @@ package com.pse.tixclick.service;
 import com.pse.tixclick.payload.dto.AccountDTO;
 import com.pse.tixclick.payload.request.create.CreateAccountRequest;
 import com.pse.tixclick.payload.request.update.UpdateAccountRequest;
+import com.pse.tixclick.payload.response.SearchAccountResponse;
 
 import java.util.List;
 
@@ -28,5 +29,10 @@ public interface AccountService {
 
     List<AccountDTO> getAccountsByRoleManagerAndAdmin();
 
+    String registerPinCode(String pinCode);
+    String loginWithPinCode(String pinCode);
 
+    SearchAccountResponse searchAccount(String email);
+
+    SearchAccountResponse searchAccountWithCompany(String email);
 }

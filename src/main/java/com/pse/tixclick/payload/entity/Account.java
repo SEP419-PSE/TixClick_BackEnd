@@ -49,6 +49,9 @@ public class Account {
     boolean active;
 
     @Column
+    String pinCode;
+
+    @Column
     LocalDate dob;
 
     @Column
@@ -82,7 +85,7 @@ public class Account {
     @OneToMany(mappedBy = "account", fetch = FetchType.LAZY)
     private Collection<TicketPurchase> ticketPurchases;
 
-    @OneToOne(mappedBy = "representativeId", fetch = FetchType.LAZY) // ✅ mappedBy phải trùng tên field bên Company
+    @OneToOne(mappedBy = "representativeId", fetch = FetchType.LAZY)
     private Company company;
 
 

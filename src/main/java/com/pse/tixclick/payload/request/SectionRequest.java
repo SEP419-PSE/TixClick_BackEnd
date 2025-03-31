@@ -1,7 +1,6 @@
-package com.pse.tixclick.payload.response;
+package com.pse.tixclick.payload.request;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.pse.tixclick.payload.request.SeatRequest;
+import com.pse.tixclick.payload.response.SeatResponse;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,12 +12,12 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class SectionResponse {
+public class SectionRequest {
     private String id;
     private String name;
     private int rows;
     private int columns;
-    private List<SeatResponse> seats;
+    private List<SeatRequest> seats;
     private int x;
     private int y;
     private int width;
@@ -27,7 +26,5 @@ public class SectionResponse {
     private String type;
     private String priceId;
     private double price;
-    @JsonProperty("isSave")
-    private boolean isSave;
 
 }

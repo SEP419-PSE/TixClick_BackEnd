@@ -1,15 +1,17 @@
-package com.pse.tixclick.payload.response;
+package com.pse.tixclick.payload.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class SeatResponse {
+public class SeatRequest {
     private String id;
 
     private String row;
@@ -18,5 +20,6 @@ public class SeatResponse {
 
     private String seatTypeId;
 
-    private boolean status;
+
+
 }

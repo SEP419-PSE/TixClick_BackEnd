@@ -7,6 +7,7 @@ import com.pse.tixclick.payload.request.create.ListTicketPurchaseRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
 import com.pse.tixclick.service.OrderService;
 import com.pse.tixclick.service.TicketPurchaseService;
+import com.pse.tixclick.service.TransactionService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -15,8 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 @RestController
 @RequestMapping("/ticket-purchase")
@@ -30,6 +30,9 @@ public class TicketPurchaseController {
 
     @Autowired
     TicketPurchaseService ticketPurchaseService;
+
+    @Autowired
+    TransactionService transactionService;
 
 
     @PostMapping("/create")
@@ -188,13 +191,31 @@ public class TicketPurchaseController {
     }
 
     @PostMapping("/decrypt_qr_code")
-    public ResponseEntity<ApiResponse<TicketQrCodeDTO>> decryptQrCode(@RequestBody String qrCode) throws Exception {
+    public ResponseEntity<ApiResponse<TicketQrCodeDTO>> decryptQrCode(@RequestBody String qrCode){
         TicketQrCodeDTO qr = ticketPurchaseService.decryptQrCode(qrCode);
         return ResponseEntity.ok(
                 ApiResponse.<TicketQrCodeDTO>builder()
                         .code(200)
                         .message("Successfully decrypted qr code")
                         .result(qr)
+                        .build()
+        );
+    }
+
+    @GetMapping("/overview")
+    public ResponseEntity<ApiResponse<Object>> total() {
+        int ticket = ticketPurchaseService.countTicketPurchaseStatusByPurchased();
+        double totalTransaction = transactionService.totalTransaction();
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("totalTickets", ticket);
+        response.put("totalTransaction", totalTransaction);
+
+        return ResponseEntity.ok(
+                ApiResponse.<Object>builder()
+                        .code(200)
+                        .message("Overview statistics")
+                        .result(response)
                         .build()
         );
     }

@@ -10,7 +10,7 @@ import java.util.Optional;
 
 @Repository
 public interface EventActivityRepository extends JpaRepository<EventActivity,Integer> {
-    Optional<List<EventActivity>> findEventActivitiesByEvent_EventId(int eventId);
+    List<EventActivity> findEventActivitiesByEvent_EventId(int eventId);
 
     Optional<EventActivity> findEventActivityByActivityName(String activityName);
 }

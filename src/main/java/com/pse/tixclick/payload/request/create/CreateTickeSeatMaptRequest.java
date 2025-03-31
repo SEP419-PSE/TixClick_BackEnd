@@ -8,10 +8,13 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class CreateContractRequest {
-
-    double totalAmount;
-    String commission;
-    String contractType;
+public class CreateTickeSeatMaptRequest {
+    String id;
+    String name;
+    String color;
+    String textColor;
+    double price;
+    int minQuantity;
+    int maxQuantity;
     int eventId;
 }

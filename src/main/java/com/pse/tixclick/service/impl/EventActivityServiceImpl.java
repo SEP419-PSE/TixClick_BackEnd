@@ -125,8 +125,10 @@ public class EventActivityServiceImpl implements EventActivityService {
 
     @Override
     public List<EventActivityDTO> getEventActivityByEventId(int eventId) {
-        List<EventActivity> eventActivities = eventActivityRepository.findEventActivitiesByEvent_EventId(eventId)
-                .orElseThrow(() -> new AppException(ErrorCode.ACTIVITY_NOT_FOUND));
+        List<EventActivity> eventActivities = eventActivityRepository.findEventActivitiesByEvent_EventId(eventId);
+        if(eventActivities.isEmpty()) {
+            throw new AppException(ErrorCode.ACTIVITY_NOT_FOUND);
+        }
 
         return modelMapper.map(eventActivities, new TypeToken<List<EventActivityDTO>>() {}.getType());
     }

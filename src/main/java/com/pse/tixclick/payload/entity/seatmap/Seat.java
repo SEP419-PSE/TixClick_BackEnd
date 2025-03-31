@@ -17,16 +17,22 @@ import java.util.Collection;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-public class Seat {
+public class  Seat {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int seatId;
+
+    @Column
+    private String seatName;
 
     @Column
     private String rowNumber;
 
     @Column
     private String columnNumber;
+
+    @Column
+    private boolean status;
 
     @Column
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

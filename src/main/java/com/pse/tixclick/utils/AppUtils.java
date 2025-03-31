@@ -117,5 +117,8 @@ public class AppUtils {
         }
     }
 
-
+    public boolean isValidString(String value) {
+        return value != null && !value.trim().isEmpty() &&
+                !value.trim().equalsIgnoreCase("0") && !value.trim().equalsIgnoreCase("null");
+    }
 }

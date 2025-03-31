@@ -7,6 +7,7 @@ import com.pse.tixclick.payload.entity.seatmap.Seat;
 import com.pse.tixclick.payload.entity.seatmap.SeatMap;
 import com.pse.tixclick.payload.entity.seatmap.Zone;
 import com.pse.tixclick.payload.entity.seatmap.ZoneType;
+import com.pse.tixclick.payload.request.SectionRequest;
 import com.pse.tixclick.payload.request.create.CreateZoneRequest;
 import com.pse.tixclick.payload.request.update.UpdateZoneRequest;
 import com.pse.tixclick.payload.response.SectionResponse;
@@ -14,6 +15,7 @@ import com.pse.tixclick.repository.SeatMapRepository;
 import com.pse.tixclick.repository.SeatRepository;
 import com.pse.tixclick.repository.ZoneRepository;
 import com.pse.tixclick.repository.ZoneTypeRepository;
+import com.pse.tixclick.service.SeatMapService;
 import com.pse.tixclick.service.ZoneService;
 import com.pse.tixclick.utils.AppUtils;
 import jakarta.transaction.Transactional;
@@ -51,6 +53,8 @@ public class ZoneServiceImpl implements ZoneService {
 
     @Autowired
     SeatRepository seatRepository;
+    @Autowired
+    SeatMapService seatMapService;
 
 
 
@@ -115,14 +119,7 @@ public class ZoneServiceImpl implements ZoneService {
                 .toList();
     }
 
-    @Override
-    public void deleteZone(int zoneId) {
-        Zone zone = zoneRepository.findById(zoneId)
-                .orElseThrow(() -> new AppException(ErrorCode.ZONE_NOT_FOUND));
 
-        zone.setStatus(false);
-        zoneRepository.save(zone);
-    }
 
     @Override
     public List<ZoneDTO> getZonesBySeatMap(int seatMapId) {
@@ -145,9 +142,6 @@ public class ZoneServiceImpl implements ZoneService {
                 .map(zone -> mapper.map(zone, ZoneDTO.class))
                 .toList();
     }
-
-
-
 
 
 

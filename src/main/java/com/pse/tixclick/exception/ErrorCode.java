@@ -104,6 +104,13 @@ public enum ErrorCode {
     ZONE_ACTIVITY_NOT_FOUND(1088, "Không tìm thấy zone activity", HttpStatus.NOT_FOUND),
     SEAT_ACTIVITY_NOT_FOUND(1089, "Không tìm thấy seat activity", HttpStatus.NOT_FOUND),
     SEAT_SOLD_OUT(1090, "Ghế đã bán", HttpStatus.BAD_REQUEST),
+    INVALID_PIN_CODE(1091, "Mã PIN không hợp lệ", HttpStatus.BAD_REQUEST),
+    MANAGER_NOT_FOUND(1092, "Không tìm thấy manager phù hợp", HttpStatus.NOT_FOUND),
+    TICKET_EXISTED(1093, "Vé đã tồn tại", HttpStatus.BAD_REQUEST),
+    CONTRACT_VERIFICATION_NOT_FOUND(1094, "Không tìm thấy contract verification", HttpStatus.NOT_FOUND),
+    CONTRACT_VERIFICATION_NOT_PENDING(1095, "Contract verification không ở trạng thái pending", HttpStatus.BAD_REQUEST),
+    SEAT_MAP_NOT_FOUND(1096, "Không tìm thấy seat map", HttpStatus.NOT_FOUND),
+    NEEDED_LOGIN(1097, "Bạn cần đăng nhập", HttpStatus.UNAUTHORIZED),
     ;
 
 

@@ -3,9 +3,12 @@ package com.pse.tixclick.service.impl;
 import com.pse.tixclick.payload.dto.MonthlySalesReportDTO;
 import com.pse.tixclick.payload.dto.TransactionDTO;
 import com.pse.tixclick.payload.entity.Account;
+import com.pse.tixclick.payload.entity.company.Contract;
+import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.entity.payment.ContractPayment;
 import com.pse.tixclick.payload.entity.payment.Payment;
 import com.pse.tixclick.payload.entity.payment.Transaction;
+import com.pse.tixclick.repository.ContractRepository;
 import com.pse.tixclick.repository.OrderRepository;
 import com.pse.tixclick.repository.TransactionRepository;
 import com.pse.tixclick.service.TransactionService;
@@ -25,8 +28,10 @@ import java.util.stream.Collectors;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Transactional
 public class TransactionServiceImpl implements TransactionService {
-   @Autowired
-   TransactionRepository transactionRepository;
+    @Autowired
+    TransactionRepository transactionRepository;
+    @Autowired
+    ContractRepository contractRepository;
 
 
     @Override
@@ -63,5 +68,28 @@ public class TransactionServiceImpl implements TransactionService {
                         Optional.ofNullable(transaction.getContractPayment()).map(ContractPayment::getContractPaymentId).orElse(0)
                 ))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public double totalTransaction() {
+        return transactionRepository.sumTotalTransaction();
+    }
+
+    @Override
+    public double totalCommission() {
+//        List<Transaction> transactions = transactionRepository.findAll();
+//        double totalCommission = 0;
+//
+//        for (Transaction transaction : transactions) {
+//            Event event = transaction.getPayment().getContractPayment().getContract().getEvent();
+//            Contract contract = event.getContract();
+//
+//            if (contract != null) {
+//                double commissionRate = Double.parseDouble(contract.getCommission()) / 100; // Convert hoa hồng từ String sang double
+//                totalCommission += transaction.getAmount() * commissionRate;
+//            }
+//        }
+//        return totalCommission;
+        return  0;
     }
 }

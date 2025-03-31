@@ -107,13 +107,6 @@ public class OrderServiceImpl implements OrderService {
             Ticket ticket = ticketRepository.findById(ticketPurchase.getTicket().getTicketId())
                     .orElseThrow(() -> new AppException(ErrorCode.TICKET_NOT_FOUND));
 
-            int minQuantity = ticket.getMinQuantity();
-            int maxQuantity = ticket.getMaxQuantity();
-
-            if (quantity < minQuantity || quantity > maxQuantity) {
-                throw new AppException(ErrorCode.INVALID_QUANTITY);
-            }
-
             OrderDetail orderDetail = new OrderDetail();
             orderDetail.setOrder(order);
             orderDetail.setTicketPurchase(ticketPurchase);

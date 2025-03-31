@@ -1,7 +1,7 @@
 package com.pse.tixclick.payload.entity.ticket;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.pse.tixclick.payload.entity.Account;
+import com.pse.tixclick.payload.entity.entity_enum.ETicketPurchaseStatus;
 import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.entity.event.EventActivity;
 import com.pse.tixclick.payload.entity.payment.OrderDetail;
@@ -10,7 +10,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.time.LocalDateTime;
 import java.util.Collection;
 
 @Getter
@@ -27,8 +26,9 @@ public class TicketPurchase {
     @Column(columnDefinition = "NVARCHAR(MAX)")
     private String qrCode;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String status;
+    private ETicketPurchaseStatus status;
 
     @Column
     private Integer quantity;

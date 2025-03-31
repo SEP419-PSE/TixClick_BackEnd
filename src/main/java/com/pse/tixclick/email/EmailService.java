@@ -5,6 +5,7 @@ import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -14,7 +15,7 @@ import java.time.format.DateTimeFormatter;
 public class EmailService {
     @Autowired
     private JavaMailSender mailSender;
-
+    @Async
     public void sendNewMail(String to, String subject, String body,String fullname) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -124,5 +125,20 @@ public class EmailService {
 
         sendNewMail(managerEmail, subject, body, "Manager");
     }
+    @Async
+    public void sendEventStartNotification(String to, String eventName, String fullname) throws MessagingException {
+        String subject = "Event Has Started - TixClick";
+        String body = "<html>" +
+                "<body>" +
+                "<h2 style=\"color: #0D6EFD;\">Event Notification</h2>" +
+                "<p>Dear " + fullname + ",</p>" +
+                "<p>Your event has officially started:</p>" +
+                "<p><strong>Event Name:</strong> " + eventName + "</p>" +
+                "<p>We wish you a successful event!</p>" +
+                "<p>Best regards,<br/>TixClick Team</p>" +
+                "</body>" +
+                "</html>";
 
+        sendNewMail(to, subject, body, fullname);
+    }
 }
