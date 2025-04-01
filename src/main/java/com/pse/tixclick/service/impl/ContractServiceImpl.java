@@ -83,6 +83,9 @@ public class ContractServiceImpl implements ContractService {
 
         contract.setContractName(request.getContractName());
         contract.setContractType(request.getContractType());
+        contract.setStartDate(request.getStartDate());
+        contract.setEndDate(request.getEndDate());
+        contract.setStatus(EContractStatus.PENDING);
         contract.setEvent(event);
         contract.setAccount(manager);
         contract.setCompany(company);
@@ -110,6 +113,7 @@ public class ContractServiceImpl implements ContractService {
     @Override
     public List<ContractDTO> getAllContracts() {
         List<Contract> contracts = contractRepository.findAll();
+
         return contracts.stream()
                 .map(contract -> modelMapper.map(contract, ContractDTO.class))
                 .toList();

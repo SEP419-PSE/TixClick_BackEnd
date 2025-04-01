@@ -1,11 +1,14 @@
 package com.pse.tixclick.payload.entity.company;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.pse.tixclick.payload.entity.Account;
+import com.pse.tixclick.payload.entity.entity_enum.EContractStatus;
 import com.pse.tixclick.payload.entity.event.Event;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 
@@ -31,6 +34,17 @@ public class Contract {
 
     @Column(nullable = false)
     private String contractType;
+
+    @Column
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDate startDate;
+
+    @Column
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDate endDate;
+
+    @Column
+    private EContractStatus status;
 
     @ManyToOne
     @JoinColumn(name="manager_id", nullable = false)

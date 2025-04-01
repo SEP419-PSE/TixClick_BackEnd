@@ -5,12 +5,10 @@ import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.CompanyVerificationDTO;
 import com.pse.tixclick.payload.entity.Notification;
+import com.pse.tixclick.payload.entity.Role;
 import com.pse.tixclick.payload.entity.company.CompanyVerification;
 import com.pse.tixclick.payload.entity.company.Member;
-import com.pse.tixclick.payload.entity.entity_enum.EStatus;
-import com.pse.tixclick.payload.entity.entity_enum.ESubRole;
-import com.pse.tixclick.payload.entity.entity_enum.EVerificationStatus;
-import com.pse.tixclick.payload.entity.entity_enum.ECompanyStatus;
+import com.pse.tixclick.payload.entity.entity_enum.*;
 import com.pse.tixclick.payload.request.create.CreateCompanyVerificationRequest;
 import com.pse.tixclick.repository.*;
 import com.pse.tixclick.service.CompanyVerificationService;
@@ -45,6 +43,7 @@ public class CompanyVerificationServiceImpl implements CompanyVerificationServic
     AppUtils appUtils;
     SimpMessagingTemplate simpMessagingTemplate;
     NotificationRepository notificationRepository;
+    RoleRepository roleRepository;
     @Override
     public CompanyVerificationDTO createCompanyVerification(CreateCompanyVerificationRequest createCompanyVerificationRequest) {
 
@@ -108,7 +107,15 @@ public class CompanyVerificationServiceImpl implements CompanyVerificationServic
                 notification.setCreatedDate(LocalDateTime.now());
                 notification.setRead(false);
 
+                var account = accountRepository
+                        .findAccountByUserName(company.getRepresentativeId().getUserName())
+                        .orElseThrow(() -> new AppException(ErrorCode.ACCOUNT_NOT_FOUND));
 
+                Role role = roleRepository.findRoleByRoleName(ERole.ORGANIZER)
+                        .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
+
+                account.setRole(role);
+                accountRepository.save(account);
 
                 notificationRepository.save(notification);
 
@@ -163,7 +170,6 @@ public class CompanyVerificationServiceImpl implements CompanyVerificationServic
         return companyVerificationList.stream()
                 .map(companyVerification -> modelMapper.map(companyVerification, CompanyVerificationDTO.class))
                 .toList();
-
     }
 
     @Override

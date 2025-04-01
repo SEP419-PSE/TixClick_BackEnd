@@ -3,6 +3,9 @@ package com.pse.tixclick.payload.request.create;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -15,4 +18,6 @@ public class CreateContractRequest {
     String commission;
     String contractType;
     int eventId;
+    LocalDate startDate;
+    LocalDate endDate;
 }
