@@ -35,7 +35,7 @@ public class SeatActivity {
     @JoinColumn(name = "event_activity_id", nullable = false)
     private EventActivity eventActivity;
 
-    @OneToMany(mappedBy = "seatActivity")
+    @OneToMany(mappedBy = "seatActivity", fetch = FetchType.LAZY)
     private Collection<TicketPurchase> ticketPurchases;
 }
 

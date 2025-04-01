@@ -64,12 +64,12 @@ public class EventActivity {
     @JoinColumn(name = "created_by", nullable = false)
     Account createdBy;
 
-    @OneToMany(mappedBy = "eventActivity")
+    @OneToMany(mappedBy = "eventActivity", fetch = FetchType.LAZY)
     Collection<TicketPurchase> ticketPurchases;
 
-    @OneToMany(mappedBy = "eventActivity")
+    @OneToMany(mappedBy = "eventActivity", fetch = FetchType.LAZY)
     Collection<ZoneActivity> zoneActivities;
 
-    @OneToMany(mappedBy = "eventActivity")
+    @OneToMany(mappedBy = "eventActivity", fetch = FetchType.LAZY)
     Collection<SeatActivity> seatActivities;
 }

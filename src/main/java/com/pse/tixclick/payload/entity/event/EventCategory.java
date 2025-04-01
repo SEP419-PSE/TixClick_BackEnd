@@ -20,6 +20,6 @@ public class EventCategory {
     @Column(columnDefinition = "NVARCHAR(255)")
     String categoryName;
 
-    @OneToMany(mappedBy = "category")
+    @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
     Collection<Event> events;
 }
