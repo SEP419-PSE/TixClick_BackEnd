@@ -381,7 +381,7 @@ public class SeatMapServiceImpl implements SeatMapService {
             }
 
             List<SeatResponse> seatResponses = new ArrayList<>();
-            int availableSeatsCount = 0;
+
 
             for (SeatActivity seatActivity : seatActivityList) {
                 Seat seat = seatActivity.getSeat();
@@ -395,7 +395,7 @@ public class SeatMapServiceImpl implements SeatMapService {
                     seatResponse.setStatus(false);
                 } else if (ESeatActivityStatus.valueOf(seatActivity.getStatus()) == ESeatActivityStatus.AVAILABLE) {
                     seatResponse.setStatus(true);
-                    availableSeatsCount++;
+
                 } else if (seatActivity.getStatus().equals(ESeatActivityStatus.PENDING.name())) {
                     seatResponse.setStatus(false);
                 }
@@ -404,6 +404,7 @@ public class SeatMapServiceImpl implements SeatMapService {
                 seatResponses.add(seatResponse);
             }
 
+            int availableSeatsCount = zone.getQuantity();
             SectionResponse sectionResponse = SectionResponse.builder()
                     .id(String.valueOf(zone.getZoneId()))
                     .name(zone.getZoneName())
