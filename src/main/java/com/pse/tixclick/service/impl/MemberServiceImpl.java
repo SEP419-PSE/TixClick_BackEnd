@@ -8,6 +8,7 @@ import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.company.Company;
 import com.pse.tixclick.payload.entity.company.Member;
 import com.pse.tixclick.payload.entity.entity_enum.ECompanyStatus;
+import com.pse.tixclick.payload.entity.entity_enum.ERole;
 import com.pse.tixclick.payload.entity.entity_enum.EStatus;
 import com.pse.tixclick.payload.entity.entity_enum.ESubRole;
 import com.pse.tixclick.payload.request.create.AddMemberRequest;
@@ -16,6 +17,7 @@ import com.pse.tixclick.payload.response.MemberDTOResponse;
 import com.pse.tixclick.repository.AccountRepository;
 import com.pse.tixclick.repository.CompanyRepository;
 import com.pse.tixclick.repository.MemberRepository;
+import com.pse.tixclick.repository.RoleRepository;
 import com.pse.tixclick.service.MemberService;
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
@@ -24,9 +26,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -42,6 +46,8 @@ public class MemberServiceImpl implements MemberService {
     MemberRepository memberRepository;
     EmailService emailService;
     ModelMapper modelMapper;
+    StringRedisTemplate stringRedisTemplate;
+    RoleRepository roleRepository;
 
     @Override
     public MemberDTOResponse createMember(CreateMemberRequest createMemberRequest) {
@@ -57,7 +63,7 @@ public class MemberServiceImpl implements MemberService {
         var member = memberRepository.findMemberByAccount_UserNameAndCompany_CompanyId(name, createMemberRequest.getCompanyId());
 
         if (member.isPresent()) {
-            if (!(member.get().getSubRole().equals(ESubRole.OWNER.name()) || member.get().getSubRole().equals(ESubRole.ADMIN.name()))) {
+            if (!(member.get().getSubRole().equals(ESubRole.OWNER) || member.get().getSubRole().equals(ESubRole.ADMIN))) {
                 throw new AppException(ErrorCode.INVALID_ROLE);
             }
         } else {
@@ -74,8 +80,13 @@ public class MemberServiceImpl implements MemberService {
                 invitedAccount = accountRepository.findAccountByEmail(email)
                         .orElseGet(() -> {
                             try {
-                                emailService.sendOTPtoActiveAccount(email, company.getCompanyName(),"Haha");
+
+
+                                String link = "http://localhost:5173/account/register";
+                                emailService.sendAccountRegistrationToCompany(email, company.getCompanyName(), link);
                                 String emailSentMessage = email + " đã gửi mail";
+                                String key = "CREATE_MEMBER:" + email;
+                                stringRedisTemplate.opsForValue().set(key, email, Duration.ofDays(7));
                                 sentEmails.add(emailSentMessage);
                             } catch (MessagingException e) {
                                 throw new RuntimeException(e);
@@ -107,6 +118,8 @@ public class MemberServiceImpl implements MemberService {
                 newMember.setStatus(EStatus.ACTIVE);
                 memberRepository.save(newMember);
 
+                invitedAccount.setRole(roleRepository.findRoleByRoleName(ERole.ORGANIZER)
+                        .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND)));
                 // Add the created member to the response list
                 MemberDTO memberDTO = new MemberDTO();
                 memberDTO.setMemberId(newMember.getMemberId());
