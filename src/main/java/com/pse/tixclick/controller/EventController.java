@@ -234,8 +234,8 @@ public class EventController {
         );
     }
 
-    @PutMapping("/{id}/approve")
-    public ResponseEntity<ApiResponse<EventDTO>> approveEvent(@PathVariable int id, @RequestBody EEventStatus status) {
+    @PutMapping("/{id}/approve/{status}")
+    public ResponseEntity<ApiResponse<EventDTO>> approveEvent(@PathVariable int id, @PathVariable EEventStatus status) {
         try {
             EventDTO event = eventService.approveEvent(id,status);
             return ResponseEntity.ok(

@@ -20,7 +20,6 @@ public class CreateTicketRequest {
     int minQuantity;
     int maxQuantity;
     int eventId;
-    boolean status;
     String textColor;
     String seatBackgroundColor;
 

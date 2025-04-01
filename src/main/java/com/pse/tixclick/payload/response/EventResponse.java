@@ -11,6 +11,10 @@ import lombok.experimental.FieldDefaults;
 public class EventResponse {
     int eventId;
     String eventName;
+    String locationName;
+    String description;
+    String bannerURL;
+    String logoURL;
     String location;
     String status;
     String typeEvent;

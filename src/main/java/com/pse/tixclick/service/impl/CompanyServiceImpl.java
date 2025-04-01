@@ -10,6 +10,7 @@ import com.pse.tixclick.payload.dto.CompanyDocumentDTO;
 import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.Notification;
 import com.pse.tixclick.payload.entity.company.Company;
+import com.pse.tixclick.payload.entity.company.CompanyDocuments;
 import com.pse.tixclick.payload.entity.company.CompanyVerification;
 import com.pse.tixclick.payload.entity.company.Member;
 import com.pse.tixclick.payload.entity.entity_enum.*;
@@ -62,6 +63,7 @@ public class CompanyServiceImpl implements CompanyService {
     SimpMessagingTemplate messagingTemplate;
     CompanyDocumentService companyDocumentService;
     NotificationRepository notificationRepository;
+    CompanyDocumentRepository companyDocumentRepository;
     @Override
     public CreateCompanyResponse createCompany(CreateCompanyRequest createCompanyRequest, MultipartFile file) throws IOException, MessagingException {
         var context = SecurityContextHolder.getContext();
@@ -294,12 +296,17 @@ public class CompanyServiceImpl implements CompanyService {
             throw new AppException(ErrorCode.COMPANY_NOT_EXISTED);
         }
 
-        // Chuyển đổi danh sách CompanyVerification sang danh sách GetByCompanyWithVerificationResponse
         return verifications.stream().map(verification -> {
             Company company = verification.getCompany();
             Account representative = company.getRepresentativeId();
 
-            // Kiểm tra nếu không có representative để tránh NullPointerException
+            // Lấy danh sách CompanyDocuments và chuyển đổi sang DTO
+            List<CompanyDocumentDTO> companyDocuments = companyDocumentRepository
+                    .findCompanyDocumentsByCompany_CompanyId(company.getCompanyId())
+                    .stream()
+                    .map(doc -> modelMapper.map(doc, CompanyDocumentDTO.class))
+                    .collect(Collectors.toList());
+
             GetByCompanyWithVerificationResponse.CustomAccount customAccount = (representative != null)
                     ? new GetByCompanyWithVerificationResponse.CustomAccount(
                     representative.getLastName(),
@@ -309,7 +316,6 @@ public class CompanyServiceImpl implements CompanyService {
             )
                     : null;
 
-            // Trả về đối tượng GetByCompanyWithVerificationResponse
             return new GetByCompanyWithVerificationResponse(
                     company.getCompanyId(),
                     company.getCompanyName(),
@@ -320,13 +326,13 @@ public class CompanyServiceImpl implements CompanyService {
                     company.getLogoURL(),
                     company.getAddress(),
                     company.getDescription(),
-                    verification.getCompanyVerificationId(), // Thêm ID của CompanyVerification
+                    companyDocuments, // Thêm danh sách tài liệu công ty
+                    verification.getCompanyVerificationId(),
                     company.getStatus(),
                     customAccount
             );
         }).collect(Collectors.toList());
     }
-
     @Override
     public CompanyAndDocumentResponse createCompanyAndDocument(CreateCompanyRequest createCompanyRequest, MultipartFile logoURL, List<MultipartFile> companyDocument) throws IOException, MessagingException {
         var context = SecurityContextHolder.getContext();

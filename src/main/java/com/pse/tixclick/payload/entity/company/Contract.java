@@ -23,8 +23,9 @@ public class Contract {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int contractId;
 
-    @Column
+    @Column(columnDefinition = "NVARCHAR(255)")
     private String contractName;
+
 
     @Column(nullable = false)
     private double totalAmount;
@@ -44,7 +45,9 @@ public class Contract {
     private LocalDate endDate;
 
     @Column
+    @Enumerated(EnumType.STRING)
     private EContractStatus status;
+
 
     @ManyToOne
     @JoinColumn(name="manager_id", nullable = false)
@@ -60,4 +63,7 @@ public class Contract {
 
     @OneToMany(mappedBy = "contract",fetch = FetchType.LAZY)
     private Collection<ContractDetail> contractDetails;
+
+    @OneToMany(mappedBy = "contract",fetch = FetchType.LAZY)
+    private Collection<ContractDocument> contractDocuments;
 }

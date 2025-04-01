@@ -59,6 +59,15 @@ public class EventActivityServiceImpl implements EventActivityService {
         if (member.getSubRole() != ESubRole.OWNER && member.getSubRole() != ESubRole.ADMIN) {
             throw new AppException(ErrorCode.NOT_PERMISSION);
         }
+
+        boolean isHaveActivity = eventActivityRepository
+                .findEventActivityByActivityNameAndEvent_EventId
+                        (eventActivityRequest.getActivityName(), eventActivityRequest.getEventId());
+        if (isHaveActivity)
+        {
+            throw new AppException(ErrorCode.ACTIVITY_EXISTED);
+        }
+
         var eventActivity = new EventActivity();
         eventActivity.setActivityName(eventActivityRequest.getActivityName());;
         eventActivity.setCreatedBy(organizer);

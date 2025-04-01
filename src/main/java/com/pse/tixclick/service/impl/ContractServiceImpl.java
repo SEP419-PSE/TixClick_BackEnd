@@ -3,8 +3,7 @@ package com.pse.tixclick.service.impl;
 import com.pse.tixclick.email.EmailService;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
-import com.pse.tixclick.payload.dto.ContractDTO;
-import com.pse.tixclick.payload.dto.PaymentDTO;
+import com.pse.tixclick.payload.dto.*;
 import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.company.Contract;
 import com.pse.tixclick.payload.entity.company.ContractVerification;
@@ -31,6 +30,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -108,15 +108,33 @@ public class ContractServiceImpl implements ContractService {
         return modelMapper.map(contract, ContractDTO.class);
     }
 
-
-
     @Override
-    public List<ContractDTO> getAllContracts() {
+    public List<ContractAndDocumentsDTO> getAllContracts() {
         List<Contract> contracts = contractRepository.findAll();
 
-        return contracts.stream()
-                .map(contract -> modelMapper.map(contract, ContractDTO.class))
-                .toList();
+        if (contracts.isEmpty()) {
+            return null;
+        }
+
+        List<ContractAndDocumentsDTO> contractDTOS = contracts.stream()
+                .map(contract -> {
+                    ContractAndDocumentsDTO contractAndDocumentsDTO = new ContractAndDocumentsDTO();
+
+                    if (contract.getContractDocuments() != null) {
+                        contractAndDocumentsDTO.setContractDocumentDTOS(
+                                contract.getContractDocuments().stream()
+                                        .map(contractDocument -> modelMapper.map(contractDocument, ContractDocumentDTO.class))
+                                        .collect(Collectors.toList())
+                        );
+                    }
+
+                    contractAndDocumentsDTO.setContractDTO(modelMapper.map(contract, ContractDTO.class));
+
+                    return contractAndDocumentsDTO;
+                })
+                .collect(Collectors.toList());
+
+        return contractDTOS.isEmpty() ? null : contractDTOS;
     }
 
     @Override
