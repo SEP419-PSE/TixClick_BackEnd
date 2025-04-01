@@ -6,6 +6,7 @@ import com.pse.tixclick.payload.entity.company.*;
 import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.entity.event.EventActivity;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
+import com.pse.tixclick.payload.response.EventActivityResponse;
 import org.modelmapper.PropertyMap;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -89,6 +90,7 @@ public class ModelMapperConfig {
                 map().setAccountId(source.getAccount().getAccountId());
             }
         });
+
         return modelMapper;
     }
 }

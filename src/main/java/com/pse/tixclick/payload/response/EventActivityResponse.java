@@ -1,7 +1,5 @@
-package com.pse.tixclick.payload.request;
-
+package com.pse.tixclick.payload.response;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.pse.tixclick.payload.dto.EventActivityDTO;
 import com.pse.tixclick.payload.dto.TicketDTO;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -13,11 +11,11 @@ import java.util.List;
 
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class   CreateEventActivityAndTicketRequest {
+public class EventActivityResponse {
+    int eventActivityId;
 
     String activityName;
 
@@ -36,29 +34,11 @@ public class   CreateEventActivityAndTicketRequest {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     LocalDateTime endTicketSale;
 
+    int seatMapId;
+
     int eventId;
 
-    List<TicketRequest> tickets;
+    int createdBy;
 
-    // Inner class TicketRequest
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Builder
-    @FieldDefaults(level = AccessLevel.PRIVATE)
-    public static class TicketRequest {
-        String ticketName;
-        String ticketCode;
-        int quantity;
-        @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-        LocalDateTime createdDate;
-        double price;
-        int minQuantity;
-        int maxQuantity;
-        boolean status;
-        int eventId;
-    }
-
-
+    List<TicketDTO> tickets;
 }
