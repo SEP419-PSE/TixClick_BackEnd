@@ -29,7 +29,7 @@ public class EventActivity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     int eventActivityId;
 
-    @Column(columnDefinition = "NVARCHAR(255)", unique = true)
+    @Column(columnDefinition = "NVARCHAR(255)")
     String activityName;
 
     @Column
