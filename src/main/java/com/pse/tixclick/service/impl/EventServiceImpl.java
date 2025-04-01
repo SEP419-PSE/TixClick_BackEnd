@@ -12,6 +12,8 @@ import com.pse.tixclick.payload.entity.entity_enum.ERole;
 import com.pse.tixclick.payload.entity.event.EventActivity;
 import com.pse.tixclick.payload.entity.seatmap.SeatMap;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
+import com.pse.tixclick.payload.entity.ticket.TicketMapping;
+import com.pse.tixclick.payload.response.EventActivityResponse;
 import com.pse.tixclick.payload.response.EventDetailForConsumer;
 import com.pse.tixclick.payload.response.EventForConsumerResponse;
 import com.pse.tixclick.payload.response.EventResponse;
@@ -59,6 +61,7 @@ public class EventServiceImpl implements EventService {
     EmailService emailService;
     TicketRepository ticketRepository;
     SeatMapRepository seatMapRepository;
+    TicketMappingRepository ticketMappingRepository;
 
     @Autowired
     AppUtils appUtils;
@@ -411,6 +414,9 @@ public class EventServiceImpl implements EventService {
                 .map(activity -> modelMapper.map(activity, EventActivityDTO.class))
                 .collect(Collectors.toList());
 
+        // Ánh xạ từ EventActivityDTO sang EventActivityResponse
+        List<EventActivityResponse> eventActivityResponseList = modelMapper.map(eventActivityDTOList, new TypeToken<List<EventActivityResponse>>() {}.getType());
+
         // Lấy công ty của sự kiện
         Company company = event.getCompany();
 
@@ -419,10 +425,20 @@ public class EventServiceImpl implements EventService {
                 .map(Ticket::getPrice)
                 .orElse(0.0);
 
-        List<Ticket> tickets = ticketRepository.findTicketsByEvent_EventId(eventId);
+        // Duyệt qua từng EventActivityResponse để gán Ticket vào từng sự kiện
+        for (EventActivityResponse activityResponse : eventActivityResponseList) {
+            // Lấy danh sách TicketMapping liên quan đến EventActivity
+            List<TicketMapping> ticketMappingList = ticketMappingRepository.findTicketMappingsByEventActivity_EventActivityId(activityResponse.getEventActivityId());
 
-        List<TicketDTO> ticketDTOS = modelMapper.map(tickets, new TypeToken<List<TicketDTO>>() {
-        }.getType());
+            List<TicketDTO> ticketDTOS = new ArrayList<>();
+            for (TicketMapping ticketMapping : ticketMappingList) {
+                Optional<Ticket> ticketOpt = ticketRepository.findById(ticketMapping.getTicket().getTicketId());
+                ticketOpt.ifPresent(ticket -> ticketDTOS.add(modelMapper.map(ticket, TicketDTO.class)));
+            }
+
+            // Gán danh sách TicketDTO vào EventActivityResponse
+            activityResponse.setTickets(ticketDTOS);
+        }
 
         // Kiểm tra xem sự kiện có seat map không
         boolean isHaveSeatMap = seatMapRepository.findSeatMapByEvent_EventId(eventId).isPresent();
@@ -440,10 +456,9 @@ public class EventServiceImpl implements EventService {
                 event.getTypeEvent(),
                 event.getDescription(),
                 event.getCategory().getCategoryName(),
-                eventActivityDTOList,
+                eventActivityResponseList,
                 isHaveSeatMap,
-                minPrice,
-                ticketDTOS
+                minPrice
         );
     }
 

@@ -24,9 +24,9 @@ public class EventDetailForConsumer {
     String typeEvent;
     String description;
     String categoryId;
-   List<EventActivityDTO> eventActivityDTOList;
+   List<EventActivityResponse> eventActivityDTOList;
    boolean isHaveSeatMap;
    double price;
-   List<TicketDTO> tickets;
+
 
 }

@@ -6,6 +6,7 @@ import com.pse.tixclick.payload.entity.seatmap.SeatActivity;
 import com.pse.tixclick.payload.entity.seatmap.SeatMap;
 import com.pse.tixclick.payload.entity.seatmap.ZoneActivity;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
+import com.pse.tixclick.payload.entity.ticket.TicketMapping;
 import com.pse.tixclick.payload.entity.ticket.TicketPurchase;
 import jakarta.persistence.*;
 import lombok.*;
@@ -64,12 +65,15 @@ public class EventActivity {
     @JoinColumn(name = "created_by", nullable = false)
     Account createdBy;
 
-    @OneToMany(mappedBy = "eventActivity")
+    @OneToMany(mappedBy = "eventActivity", fetch = FetchType.LAZY)
     Collection<TicketPurchase> ticketPurchases;
 
-    @OneToMany(mappedBy = "eventActivity")
+    @OneToMany(mappedBy = "eventActivity", fetch = FetchType.LAZY)
     Collection<ZoneActivity> zoneActivities;
 
-    @OneToMany(mappedBy = "eventActivity")
+    @OneToMany(mappedBy = "eventActivity", fetch = FetchType.LAZY)
     Collection<SeatActivity> seatActivities;
+
+    @OneToMany(mappedBy = "eventActivity", fetch = FetchType.LAZY)
+    Collection<TicketMapping> tickets;
 }
