@@ -1,8 +1,11 @@
 package com.pse.tixclick.payload.response;
 
+import com.pse.tixclick.payload.dto.CompanyDocumentDTO;
 import com.pse.tixclick.payload.entity.entity_enum.ECompanyStatus;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+
+import java.util.List;
 
 @Getter
 @Setter
@@ -19,7 +22,7 @@ public class GetByCompanyWithVerificationResponse {
     private String logoURL;
     private String address;
     private String description;
-
+    private List<CompanyDocumentDTO> companyDocument;
     private int companyVerificationId;
     private ECompanyStatus status;
     private CustomAccount customAccount;
