@@ -20,4 +20,5 @@ public class GetSeatResponse {
     private String seatTypeId;
 
     private boolean status;
+
 }

@@ -14,4 +14,5 @@ public class TicketRequest {
     String color;
     String textColor;
     double price;
+    int maxQuantity;
 }

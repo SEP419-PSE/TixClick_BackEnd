@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-public class Ticket {
+public class  Ticket {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     int ticketId;

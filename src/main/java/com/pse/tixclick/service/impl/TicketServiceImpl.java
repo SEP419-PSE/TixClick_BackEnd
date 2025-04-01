@@ -96,6 +96,7 @@ public class TicketServiceImpl implements TicketService {
                 .color(ticket.getSeatBackgroundColor())
                 .textColor(ticket.getTextColor())
                 .price(ticket.getPrice())
+                .maxQuantity(ticket.getMaxQuantity())
                 .build()
         ).collect(Collectors.toList());
     }
