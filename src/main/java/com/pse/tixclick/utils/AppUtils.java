@@ -2,6 +2,7 @@ package com.pse.tixclick.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.pse.tixclick.payload.dto.TicketQrCodeDTO;
@@ -73,26 +74,26 @@ public class AppUtils {
     }
 
 
-    public static String generateQRCode(String data, int width, int height){
-        StringBuilder result = new StringBuilder();
-
-        if(!data.isEmpty()){
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-
-            try {
-                QRCodeWriter qrCodeWriter = new QRCodeWriter();
-                BitMatrix bitMatrix = qrCodeWriter.encode(data, com.google.zxing.BarcodeFormat.QR_CODE, width, height);
-                BufferedImage bufferedImage = MatrixToImageWriter.toBufferedImage(bitMatrix);
-                ImageIO.write(bufferedImage, "png", out);
-
-                result.append(new String(Base64.getEncoder().encode(out.toByteArray())));
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-
-        }
-        return result.toString();
-    }
+//    public static String generateQRCode(String data, int width, int height){
+//        StringBuilder result = new StringBuilder();
+//
+//        if(!data.isEmpty()){
+//            ByteArrayOutputStream out = new ByteArrayOutputStream();
+//
+//            try {
+//                QRCodeWriter qrCodeWriter = new QRCodeWriter();
+//                BitMatrix bitMatrix = qrCodeWriter.encode(data, com.google.zxing.BarcodeFormat.QR_CODE, width, height);
+//                BufferedImage bufferedImage = MatrixToImageWriter.toBufferedImage(bitMatrix);
+//                ImageIO.write(bufferedImage, "png", out);
+//
+//                result.append(new String(Base64.getEncoder().encode(out.toByteArray())));
+//            }catch (Exception e){
+//                e.printStackTrace();
+//            }
+//
+//        }
+//        return result.toString();
+//    }
 
     public static String encrypt(String data) throws Exception {
         SecretKey secretKey = new SecretKeySpec(SECRET_KEY.getBytes(), AES_ALGORITHM);
