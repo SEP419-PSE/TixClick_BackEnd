@@ -3,6 +3,7 @@ package com.pse.tixclick.service.impl;
 import com.pse.tixclick.cloudinary.CloudinaryService;
 import com.pse.tixclick.email.EmailService;
 import com.pse.tixclick.payload.dto.EventActivityDTO;
+import com.pse.tixclick.payload.dto.TicketDTO;
 import com.pse.tixclick.payload.dto.UpcomingEventDTO;
 import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.company.Company;
@@ -417,6 +418,11 @@ public class EventServiceImpl implements EventService {
                 .map(Ticket::getPrice)
                 .orElse(0.0);
 
+        List<Ticket> tickets = ticketRepository.findTicketsByEvent_EventId(eventId);
+
+        List<TicketDTO> ticketDTOS = modelMapper.map(tickets, new TypeToken<List<TicketDTO>>() {
+        }.getType());
+
         // Kiểm tra xem sự kiện có seat map không
         boolean isHaveSeatMap = seatMapRepository.findSeatMapByEvent_EventId(eventId).isPresent();
 
@@ -435,7 +441,8 @@ public class EventServiceImpl implements EventService {
                 event.getCategory().getCategoryName(),
                 eventActivityDTOList,
                 isHaveSeatMap,
-                minPrice
+                minPrice,
+                ticketDTOS
         );
     }
 

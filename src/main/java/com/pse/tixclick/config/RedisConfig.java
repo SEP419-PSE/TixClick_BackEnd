@@ -15,19 +15,26 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 @Slf4j
 @Configuration
 public class RedisConfig {
+
     @Bean
     public LettuceConnectionFactory redisConnectionFactory(
             @Value("${spring.data.redis.host}") String host,
             @Value("${spring.data.redis.port}") int port,
             @Value("${spring.data.redis.password}") String password) {
 
+        log.info("Configuring Redis connection to {}:{}", host, port);
+
         RedisStandaloneConfiguration redisConfig = new RedisStandaloneConfiguration();
         redisConfig.setHostName(host);
         redisConfig.setPort(port);
         redisConfig.setPassword(RedisPassword.of(password));
 
-        return new LettuceConnectionFactory(redisConfig);
+        LettuceConnectionFactory connectionFactory = new LettuceConnectionFactory(redisConfig);
+        log.info("Redis connection factory initialized");
+
+        return connectionFactory;
     }
+
 
     @Bean
     public StringRedisTemplate stringRedisTemplate(LettuceConnectionFactory redisConnectionFactory) {

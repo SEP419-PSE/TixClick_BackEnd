@@ -27,6 +27,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -75,6 +76,7 @@ public class SeatMapServiceImpl implements SeatMapService {
 
     @Autowired
     SeatActivityRepository seatActivityRepository;
+
     @Override
     public SeatMapDTO createSeatMap(CreateSeatMapRequest createSeatMapRequest) {
         SeatMap seatMap = new SeatMap();
@@ -104,7 +106,7 @@ public class SeatMapServiceImpl implements SeatMapService {
     @Override
     public List<SeatMapDTO> getAllSeatMaps() {
         List<SeatMap> seatMaps = seatMapRepository.findAll();
-        if(seatMaps.isEmpty()) {
+        if (seatMaps.isEmpty()) {
             throw new AppException(ErrorCode.SEATMAP_NOT_FOUND);
         }
         return seatMaps.stream()
@@ -248,7 +250,8 @@ public class SeatMapServiceImpl implements SeatMapService {
                 seatResponse.setColumn(seatDto.getColumn());
                 seatResponse.setSeatTypeId(seatTicket.getTicketCode());
                 seatResponse.setStatus(seat.isStatus());
-                seatResponses.add(seatResponse);            }
+                seatResponses.add(seatResponse);
+            }
             seatRepository.saveAll(seats);
 
             SectionResponse sectionResponse = SectionResponse.builder()
@@ -343,8 +346,8 @@ public class SeatMapServiceImpl implements SeatMapService {
     }
 
     @Override
-    public List<SectionResponse> deleteZone(List<SectionRequest> sectionResponse,String zoneId,int eventId) {
-        designZone(sectionResponse,eventId);
+    public List<SectionResponse> deleteZone(List<SectionRequest> sectionResponse, String zoneId, int eventId) {
+        designZone(sectionResponse, eventId);
         Zone zone = zoneRepository.findZoneByZoneCode(zoneId)
                 .orElseThrow(() -> new AppException(ErrorCode.ZONE_NOT_FOUND));
         zoneRepository.delete(zone);
@@ -353,6 +356,7 @@ public class SeatMapServiceImpl implements SeatMapService {
 
     }
 
+    @Async
     @Override
     public List<SectionResponse> getSections(int eventId, int eventActivityId) {
         Event event = eventRepository.findById(eventId)
