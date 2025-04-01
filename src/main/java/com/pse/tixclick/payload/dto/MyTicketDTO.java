@@ -13,6 +13,7 @@ import java.time.LocalTime;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class MyTicketDTO {
+    private int eventId;
     private String eventName;
     private LocalDate eventDate;
     private LocalTime eventStartTime;
