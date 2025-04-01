@@ -8,6 +8,7 @@ import com.pse.tixclick.payload.dto.UpcomingEventDTO;
 import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.company.Company;
 import com.pse.tixclick.payload.entity.company.Contract;
+import com.pse.tixclick.payload.entity.entity_enum.ERole;
 import com.pse.tixclick.payload.entity.event.EventActivity;
 import com.pse.tixclick.payload.entity.seatmap.SeatMap;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
@@ -242,7 +243,7 @@ public class EventServiceImpl implements EventService {
         String name = context.getAuthentication().getName();
         var account = accountRepository.findAccountByUserName(name)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-        if (!account.getRole().getRoleName().equals("MANAGER")) {
+        if (!account.getRole().getRoleName().equals(ERole.MANAGER)) {
             throw new AppException(ErrorCode.INVALID_ROLE);
         }
 

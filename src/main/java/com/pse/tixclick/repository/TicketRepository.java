@@ -16,7 +16,7 @@ public interface TicketRepository extends JpaRepository<Ticket, Integer> {
 
     @Query(value = "SELECT TOP 1 * \n" +
             "FROM ticket \n" +
-            "WHERE event_id = 3 \n" +
+            "WHERE event_id = :eventId \n" +
             "ORDER BY price ASC;\n", nativeQuery = true)
     Optional<Ticket> findMinTicketByEvent_EventId(int eventId);
 }
