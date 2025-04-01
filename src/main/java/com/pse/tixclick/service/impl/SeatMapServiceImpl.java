@@ -7,6 +7,8 @@ import com.pse.tixclick.payload.entity.seatmap.*;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
 import com.pse.tixclick.payload.request.SeatRequest;
 import com.pse.tixclick.payload.request.SectionRequest;
+import com.pse.tixclick.payload.response.GetSeatResponse;
+import com.pse.tixclick.payload.response.GetSectionResponse;
 import com.pse.tixclick.payload.response.SeatResponse;
 import com.pse.tixclick.payload.response.SectionResponse;
 import com.pse.tixclick.repository.*;
@@ -358,7 +360,7 @@ public class SeatMapServiceImpl implements SeatMapService {
 
 
     @Override
-    public List<SectionResponse> getSections(int eventId, int eventActivityId) {
+    public List<GetSectionResponse> getSections(int eventId, int eventActivityId) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
         EventActivity eventActivity = eventActivityRepository.findById(eventActivityId)
@@ -369,7 +371,7 @@ public class SeatMapServiceImpl implements SeatMapService {
             return Collections.emptyList();
         }
 
-        List<SectionResponse> sectionResponses = new ArrayList<>();
+        List<GetSectionResponse> sectionResponses = new ArrayList<>();
 
         for (ZoneActivity zoneActivity : zoneActivityList) {
             Zone zone = zoneActivity.getZone();
@@ -380,12 +382,12 @@ public class SeatMapServiceImpl implements SeatMapService {
                 seatActivityList = seatActivityRepository.findSeatActivitiesByZoneActivity_ZoneActivityId(zoneActivity.getZoneActivityId());
             }
 
-            List<SeatResponse> seatResponses = new ArrayList<>();
+            List<GetSeatResponse> seatResponses = new ArrayList<>();
 
 
             for (SeatActivity seatActivity : seatActivityList) {
                 Seat seat = seatActivity.getSeat();
-                SeatResponse seatResponse = new SeatResponse();
+                GetSeatResponse seatResponse = new GetSeatResponse();
                 seatResponse.setId(seat.getSeatName());
                 seatResponse.setRow(seat.getRowNumber());
                 seatResponse.setColumn(seat.getColumnNumber());
@@ -405,7 +407,8 @@ public class SeatMapServiceImpl implements SeatMapService {
             }
 
             int availableSeatsCount = zone.getQuantity();
-            SectionResponse sectionResponse = SectionResponse.builder()
+            GetSectionResponse sectionResponse = GetSectionResponse.builder()
+                    .zoneActivityId(zoneActivity.getZoneActivityId())
                     .id(String.valueOf(zone.getZoneId()))
                     .name(zone.getZoneName())
                     .rows(Integer.parseInt(zone.getRows()))

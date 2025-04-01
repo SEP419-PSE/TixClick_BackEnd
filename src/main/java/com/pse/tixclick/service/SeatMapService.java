@@ -5,6 +5,7 @@ import com.pse.tixclick.payload.request.SeatRequest;
 import com.pse.tixclick.payload.request.SectionRequest;
 import com.pse.tixclick.payload.request.create.CreateSeatMapRequest;
 import com.pse.tixclick.payload.request.update.UpdateSeatMapRequest;
+import com.pse.tixclick.payload.response.GetSectionResponse;
 import com.pse.tixclick.payload.response.SeatResponse;
 import com.pse.tixclick.payload.response.SectionResponse;
 
@@ -28,5 +29,5 @@ public interface SeatMapService {
 
     List<SectionResponse> deleteZone(List<SectionRequest> sectionResponse,String zoneId, int eventId);
 
-    List<SectionResponse> getSections(int eventId, int eventActivityId);
+    List<GetSectionResponse> getSections(int eventId, int eventActivityId);
 }
