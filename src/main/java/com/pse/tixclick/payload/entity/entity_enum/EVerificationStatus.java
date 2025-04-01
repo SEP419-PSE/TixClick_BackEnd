@@ -4,5 +4,4 @@ public enum EVerificationStatus {
     PENDING,
     APPROVED,
     REJECTED,
-    REVIEWING
 }

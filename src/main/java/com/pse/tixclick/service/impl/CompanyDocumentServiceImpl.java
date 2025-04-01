@@ -86,7 +86,7 @@ public class CompanyDocumentServiceImpl implements CompanyDocumentService {
                 throw new AppException(ErrorCode.FILE_UPLOAD_FAILED);
             }
         }
-        companyVerification.setStatus(EVerificationStatus.REVIEWING);
+        companyVerification.setStatus(EVerificationStatus.PENDING);
         companyVerificationRepository.save(companyVerification);
         return documentDTOList;
     }
