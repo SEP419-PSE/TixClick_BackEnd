@@ -465,15 +465,30 @@ public class EventServiceImpl implements EventService {
             // Lấy danh sách TicketMapping liên quan đến EventActivity
             List<TicketMapping> ticketMappingList = ticketMappingRepository.findTicketMappingsByEventActivity_EventActivityId(activityResponse.getEventActivityId());
 
+            // Nếu không có TicketMapping, tiếp tục với việc lấy vé từ các Ticket
             List<TicketDTO> ticketDTOS = new ArrayList<>();
-            for (TicketMapping ticketMapping : ticketMappingList) {
-                Optional<Ticket> ticketOpt = ticketRepository.findById(ticketMapping.getTicket().getTicketId());
-                ticketOpt.ifPresent(ticket -> ticketDTOS.add(modelMapper.map(ticket, TicketDTO.class)));
+
+            if (!ticketMappingList.isEmpty()) {
+                // Lấy danh sách Ticket từ TicketMapping
+                for (TicketMapping ticketMapping : ticketMappingList) {
+                    Optional<Ticket> ticketOpt = ticketRepository.findById(ticketMapping.getTicket().getTicketId());
+                    ticketOpt.ifPresent(ticket -> ticketDTOS.add(modelMapper.map(ticket, TicketDTO.class)));
+                }
+            } else {
+                // Nếu không có TicketMapping, lấy Ticket trực tiếp từ EventActivity hoặc Zone
+                // Bạn có thể thêm logic để lấy vé từ Zone hoặc Seat nếu cần
+                // Trong trường hợp này, tôi chỉ lấy Ticket mặc định nếu không có TicketMapping
+                List<Ticket> tickets = ticketRepository.findTicketsByEvent_EventId(eventId);
+                ticketDTOS.addAll(tickets.stream()
+                        .map(ticket -> modelMapper.map(ticket, TicketDTO.class))
+                        .collect(Collectors.toList()));
             }
 
             // Gán danh sách TicketDTO vào EventActivityResponse
             activityResponse.setTickets(ticketDTOS);
         }
+
+
 
         // Kiểm tra xem sự kiện có seat map không
         boolean isHaveSeatMap = seatMapRepository.findSeatMapByEvent_EventId(eventId).isPresent();
