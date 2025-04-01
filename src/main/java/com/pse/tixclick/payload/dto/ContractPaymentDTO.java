@@ -26,4 +26,8 @@ public class ContractPaymentDTO {
     private String note;
 
     private int contractDetailId;
+
+    private String bankName;
+
+    private String accountNumber;
 }

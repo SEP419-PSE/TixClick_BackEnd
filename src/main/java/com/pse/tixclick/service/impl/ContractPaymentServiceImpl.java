@@ -104,6 +104,7 @@ public class ContractPaymentServiceImpl implements ContractPaymentService {
 
 
                     contractPayment.setStatus("PAID");
+                    contractPayment.setPaymentDate(LocalDateTime.now());
                     contractPaymentRepository.save(contractPayment);
                     // Lưu vào database
                     Transaction transaction = new Transaction();
@@ -149,8 +150,16 @@ public class ContractPaymentServiceImpl implements ContractPaymentService {
 
         List<ContractPaymentDTO> contractPaymentDTOS = new ArrayList<>();
         for (ContractPayment contractPayment : contractPayments) {
-            ContractPaymentDTO contractPaymentDTO = modelMapper.map(contractPayment, ContractPaymentDTO.class);
+            ContractPaymentDTO contractPaymentDTO = new ContractPaymentDTO();
+            contractPaymentDTO.setContractPaymentId(contractPayment.getContractPaymentId());
+            contractPaymentDTO.setPaymentAmount(contractPayment.getPaymentAmount());
+            contractPaymentDTO.setPaymentDate(contractPayment.getPaymentDate());
+            contractPaymentDTO.setPaymentMethod(contractPayment.getPaymentMethod());
+            contractPaymentDTO.setStatus(contractPayment.getStatus());
+            contractPaymentDTO.setNote(contractPayment.getNote());
             contractPaymentDTO.setContractDetailId(contractPayment.getContractDetail().getContractDetailId());
+            contractPaymentDTO.setAccountNumber(contractPayment.getContractDetail().getContract().getCompany().getBankingCode());
+            contractPaymentDTO.setBankName(contractPayment.getContractDetail().getContract().getCompany().getBankingName());
             contractPaymentDTOS.add(contractPaymentDTO);
         }
 
