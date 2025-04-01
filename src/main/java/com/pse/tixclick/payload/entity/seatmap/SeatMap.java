@@ -49,9 +49,9 @@ public class SeatMap {
     @JoinColumn(name = "event_id", nullable = false)
     private Event event;
 
-    @OneToMany(mappedBy = "seatMap")
+    @OneToMany(mappedBy = "seatMap", fetch = FetchType.LAZY)
     private Collection<Zone> zones;
 
-    @OneToMany(mappedBy = "seatMap")
+    @OneToMany(mappedBy = "seatMap", fetch = FetchType.LAZY)
     private Collection<EventActivity> eventActivities;
 }

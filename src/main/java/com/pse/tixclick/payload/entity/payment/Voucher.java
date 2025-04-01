@@ -41,6 +41,6 @@ public class Voucher {
     @JoinColumn(name = "account_id", nullable = false)
     private Account account;
 
-    @OneToMany(mappedBy = "voucher")
+    @OneToMany(mappedBy = "voucher", fetch = FetchType.LAZY)
     private Collection<OrderDetail> orderDetails;
 }

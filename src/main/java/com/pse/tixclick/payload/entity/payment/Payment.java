@@ -44,6 +44,6 @@ public class Payment {
     @JoinColumn(name = "account_id", nullable = false)
     private Account account;
 
-    @OneToMany(mappedBy = "payment")
+    @OneToMany(mappedBy = "payment", fetch = FetchType.LAZY)
     private Collection<Transaction> transactions;
 }

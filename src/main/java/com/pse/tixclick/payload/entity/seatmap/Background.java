@@ -26,6 +26,6 @@ public class Background {
     @Column
     private String value;
 
-    @OneToMany(mappedBy = "background")
+    @OneToMany(mappedBy = "background", fetch = FetchType.LAZY)
     private Collection<SeatMap> seatMaps;
 }
