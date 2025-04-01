@@ -1,6 +1,7 @@
 package com.pse.tixclick.controller;
 
 import com.pse.tixclick.exception.AppException;
+import com.pse.tixclick.payload.dto.ContractAndDocumentsDTO;
 import com.pse.tixclick.payload.dto.ContractDTO;
 import com.pse.tixclick.payload.entity.entity_enum.EVerificationStatus;
 import com.pse.tixclick.payload.request.create.CreateContractRequest;
@@ -54,11 +55,11 @@ public class ContractController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<ApiResponse<List<ContractDTO>>> getAllContracts() {
+    public ResponseEntity<ApiResponse<List<ContractAndDocumentsDTO>>> getAllContracts() {
         try {
-            List<ContractDTO> result = contractService.getAllContracts();
+            List<ContractAndDocumentsDTO> result = contractService.getAllContracts();
             return ResponseEntity.ok(
-                    ApiResponse.<List<ContractDTO>>builder()
+                    ApiResponse.<List<ContractAndDocumentsDTO>>builder()
                             .code(HttpStatus.OK.value())
                             .message("Successfully fetched all contracts")
                             .result(result)
@@ -66,7 +67,7 @@ public class ContractController {
             );
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.<List<ContractDTO>>builder()
+                    .body(ApiResponse.<List<ContractAndDocumentsDTO>>builder()
                             .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .message("Internal Server Error: " + e.getMessage())
                             .result(null)

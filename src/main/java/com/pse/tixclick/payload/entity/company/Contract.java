@@ -63,4 +63,7 @@ public class Contract {
 
     @OneToMany(mappedBy = "contract",fetch = FetchType.LAZY)
     private Collection<ContractDetail> contractDetails;
+
+    @OneToMany(mappedBy = "contract",fetch = FetchType.LAZY)
+    private Collection<ContractDocument> contractDocuments;
 }
