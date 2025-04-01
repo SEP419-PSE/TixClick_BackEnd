@@ -182,6 +182,10 @@ public class EventServiceImpl implements EventService {
         return events.stream().map(event -> {
             EventResponse response = new EventResponse();
             response.setEventId(event.getEventId());
+            response.setBannerURL(event.getBannerURL());
+            response.setLogoURL(event.getLogoURL());
+            response.setDescription(event.getDescription());
+            response.setLocationName(event.getLocationName());
             response.setEventName(event.getEventName());
             response.setLocation(event.getLocation());
             response.setStatus(String.valueOf(event.getStatus()));
