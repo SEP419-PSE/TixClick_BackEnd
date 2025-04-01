@@ -140,6 +140,28 @@ public class EventController {
         );
     }
 
+    @GetMapping("/all_scheduled_pending_approved")
+    public ResponseEntity<ApiResponse<List<EventResponse>>> getAllEventScheduledAndPendingApproved() {
+        List<EventResponse> events = eventService.getAllEventScheduledAndPendingApproved();
+
+        if (events.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.<List<EventResponse>>builder()
+                            .code(HttpStatus.NOT_FOUND.value())
+                            .message("No events found")
+                            .result(null)
+                            .build());
+        }
+
+        return ResponseEntity.ok(
+                ApiResponse.<List<EventResponse>>builder()
+                        .code(HttpStatus.OK.value())
+                        .message("Get all events successfully")
+                        .result(events)
+                        .build()
+        );
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<EventDTO>> getEventById(@PathVariable int id) {
         try {

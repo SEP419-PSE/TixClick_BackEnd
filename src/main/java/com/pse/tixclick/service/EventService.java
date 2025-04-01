@@ -24,6 +24,8 @@ public interface EventService {
 
     List<EventResponse> getAllEvent();
 
+    List<EventResponse> getAllEventScheduledAndPendingApproved();
+
     EventDTO getEventById(int id);
 
     List<EventDTO> getEventByStatus(EEventStatus status);
@@ -49,7 +51,6 @@ public interface EventService {
     List<UpcomingEventDTO> getUpcomingEvents();
 
     List<UpcomingEventDTO> getTopPerformingEvents();
-
 
     String sentRequestForApproval(int eventId) throws MessagingException;
 
