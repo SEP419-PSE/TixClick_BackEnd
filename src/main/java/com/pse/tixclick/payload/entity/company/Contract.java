@@ -61,9 +61,9 @@ public class Contract {
     @JoinColumn(name="company_id", nullable = false)
     private Company company;
 
-    @OneToMany(mappedBy = "contract",fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "contract", fetch = FetchType.LAZY)
     private Collection<ContractDetail> contractDetails;
 
-    @OneToMany(mappedBy = "contract",fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "contract", fetch = FetchType.LAZY)
     private Collection<ContractDocument> contractDocuments;
 }

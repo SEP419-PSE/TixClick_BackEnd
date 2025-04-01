@@ -63,9 +63,9 @@ public class Event {
     @JoinColumn(name = "company_id", nullable = false)
     Company company;
 
-    @OneToOne(mappedBy = "event")
+    @OneToOne(mappedBy = "event", fetch = FetchType.LAZY)
     private Contract contract;
 
-    @OneToOne(mappedBy = "event")
+    @OneToOne(mappedBy = "event", fetch = FetchType.LAZY)
     private SeatMap seatMap;
 }

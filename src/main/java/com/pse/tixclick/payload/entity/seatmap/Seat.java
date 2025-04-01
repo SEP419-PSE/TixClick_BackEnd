@@ -50,6 +50,6 @@ public class  Seat {
     @JoinColumn(name="ticket_id", nullable = false)
     private Ticket ticket;
 
-    @OneToMany(mappedBy = "seat")
+    @OneToMany(mappedBy = "seat", fetch = FetchType.LAZY)
     private Collection<SeatActivity> seatActivities;
 }
