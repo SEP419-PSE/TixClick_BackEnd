@@ -52,8 +52,8 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Transactional
 public class PaymentServiceImpl implements PaymentService {
-    private static final int QR_CODE_WIDTH = 600;
-    private static final int QR_CODE_HEIGHT = 600;
+    private static final int QR_CODE_WIDTH = 128;
+    private static final int QR_CODE_HEIGHT = 128;
 
     @Autowired
     PayOSUtils payOSUtils;
@@ -501,8 +501,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     private String generateQRCode(TicketQrCodeDTO ticketQrCodeDTO) throws Exception {
         String dataTransfer = AppUtils.transferToString(ticketQrCodeDTO);
-        String encryptedData = AppUtils.encrypt(dataTransfer); // Mã hóa dữ liệu
-        return AppUtils.generateQRCode(encryptedData, QR_CODE_WIDTH, QR_CODE_HEIGHT);
+        return AppUtils.encrypt(dataTransfer);
     }
 
     private String getBaseUrl(HttpServletRequest request) {

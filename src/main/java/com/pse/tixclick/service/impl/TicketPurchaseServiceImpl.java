@@ -608,7 +608,7 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
 
 
     @Override
-    public TicketQrCodeDTO decryptQrCode(String qrCode){
+    public TicketQrCodeDTO decryptQrCode(String qrCode) throws Exception{
         TicketQrCodeDTO ticketQrCodeDTO = AppUtils.decryptQrCode(qrCode);
         if (ticketQrCodeDTO == null) {
             throw new AppException(ErrorCode.QR_CODE_NOT_FOUND);
