@@ -135,8 +135,7 @@ public class ContractServiceImpl implements ContractService {
         }
 
         // Kiểm tra trạng thái hợp đồng (SỬA LỖI LOGIC)
-        if (contractVerification.getStatus() != EVerificationStatus.PENDING
-                && contractVerification.getStatus() != EVerificationStatus.REVIEWING) {
+        if (contractVerification.getStatus() != EVerificationStatus.PENDING) {
             throw new AppException(ErrorCode.CONTRACT_VERIFICATION_NOT_PENDING);
         }
 
