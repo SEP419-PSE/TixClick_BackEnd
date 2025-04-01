@@ -356,7 +356,7 @@ public class SeatMapServiceImpl implements SeatMapService {
 
     }
 
-    @Async
+
     @Override
     public List<SectionResponse> getSections(int eventId, int eventActivityId) {
         Event event = eventRepository.findById(eventId)
