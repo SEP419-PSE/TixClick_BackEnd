@@ -17,5 +17,6 @@ public class ContractDocumentDTO {
     String fileURL;
     String fileType;
     int uploadedBy;
+    String status;
     LocalDateTime uploadDate;
 }

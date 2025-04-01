@@ -185,6 +185,41 @@ public class EventServiceImpl implements EventService {
         return events.stream().map(event -> {
             EventResponse response = new EventResponse();
             response.setEventId(event.getEventId());
+            response.setBannerURL(event.getBannerURL());
+            response.setLogoURL(event.getLogoURL());
+            response.setDescription(event.getDescription());
+            response.setLocationName(event.getLocationName());
+            response.setEventName(event.getEventName());
+            response.setLocation(event.getLocation());
+            response.setStatus(String.valueOf(event.getStatus()));
+            response.setTypeEvent(event.getTypeEvent());
+
+            if (event.getOrganizer() != null) {
+                response.setOrganizerId(event.getOrganizer().getAccountId());
+                response.setOrganizerName(event.getOrganizer().getUserName());
+            }
+
+            if (event.getCompany() != null) {
+                response.setCompanyId(event.getCompany().getCompanyId());
+                response.setCompanyName(event.getCompany().getCompanyName());
+            }
+
+            return response;
+        }).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<EventResponse> getAllEventScheduledAndPendingApproved() {
+        List<Event> events = eventRepository.findAll();
+        return events.stream()
+                .filter(event -> event.getStatus() == EEventStatus.SCHEDULED || event.getStatus() == EEventStatus.PENDING_APPROVAL)
+                .map(event -> {
+            EventResponse response = new EventResponse();
+            response.setEventId(event.getEventId());
+            response.setBannerURL(event.getBannerURL());
+            response.setLogoURL(event.getLogoURL());
+            response.setDescription(event.getDescription());
+            response.setLocationName(event.getLocationName());
             response.setEventName(event.getEventName());
             response.setLocation(event.getLocation());
             response.setStatus(String.valueOf(event.getStatus()));
