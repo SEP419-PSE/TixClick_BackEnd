@@ -69,7 +69,12 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-oauth2-client</artifactId>
 		</dependency>
-
+		<!-- https://mvnrepository.com/artifact/com.github.vladimir-bukhtoyarov/bucket4j-core -->
+		<dependency>
+			<groupId>com.github.vladimir-bukhtoyarov</groupId>
+			<artifactId>bucket4j-core</artifactId>
+			<version>8.0.1</version>
+		</dependency>
 		<!-- Database Dependency -->
 		<dependency>
 			<groupId>com.microsoft.sqlserver</groupId>

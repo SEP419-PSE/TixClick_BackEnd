@@ -1,6 +1,7 @@
 package com.pse.tixclick.payload.response;
 
 import com.pse.tixclick.payload.dto.EventActivityDTO;
+import com.pse.tixclick.payload.dto.TicketDTO;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -26,5 +27,6 @@ public class EventDetailForConsumer {
    List<EventActivityDTO> eventActivityDTOList;
    boolean isHaveSeatMap;
    double price;
+   List<TicketDTO> tickets;
 
 }
