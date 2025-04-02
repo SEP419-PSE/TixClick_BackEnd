@@ -8,9 +8,6 @@ import com.pse.tixclick.payload.dto.UpcomingEventDTO;
 import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.company.Company;
 import com.pse.tixclick.payload.entity.company.Contract;
-import com.pse.tixclick.payload.entity.entity_enum.ERole;
-import com.pse.tixclick.payload.entity.event.EventActivity;
-import com.pse.tixclick.payload.entity.seatmap.SeatMap;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
 import com.pse.tixclick.payload.entity.ticket.TicketMapping;
 import com.pse.tixclick.payload.response.EventActivityResponse;
@@ -42,7 +39,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 @Service
