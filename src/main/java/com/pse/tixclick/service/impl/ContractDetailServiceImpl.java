@@ -112,6 +112,13 @@ public class ContractDetailServiceImpl implements ContractDetailService {
 
     @Override
     public List<ContractDetailDTO> getAllContractDetailByContract(int contractId) {
+        if(appUtils.getAccountFromAuthentication() == null){
+            throw new AppException(ErrorCode.NEEDED_LOGIN);
+        }
+        else if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.MANAGER) || !appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.ORGANIZER)) {
+            throw new AppException(ErrorCode.NOT_PERMISSION);
+        }
+
         List<ContractDetail> contractDetails = contractDetailRepository.findByContractId(contractId);
         if(contractDetails.isEmpty()) {
             throw new AppException(ErrorCode.CONTRACT_DETAIL_NOT_FOUND);
