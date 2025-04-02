@@ -8,6 +8,7 @@ import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.ContractPaymentDTO;
 import com.pse.tixclick.payload.entity.company.ContractDetail;
 import com.pse.tixclick.payload.entity.entity_enum.EContractDetailStatus;
+import com.pse.tixclick.payload.entity.entity_enum.ETransactionStatus;
 import com.pse.tixclick.payload.entity.entity_enum.ETransactionType;
 import com.pse.tixclick.payload.entity.payment.ContractPayment;
 import com.pse.tixclick.payload.entity.payment.Transaction;
@@ -111,8 +112,8 @@ public class ContractPaymentServiceImpl implements ContractPaymentService {
                     transaction.setAmount(amount);
                     transaction.setDescription(description);
                     transaction.setTransactionCode(transactionCode);
-                    transaction.setType("PAYMENT");
-                    transaction.setStatus("SUCCESS");
+                    transaction.setType(ETransactionType.CONTRACT_PAYMENT.name());
+                    transaction.setStatus(ETransactionStatus.SUCCESS.name());
                     transaction.setTransactionDate(LocalDateTime.now());
                     transaction.setContractPayment(contractPayment);
                     transaction.setAccount(account);
