@@ -11,7 +11,6 @@ import com.pse.tixclick.payload.entity.entity_enum.ECompanyStatus;
 import com.pse.tixclick.payload.entity.entity_enum.ERole;
 import com.pse.tixclick.payload.entity.entity_enum.EStatus;
 import com.pse.tixclick.payload.entity.entity_enum.ESubRole;
-import com.pse.tixclick.payload.request.create.AddMemberRequest;
 import com.pse.tixclick.payload.request.create.CreateMemberRequest;
 import com.pse.tixclick.payload.response.MemberDTOResponse;
 import com.pse.tixclick.repository.AccountRepository;
