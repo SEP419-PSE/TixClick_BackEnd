@@ -5,7 +5,6 @@ import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.PaymentDTO;
 import com.pse.tixclick.payload.dto.TicketQrCodeDTO;
-import com.pse.tixclick.payload.dto.ZoneDTO;
 import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.CheckinLog;
 import com.pse.tixclick.payload.entity.entity_enum.*;
@@ -39,11 +38,8 @@ import vn.payos.type.PaymentData;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -52,17 +48,11 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Transactional
 public class PaymentServiceImpl implements PaymentService {
-    private static final int QR_CODE_WIDTH = 128;
-    private static final int QR_CODE_HEIGHT = 128;
-
     @Autowired
     PayOSUtils payOSUtils;
 
     @Autowired
     ModelMapper mapper;
-
-    @Autowired
-    AppUtils appUtils;
 
     @Autowired
     OrderRepository orderRepository;
