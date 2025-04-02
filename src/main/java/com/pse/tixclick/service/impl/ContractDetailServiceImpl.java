@@ -8,6 +8,7 @@ import com.pse.tixclick.payload.entity.company.Contract;
 import com.pse.tixclick.payload.entity.company.ContractDetail;
 import com.pse.tixclick.payload.entity.entity_enum.EContractDetailStatus;
 import com.pse.tixclick.payload.entity.payment.ContractPayment;
+import com.pse.tixclick.payload.request.create.ContractDetailRequest;
 import com.pse.tixclick.payload.request.create.CreateContractDetailRequest;
 import com.pse.tixclick.payload.response.QRCompanyResponse;
 import com.pse.tixclick.repository.*;
@@ -60,29 +61,29 @@ public class ContractDetailServiceImpl implements ContractDetailService {
 
 
     @Override
-    public List<ContractDetailDTO> createContractDetail(List<CreateContractDetailRequest> createContractDetailRequests, int contractId) {
+    public List<ContractDetailDTO> createContractDetail(CreateContractDetailRequest createContractDetailRequests) {
         Contract contract = contractRepository
-                .findById(contractId)
+                .findById(createContractDetailRequests.getContractId())
                 .orElseThrow(() -> new AppException(ErrorCode.CONTRACT_NOT_FOUND));
 
         List<ContractDetailDTO> contractDetailDTOList = new ArrayList<>();
 
-        for (CreateContractDetailRequest createContractDetailRequest : createContractDetailRequests) {
+        for (ContractDetailRequest contractDetailRequest : createContractDetailRequests.getContractDetails()) {
             ContractDetail contractDetail = new ContractDetail();
-            contractDetail.setContractDetailName(createContractDetailRequest.getContractDetailName());
-            contractDetail.setDescription(createContractDetailRequest.getContractDetailDescription());
-            contractDetail.setAmount(createContractDetailRequest.getContractDetailAmount());
-            contractDetail.setPayDate(createContractDetailRequest.getContractDetailPayDate());
+            contractDetail.setContractDetailName(contractDetailRequest.getContractDetailName());
+            contractDetail.setDescription(contractDetailRequest.getContractDetailDescription());
+            contractDetail.setAmount(contractDetailRequest.getContractDetailAmount());
+            contractDetail.setPayDate(contractDetailRequest.getContractDetailPayDate());
             contractDetail.setContract(contract);
-            contractDetail.setContractDetailCode(createContractDetailRequest.getContractDetailCode());
+            contractDetail.setContractDetailCode(contractDetailRequest.getContractDetailCode());
             contractDetail.setStatus(EContractDetailStatus.PENDING.name());
-            contractDetail.setPercentage(createContractDetailRequest.getContractDetailPercentage());
+            contractDetail.setPercentage(contractDetailRequest.getContractDetailPercentage());
             contractDetail = contractDetailRepository.save(contractDetail);
 
             ContractPayment contractPayment = new ContractPayment();
-            contractPayment.setPaymentAmount(createContractDetailRequest.getContractDetailAmount());
+            contractPayment.setPaymentAmount(contractDetailRequest.getContractDetailAmount());
             contractPayment.setContractDetail(contractDetail);
-            contractPayment.setNote(createContractDetailRequest.getContractDetailDescription());
+            contractPayment.setNote(contractDetailRequest.getContractDetailDescription());
             contractPayment.setPaymentMethod("Thanh Toan Ngan Hang");
             contractPayment.setStatus(EContractDetailStatus.PENDING.name());
             contractPaymentRepository.save(contractPayment);

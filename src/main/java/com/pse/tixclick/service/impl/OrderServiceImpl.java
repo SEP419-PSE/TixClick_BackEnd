@@ -86,7 +86,7 @@ public class OrderServiceImpl implements OrderService {
 
         double totalAmount = 0;
         Set<Integer> ticketPurchaseIds = new HashSet<>();
-        int quantity = 0;
+        int quantity;
 
         for (TicketOrderDTO ticketOrderDTO : createOrderRequest.getTicketOrderDTOS()) {
             int ticketPurchaseId = ticketOrderDTO.getTicketPurchaseId();

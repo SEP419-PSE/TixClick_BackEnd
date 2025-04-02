@@ -7,7 +7,7 @@ import com.pse.tixclick.payload.response.QRCompanyResponse;
 import java.util.List;
 
 public interface ContractDetailService {
-    List<ContractDetailDTO> createContractDetail(List<CreateContractDetailRequest> createContractDetailRequests, int contractId);
+    List<ContractDetailDTO> createContractDetail(CreateContractDetailRequest createContractDetailRequest);
 
     List<ContractDetailDTO> getAllContractDetailByContract(int contractId);
 
