@@ -12,7 +12,6 @@ import com.pse.tixclick.payload.response.GetSectionResponse;
 import com.pse.tixclick.payload.response.SeatResponse;
 import com.pse.tixclick.payload.response.SectionResponse;
 import com.pse.tixclick.repository.*;
-import com.pse.tixclick.utils.AppUtils;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.BackgroundDTO;
@@ -29,7 +28,6 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -43,9 +41,6 @@ import java.util.stream.Collectors;
 @Transactional
 @Slf4j
 public class SeatMapServiceImpl implements SeatMapService {
-    @Autowired
-    AppUtils appUtils;
-
     @Autowired
     ModelMapper mapper;
 
