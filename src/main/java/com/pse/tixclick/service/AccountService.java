@@ -7,7 +7,8 @@ import com.pse.tixclick.payload.response.SearchAccountResponse;
 
 import java.util.List;
 
-public interface AccountService {
+public interface
+AccountService {
     boolean changePasswordWithOtp(String email, String newPassword, String oldPassword);
     AccountDTO myProfile();
 
@@ -35,4 +36,6 @@ public interface AccountService {
     SearchAccountResponse searchAccount(String email);
 
     SearchAccountResponse searchAccountWithCompany(String email);
+
+
 }

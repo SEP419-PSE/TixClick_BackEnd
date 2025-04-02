@@ -10,6 +10,7 @@ import com.pse.tixclick.payload.request.create.CreateSeatMapRequest;
 import com.pse.tixclick.payload.request.create.CreateTicketRequest;
 import com.pse.tixclick.payload.request.update.UpdateSeatMapRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
+import com.pse.tixclick.payload.response.GetSectionResponse;
 import com.pse.tixclick.payload.response.SectionResponse;
 import com.pse.tixclick.service.SeatMapService;
 import lombok.extern.slf4j.Slf4j;
@@ -203,12 +204,12 @@ public class SeatMapController {
     }
 
     @GetMapping("/events/{eventId}/activities/{eventActivityId}")
-    public ResponseEntity<ApiResponse<List<SectionResponse>>> getSections(@PathVariable int eventId, @PathVariable int eventActivityId) {
-        List<SectionResponse> sectionRequests = seatMapService.getSections(eventId, eventActivityId);
+    public ResponseEntity<ApiResponse<List<GetSectionResponse>>> getSections(@PathVariable int eventId, @PathVariable int eventActivityId) {
+        List<GetSectionResponse> sectionRequests = seatMapService.getSections(eventId, eventActivityId);
 
         if (sectionRequests.isEmpty()) {
             return ResponseEntity.status(HttpStatus.OK)
-                    .body(ApiResponse.<List<SectionResponse>>builder()
+                    .body(ApiResponse.<List<GetSectionResponse>>builder()
                             .code(HttpStatus.OK.value())
                             .message("No sections found")
                             .result(Collections.emptyList())
@@ -216,7 +217,7 @@ public class SeatMapController {
         }
 
         return ResponseEntity.ok(
-                ApiResponse.<List<SectionResponse>>builder()
+                ApiResponse.<List<GetSectionResponse>>builder()
                         .code(HttpStatus.OK.value())
                         .message("Get all sections successfully")
                         .result(sectionRequests)

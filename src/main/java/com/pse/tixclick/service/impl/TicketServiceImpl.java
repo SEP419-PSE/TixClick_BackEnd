@@ -91,11 +91,13 @@ public class TicketServiceImpl implements TicketService {
 
 
         return tickets.stream().map(ticket -> TicketRequest.builder()
+                .ticketId(ticket.getTicketId())
                 .id(ticket.getTicketCode())
                 .name(ticket.getTicketName())
                 .color(ticket.getSeatBackgroundColor())
                 .textColor(ticket.getTextColor())
                 .price(ticket.getPrice())
+                .maxQuantity(ticket.getMaxQuantity())
                 .build()
         ).collect(Collectors.toList());
     }

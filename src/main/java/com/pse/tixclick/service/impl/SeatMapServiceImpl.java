@@ -7,6 +7,8 @@ import com.pse.tixclick.payload.entity.seatmap.*;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
 import com.pse.tixclick.payload.request.SeatRequest;
 import com.pse.tixclick.payload.request.SectionRequest;
+import com.pse.tixclick.payload.response.GetSeatResponse;
+import com.pse.tixclick.payload.response.GetSectionResponse;
 import com.pse.tixclick.payload.response.SeatResponse;
 import com.pse.tixclick.payload.response.SectionResponse;
 import com.pse.tixclick.repository.*;
@@ -356,9 +358,9 @@ public class SeatMapServiceImpl implements SeatMapService {
 
     }
 
-    @Async
+
     @Override
-    public List<SectionResponse> getSections(int eventId, int eventActivityId) {
+    public List<GetSectionResponse> getSections(int eventId, int eventActivityId) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
         EventActivity eventActivity = eventActivityRepository.findById(eventActivityId)
@@ -369,7 +371,7 @@ public class SeatMapServiceImpl implements SeatMapService {
             return Collections.emptyList();
         }
 
-        List<SectionResponse> sectionResponses = new ArrayList<>();
+        List<GetSectionResponse> sectionResponses = new ArrayList<>();
 
         for (ZoneActivity zoneActivity : zoneActivityList) {
             Zone zone = zoneActivity.getZone();
@@ -380,12 +382,13 @@ public class SeatMapServiceImpl implements SeatMapService {
                 seatActivityList = seatActivityRepository.findSeatActivitiesByZoneActivity_ZoneActivityId(zoneActivity.getZoneActivityId());
             }
 
-            List<SeatResponse> seatResponses = new ArrayList<>();
-            int availableSeatsCount = 0;
+            List<GetSeatResponse> seatResponses = new ArrayList<>();
+
 
             for (SeatActivity seatActivity : seatActivityList) {
                 Seat seat = seatActivity.getSeat();
-                SeatResponse seatResponse = new SeatResponse();
+                GetSeatResponse seatResponse = new GetSeatResponse();
+                seatResponse.setSeatId(seat.getSeatId());
                 seatResponse.setId(seat.getSeatName());
                 seatResponse.setRow(seat.getRowNumber());
                 seatResponse.setColumn(seat.getColumnNumber());
@@ -395,7 +398,7 @@ public class SeatMapServiceImpl implements SeatMapService {
                     seatResponse.setStatus(false);
                 } else if (ESeatActivityStatus.valueOf(seatActivity.getStatus()) == ESeatActivityStatus.AVAILABLE) {
                     seatResponse.setStatus(true);
-                    availableSeatsCount++;
+
                 } else if (seatActivity.getStatus().equals(ESeatActivityStatus.PENDING.name())) {
                     seatResponse.setStatus(false);
                 }
@@ -404,7 +407,9 @@ public class SeatMapServiceImpl implements SeatMapService {
                 seatResponses.add(seatResponse);
             }
 
-            SectionResponse sectionResponse = SectionResponse.builder()
+            int availableSeatsCount = zone.getQuantity();
+            GetSectionResponse sectionResponse = GetSectionResponse.builder()
+                    .zoneId(zone.getZoneId())
                     .id(String.valueOf(zone.getZoneId()))
                     .name(zone.getZoneName())
                     .rows(Integer.parseInt(zone.getRows()))

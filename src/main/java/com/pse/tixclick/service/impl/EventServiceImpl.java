@@ -275,23 +275,7 @@ public class EventServiceImpl implements EventService {
         }.getType());
     }
 
-    @Override
-    public EventDTO approveEvent(int id, EEventStatus status) {
-        var context = SecurityContextHolder.getContext();
-        String name = context.getAuthentication().getName();
-        var account = accountRepository.findAccountByUserName(name)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-        if (!account.getRole().getRoleName().equals(ERole.MANAGER)) {
-            throw new AppException(ErrorCode.INVALID_ROLE);
-        }
 
-        var event = eventRepository.findEventByEventId(id)
-                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
-
-        event.setStatus(status);
-        eventRepository.save(event);
-        return modelMapper.map(event, EventDTO.class);
-    }
 
     @Override
     public List<EventDTO> getAllEventsByAccountId() {

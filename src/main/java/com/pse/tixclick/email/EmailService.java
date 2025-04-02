@@ -156,5 +156,36 @@ public class EmailService {
                 "</html>";
         sendNewMail(to, subject, body, "Manager");
     }
+    public void sendAccountRegistrationToCompany(String to, String companyName, String registrationLink) throws MessagingException {
+        String subject = "Account Registration for Company - TixClick";
+
+        String body = "<html>" +
+                "<body>" +
+                "<h2 style=\"color: #0D6EFD;\">Account Registration</h2>" +
+                "<p>Your account has been successfully registered with the following company:</p>" +
+                "<p><strong>Company Name:</strong> " + companyName + "</p>" +
+                "<p>We are excited to have you as a part of our company on TixClick!</p>" +
+                "<p>Please <a href=\"" + registrationLink + "\" style=\"color: #0D6EFD;\">click here</a> to complete your registration or manage your account.</p>" +
+                "<p>If you have any questions, feel free to contact us.</p>" +
+                "<p>Best regards,<br/>TixClick Team</p>" +
+                "</body>" +
+                "</html>";
+
+        sendNewMailCompany(to, subject, body, null);  // Truyền null vì không có fullname
+    }
+    @Async
+    public void sendNewMailCompany(String to, String subject, String body, String fullname) throws MessagingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        // Thay thế {recipient_email} bằng email của người nhận (to)
+        body = body.replace("{recipient_email}", to);
+
+        helper.setTo(to);
+        helper.setSubject(subject);
+        helper.setText(body, true); // Chỉ gửi nội dung email đã thay thế
+
+        mailSender.send(message);
+    }
 
 }

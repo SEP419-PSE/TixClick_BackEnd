@@ -4,6 +4,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Getter
 @Setter
@@ -11,10 +12,6 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CreateContractDetailRequest {
-    String contractDetailName;
-    String contractDetailCode;
-    String contractDetailDescription;
-    double contractDetailAmount;
-    LocalDate contractDetailPayDate;
-    double contractDetailPercentage;
+    int contractId;
+    List<ContractDetailRequest> contractDetails;
 }

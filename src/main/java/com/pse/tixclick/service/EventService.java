@@ -34,7 +34,6 @@ public interface EventService {
 
     List<EventDTO> getEventByCompleted();
 
-    EventDTO approveEvent(int id, EEventStatus status);
 
     List<EventDTO> getAllEventsByAccountId();
 
