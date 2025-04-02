@@ -13,7 +13,8 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 public class GetSectionResponse {
-    private int zoneActivityId;
+    private int zoneId;
+
     private String id;
     private String name;
     private int rows;

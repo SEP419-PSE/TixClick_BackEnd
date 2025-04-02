@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class GetSeatResponse {
-    private int seatActivityId;
+    private int seatId;
     private String id;
 
     private String row;

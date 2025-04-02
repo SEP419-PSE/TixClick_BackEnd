@@ -388,6 +388,7 @@ public class SeatMapServiceImpl implements SeatMapService {
             for (SeatActivity seatActivity : seatActivityList) {
                 Seat seat = seatActivity.getSeat();
                 GetSeatResponse seatResponse = new GetSeatResponse();
+                seatResponse.setSeatId(seat.getSeatId());
                 seatResponse.setId(seat.getSeatName());
                 seatResponse.setRow(seat.getRowNumber());
                 seatResponse.setColumn(seat.getColumnNumber());
@@ -408,7 +409,7 @@ public class SeatMapServiceImpl implements SeatMapService {
 
             int availableSeatsCount = zone.getQuantity();
             GetSectionResponse sectionResponse = GetSectionResponse.builder()
-                    .zoneActivityId(zoneActivity.getZoneActivityId())
+                    .zoneId(zone.getZoneId())
                     .id(String.valueOf(zone.getZoneId()))
                     .name(zone.getZoneName())
                     .rows(Integer.parseInt(zone.getRows()))
