@@ -3,13 +3,9 @@ package com.pse.tixclick.service.impl;
 import com.pse.tixclick.payload.dto.MonthlySalesReportDTO;
 import com.pse.tixclick.payload.dto.TransactionDTO;
 import com.pse.tixclick.payload.entity.Account;
-import com.pse.tixclick.payload.entity.company.Contract;
-import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.entity.payment.ContractPayment;
 import com.pse.tixclick.payload.entity.payment.Payment;
 import com.pse.tixclick.payload.entity.payment.Transaction;
-import com.pse.tixclick.repository.ContractRepository;
-import com.pse.tixclick.repository.OrderRepository;
 import com.pse.tixclick.repository.TransactionRepository;
 import com.pse.tixclick.service.TransactionService;
 import jakarta.transaction.Transactional;
@@ -30,8 +26,6 @@ import java.util.stream.Collectors;
 public class TransactionServiceImpl implements TransactionService {
     @Autowired
     TransactionRepository transactionRepository;
-    @Autowired
-    ContractRepository contractRepository;
 
 
     @Override
