@@ -1,7 +1,6 @@
 package com.pse.tixclick.service.impl;
 
-import com.cloudinary.Cloudinary;
-import com.cloudinary.utils.ObjectUtils;
+
 import com.pse.tixclick.cloudinary.CloudinaryService;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
@@ -9,7 +8,6 @@ import com.pse.tixclick.payload.dto.CompanyDocumentDTO;
 import com.pse.tixclick.payload.entity.company.CompanyDocuments;
 import com.pse.tixclick.payload.entity.entity_enum.EVerificationStatus;
 import com.pse.tixclick.payload.request.create.CreateCompanyDocumentRequest;
-import com.pse.tixclick.repository.AccountRepository;
 import com.pse.tixclick.repository.CompanyDocumentRepository;
 import com.pse.tixclick.repository.CompanyRepository;
 import com.pse.tixclick.repository.CompanyVerificationRepository;
@@ -19,7 +17,6 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.modelmapper.ModelMapper;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -29,7 +26,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Service
 @Transactional
@@ -37,11 +33,12 @@ import java.util.Map;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class CompanyDocumentServiceImpl implements CompanyDocumentService {
     CompanyDocumentRepository companyDocumentRepository;
-    AccountRepository accountRepository;
     CompanyRepository companyRepository;
     ModelMapper modelMapper;
     CloudinaryService cloudinary;
     CompanyVerificationRepository companyVerificationRepository;
+
+
     @Override
     public List<CompanyDocumentDTO> createCompanyDocument(CreateCompanyDocumentRequest createCompanyDocumentRequest, List<MultipartFile> files) throws IOException {
         var context = SecurityContextHolder.getContext();
