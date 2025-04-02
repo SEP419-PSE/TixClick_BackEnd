@@ -9,10 +9,7 @@ import com.pse.tixclick.payload.entity.entity_enum.ETicketPurchaseStatus;
 import com.pse.tixclick.payload.entity.payment.Order;
 import com.pse.tixclick.payload.entity.payment.OrderDetail;
 import com.pse.tixclick.payload.entity.payment.Voucher;
-import com.pse.tixclick.payload.entity.seatmap.Seat;
-import com.pse.tixclick.payload.entity.seatmap.Zone;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
-import com.pse.tixclick.payload.entity.ticket.TicketMapping;
 import com.pse.tixclick.payload.entity.ticket.TicketPurchase;
 import com.pse.tixclick.payload.request.create.CreateOrderRequest;
 import com.pse.tixclick.repository.*;
@@ -24,16 +21,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.stream.Collectors;
+
 
 @Service
 @RequiredArgsConstructor
@@ -53,24 +46,13 @@ public class OrderServiceImpl implements OrderService {
     ModelMapper mapper;
 
     @Autowired
-    ZoneRepository zoneRepository;
-
-    @Autowired
     TicketPurchaseRepository ticketPurchaseRepository;
-
-    @Autowired
-    SeatRepository seatRepository;
 
     @Autowired
     TicketRepository ticketRepository;
 
     @Autowired
     VoucherRepository voucherRepository;
-
-    @Autowired
-    TicketMappingRepository ticketMappingRepository;
-
-    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
 
 
@@ -134,9 +116,6 @@ public class OrderServiceImpl implements OrderService {
 
         order.setTotalAmount(totalAmount);
         orderRepository.save(order);
-
-//        final int orderId = order.getOrderId();
-//        CompletableFuture.runAsync(() -> scheduleStatusUpdate(LocalDateTime.now(), orderId));
 
         return mapper.map(order, OrderDTO.class);
     }
@@ -263,116 +242,4 @@ public class OrderServiceImpl implements OrderService {
 
         return accountId + date  + uniqueId;
     }
-
-//    @Async
-//    public void scheduleStatusUpdate(LocalDateTime startTime, int orderId) {
-//        LocalDateTime currentTime = LocalDateTime.now();
-//        long delay = java.time.Duration.between(currentTime, startTime.plusMinutes(15)).toSeconds();
-//
-//        if (delay > 0) {
-//            scheduler.schedule(() -> {
-//                Order order = orderRepository
-//                        .findById(orderId)
-//                        .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
-//                if (order.getStatus().equals(EOrderStatus.SUCCESSFUL.name())) {
-//                    return;
-//                }
-//                if (order.getStatus().equals(EOrderStatus.FAILURE.name())) {
-//                    return;
-//                }
-//                if (order.getStatus().equals(EOrderStatus.EXPIRED.name())) {
-//                    return;
-//                }
-//                if (order.getStatus().equals(EOrderStatus.PENDING.name())) {
-//                    List<OrderDetail> orderDetails = orderDetailRepository.findByOrderId(orderId);
-//                    for (OrderDetail orderDetail : orderDetails) {
-//                        TicketPurchase ticketPurchase = ticketPurchaseRepository
-//                                .findById(orderDetail.getTicketPurchase().getTicketPurchaseId())
-//                                .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
-//
-//                        TicketMapping ticketMapping = ticketMappingRepository
-//                                .findTicketMappingByTicketIdAndEventActivityId(ticketPurchase.getTicket().getTicketId(), ticketPurchase.getEventActivity().getEventActivityId())
-//                                .orElseThrow(() -> new AppException(ErrorCode.TICKET_MAPPING_NOT_FOUND));
-//
-//                        ticketMapping.setQuantity(ticketMapping.getQuantity() + 1);
-//                        ticketMappingRepository.save(ticketMapping);
-//
-//                        Seat seat = seatRepository
-//                                .findById(ticketPurchase.getSeat().getSeatId())
-//                                .orElseThrow(() -> new AppException(ErrorCode.SEAT_NOT_FOUND));
-//                        seat.setStatus(true);
-//
-//                        Zone zone = zoneRepository
-//                                .findById(ticketPurchase.getZone().getZoneId())
-//                                .orElseThrow(() -> new AppException(ErrorCode.ZONE_NOT_FOUND));
-//
-//                        if (zone.getAvailableQuantity() < 1) {
-//                            zone.setAvailableQuantity(zone.getAvailableQuantity() + 1);
-//                            zone.setStatus(true);
-//                        } else {
-//                            zone.setAvailableQuantity(zone.getAvailableQuantity() + 1);
-//                        }
-//                        ticketPurchase.setStatus(ETicketPurchaseStatus.EXPIRED.name());
-//
-//                        ticketPurchaseRepository.save(ticketPurchase);
-//                        seatRepository.save(seat);
-//                        zoneRepository.save(zone);
-//                    }
-//                    order.setStatus(EOrderStatus.EXPIRED.name());
-//                    orderRepository.save(order);
-//                }
-//            }, delay, java.util.concurrent.TimeUnit.SECONDS);
-//        } else {
-//            Order order = orderRepository
-//                    .findById(orderId)
-//                    .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
-//            if (order.getStatus().equals(EOrderStatus.SUCCESSFUL.name())) {
-//                return;
-//            }
-//            if (order.getStatus().equals(EOrderStatus.FAILURE.name())) {
-//                return;
-//            }
-//            if (order.getStatus().equals(EOrderStatus.EXPIRED.name())) {
-//                return;
-//            }
-//            if (order.getStatus().equals(EOrderStatus.PENDING.name())) {
-//                List<OrderDetail> orderDetails = orderDetailRepository.findByOrderId(orderId);
-//                for (OrderDetail orderDetail : orderDetails) {
-//                    TicketPurchase ticketPurchase = ticketPurchaseRepository
-//                            .findById(orderDetail.getTicketPurchase().getTicketPurchaseId())
-//                            .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
-//
-//                    TicketMapping ticketMapping = ticketMappingRepository
-//                            .findTicketMappingByTicketIdAndEventActivityId(ticketPurchase.getTicket().getTicketId(), ticketPurchase.getEventActivity().getEventActivityId())
-//                            .orElseThrow(() -> new AppException(ErrorCode.TICKET_MAPPING_NOT_FOUND));
-//
-//                    ticketMapping.setQuantity(ticketMapping.getQuantity() + 1);
-//                    ticketMappingRepository.save(ticketMapping);
-//
-//                    Seat seat = seatRepository
-//                            .findById(ticketPurchase.getSeat().getSeatId())
-//                            .orElseThrow(() -> new AppException(ErrorCode.SEAT_NOT_FOUND));
-//                    seat.setStatus(true);
-//
-//                    Zone zone = zoneRepository
-//                            .findById(ticketPurchase.getZone().getZoneId())
-//                            .orElseThrow(() -> new AppException(ErrorCode.ZONE_NOT_FOUND));
-//
-//                    if (zone.getAvailableQuantity() < 1) {
-//                        zone.setAvailableQuantity(zone.getAvailableQuantity() + 1);
-//                        zone.setStatus(true);
-//                    } else {
-//                        zone.setAvailableQuantity(zone.getAvailableQuantity() + 1);
-//                    }
-//                    ticketPurchase.setStatus(ETicketPurchaseStatus.EXPIRED.name());
-//
-//                    ticketPurchaseRepository.save(ticketPurchase);
-//                    seatRepository.save(seat);
-//                    zoneRepository.save(zone);
-//                }
-//                order.setStatus(EOrderStatus.EXPIRED.name());
-//                orderRepository.save(order);
-//            }
-//        }
-//    }
 }
