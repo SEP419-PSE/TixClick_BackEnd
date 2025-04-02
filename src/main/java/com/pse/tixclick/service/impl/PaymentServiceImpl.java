@@ -99,6 +99,9 @@ public class PaymentServiceImpl implements PaymentService {
     @Autowired
     TicketMappingRepository ticketMappingRepository;
 
+    @Autowired
+    AppUtils appUtils;
+
 
     @Override
     public PayOSResponse changeOrderStatusPayOs(int orderId) {
@@ -107,6 +110,13 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public PayOSResponse createPaymentLink(int orderId, long expiredTime, HttpServletRequest request) throws Exception {
+        if(appUtils.getAccountFromAuthentication() == null){
+            throw new AppException(ErrorCode.NEEDED_LOGIN);
+        }
+        else if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.BUYER)) {
+            throw new AppException(ErrorCode.NOT_PERMISSION);
+        }
+
         ObjectMapper objectMapper = new ObjectMapper();
 
         Order order = orderRepository
