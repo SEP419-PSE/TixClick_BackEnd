@@ -3,18 +3,14 @@ package com.pse.tixclick.service.impl;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.*;
-import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.CheckinLog;
 import com.pse.tixclick.payload.entity.entity_enum.*;
 import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.entity.event.EventActivity;
-import com.pse.tixclick.payload.entity.payment.Order;
-import com.pse.tixclick.payload.entity.payment.OrderDetail;
 import com.pse.tixclick.payload.entity.seatmap.*;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
 import com.pse.tixclick.payload.entity.ticket.TicketMapping;
 import com.pse.tixclick.payload.entity.ticket.TicketPurchase;
-import com.pse.tixclick.payload.request.create.CheckinRequest;
 import com.pse.tixclick.payload.request.create.CreateTicketPurchaseRequest;
 import com.pse.tixclick.payload.request.create.ListTicketPurchaseRequest;
 import com.pse.tixclick.repository.*;
@@ -24,7 +20,6 @@ import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Async;
@@ -48,9 +43,6 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
     AppUtils appUtils;
 
     @Autowired
-    ModelMapper modelMapper;
-
-    @Autowired
     TicketPurchaseRepository ticketPurchaseRepository;
 
     @Autowired
@@ -67,9 +59,6 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
 
     @Autowired
     EventRepository eventRepository;
-
-    @Autowired
-    AccountRepository accountRepository;
 
     @Autowired
     CheckinLogRepository checkinLogRepository;
