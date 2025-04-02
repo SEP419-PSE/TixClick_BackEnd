@@ -3,14 +3,12 @@ package com.pse.tixclick.service.impl;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.TicketDTO;
-import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
 import com.pse.tixclick.payload.request.TicketRequest;
 import com.pse.tixclick.payload.request.create.CreateTickeSeatMaptRequest;
 import com.pse.tixclick.payload.request.create.CreateTicketRequest;
 import com.pse.tixclick.payload.request.update.UpdateTicketRequest;
 import com.pse.tixclick.repository.AccountRepository;
-import com.pse.tixclick.repository.EventActivityRepository;
 import com.pse.tixclick.repository.EventRepository;
 import com.pse.tixclick.repository.TicketRepository;
 import com.pse.tixclick.service.TicketService;
@@ -24,7 +22,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -36,7 +33,6 @@ import java.util.stream.Collectors;
 @Transactional
 public class TicketServiceImpl implements TicketService {
     AccountRepository accountRepository;
-    EventActivityRepository eventActivityRepository;
     TicketRepository ticketRepository;
     ModelMapper modelMapper;
     EventRepository eventRepository;
