@@ -493,6 +493,8 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
 
     @Override
     public int countTotalTicketSold() {
+
+
         return Optional.of(ticketPurchaseRepository.countTotalTicketSold()).orElse(0);
     }
 
@@ -560,6 +562,13 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
 
     @Override
     public List<MyTicketDTO> getTicketPurchasesByAccount() {
+        if(appUtils.getAccountFromAuthentication() == null){
+            throw new AppException(ErrorCode.NEEDED_LOGIN);
+        }
+        else if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.BUYER)) {
+            throw new AppException(ErrorCode.NOT_PERMISSION);
+        }
+
         List<TicketPurchase> ticketPurchases = ticketPurchaseRepository
                 .getTicketPurchasesByAccount(appUtils.getAccountFromAuthentication().getAccountId());
 
