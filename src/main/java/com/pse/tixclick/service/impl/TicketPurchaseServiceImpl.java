@@ -454,6 +454,12 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
     }
     @Override
     public String checkinTicketPurchase(int checkinId) {
+        if(appUtils.getAccountFromAuthentication() == null){
+            throw new AppException(ErrorCode.NEEDED_LOGIN);
+        }
+        else if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.ORGANIZER)) {
+            throw new AppException(ErrorCode.NOT_PERMISSION);
+        }
         CheckinLog checkinLog = checkinLogRepository
                 .findById(checkinId)
                 .orElseThrow(() -> new AppException(ErrorCode.CHECKIN_LOG_NOT_FOUND));
