@@ -30,9 +30,9 @@ public class ContractDetailController {
 
 
     @PostMapping("/create")
-    public ResponseEntity<ApiResponse<List<ContractDetailDTO>>> createContractDetail(@RequestBody List<CreateContractDetailRequest> createContractDetailRequest, @RequestBody int contractId) {
+    public ResponseEntity<ApiResponse<List<ContractDetailDTO>>> createContractDetail(@RequestBody CreateContractDetailRequest createContractDetailRequest) {
         try {
-            List<ContractDetailDTO> contractDetailDTOs = contractDetailService.createContractDetail(createContractDetailRequest, contractId);
+            List<ContractDetailDTO> contractDetailDTOs = contractDetailService.createContractDetail(createContractDetailRequest);
             return ResponseEntity.ok(
                     ApiResponse.<List<ContractDetailDTO>>builder()
                             .code(200)
