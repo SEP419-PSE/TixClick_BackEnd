@@ -507,15 +507,4 @@ public class PaymentServiceImpl implements PaymentService {
     private String getBaseUrl(HttpServletRequest request) {
         return "http://tixclick.site";
     }
-
-    private Date setTransactionDateFromPayDate(String payDate) {
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
-
-        try {
-            return formatter.parse(payDate);
-        } catch (ParseException e) {
-            e.printStackTrace();
-            throw new RuntimeException("Invalid date format for payDate: " + payDate);
-        }
-    }
 }
