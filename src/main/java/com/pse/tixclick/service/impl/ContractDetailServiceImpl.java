@@ -7,12 +7,14 @@ import com.pse.tixclick.payload.dto.ContractDetailDTO;
 import com.pse.tixclick.payload.entity.company.Contract;
 import com.pse.tixclick.payload.entity.company.ContractDetail;
 import com.pse.tixclick.payload.entity.entity_enum.EContractDetailStatus;
+import com.pse.tixclick.payload.entity.entity_enum.ERole;
 import com.pse.tixclick.payload.entity.payment.ContractPayment;
 import com.pse.tixclick.payload.request.create.ContractDetailRequest;
 import com.pse.tixclick.payload.request.create.CreateContractDetailRequest;
 import com.pse.tixclick.payload.response.QRCompanyResponse;
 import com.pse.tixclick.repository.*;
 import com.pse.tixclick.service.ContractDetailService;
+import com.pse.tixclick.utils.AppUtils;
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -53,9 +55,19 @@ public class ContractDetailServiceImpl implements ContractDetailService {
     @Autowired
     ModelMapper modelMapper;
 
+    @Autowired
+    AppUtils appUtils;
+
 
     @Override
     public List<ContractDetailDTO> createContractDetail(CreateContractDetailRequest createContractDetailRequests) {
+        if(appUtils.getAccountFromAuthentication() == null){
+            throw new AppException(ErrorCode.NEEDED_LOGIN);
+        }
+        else if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.MANAGER)) {
+            throw new AppException(ErrorCode.NOT_PERMISSION);
+        }
+
         Contract contract = contractRepository
                 .findById(createContractDetailRequests.getContractId())
                 .orElseThrow(() -> new AppException(ErrorCode.CONTRACT_NOT_FOUND));
