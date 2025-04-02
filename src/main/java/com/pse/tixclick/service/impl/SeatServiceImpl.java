@@ -7,12 +7,9 @@ import com.pse.tixclick.payload.entity.seatmap.Seat;
 import com.pse.tixclick.payload.entity.seatmap.Zone;
 import com.pse.tixclick.payload.request.create.CreateSeatRequest;
 import com.pse.tixclick.payload.request.update.UpdateSeatRequest;
-import com.pse.tixclick.repository.SeatMapRepository;
 import com.pse.tixclick.repository.SeatRepository;
 import com.pse.tixclick.repository.ZoneRepository;
-import com.pse.tixclick.repository.ZoneTypeRepository;
 import com.pse.tixclick.service.SeatService;
-import com.pse.tixclick.utils.AppUtils;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -37,12 +34,6 @@ public class SeatServiceImpl implements SeatService {
 
     @Autowired
     ModelMapper mapper;
-
-    @Autowired
-    AppUtils appUtils;
-
-    @Autowired
-    SeatMapRepository seatMapRepository;
 
 
     @Override
