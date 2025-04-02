@@ -13,7 +13,6 @@ import com.pse.tixclick.payload.request.create.CreateContractDetailRequest;
 import com.pse.tixclick.payload.response.QRCompanyResponse;
 import com.pse.tixclick.repository.*;
 import com.pse.tixclick.service.ContractDetailService;
-import com.pse.tixclick.utils.AppUtils;
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -21,14 +20,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 @Service
 @Transactional
@@ -52,9 +49,6 @@ public class ContractDetailServiceImpl implements ContractDetailService {
 
     @Autowired
     EmailService emailService;
-
-    @Autowired
-    AppUtils appUtils;
 
     @Autowired
     ModelMapper modelMapper;
@@ -158,9 +152,6 @@ public class ContractDetailServiceImpl implements ContractDetailService {
                 .description(description)
                 .build();
     }
-
-
-
 
     @Scheduled(cron = "0 0 0 * * ?")
     public void updateAmountOfContractPayment() throws MessagingException {
