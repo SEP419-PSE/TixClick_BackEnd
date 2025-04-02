@@ -7,7 +7,6 @@ import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.ContractPaymentDTO;
 import com.pse.tixclick.payload.entity.company.ContractDetail;
-import com.pse.tixclick.payload.entity.entity_enum.EContractDetailStatus;
 import com.pse.tixclick.payload.entity.entity_enum.ETransactionStatus;
 import com.pse.tixclick.payload.entity.entity_enum.ETransactionType;
 import com.pse.tixclick.payload.entity.payment.ContractPayment;
@@ -27,7 +26,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,25 +40,10 @@ public class ContractPaymentServiceImpl implements ContractPaymentService {
     ContractDetailRepository contractDetailRepository;
 
     @Autowired
-    ContractRepository contractRepository;
-
-    @Autowired
     ContractPaymentRepository contractPaymentRepository;
 
     @Autowired
     TransactionRepository transactionRepository;
-
-    @Autowired
-    EventRepository eventRepository;
-
-    @Autowired
-    EmailService emailService;
-
-    @Autowired
-    AppUtils appUtils;
-
-    @Autowired
-    ModelMapper modelMapper;
 
     @Autowired
     CassoService cassoService;
