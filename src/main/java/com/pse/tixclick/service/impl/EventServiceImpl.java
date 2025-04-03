@@ -99,6 +99,8 @@ public class EventServiceImpl implements EventService {
         event.setLocationName(request.getLocationName());
         event.setLocation(request.getLocation());
         event.setStatus(EEventStatus.DRAFT);
+        event.setStartDate(request.getStartDate());
+        event.setEndDate(request.getEndDate());
         event.setLogoURL(logocode);
         event.setBannerURL(bannercode);
         event.setOrganizer(organnizer);
@@ -501,6 +503,27 @@ public class EventServiceImpl implements EventService {
         eventRepository.save(event);
         return true;
     }
+
+    @Override
+    public List<EventForConsumerResponse> getEventsForConsumerForWeekend() {
+        List<Event> events = eventRepository.findScheduledEvents().stream()
+                .filter(event -> event.getEventActivities().stream()
+                        .anyMatch(eventActivity -> appUtils.isWeekend(eventActivity.getDateEvent())))
+                .toList();
+
+        if (events.isEmpty()) {
+            throw new AppException(ErrorCode.EVENT_NOT_FOUND);
+        }
+
+        return events.stream()
+                .map(event -> new EventForConsumerResponse(
+                        event.getBannerURL(),
+                        event.getEventId(),
+                        event.getLogoURL()
+                ))
+                .collect(Collectors.toList());
+    }
+
 
 
 }

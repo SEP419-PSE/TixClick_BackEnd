@@ -1,5 +1,6 @@
 package com.pse.tixclick.payload.entity.event;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.company.Company;
 import com.pse.tixclick.payload.entity.company.Contract;
@@ -9,6 +10,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDate;
 import java.util.Collection;
 
 @Getter
@@ -50,6 +52,14 @@ public class Event {
 
     @Column(columnDefinition = "NVARCHAR(MAX)")
     String description;
+
+    @Column
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    LocalDate startDate;
+
+    @Column
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    LocalDate endDate;
 
     @OneToMany(mappedBy = "event")
     Collection<EventActivity> eventActivities;

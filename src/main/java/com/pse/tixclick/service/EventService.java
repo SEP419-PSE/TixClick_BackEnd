@@ -59,6 +59,8 @@ public interface EventService {
 
     boolean countView(int eventId);
 
+    List<EventForConsumerResponse> getEventsForConsumerForWeekend();
+
 
 
 }

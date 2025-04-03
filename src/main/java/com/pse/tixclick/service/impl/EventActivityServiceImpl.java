@@ -20,6 +20,7 @@ import org.modelmapper.TypeToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -162,6 +163,13 @@ public class EventActivityServiceImpl implements EventActivityService {
             // Kiểm tra sự tồn tại của event
             var event = eventRepository.findById(request.getEventId())
                     .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+
+
+            LocalDate dateEvent = request.getDateEvent(); // Lấy ngày từ request
+
+            if (dateEvent.isBefore(event.getStartDate()) || dateEvent.isAfter(event.getEndDate())) {
+                throw new IllegalArgumentException("Ngày sự kiện phải nằm trong khoảng từ hôm nay đến 6 tháng sau.");
+            }
 
             // Tạo và lưu EventActivity
             EventActivity newEventActivity = new EventActivity();

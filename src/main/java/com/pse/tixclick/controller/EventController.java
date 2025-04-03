@@ -514,4 +514,26 @@ public class EventController {
                             .build());
         }
     }
+
+    @GetMapping("/consumer/weekend")
+    public ResponseEntity<ApiResponse<List<EventForConsumerResponse>>> getEventsForConsumerForWeekend() {
+        List<EventForConsumerResponse> events = eventService.getEventsForConsumerForWeekend();
+
+        if (events.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.<List<EventForConsumerResponse>>builder()
+                            .code(HttpStatus.NOT_FOUND.value())
+                            .message("No weekend events found")
+                            .result(null)
+                            .build());
+        }
+
+        return ResponseEntity.ok(
+                ApiResponse.<List<EventForConsumerResponse>>builder()
+                        .code(HttpStatus.OK.value())
+                        .message("Get all weekend events successfully")
+                        .result(events)
+                        .build()
+        );
+    }
 }
