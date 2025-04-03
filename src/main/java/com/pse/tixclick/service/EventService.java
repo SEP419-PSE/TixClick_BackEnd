@@ -57,4 +57,8 @@ public interface EventService {
 
     EventDetailForConsumer getEventDetailForConsumer(int eventId);
 
+    boolean countView(int eventId);
+
+
+
 }

@@ -493,4 +493,25 @@ public class EventController {
                             .build());
         }
     }
+
+    @PostMapping("/count-view/{eventId}")
+    public ResponseEntity<ApiResponse<Boolean>> countView(@PathVariable int eventId) {
+        try {
+            boolean isUpdated = eventService.countView(eventId);
+            return ResponseEntity.ok(
+                    ApiResponse.<Boolean>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Event view count updated successfully")
+                            .result(isUpdated)
+                            .build()
+            );
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.<Boolean>builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        }
+    }
 }

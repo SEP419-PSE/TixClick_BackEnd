@@ -102,6 +102,7 @@ public class EventServiceImpl implements EventService {
         event.setLogoURL(logocode);
         event.setBannerURL(bannercode);
         event.setOrganizer(organnizer);
+        event.setCountView(0);
         event.setCompany(company);
 
 
@@ -492,7 +493,14 @@ public class EventServiceImpl implements EventService {
         );
     }
 
-
+    @Override
+    public boolean countView(int eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+        event.setCountView(event.getCountView() + 1);
+        eventRepository.save(event);
+        return true;
+    }
 
 
 }

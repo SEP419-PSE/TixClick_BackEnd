@@ -40,6 +40,9 @@ public class Event {
     String typeEvent;
 
     @Column
+    int countView;
+
+    @Column
     String logoURL;
 
     @Column
