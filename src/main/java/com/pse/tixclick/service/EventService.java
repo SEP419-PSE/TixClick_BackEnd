@@ -61,6 +61,6 @@ public interface EventService {
 
     List<EventForConsumerResponse> getEventsForConsumerForWeekend();
 
-
+    List<EventForConsumerResponse> getEventsForConsumerInMonth(int month);
 
 }

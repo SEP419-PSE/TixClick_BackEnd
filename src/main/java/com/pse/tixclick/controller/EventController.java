@@ -536,4 +536,35 @@ public class EventController {
                         .build()
         );
     }
+
+    @GetMapping("/consumer/month/{month}")
+    public ResponseEntity<ApiResponse<List<EventForConsumerResponse>>> getEventsForConsumerInMonth(@PathVariable int month) {
+        try{
+            List<EventForConsumerResponse> events = eventService.getEventsForConsumerInMonth(month);
+
+            if (events.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(ApiResponse.<List<EventForConsumerResponse>>builder()
+                                .code(HttpStatus.NOT_FOUND.value())
+                                .message("No events found for month: " + month)
+                                .result(null)
+                                .build());
+            }
+
+            return ResponseEntity.ok(
+                    ApiResponse.<List<EventForConsumerResponse>>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Get all events for month: " + month + " successfully")
+                            .result(events)
+                            .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<List<EventForConsumerResponse>>builder()
+                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .message("An error occurred while retrieving the events for month: " + month)
+                            .result(null)
+                            .build());
+        }
+    }
 }

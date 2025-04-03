@@ -509,6 +509,28 @@ public class EventServiceImpl implements EventService {
         List<Event> events = eventRepository.findScheduledEvents().stream()
                 .filter(event -> event.getEventActivities().stream()
                         .anyMatch(eventActivity -> appUtils.isWeekend(eventActivity.getDateEvent())))
+                .filter(event -> event.getStatus() == EEventStatus.SCHEDULED || event.getStatus() == EEventStatus.ON_GOING)
+                .toList();
+
+        if (events.isEmpty()) {
+            throw new AppException(ErrorCode.EVENT_NOT_FOUND);
+        }
+
+        return events.stream()
+                .map(event -> new EventForConsumerResponse(
+                        event.getBannerURL(),
+                        event.getEventId(),
+                        event.getLogoURL()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<EventForConsumerResponse> getEventsForConsumerInMonth(int month) {
+        List<Event> events = eventRepository.findAll().stream()
+                .filter(event -> (event.getStatus() == EEventStatus.SCHEDULED || event.getStatus() == EEventStatus.ON_GOING))
+                .filter(event -> event.getEventActivities().stream()
+                        .anyMatch(eventActivity -> eventActivity.getDateEvent().getMonthValue() == month))
                 .toList();
 
         if (events.isEmpty()) {
