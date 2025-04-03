@@ -27,7 +27,7 @@ public class TicketMappingController {
     @Autowired
     TicketMappingService ticketMappingService;
 
-    @GetMapping("/get-ticket-mapping-by-event-id/{eventId}")
+    @GetMapping("/get-ticket-mapping-by-event-activity-id/{eventActivityId}")
     public ResponseEntity<ApiResponse<List<TicketMappingResponse>>> getTicketMappingByEventId(@PathVariable int eventId) {
         try {
             List<TicketMappingResponse> ticketMappings = ticketMappingService.getAllTicketMappingByEventActivityId(eventId);

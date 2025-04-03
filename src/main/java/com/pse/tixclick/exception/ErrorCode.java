@@ -115,6 +115,7 @@ public enum ErrorCode {
     INVALID_EVENT_STATUS(1099, "Tình trạng sự kiện không hợp lệ", HttpStatus.BAD_REQUEST),
     TICKET_PURCHASE_CANCELLED(1098, "Ticket purchase đã bị hủy", HttpStatus.BAD_REQUEST),
     ORDER_PENDING(1099, "Order đang chờ xử lý", HttpStatus.BAD_REQUEST),
+    EVENT_NOT_HAVE_SEATMAP(1100, "Sự kiện không có seatmap", HttpStatus.BAD_REQUEST),
     ;
 
 
