@@ -28,9 +28,9 @@ public class TicketMappingController {
     TicketMappingService ticketMappingService;
 
     @GetMapping("/get-ticket-mapping-by-event-activity-id/{eventActivityId}")
-    public ResponseEntity<ApiResponse<List<TicketMappingResponse>>> getTicketMappingByEventId(@PathVariable int eventId) {
+    public ResponseEntity<ApiResponse<List<TicketMappingResponse>>> getTicketMappingByEventId(@PathVariable int eventActivityId) {
         try {
-            List<TicketMappingResponse> ticketMappings = ticketMappingService.getAllTicketMappingByEventActivityId(eventId);
+            List<TicketMappingResponse> ticketMappings = ticketMappingService.getAllTicketMappingByEventActivityId(eventActivityId);
             if (ticketMappings.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.OK).body(
                         ApiResponse.<List<TicketMappingResponse>>builder()
