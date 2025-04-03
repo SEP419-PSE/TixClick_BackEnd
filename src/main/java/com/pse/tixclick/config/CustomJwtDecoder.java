@@ -3,6 +3,7 @@ package com.pse.tixclick.config;
 import com.pse.tixclick.payload.request.IntrospectRequest;
 import com.pse.tixclick.service.AuthenService;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -33,7 +34,7 @@ CustomJwtDecoder implements JwtDecoder {
         var response = authenticationService.introspect(
                 IntrospectRequest.builder().token(token).build());
 
-        if (!response.isValid()) throw new JwtException("Token invalid");
+        if (!response.isValid()) throw new BadCredentialsException("Token invalid or expired"); // Ném BadCredentialsException;
 
         if (Objects.isNull(nimbusJwtDecoder)) {
             SecretKeySpec secretKeySpec = new SecretKeySpec(signerKey.getBytes(), "HS512");
