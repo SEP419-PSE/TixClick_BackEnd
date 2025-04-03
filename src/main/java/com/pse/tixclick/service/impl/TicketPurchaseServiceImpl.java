@@ -111,19 +111,6 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
                 EventActivity eventActivity = eventActivityRepository.findById(createTicketPurchaseRequest1.getEventActivityId())
                         .orElseThrow(() -> new AppException(ErrorCode.EVENT_ACTIVITY_NOT_FOUND));
 
-                TicketMapping ticketMapping = ticketMappingRepository
-                        .findTicketMappingByTicketIdAndEventActivityId(createTicketPurchaseRequest1.getTicketId(), createTicketPurchaseRequest1.getEventActivityId())
-                        .orElseThrow(() -> new AppException(ErrorCode.TICKET_MAPPING_NOT_FOUND));
-
-                if (ticketMapping.getQuantity() <= 0) {
-                    throw new AppException(ErrorCode.TICKET_MAPPING_EMPTY);
-                }
-                if(ticketMapping.getQuantity() < createTicketPurchaseRequest1.getQuantity()){
-                    throw new AppException(ErrorCode.TICKET_MAPPING_NOT_ENOUGH);
-                }
-                ticketMapping.setQuantity(ticketMapping.getQuantity() - createTicketPurchaseRequest1.getQuantity());
-                ticketMappingRepository.save(ticketMapping);
-
                 //Kiểm tra zone
                 ZoneActivity zoneActivity = zoneActivityRepository
                         .findByEventActivityIdAndZoneId(createTicketPurchaseRequest1.getEventActivityId(), createTicketPurchaseRequest1.getZoneId())
@@ -186,19 +173,6 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
                 if (quantity < minQuantity || quantity > maxQuantity) {
                     throw new AppException(ErrorCode.INVALID_QUANTITY);
                 }
-
-                TicketMapping ticketMapping = ticketMappingRepository
-                        .findTicketMappingByTicketIdAndEventActivityId(createTicketPurchaseRequest1.getTicketId(), createTicketPurchaseRequest1.getEventActivityId())
-                        .orElseThrow(() -> new AppException(ErrorCode.TICKET_MAPPING_NOT_FOUND));
-
-                if (ticketMapping.getQuantity() <= 0) {
-                    throw new AppException(ErrorCode.TICKET_MAPPING_EMPTY);
-                }
-                if(ticketMapping.getQuantity() < createTicketPurchaseRequest1.getQuantity()){
-                    throw new AppException(ErrorCode.TICKET_MAPPING_NOT_ENOUGH);
-                }
-                ticketMapping.setQuantity(ticketMapping.getQuantity() - createTicketPurchaseRequest1.getQuantity());
-                ticketMappingRepository.save(ticketMapping);
 
                 Event event = eventRepository.findById(createTicketPurchaseRequest1.getEventId())
                         .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
