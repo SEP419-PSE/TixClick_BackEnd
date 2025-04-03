@@ -3,6 +3,7 @@ package com.pse.tixclick.service;
 import com.pse.tixclick.payload.dto.EventDTO;
 import com.pse.tixclick.payload.dto.UpcomingEventDTO;
 import com.pse.tixclick.payload.entity.entity_enum.EEventStatus;
+import com.pse.tixclick.payload.entity.entity_enum.ETypeEvent;
 import com.pse.tixclick.payload.request.create.CreateEventRequest;
 import com.pse.tixclick.payload.request.update.UpdateEventRequest;
 import com.pse.tixclick.payload.response.EventDetailForConsumer;
@@ -56,5 +57,13 @@ public interface EventService {
     List<EventForConsumerResponse> getEventsForConsumerByStatusScheduled();
 
     EventDetailForConsumer getEventDetailForConsumer(int eventId);
+
+    boolean countView(int eventId);
+
+    List<EventForConsumerResponse> getEventsForConsumerForWeekend();
+
+    List<EventForConsumerResponse> getEventsForConsumerInMonth(int month);
+
+    List<EventDTO>  getEventByStartDateAndEndDateAndEventTypeAndEventName(String startDate, String endDate, String eventType, String eventName,List<String> eventCategory);
 
 }

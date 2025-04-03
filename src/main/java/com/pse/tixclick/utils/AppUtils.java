@@ -29,6 +29,8 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.concurrent.ScheduledFuture;
@@ -121,5 +123,11 @@ public class AppUtils {
     public boolean isValidString(String value) {
         return value != null && !value.trim().isEmpty() &&
                 !value.trim().equalsIgnoreCase("0") && !value.trim().equalsIgnoreCase("null");
+    }
+
+    public boolean isWeekend(LocalDate date) {
+        if (date == null) return false;
+        DayOfWeek dayOfWeek = date.getDayOfWeek();
+        return dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY;
     }
 }

@@ -7,6 +7,5 @@ public enum EEventStatus {
     COMPLETED,
     SOLD_OUT,
     PENDING_APPROVAL,
-    REJECTED,
-    PENDING
+    REJECTED
 }

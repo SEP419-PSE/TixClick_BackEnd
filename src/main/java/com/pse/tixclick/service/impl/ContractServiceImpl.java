@@ -12,6 +12,8 @@ import com.pse.tixclick.payload.entity.seatmap.Seat;
 import com.pse.tixclick.payload.entity.seatmap.SeatActivity;
 import com.pse.tixclick.payload.entity.seatmap.Zone;
 import com.pse.tixclick.payload.entity.seatmap.ZoneActivity;
+import com.pse.tixclick.payload.entity.ticket.Ticket;
+import com.pse.tixclick.payload.entity.ticket.TicketMapping;
 import com.pse.tixclick.payload.request.create.CreateContractRequest;
 import com.pse.tixclick.repository.*;
 import com.pse.tixclick.service.ContractService;
@@ -45,6 +47,7 @@ public class ContractServiceImpl implements ContractService {
     ZoneRepository zoneRepository;
     SeatRepository seatRepository;
     EmailService emailService;
+    TicketMappingRepository ticketMappingRepository;
 
     @Override
     public ContractDTO createContract(CreateContractRequest request) {
@@ -171,51 +174,56 @@ public class ContractServiceImpl implements ContractService {
                 var event = contract.getEvent();
                 var seatMap = event.getSeatMap();
 
-                if (seatMap == null) {
-                    throw new AppException(ErrorCode.SEAT_MAP_NOT_FOUND);
-                }
+                if (seatMap != null) {
+                    // Lấy tất cả hoạt động (eventActivity) của event này
+                    List<EventActivity> eventActivities = eventActivityRepository.findEventActivitiesByEvent_EventId(event.getEventId());
 
-                // Lấy tất cả hoạt động (eventActivity) của event này
-                List<EventActivity> eventActivities = eventActivityRepository.findEventActivitiesByEvent_EventId(event.getEventId());
+                    for (EventActivity eventActivity : eventActivities) {
+                        // Gán seatMap cho eventActivity
+                        eventActivity.setSeatMap(seatMap);
+                        eventActivityRepository.save(eventActivity);
 
-                for (EventActivity eventActivity : eventActivities) {
-                    // Gán seatMap cho eventActivity
-                    eventActivity.setSeatMap(seatMap);
-                    eventActivityRepository.save(eventActivity);
+                        // Lấy danh sách zone từ seatMap
+                        List<Zone> zones = zoneRepository.findBySeatMapId(seatMap.getSeatMapId());
+                        for (Zone zone : zones) {
+                            // Tạo ZoneActivity
+                            ZoneActivity zoneActivity = new ZoneActivity();
+                            zoneActivity.setZone(zone);
+                            zoneActivity.setEventActivity(eventActivity);
+                            zoneActivity.setAvailableQuantity(zone.getQuantity()); // Ban đầu, tất cả chỗ đều trống
+                            zoneActivity = zoneActivityRepository.save(zoneActivity); // Lưu vào DB
 
-                    // Lấy danh sách zone từ seatMap
-                    List<Zone> zones = zoneRepository.findBySeatMapId(seatMap.getSeatMapId());
-                    for (Zone zone : zones) {
-                        // Tạo ZoneActivity
-                        ZoneActivity zoneActivity = new ZoneActivity();
-                        zoneActivity.setZone(zone);
-                        zoneActivity.setEventActivity(eventActivity);
-                        zoneActivity.setAvailableQuantity(zone.getQuantity()); // Ban đầu, tất cả chỗ đều trống
-                        zoneActivity = zoneActivityRepository.save(zoneActivity); // Lưu vào DB
+                            // Nếu là Standing, bỏ qua SeatActivity
+                            if (zone.getZoneType().getTypeName() == ZoneTypeEnum.STANDING) {
+                                continue;
+                            }
 
-                        // Nếu là Standing, bỏ qua SeatActivity
-                        if (zone.getZoneType().getTypeName() == ZoneTypeEnum.STANDING) {
-                            continue;
+                            // Lấy danh sách ghế trong Zone
+                            List<Seat> seats = seatRepository.findSeatsByZone_ZoneId(zone.getZoneId());
+                            List<SeatActivity> seatActivities = new ArrayList<>();
+
+                            for (Seat seat : seats) {
+                                // Tạo SeatActivity
+                                SeatActivity seatActivity = new SeatActivity();
+                                seatActivity.setSeat(seat);
+                                seatActivity.setZoneActivity(zoneActivity);
+                                seatActivity.setEventActivity(eventActivity);
+                                seatActivity.setStatus(String.valueOf(ESeatActivityStatus.AVAILABLE)); // Trạng thái mặc định
+                                seatActivities.add(seatActivity);
+                            }
+
+                            // Lưu tất cả seatActivities một lần để giảm số lần truy cập DB
+                            seatActivityRepository.saveAll(seatActivities);
                         }
-
-                        // Lấy danh sách ghế trong Zone
-                        List<Seat> seats = seatRepository.findSeatsByZone_ZoneId(zone.getZoneId());
-                        List<SeatActivity> seatActivities = new ArrayList<>();
-
-                        for (Seat seat : seats) {
-                            // Tạo SeatActivity
-                            SeatActivity seatActivity = new SeatActivity();
-                            seatActivity.setSeat(seat);
-                            seatActivity.setZoneActivity(zoneActivity);
-                            seatActivity.setEventActivity(eventActivity);
-                            seatActivity.setStatus(String.valueOf(ESeatActivityStatus.AVAILABLE)); // Trạng thái mặc định
-                            seatActivities.add(seatActivity);
-                        }
-
-                        // Lưu tất cả seatActivities một lần để giảm số lần truy cập DB
-                        seatActivityRepository.saveAll(seatActivities);
                     }
+                }else {
+                    List<TicketMapping> ticketMappings = ticketMappingRepository.findTicketMappingsByEventActivity_Event(event);
+                    if (ticketMappings.isEmpty()) {
+                        throw new AppException(ErrorCode.EVENT_NOT_HAVE_SEATMAP);
+                    }
+
                 }
+
 
                 event.setStatus(EEventStatus.SCHEDULED);
 

@@ -15,4 +15,6 @@ public interface EventActivityRepository extends JpaRepository<EventActivity,Int
     Optional<EventActivity> findEventActivityByActivityName(String activityName);
 
     boolean findEventActivityByActivityNameAndEvent_EventId(String activityName, int eventId);
+
+    Optional<EventActivity> findEventActivitiesByEvent_EventIdAndActivityName(int eventId, String activityName);
 }

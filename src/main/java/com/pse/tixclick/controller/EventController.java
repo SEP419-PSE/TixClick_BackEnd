@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -39,7 +40,7 @@ public class EventController {
             @ModelAttribute CreateEventRequest eventDTO,
             @RequestParam("logoURL") MultipartFile logoURL,
             @RequestParam("bannerURL") MultipartFile bannerURL
-            ) {
+    ) {
         try {
             EventDTO createdEvent = eventService.createEvent(eventDTO, logoURL, bannerURL);
 
@@ -69,7 +70,7 @@ public class EventController {
             @ModelAttribute UpdateEventRequest eventDTO,
             @RequestParam("logoURL") MultipartFile logoURL,
             @RequestParam("bannerURL") MultipartFile bannerURL
-            ) {
+    ) {
         try {
             EventDTO updatedEvent = eventService.updateEvent(eventDTO, logoURL, bannerURL);
 
@@ -255,7 +256,6 @@ public class EventController {
                         .build()
         );
     }
-
 
 
     @GetMapping("/account")
@@ -493,4 +493,115 @@ public class EventController {
                             .build());
         }
     }
+
+    @PostMapping("/count-view/{eventId}")
+    public ResponseEntity<ApiResponse<Boolean>> countView(@PathVariable int eventId) {
+        try {
+            boolean isUpdated = eventService.countView(eventId);
+            return ResponseEntity.ok(
+                    ApiResponse.<Boolean>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Event view count updated successfully")
+                            .result(isUpdated)
+                            .build()
+            );
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.<Boolean>builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        }
+    }
+
+    @GetMapping("/consumer/weekend")
+    public ResponseEntity<ApiResponse<List<EventForConsumerResponse>>> getEventsForConsumerForWeekend() {
+        List<EventForConsumerResponse> events = eventService.getEventsForConsumerForWeekend();
+
+        if (events.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.<List<EventForConsumerResponse>>builder()
+                            .code(HttpStatus.NOT_FOUND.value())
+                            .message("No weekend events found")
+                            .result(null)
+                            .build());
+        }
+
+        return ResponseEntity.ok(
+                ApiResponse.<List<EventForConsumerResponse>>builder()
+                        .code(HttpStatus.OK.value())
+                        .message("Get all weekend events successfully")
+                        .result(events)
+                        .build()
+        );
+    }
+
+    @GetMapping("/consumer/month/{month}")
+    public ResponseEntity<ApiResponse<List<EventForConsumerResponse>>> getEventsForConsumerInMonth(@PathVariable int month) {
+        try {
+            List<EventForConsumerResponse> events = eventService.getEventsForConsumerInMonth(month);
+
+            if (events.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(ApiResponse.<List<EventForConsumerResponse>>builder()
+                                .code(HttpStatus.NOT_FOUND.value())
+                                .message("No events found for month: " + month)
+                                .result(null)
+                                .build());
+            }
+
+            return ResponseEntity.ok(
+                    ApiResponse.<List<EventForConsumerResponse>>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Get all events for month: " + month + " successfully")
+                            .result(events)
+                            .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<List<EventForConsumerResponse>>builder()
+                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .message("An error occurred while retrieving the events for month: " + month)
+                            .result(null)
+                            .build());
+        }
+    }
+
+    @GetMapping("/filter")
+    public ResponseEntity<ApiResponse<List<EventDTO>>> getEventByFilters(
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate,
+            @RequestParam(required = false) String eventType,
+            @RequestParam(required = false) String eventName,
+            @RequestParam(required = false) List<String> eventCategory){
+        try {
+            List<EventDTO> events = eventService.getEventByStartDateAndEndDateAndEventTypeAndEventName(startDate, endDate, eventType, eventName,eventCategory);
+
+            if (events.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.OK)
+                        .body(ApiResponse.<List<EventDTO>>builder()
+                                .code(HttpStatus.OK.value())
+                                .message("No events found with the provided filters")
+                                .result(Collections.emptyList())
+                                .build());
+            }
+
+            return ResponseEntity.ok(
+                    ApiResponse.<List<EventDTO>>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Get all events with the provided filters successfully")
+                            .result(events)
+                            .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<List<EventDTO>>builder()
+                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .message("An error occurred while retrieving the events with the provided filters")
+                            .result(null)
+                            .build());
+        }
+    }
 }
+

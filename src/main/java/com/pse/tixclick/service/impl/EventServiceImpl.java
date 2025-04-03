@@ -38,6 +38,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -99,9 +100,12 @@ public class EventServiceImpl implements EventService {
         event.setLocationName(request.getLocationName());
         event.setLocation(request.getLocation());
         event.setStatus(EEventStatus.DRAFT);
+        event.setStartDate(request.getStartDate());
+        event.setEndDate(request.getEndDate());
         event.setLogoURL(logocode);
         event.setBannerURL(bannercode);
         event.setOrganizer(organnizer);
+        event.setCountView(0);
         event.setCompany(company);
 
 
@@ -127,6 +131,13 @@ public class EventServiceImpl implements EventService {
 
         if (eventRequest.getDescription() != null && !eventRequest.getDescription().trim().isEmpty()) {
             event.setDescription(eventRequest.getDescription());
+        }
+
+        if(eventRequest.getStartDate() != null) {
+            event.setStartDate(eventRequest.getStartDate());
+        }
+        if(eventRequest.getEndDate() != null) {
+            event.setEndDate(eventRequest.getEndDate());
         }
 
         if (eventRequest.getLocation() != null) {
@@ -491,6 +502,88 @@ public class EventServiceImpl implements EventService {
                 minPrice
         );
     }
+
+    @Override
+    public boolean countView(int eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+        event.setCountView(event.getCountView() + 1);
+        eventRepository.save(event);
+        return true;
+    }
+
+    @Override
+    public List<EventForConsumerResponse> getEventsForConsumerForWeekend() {
+        List<Event> events = eventRepository.findScheduledEvents().stream()
+                .filter(event -> event.getEventActivities().stream()
+                        .anyMatch(eventActivity -> appUtils.isWeekend(eventActivity.getDateEvent())))
+                .filter(event -> event.getStatus() == EEventStatus.SCHEDULED || event.getStatus() == EEventStatus.ON_GOING)
+                .toList();
+
+        if (events.isEmpty()) {
+            throw new AppException(ErrorCode.EVENT_NOT_FOUND);
+        }
+
+        return events.stream()
+                .map(event -> new EventForConsumerResponse(
+                        event.getBannerURL(),
+                        event.getEventId(),
+                        event.getLogoURL()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<EventForConsumerResponse> getEventsForConsumerInMonth(int month) {
+        List<Event> events = eventRepository.findAll().stream()
+                .filter(event -> (event.getStatus() == EEventStatus.SCHEDULED || event.getStatus() == EEventStatus.ON_GOING))
+                .filter(event -> event.getEventActivities().stream()
+                        .anyMatch(eventActivity -> eventActivity.getDateEvent().getMonthValue() == month))
+                .toList();
+
+        if (events.isEmpty()) {
+            throw new AppException(ErrorCode.EVENT_NOT_FOUND);
+        }
+
+        return events.stream()
+                .map(event -> new EventForConsumerResponse(
+                        event.getBannerURL(),
+                        event.getEventId(),
+                        event.getLogoURL()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<EventDTO> getEventByStartDateAndEndDateAndEventTypeAndEventName(
+            String startDate, String endDate, String eventType, String eventName, List<String> eventCategories) {
+
+        LocalDate start = (startDate != null && !startDate.isEmpty()) ? LocalDate.parse(startDate) : null;
+        LocalDate end = (endDate != null && !endDate.isEmpty()) ? LocalDate.parse(endDate) : null;
+
+        List<Event> events = eventRepository.findAll().stream()
+                // Lọc theo status hợp lệ
+                .filter(event -> event.getStatus() == EEventStatus.SCHEDULED
+                        || event.getStatus() == EEventStatus.ON_GOING
+                        || event.getStatus() == EEventStatus.SOLD_OUT)
+                // Lọc theo khoảng thời gian (chỉ lọc nếu startDate và endDate có giá trị)
+                .filter(event -> (start == null || !event.getStartDate().isBefore(start)) &&
+                        (end == null || !event.getEndDate().isAfter(end)))
+                // Lọc theo loại sự kiện (bỏ qua nếu eventType rỗng hoặc null)
+                .filter(event -> eventType == null || eventType.isEmpty() || event.getTypeEvent().equalsIgnoreCase(eventType))
+                // Lọc theo tên sự kiện (bỏ qua nếu eventName rỗng hoặc null)
+                .filter(event -> eventName == null || eventName.isEmpty() || event.getEventName().toLowerCase().contains(eventName.toLowerCase()))
+                // Lọc theo danh sách categoryName (nếu eventCategories có giá trị)
+                .filter(event -> eventCategories == null || eventCategories.isEmpty() ||
+                        (event.getCategory() != null && eventCategories.contains(event.getCategory().getCategoryName())))
+                .toList();
+
+        return events.stream()
+                .map(event -> modelMapper.map(event, EventDTO.class))
+                .collect(Collectors.toList());
+    }
+
+
 
 
 
