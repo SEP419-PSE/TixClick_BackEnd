@@ -157,7 +157,7 @@ public class EventActivityServiceImpl implements EventActivityService {
         List<CreateEventActivityAndTicketRequest> savedRequests = new ArrayList<>();
 
         for (CreateEventActivityAndTicketRequest request : requestList) {
-            var eventActivity = eventActivityRepository.findEventActivityByActivityName(request.getActivityName());
+            var eventActivity = eventActivityRepository.findEventActivitiesByEvent_EventIdAndActivityName(request.getEventId(), request.getActivityName());
             if (eventActivity.isPresent()) {
                 throw new AppException(ErrorCode.ACTIVITY_EXISTED);
             }
