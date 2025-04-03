@@ -45,4 +45,4 @@ jobs:
       - name: Cleanup Unused Docker Images
         run: |
           echo "Cleaning up unused Docker images..."
-          docker image prune -f
+          docker system prune -af
