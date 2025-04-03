@@ -5,7 +5,6 @@ import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.EventActivityDTO;
 import com.pse.tixclick.payload.entity.entity_enum.ESubRole;
 import com.pse.tixclick.payload.entity.event.EventActivity;
-import com.pse.tixclick.payload.entity.seatmap.SeatMap;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
 import com.pse.tixclick.payload.entity.ticket.TicketMapping;
 import com.pse.tixclick.payload.request.CreateEventActivityAndTicketRequest;
@@ -24,8 +23,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor

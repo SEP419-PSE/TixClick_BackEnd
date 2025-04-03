@@ -191,7 +191,7 @@ public class TicketPurchaseController {
     }
 
     @PostMapping("/decrypt_qr_code")
-    public ResponseEntity<ApiResponse<TicketQrCodeDTO>> decryptQrCode(@RequestBody String qrCode) throws Exception{
+    public ResponseEntity<ApiResponse<TicketQrCodeDTO>> decryptQrCode(@RequestBody String qrCode){
         TicketQrCodeDTO qr = ticketPurchaseService.decryptQrCode(qrCode);
         return ResponseEntity.ok(
                 ApiResponse.<TicketQrCodeDTO>builder()

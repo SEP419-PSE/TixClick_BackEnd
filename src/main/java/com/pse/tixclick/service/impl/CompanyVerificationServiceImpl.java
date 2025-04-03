@@ -12,7 +12,6 @@ import com.pse.tixclick.payload.entity.entity_enum.*;
 import com.pse.tixclick.payload.request.create.CreateCompanyVerificationRequest;
 import com.pse.tixclick.repository.*;
 import com.pse.tixclick.service.CompanyVerificationService;
-import com.pse.tixclick.utils.AppUtils;
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -22,7 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -40,7 +38,6 @@ public class CompanyVerificationServiceImpl implements CompanyVerificationServic
     ModelMapper modelMapper;
     MemberRepository memberRepository;
     EmailService emailService;
-    AppUtils appUtils;
     SimpMessagingTemplate simpMessagingTemplate;
     NotificationRepository notificationRepository;
     RoleRepository roleRepository;
@@ -81,12 +78,6 @@ public class CompanyVerificationServiceImpl implements CompanyVerificationServic
 
         switch (status) {
             case APPROVED:
-
-
-
-
-
-
                 int count = notificationRepository.countNotificationByAccountId(company.getRepresentativeId().getUserName());
                 log.info("Count: {}", count);
 
@@ -95,9 +86,6 @@ public class CompanyVerificationServiceImpl implements CompanyVerificationServic
                             .orElseThrow(() -> new AppException(ErrorCode.NOTIFICATION_NOT_EXISTED));
                     notificationRepository.delete(notification);
                 }
-
-
-
                 simpMessagingTemplate.convertAndSendToUser(company.getRepresentativeId().getUserName(), "/specific/messages",
                         "Your company has been approved");
 

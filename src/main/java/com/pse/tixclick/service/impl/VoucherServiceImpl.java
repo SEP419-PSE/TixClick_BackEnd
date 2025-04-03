@@ -12,4 +12,5 @@ import org.springframework.stereotype.Service;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Transactional
 public class VoucherServiceImpl implements VoucherService {
+
 }

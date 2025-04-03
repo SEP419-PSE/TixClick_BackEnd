@@ -2,12 +2,12 @@ package com.pse.tixclick.service.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.pse.tixclick.email.EmailService;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.ContractPaymentDTO;
 import com.pse.tixclick.payload.entity.company.ContractDetail;
-import com.pse.tixclick.payload.entity.entity_enum.EContractDetailStatus;
+import com.pse.tixclick.payload.entity.entity_enum.ERole;
+import com.pse.tixclick.payload.entity.entity_enum.ETransactionStatus;
 import com.pse.tixclick.payload.entity.entity_enum.ETransactionType;
 import com.pse.tixclick.payload.entity.payment.ContractPayment;
 import com.pse.tixclick.payload.entity.payment.Transaction;
@@ -20,13 +20,11 @@ import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -41,31 +39,19 @@ public class ContractPaymentServiceImpl implements ContractPaymentService {
     ContractDetailRepository contractDetailRepository;
 
     @Autowired
-    ContractRepository contractRepository;
-
-    @Autowired
     ContractPaymentRepository contractPaymentRepository;
 
     @Autowired
     TransactionRepository transactionRepository;
 
     @Autowired
-    EventRepository eventRepository;
-
-    @Autowired
-    EmailService emailService;
-
-    @Autowired
-    AppUtils appUtils;
-
-    @Autowired
-    ModelMapper modelMapper;
-
-    @Autowired
     CassoService cassoService;
 
     @Autowired
     AccountRepository accountRepository;
+
+    @Autowired
+    AppUtils appUtils;
 
     @Override
     public ContractPaymentRequest getContractPayment(String transactionCode, int paymentId) {
@@ -111,8 +97,8 @@ public class ContractPaymentServiceImpl implements ContractPaymentService {
                     transaction.setAmount(amount);
                     transaction.setDescription(description);
                     transaction.setTransactionCode(transactionCode);
-                    transaction.setType("PAYMENT");
-                    transaction.setStatus("SUCCESS");
+                    transaction.setType(ETransactionType.CONTRACT_PAYMENT.name());
+                    transaction.setStatus(ETransactionStatus.SUCCESS.name());
                     transaction.setTransactionDate(LocalDateTime.now());
                     transaction.setContractPayment(contractPayment);
                     transaction.setAccount(account);
@@ -135,6 +121,12 @@ public class ContractPaymentServiceImpl implements ContractPaymentService {
 
     @Override
     public List<ContractPaymentDTO> getAllContractPaymentByContract(int contractId) {
+        if(appUtils.getAccountFromAuthentication() == null){
+            throw new AppException(ErrorCode.NEEDED_LOGIN);
+        }
+        else if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.MANAGER)) {
+            throw new AppException(ErrorCode.NOT_PERMISSION);
+        }
         List<ContractDetail> contractDetails = contractDetailRepository.findByContractId(contractId);
         if (contractDetails.isEmpty()) {
             throw new AppException(ErrorCode.CONTRACT_DETAIL_NOT_FOUND);

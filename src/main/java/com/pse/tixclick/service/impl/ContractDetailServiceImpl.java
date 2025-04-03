@@ -7,7 +7,9 @@ import com.pse.tixclick.payload.dto.ContractDetailDTO;
 import com.pse.tixclick.payload.entity.company.Contract;
 import com.pse.tixclick.payload.entity.company.ContractDetail;
 import com.pse.tixclick.payload.entity.entity_enum.EContractDetailStatus;
+import com.pse.tixclick.payload.entity.entity_enum.ERole;
 import com.pse.tixclick.payload.entity.payment.ContractPayment;
+import com.pse.tixclick.payload.request.create.ContractDetailRequest;
 import com.pse.tixclick.payload.request.create.CreateContractDetailRequest;
 import com.pse.tixclick.payload.response.QRCompanyResponse;
 import com.pse.tixclick.repository.*;
@@ -20,14 +22,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 @Service
 @Transactional
@@ -53,36 +53,43 @@ public class ContractDetailServiceImpl implements ContractDetailService {
     EmailService emailService;
 
     @Autowired
-    AppUtils appUtils;
+    ModelMapper modelMapper;
 
     @Autowired
-    ModelMapper modelMapper;
+    AppUtils appUtils;
 
 
     @Override
-    public List<ContractDetailDTO> createContractDetail(List<CreateContractDetailRequest> createContractDetailRequests, int contractId) {
+    public List<ContractDetailDTO> createContractDetail(CreateContractDetailRequest createContractDetailRequests) {
+        if(appUtils.getAccountFromAuthentication() == null){
+            throw new AppException(ErrorCode.NEEDED_LOGIN);
+        }
+        else if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.MANAGER)) {
+            throw new AppException(ErrorCode.NOT_PERMISSION);
+        }
+
         Contract contract = contractRepository
-                .findById(contractId)
+                .findById(createContractDetailRequests.getContractId())
                 .orElseThrow(() -> new AppException(ErrorCode.CONTRACT_NOT_FOUND));
 
         List<ContractDetailDTO> contractDetailDTOList = new ArrayList<>();
 
-        for (CreateContractDetailRequest createContractDetailRequest : createContractDetailRequests) {
+        for (ContractDetailRequest contractDetailRequest : createContractDetailRequests.getContractDetails()) {
             ContractDetail contractDetail = new ContractDetail();
-            contractDetail.setContractDetailName(createContractDetailRequest.getContractDetailName());
-            contractDetail.setDescription(createContractDetailRequest.getContractDetailDescription());
-            contractDetail.setAmount(createContractDetailRequest.getContractDetailAmount());
-            contractDetail.setPayDate(createContractDetailRequest.getContractDetailPayDate());
+            contractDetail.setContractDetailName(contractDetailRequest.getContractDetailName());
+            contractDetail.setDescription(contractDetailRequest.getContractDetailDescription());
+            contractDetail.setAmount(contractDetailRequest.getContractDetailAmount());
+            contractDetail.setPayDate(contractDetailRequest.getContractDetailPayDate());
             contractDetail.setContract(contract);
-            contractDetail.setContractDetailCode(createContractDetailRequest.getContractDetailCode());
+            contractDetail.setContractDetailCode(contractDetailRequest.getContractDetailCode());
             contractDetail.setStatus(EContractDetailStatus.PENDING.name());
-            contractDetail.setPercentage(createContractDetailRequest.getContractDetailPercentage());
+            contractDetail.setPercentage(contractDetailRequest.getContractDetailPercentage());
             contractDetail = contractDetailRepository.save(contractDetail);
 
             ContractPayment contractPayment = new ContractPayment();
-            contractPayment.setPaymentAmount(createContractDetailRequest.getContractDetailAmount());
+            contractPayment.setPaymentAmount(contractDetailRequest.getContractDetailAmount());
             contractPayment.setContractDetail(contractDetail);
-            contractPayment.setNote(createContractDetailRequest.getContractDetailDescription());
+            contractPayment.setNote(contractDetailRequest.getContractDetailDescription());
             contractPayment.setPaymentMethod("Thanh Toan Ngan Hang");
             contractPayment.setStatus(EContractDetailStatus.PENDING.name());
             contractPaymentRepository.save(contractPayment);
@@ -105,6 +112,13 @@ public class ContractDetailServiceImpl implements ContractDetailService {
 
     @Override
     public List<ContractDetailDTO> getAllContractDetailByContract(int contractId) {
+        if(appUtils.getAccountFromAuthentication() == null){
+            throw new AppException(ErrorCode.NEEDED_LOGIN);
+        }
+        else if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.MANAGER) || !appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.ORGANIZER)) {
+            throw new AppException(ErrorCode.NOT_PERMISSION);
+        }
+
         List<ContractDetail> contractDetails = contractDetailRepository.findByContractId(contractId);
         if(contractDetails.isEmpty()) {
             throw new AppException(ErrorCode.CONTRACT_DETAIL_NOT_FOUND);
@@ -157,9 +171,6 @@ public class ContractDetailServiceImpl implements ContractDetailService {
                 .description(description)
                 .build();
     }
-
-
-
 
     @Scheduled(cron = "0 0 0 * * ?")
     public void updateAmountOfContractPayment() throws MessagingException {
