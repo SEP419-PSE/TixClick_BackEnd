@@ -569,18 +569,18 @@ public class EventController {
     }
 
     @GetMapping("/filter")
-    public ResponseEntity<ApiResponse<List<EventDTO>>> getEventByFilters(
+    public ResponseEntity<ApiResponse<List<EventDetailForConsumer>>> getEventByFilters(
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate,
             @RequestParam(required = false) String eventType,
             @RequestParam(required = false) String eventName,
             @RequestParam(required = false) List<String> eventCategory){
         try {
-            List<EventDTO> events = eventService.getEventByStartDateAndEndDateAndEventTypeAndEventName(startDate, endDate, eventType, eventName,eventCategory);
+            List<EventDetailForConsumer> events = eventService.getEventByStartDateAndEndDateAndEventTypeAndEventName(startDate, endDate, eventType, eventName,eventCategory);
 
             if (events.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.OK)
-                        .body(ApiResponse.<List<EventDTO>>builder()
+                        .body(ApiResponse.<List<EventDetailForConsumer>>builder()
                                 .code(HttpStatus.OK.value())
                                 .message("No events found with the provided filters")
                                 .result(Collections.emptyList())
@@ -588,7 +588,7 @@ public class EventController {
             }
 
             return ResponseEntity.ok(
-                    ApiResponse.<List<EventDTO>>builder()
+                    ApiResponse.<List<EventDetailForConsumer>>builder()
                             .code(HttpStatus.OK.value())
                             .message("Get all events with the provided filters successfully")
                             .result(events)
@@ -596,7 +596,7 @@ public class EventController {
             );
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.<List<EventDTO>>builder()
+                    .body(ApiResponse.<List<EventDetailForConsumer>>builder()
                             .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .message("An error occurred while retrieving the events with the provided filters")
                             .result(null)

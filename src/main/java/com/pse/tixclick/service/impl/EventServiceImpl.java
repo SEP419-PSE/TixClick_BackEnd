@@ -555,7 +555,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public List<EventDTO> getEventByStartDateAndEndDateAndEventTypeAndEventName(
+    public List<EventDetailForConsumer> getEventByStartDateAndEndDateAndEventTypeAndEventName(
             String startDate, String endDate, String eventType, String eventName, List<String> eventCategories) {
 
         LocalDate start = (startDate != null && !startDate.isEmpty()) ? LocalDate.parse(startDate) : null;
@@ -576,16 +576,50 @@ public class EventServiceImpl implements EventService {
                 // Lọc theo danh sách categoryName (nếu eventCategories có giá trị)
                 .filter(event -> eventCategories == null || eventCategories.isEmpty() ||
                         (event.getCategory() != null && eventCategories.contains(event.getCategory().getCategoryName())))
-                .toList();
+                .collect(Collectors.toList()); // Collect filtered events
 
-        return events.stream()
-                .map(event -> modelMapper.map(event, EventDTO.class))
+        // Chuyển đổi mỗi Event thành EventDetailForConsumer
+        List<EventDetailForConsumer> eventDetails = events.stream()
+                .map(event -> {
+                    // Giả sử bạn có cách lấy thông tin công ty và eventActivityResponseList từ event
+                    Company company = event.getCompany();  // Nếu bạn có phương thức để lấy công ty từ event
+                    boolean isHaveSeatMap = event.getSeatMap() != null;
+                    List<EventActivityDTO> eventActivityDTOList = event.getEventActivities().stream()
+                            .map(activity -> modelMapper.map(activity, EventActivityDTO.class))
+                            .collect(Collectors.toList());
+
+                    // Ánh xạ từ EventActivityDTO sang EventActivityResponse
+                    List<EventActivityResponse> eventActivityResponseList = modelMapper.map(eventActivityDTOList, new TypeToken<List<EventActivityResponse>>() {}.getType());
+                    double minPrice = ticketRepository.findMinTicketByEvent_EventId(event.getEventId())
+                            .map(Ticket::getPrice)
+                            .orElse(0.0);
+                    return new EventDetailForConsumer(
+                            event.getEventName(),
+                            event.getLocation(),
+                            event.getLocationName(),
+                            event.getLogoURL(),
+                            event.getBannerURL(),
+                            company != null ? company.getLogoURL() : null,  // URL logo của công ty
+                            company != null ? company.getCompanyName() : null, // Tên công ty
+                            company != null ? company.getDescription() : null, // Mô tả công ty
+                            event.getStatus().name(),
+                            event.getTypeEvent(),
+                            event.getDescription(),
+                            event.getCategory() != null ? event.getCategory().getCategoryName() : null,
+                            eventActivityResponseList,
+                            isHaveSeatMap,
+                            minPrice
+                    );
+                })
                 .collect(Collectors.toList());
+
+        return eventDetails;
     }
 
-
-
-
-
-
 }
+
+
+
+
+
+

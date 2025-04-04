@@ -64,6 +64,6 @@ public interface EventService {
 
     List<EventForConsumerResponse> getEventsForConsumerInMonth(int month);
 
-    List<EventDTO>  getEventByStartDateAndEndDateAndEventTypeAndEventName(String startDate, String endDate, String eventType, String eventName,List<String> eventCategory);
+    List<EventDetailForConsumer>  getEventByStartDateAndEndDateAndEventTypeAndEventName(String startDate, String endDate, String eventType, String eventName,List<String> eventCategory);
 
 }
