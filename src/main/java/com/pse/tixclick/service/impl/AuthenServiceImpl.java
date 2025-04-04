@@ -148,8 +148,8 @@ public class AuthenServiceImpl implements AuthenService {// Để lưu thời gi
         // Giải mã refresh token để lấy username
         int userId = jwt.extractUserId(refreshToken);
 
-        Account account = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-
+        Account account = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
         if (account.getUserName() == null) {
             throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
@@ -164,17 +164,30 @@ public class AuthenServiceImpl implements AuthenService {// Để lưu thời gi
             throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
         }
 
-        // Tạo access token mới
-        var user = userRepository.findAccountByUserName(account.getUserName())
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        // Kiểm tra thời gian hết hạn của refresh token trong Redis
+        Long expirationTime = stringRedisTemplate.getExpire(refreshTokenKey, TimeUnit.SECONDS); // Thời gian hết hạn còn lại tính bằng giây
 
-        var tokenPair = jwt.generateTokens(user);
+        // Nếu thời gian còn lại ít hơn hoặc bằng 1 ngày (86400 giây), tạo mới refresh token
+        if (expirationTime != null && expirationTime <= 86400) { // 86400 giây = 1 ngày
+            // Tạo mới refresh token
+            var tokenPair = jwt.generateTokens(account);
 
-        // Cập nhật refresh token mới vào Redis
-        long expirationDays = 7; // Refresh token hết hạn sau 7 ngày
-        stringRedisTemplate.opsForValue().set(refreshTokenKey, tokenPair.refreshToken().token(), expirationDays, TimeUnit.DAYS);
+            // Cập nhật refresh token mới vào Redis với thời gian hết hạn mới
+            long expirationDays = 7; // Refresh token hết hạn sau 7 ngày
+            stringRedisTemplate.opsForValue().set(refreshTokenKey, tokenPair.refreshToken().token(), expirationDays, TimeUnit.DAYS);
 
-        // Trả về access token mới
+            // Cập nhật lại refresh token vào response
+            return RefreshTokenResponse.builder()
+                    .accessToken(tokenPair.accessToken().token())
+                    .refreshToken(tokenPair.refreshToken().token())
+                    .accessExpiryTime(tokenPair.accessToken().expiryDate())
+                    .build();
+        }
+
+        // Nếu refresh token còn thời gian dài hơn 1 ngày, chỉ cần tạo mới access token
+        var tokenPair = jwt.generateTokens(account);
+
+        // Trả về access token mới mà không cập nhật refresh token
         return RefreshTokenResponse.builder()
                 .accessToken(tokenPair.accessToken().token())
                 .accessExpiryTime(tokenPair.accessToken().expiryDate())
