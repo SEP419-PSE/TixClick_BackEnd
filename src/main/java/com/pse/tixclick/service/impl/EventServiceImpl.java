@@ -94,6 +94,17 @@ public class EventServiceImpl implements EventService {
         Event event = new Event();
         event.setEventName(request.getEventName());
         event.setLocation(request.getLocation());
+        String typeEvent = request.getTypeEvent().toUpperCase();
+
+        // Kiểm tra xem typeEvent có phải là "ONLINE" hoặc "OFFLINE" không (có thể sử dụng toUpperCase() để kiểm tra không phân biệt chữ hoa chữ thường)
+        if ("ONLINE".equalsIgnoreCase(typeEvent) || "OFFLINE".equalsIgnoreCase(typeEvent)) {
+            // Chuyển typeEvent về chữ in hoa trước khi gán vào event
+            event.setTypeEvent(typeEvent.toUpperCase());
+        } else {
+            // Nếu không phải ONLINE hoặc OFFLINE, có thể xử lý thêm tùy theo yêu cầu
+            // Ví dụ: throw exception, log error hoặc gán một giá trị mặc định
+            throw new IllegalArgumentException("Invalid event type. Must be ONLINE or OFFLINE.");
+        }
         event.setTypeEvent(request.getTypeEvent());
         event.setDescription(request.getDescription());
         event.setCategory(category);
