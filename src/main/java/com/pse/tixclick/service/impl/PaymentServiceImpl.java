@@ -36,8 +36,6 @@ import vn.payos.type.CheckoutResponseData;
 import vn.payos.type.ItemData;
 import vn.payos.type.PaymentData;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Date;
@@ -367,13 +365,6 @@ public class PaymentServiceImpl implements PaymentService {
                 if (ticketPurchase.getStatus().equals(ETicketPurchaseStatus.PENDING)) {
                     //Nếu không ghế và có zone
                     if(ticketPurchase.getSeatActivity() == null && ticketPurchase.getZoneActivity() != null){
-                        TicketMapping ticketMapping = ticketMappingRepository
-                                .findTicketMappingByTicketIdAndEventActivityId(ticketPurchase.getTicket().getTicketId(), ticketPurchase.getEventActivity().getEventActivityId())
-                                .orElseThrow(() -> new AppException(ErrorCode.TICKET_MAPPING_NOT_FOUND));
-
-                        ticketMapping.setQuantity(ticketMapping.getQuantity() + ticketPurchase.getQuantity());
-                        ticketMappingRepository.save(ticketMapping);
-
                         //kiểm tra Zone
                         ZoneActivity zoneActivity = zoneActivityRepository
                                 .findByEventActivityIdAndZoneId(ticketPurchase.getZoneActivity().getEventActivity().getEventActivityId(), ticketPurchase.getZoneActivity().getZone().getZoneId())
@@ -402,13 +393,6 @@ public class PaymentServiceImpl implements PaymentService {
 
                     //Nếu có ghế và có zone
                     if(ticketPurchase.getZoneActivity() != null && ticketPurchase.getSeatActivity() != null){
-                        TicketMapping ticketMapping = ticketMappingRepository
-                                .findTicketMappingByTicketIdAndEventActivityId(ticketPurchase.getTicket().getTicketId(), ticketPurchase.getEventActivity().getEventActivityId())
-                                .orElseThrow(() -> new AppException(ErrorCode.TICKET_MAPPING_NOT_FOUND));
-
-                        ticketMapping.setQuantity(ticketMapping.getQuantity() + ticketPurchase.getQuantity());
-                        ticketMappingRepository.save(ticketMapping);
-
                         //kiểm tra Zone
                         ZoneActivity zoneActivity = zoneActivityRepository
                                 .findByEventActivityIdAndZoneId(ticketPurchase.getZoneActivity().getEventActivity().getEventActivityId(), ticketPurchase.getZoneActivity().getZone().getZoneId())
