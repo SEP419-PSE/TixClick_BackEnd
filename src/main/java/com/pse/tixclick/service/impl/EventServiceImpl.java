@@ -111,6 +111,7 @@ public class EventServiceImpl implements EventService {
         event.setLocationName(request.getLocationName());
         event.setLocation(request.getLocation());
         event.setStatus(EEventStatus.DRAFT);
+        event.setUrlOnline(request.getURLONline());
         event.setStartDate(request.getStartDate());
         event.setEndDate(request.getEndDate());
         event.setLogoURL(logocode);
