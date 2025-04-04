@@ -164,7 +164,9 @@ public class SeatMapServiceImpl implements SeatMapService {
     public List<SectionResponse> designZone(List<SectionRequest> sectionRequests, int eventId) {
         var event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
-
+        if(event.getTypeEvent()== "ONLINE"){
+            throw new AppException(ErrorCode.EVENT_ONLINE);
+        }
         seatMapRepository.findSeatMapByEvent_EventId(eventId).ifPresent(seatMap -> {
             List<Zone> zones = zoneRepository.findBySeatMapId(seatMap.getSeatMapId());
 
