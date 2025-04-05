@@ -108,10 +108,8 @@ public class EventServiceImpl implements EventService {
         event.setTypeEvent(request.getTypeEvent());
         event.setDescription(request.getDescription());
         event.setCategory(category);
-        event.setLocationName(request.getLocationName());
-        event.setLocation(request.getLocation());
+
         event.setStatus(EEventStatus.DRAFT);
-        event.setUrlOnline(request.getURLONline());
         event.setStartDate(request.getStartDate());
         event.setEndDate(request.getEndDate());
         event.setLogoURL(logocode);
@@ -119,6 +117,15 @@ public class EventServiceImpl implements EventService {
         event.setOrganizer(organnizer);
         event.setCountView(0);
         event.setCompany(company);
+        if(request.getTypeEvent()== "ONLINE") {
+            event.setUrlOnline(request.getURLONline());
+            event.setLocationName(null);
+            event.setLocation(null);
+        } else if(request.getTypeEvent() == "OFFLINE") {
+            event.setUrlOnline(null);
+            event.setLocationName(request.getLocationName());
+            event.setLocation(request.getLocation());
+        }
 
 
         // Lưu vào database
