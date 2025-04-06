@@ -117,6 +117,7 @@ public enum ErrorCode {
     ORDER_PENDING(1099, "Order đang chờ xử lý", HttpStatus.BAD_REQUEST),
     EVENT_NOT_HAVE_SEATMAP(1100, "Sự kiện không có seatmap", HttpStatus.BAD_REQUEST),
     EVENT_ONLINE(1101, "Sự kiện online không có seatmap", HttpStatus.BAD_REQUEST),
+    ACCOUNT_ALREADY_EXISTS(1102, "Tài khoản đã tồn tại", HttpStatus.BAD_REQUEST),
     ;
 
 

@@ -1,5 +1,6 @@
 package com.pse.tixclick.payload.request.create;
 
+import com.pse.tixclick.payload.dto.MailListDTO;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -12,6 +13,5 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CreateMemberRequest {
     int companyId;
-    List<String> mailList;
-    String subRole;
+    List<MailListDTO> mailList;
 }

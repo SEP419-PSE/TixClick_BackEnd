@@ -2,6 +2,7 @@ package com.pse.tixclick.controller;
 
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.payload.dto.MemberDTO;
+import com.pse.tixclick.payload.entity.entity_enum.ESubRole;
 import com.pse.tixclick.payload.request.create.CreateMemberRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
 import com.pse.tixclick.payload.response.MemberDTOResponse;
@@ -135,6 +136,43 @@ public class MemberController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
         } catch (Exception e) {
             ApiResponse<List<MemberDTO>> errorResponse = ApiResponse.<List<MemberDTO>>builder()
+                    .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .message("An error occurred while processing the request.")
+                    .result(null)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+
+    @GetMapping("/create-member-with-link/{email}/{companyId}/{subRole}")
+    public ResponseEntity<ApiResponse<MemberDTO>> createMemberWithLink(
+            @PathVariable String email,
+            @PathVariable int companyId,
+            @PathVariable ESubRole subRole) {
+
+        try {
+            MemberDTO createdMember = memberService.createMemberWithLink(email, companyId, subRole);
+
+            ApiResponse<MemberDTO> response = ApiResponse.<MemberDTO>builder()
+                    .code(HttpStatus.CREATED.value())
+                    .message("Member created successfully")
+                    .result(createdMember)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+
+        } catch (AppException e) {
+            ApiResponse<MemberDTO> errorResponse = ApiResponse.<MemberDTO>builder()
+                    .code(HttpStatus.BAD_REQUEST.value())
+                    .message(e.getMessage())
+                    .result(null)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+
+        } catch (Exception e) {
+            ApiResponse<MemberDTO> errorResponse = ApiResponse.<MemberDTO>builder()
                     .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .message("An error occurred while processing the request.")
                     .result(null)
