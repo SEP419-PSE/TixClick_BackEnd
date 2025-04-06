@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -227,33 +228,24 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public SearchAccountResponse searchAccount(String email) {
-        Account account = accountRepository.searchAccountByEmail(email)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+    public List<SearchAccountResponse> searchAccount(String email) {
+        List<Account> accounts = accountRepository.searchAccountByEmail(email);
 
-        return SearchAccountResponse.builder()
+        if (accounts.isEmpty()) {
+            throw new AppException(ErrorCode.USER_NOT_EXISTED);
+        }
+
+        // Duyệt qua danh sách Account và chuyển thành SearchAccountResponse
+        return accounts.stream().map(account -> SearchAccountResponse.builder()
                 .userName(account.getUserName())
                 .email(account.getEmail())
                 .firstName(account.getFirstName())
                 .lastName(account.getLastName())
                 .avatar(account.getAvatarURL())
-                .build();
+                .build()).collect(Collectors.toList());
     }
 
-    @Override
-    public SearchAccountResponse searchAccountWithCompany(String email) {
-        Account account = accountRepository.findAccountByEmail(email)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-
-        return SearchAccountResponse.builder()
-                .userName(account.getUserName())
-                .email(account.getEmail())
-                .firstName(account.getFirstName())
-                .lastName(account.getLastName())
-                .avatar(account.getAvatarURL())
-                .build();
-    }
 
 
 }

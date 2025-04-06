@@ -17,6 +17,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -463,31 +464,37 @@ public class AccountController {
     }
 
     @GetMapping("/search-account")
-    public ResponseEntity<ApiResponse<SearchAccountResponse>> searchAccount(@RequestParam String email) {
-        try{
-            SearchAccountResponse searchAccountResponse = accountService.searchAccount(email);
-            ApiResponse<SearchAccountResponse> apiResponse = ApiResponse.<SearchAccountResponse>builder()
+    public ResponseEntity<ApiResponse<List<SearchAccountResponse>>> searchAccount(@RequestParam String email) {
+        try {
+            List<SearchAccountResponse> searchAccountResponse = accountService.searchAccount(email);
+            if (searchAccountResponse.isEmpty()) {
+                ApiResponse<List<SearchAccountResponse>> apiResponse = ApiResponse.<List<SearchAccountResponse>>builder()
+                        .code(HttpStatus.OK.value())
+                        .message("No accounts found")
+                        .result(Collections.emptyList())
+                        .build();
+            }
+            ApiResponse<List<SearchAccountResponse>> apiResponse = ApiResponse.<List<SearchAccountResponse>>builder()
                     .code(HttpStatus.OK.value())
                     .message("Account retrieved successfully")
                     .result(searchAccountResponse)
                     .build();
             return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
         } catch (AppException e) {
-            ApiResponse<SearchAccountResponse> errorResponse = ApiResponse.<SearchAccountResponse>builder()
+            ApiResponse<List<SearchAccountResponse>> errorResponse = ApiResponse.<List<SearchAccountResponse>>builder()
                     .code(HttpStatus.BAD_REQUEST.value())
                     .message(e.getMessage())
                     .result(null)
                     .build();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
         } catch (Exception e) {
-            ApiResponse<SearchAccountResponse> errorResponse = ApiResponse.<SearchAccountResponse>builder()
+            ApiResponse<List<SearchAccountResponse>> errorResponse = ApiResponse.<List<SearchAccountResponse>>builder()
                     .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .message("An unexpected error occurred.")
                     .result(null)
                     .build();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
+
     }
-
-
 }
