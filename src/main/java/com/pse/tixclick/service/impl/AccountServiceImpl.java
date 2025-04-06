@@ -229,10 +229,13 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public List<SearchAccountResponse> searchAccount(String email) {
+        if(email == null || email.isEmpty()) {
+           return List.of(); // Trả về danh sách rỗng nếu email không hợp lệ
+        }
         List<Account> accounts = accountRepository.searchAccountByEmail(email);
-
+        // Kiểm tra xem có tài khoản nào được tìm thấy không
         if (accounts.isEmpty()) {
-            throw new AppException(ErrorCode.USER_NOT_EXISTED);
+            return List.of(); // Trả về danh sách rỗng nếu không tìm thấy tài khoản
         }
 
         // Duyệt qua danh sách Account và chuyển thành SearchAccountResponse
