@@ -67,6 +67,9 @@ public class EventServiceImpl implements EventService {
         if (request == null || request.getEventName() == null || request.getCategoryId() == 0) {
             throw new AppException(ErrorCode.INVALID_EVENT_DATA);
         }
+
+        request.getTypeEvent().toUpperCase();
+
         var context = SecurityContextHolder.getContext();
         String name = context.getAuthentication().getName();
         var organnizer = accountRepository.findAccountByUserName(name)
@@ -111,7 +114,7 @@ public class EventServiceImpl implements EventService {
         event.setCountView(0);
         event.setCompany(company);
         if("ONLINE".equals(request.getTypeEvent())) {
-            event.setUrlOnline(request.getURLONline());
+            event.setUrlOnline(request.getUrlOnline());
             event.setLocationName(null);
             event.setLocation(null);
         } else if("OFFLINE".equals(request.getTypeEvent())) {
