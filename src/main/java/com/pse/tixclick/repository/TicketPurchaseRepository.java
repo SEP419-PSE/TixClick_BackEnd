@@ -104,4 +104,33 @@ ORDER BY m.month;
 
     int countTicketPurchasesByStatus(ETicketPurchaseStatus status);
 
+    @Query(value = "SELECT \n" +
+            "    SUM(tp.quantity * t.price) AS totalPrice\n" +
+            "FROM \n" +
+            "    ticket_purchase tp\n" +
+            "JOIN \n" +
+            "    ticket t ON tp.ticket_id = t.ticket_id\n" +
+            "JOIN \n" +
+            "    events e ON tp.event_id = e.event_id\n" +
+            "WHERE\n" +
+            "    tp.status = 'PURCHASED'  -- Assuming you only want to calculate for successful purchases\n" +
+            "    AND e.event_id = :eventId  -- Replace YOUR_EVENT_ID with the specific event id you want to filter by\n" +
+            "GROUP BY\n" +
+            "    e.event_id, e.event_name\n" +
+            "ORDER BY\n" +
+            "    totalPrice DESC;", nativeQuery = true)
+    Double getTotalPriceByEventId(@Param("eventId") int eventId);
+    @Query(value = "SELECT \n" +
+            "    SUM(tp.quantity) AS totalTicketsSold\n" +
+            "FROM \n" +
+            "    ticket_purchase tp\n" +
+            "JOIN \n" +
+            "    events e ON tp.event_id = e.event_id\n" +
+            "WHERE\n" +
+            "    tp.status = 'PURCHASED'  -- Chỉ đếm vé đã mua thành công\n" +
+            "    AND e.event_id = :eventId  -- Chỉ lấy sự kiện với event_id = 6\n" +
+            "GROUP BY\n" +
+            "    e.event_id, e.event_name;", nativeQuery = true)
+    Integer getTotalTicketsSoldByEventId(@Param("eventId") int eventId);
+
 }

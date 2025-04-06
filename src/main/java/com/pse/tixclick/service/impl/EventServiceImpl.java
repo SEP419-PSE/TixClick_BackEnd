@@ -10,10 +10,7 @@ import com.pse.tixclick.payload.entity.company.Company;
 import com.pse.tixclick.payload.entity.company.Contract;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
 import com.pse.tixclick.payload.entity.ticket.TicketMapping;
-import com.pse.tixclick.payload.response.EventActivityResponse;
-import com.pse.tixclick.payload.response.EventDetailForConsumer;
-import com.pse.tixclick.payload.response.EventForConsumerResponse;
-import com.pse.tixclick.payload.response.EventResponse;
+import com.pse.tixclick.payload.response.*;
 import com.pse.tixclick.repository.*;
 import com.pse.tixclick.utils.AppUtils;
 import com.pse.tixclick.exception.AppException;
@@ -59,15 +56,11 @@ public class EventServiceImpl implements EventService {
     TicketRepository ticketRepository;
     SeatMapRepository seatMapRepository;
     TicketMappingRepository ticketMappingRepository;
-
-    @Autowired
+    TicketPurchaseRepository ticketPurchaseRepository;
     AppUtils appUtils;
-
-    @Autowired
     OrderRepository orderRepository;
 
-    @Autowired
-    TicketPurchaseRepository ticketPurchaseRepository;
+
 
     @Override
     public EventDTO createEvent(CreateEventRequest request, MultipartFile logoURL, MultipartFile bannerURL) throws IOException {
@@ -623,7 +616,55 @@ public class EventServiceImpl implements EventService {
         return eventDetails;
     }
 
+    @Override
+    public List<EventDashboardResponse> getEventDashboardByCompanyId(int companyId) {
+        var context = SecurityContextHolder.getContext();
+        String name = context.getAuthentication().getName();
+        var account = accountRepository.findAccountByUserName(name)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        var company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new AppException(ErrorCode.ACCOUNT_NOT_CREATE_COMPANY));
 
+        if (company.getStatus() != ECompanyStatus.ACTIVE) {
+            throw new AppException(ErrorCode.COMPANY_NOT_ACTIVE);
+        }
+        if (company.getCompanyId() != companyId) {
+            throw new AppException(ErrorCode.INVALID_COMPANY);
+        }
+
+        List<Event> events = eventRepository.findEventsByCompany_CompanyId(companyId)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+
+        List<EventDashboardResponse> eventDashboardResponses = new ArrayList<>();
+        for (Event event : events) {
+            EventDashboardResponse response = new EventDashboardResponse();
+            response.setEventId(event.getEventId());
+            response.setEventName(event.getEventName());
+            response.setDescription(event.getDescription());
+            response.setLocation(event.getLocation());
+            response.setLocationName(event.getLocationName());
+            response.setLogoURL(event.getLogoURL());
+            response.setBannerURL(event.getBannerURL());
+            response.setStatus(event.getStatus().name());
+            response.setCountView(event.getCountView());
+            response.setTypeEvent(event.getTypeEvent());
+            response.setStartDate(String.valueOf(event.getStartDate()));
+            response.setEndDate(String.valueOf(event.getEndDate()));
+            response.setEventCategory(event.getCategory() != null ? event.getCategory().getCategoryName() : null);
+            // Lấy danh sách TicketMapping liên quan đến sự kiện
+            Integer totalTicketSold = ticketPurchaseRepository.getTotalTicketsSoldByEventId(event.getEventId());
+
+
+            // Tính tổng doanh thu từ các vé đã bán
+            Double totalRevenue = ticketPurchaseRepository.getTotalPriceByEventId(event.getEventId());
+
+            response.setCountTicketSold(totalTicketSold);
+            response.setTotalRevenue(totalRevenue);
+
+            eventDashboardResponses.add(response);
+        }
+        return eventDashboardResponses;
+    }
 
 
 }

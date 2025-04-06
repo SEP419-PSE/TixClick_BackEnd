@@ -6,10 +6,7 @@ import com.pse.tixclick.payload.dto.UpcomingEventDTO;
 import com.pse.tixclick.payload.entity.entity_enum.EEventStatus;
 import com.pse.tixclick.payload.request.create.CreateEventRequest;
 import com.pse.tixclick.payload.request.update.UpdateEventRequest;
-import com.pse.tixclick.payload.response.ApiResponse;
-import com.pse.tixclick.payload.response.EventDetailForConsumer;
-import com.pse.tixclick.payload.response.EventForConsumerResponse;
-import com.pse.tixclick.payload.response.EventResponse;
+import com.pse.tixclick.payload.response.*;
 import com.pse.tixclick.service.EventService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -601,6 +598,37 @@ public class EventController {
                     .body(ApiResponse.<List<EventDetailForConsumer>>builder()
                             .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .message("An error occurred while retrieving the events with the provided filters")
+                            .result(null)
+                            .build());
+        }
+    }
+
+    @GetMapping("/dashboard/{companyId}")
+    public ResponseEntity<ApiResponse<List<EventDashboardResponse>>> getEventDashboardByCompanyId(@PathVariable int companyId) {
+        try {
+            List<EventDashboardResponse> events = eventService.getEventDashboardByCompanyId(companyId);
+
+            if (events.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(ApiResponse.<List<EventDashboardResponse>>builder()
+                                .code(HttpStatus.NOT_FOUND.value())
+                                .message("No events found for company id: " + companyId)
+                                .result(null)
+                                .build());
+            }
+
+            return ResponseEntity.ok(
+                    ApiResponse.<List<EventDashboardResponse>>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Get all events for company id: " + companyId + " successfully")
+                            .result(events)
+                            .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<List<EventDashboardResponse>>builder()
+                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .message("An error occurred while retrieving the events for company id: " + companyId)
                             .result(null)
                             .build());
         }
