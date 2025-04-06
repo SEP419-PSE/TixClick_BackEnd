@@ -25,6 +25,7 @@ public class EventDTO {
     LocalDate startDate;
     String logoURL;
     String bannerURL;
+    String urlOnline;
     String status;
     String typeEvent;
     String description;

@@ -110,11 +110,11 @@ public class EventServiceImpl implements EventService {
         event.setOrganizer(organnizer);
         event.setCountView(0);
         event.setCompany(company);
-        if(request.getTypeEvent()== "ONLINE") {
+        if("ONLINE".equals(request.getTypeEvent())) {
             event.setUrlOnline(request.getURLONline());
             event.setLocationName(null);
             event.setLocation(null);
-        } else if(request.getTypeEvent() == "OFFLINE") {
+        } else if("OFFLINE".equals(request.getTypeEvent())) {
             event.setUrlOnline(null);
             event.setLocationName(request.getLocationName());
             event.setLocation(request.getLocation());
