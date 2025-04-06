@@ -103,4 +103,6 @@ public interface AccountRepository extends JpaRepository<Account, Integer> {
     int countTotalAccounts();
 
     List<Account> findAccountsByRole_RoleId(int roleId);
+
+    Optional<Account> searchAccountByEmail(String email);
 }

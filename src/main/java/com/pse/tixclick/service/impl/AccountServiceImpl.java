@@ -228,7 +228,7 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public SearchAccountResponse searchAccount(String email) {
-        Account account = accountRepository.findAccountByEmail(email)
+        Account account = accountRepository.searchAccountByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
         return SearchAccountResponse.builder()
