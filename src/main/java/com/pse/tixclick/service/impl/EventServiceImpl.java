@@ -575,65 +575,56 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public List<EventDetailForConsumer> getEventByStartDateAndEndDateAndEventTypeAndEventName(
-            String startDate, String endDate, String eventType, String eventName, List<String> eventCategories) {
+            String startDate, String endDate, String eventType, String eventName, List<String> eventCategories, Double minPrice, Double maxPrice) {
 
+        // Chuyển đổi startDate và endDate từ String sang LocalDate
         LocalDate start = (startDate != null && !startDate.isEmpty()) ? LocalDate.parse(startDate) : null;
         LocalDate end = (endDate != null && !endDate.isEmpty()) ? LocalDate.parse(endDate) : null;
 
-        List<Event> events = eventRepository.findAll().stream()
-                // Lọc theo status hợp lệ
-                .filter(event -> event.getStatus() == EEventStatus.SCHEDULED
-                        || event.getStatus() == EEventStatus.ON_GOING
-                        || event.getStatus() == EEventStatus.SOLD_OUT)
-                // Lọc theo khoảng thời gian (chỉ lọc nếu startDate và endDate có giá trị)
-                .filter(event -> (start == null || !event.getStartDate().isBefore(start)) &&
-                        (end == null || !event.getEndDate().isAfter(end)))
-                // Lọc theo loại sự kiện (bỏ qua nếu eventType rỗng hoặc null)
-                .filter(event -> eventType == null || eventType.isEmpty() || event.getTypeEvent().equalsIgnoreCase(eventType))
-                // Lọc theo tên sự kiện (bỏ qua nếu eventName rỗng hoặc null)
-                .filter(event -> eventName == null || eventName.isEmpty() || event.getEventName().toLowerCase().contains(eventName.toLowerCase()))
-                // Lọc theo danh sách categoryName (nếu eventCategories có giá trị)
-                .filter(event -> eventCategories == null || eventCategories.isEmpty() ||
-                        (event.getCategory() != null && eventCategories.contains(event.getCategory().getCategoryName())))
-                .collect(Collectors.toList()); // Collect filtered events
+        // Lấy danh sách sự kiện từ repository với các bộ lọc
+        List<Event> events = eventRepository.findEventsByFilter(start, end, eventType, eventName, eventCategories, minPrice, maxPrice);
 
-        // Chuyển đổi mỗi Event thành EventDetailForConsumer
+        // Chuyển đổi danh sách sự kiện thành danh sách EventDetailForConsumer
         List<EventDetailForConsumer> eventDetails = events.stream()
                 .map(event -> {
-                    // Giả sử bạn có cách lấy thông tin công ty và eventActivityResponseList từ event
-                    Company company = event.getCompany();  // Nếu bạn có phương thức để lấy công ty từ event
+                    Company company = event.getCompany();
                     boolean isHaveSeatMap = event.getSeatMap() != null;
                     List<EventActivityDTO> eventActivityDTOList = event.getEventActivities().stream()
                             .map(activity -> modelMapper.map(activity, EventActivityDTO.class))
                             .collect(Collectors.toList());
 
-                    // Ánh xạ từ EventActivityDTO sang EventActivityResponse
                     List<EventActivityResponse> eventActivityResponseList = modelMapper.map(eventActivityDTOList, new TypeToken<List<EventActivityResponse>>() {}.getType());
-                    double minPrice = ticketRepository.findMinTicketByEvent_EventId(event.getEventId())
+
+                    // Lấy giá ticket thấp nhất của sự kiện
+                    double minEventPrice = ticketRepository.findMinTicketByEvent_EventId(event.getEventId())
                             .map(Ticket::getPrice)
                             .orElse(0.0);
+
                     return new EventDetailForConsumer(
                             event.getEventName(),
                             event.getLocation(),
                             event.getLocationName(),
                             event.getLogoURL(),
                             event.getBannerURL(),
-                            company != null ? company.getLogoURL() : null,  // URL logo của công ty
-                            company != null ? company.getCompanyName() : null, // Tên công ty
-                            company != null ? company.getDescription() : null, // Mô tả công ty
+                            company != null ? company.getLogoURL() : null,
+                            company != null ? company.getCompanyName() : null,
+                            company != null ? company.getDescription() : null,
                             event.getStatus().name(),
                             event.getTypeEvent(),
                             event.getDescription(),
                             event.getCategory() != null ? event.getCategory().getCategoryName() : null,
                             eventActivityResponseList,
                             isHaveSeatMap,
-                            minPrice
+                            minEventPrice
                     );
                 })
                 .collect(Collectors.toList());
 
         return eventDetails;
     }
+
+
+
 
 }
 

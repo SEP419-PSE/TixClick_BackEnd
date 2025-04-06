@@ -6,6 +6,7 @@ import com.pse.tixclick.payload.entity.company.Company;
 import com.pse.tixclick.payload.entity.company.Contract;
 import com.pse.tixclick.payload.entity.entity_enum.EEventStatus;
 import com.pse.tixclick.payload.entity.seatmap.SeatMap;
+import com.pse.tixclick.payload.entity.ticket.Ticket;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -84,4 +85,7 @@ public class Event {
 
     @OneToOne(mappedBy = "event", fetch = FetchType.LAZY)
     private SeatMap seatMap;
+
+    @OneToMany(mappedBy = "event", fetch = FetchType.LAZY)
+    private Collection<Ticket> tickets;
 }

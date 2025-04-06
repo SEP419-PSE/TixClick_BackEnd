@@ -574,9 +574,11 @@ public class EventController {
             @RequestParam(required = false) String endDate,
             @RequestParam(required = false) String eventType,
             @RequestParam(required = false) String eventName,
-            @RequestParam(required = false) List<String> eventCategory){
+            @RequestParam(required = false) List<String> eventCategory,
+            @RequestParam(required = false) double minPrice,
+            @RequestParam(required = false) Double maxPrice){
         try {
-            List<EventDetailForConsumer> events = eventService.getEventByStartDateAndEndDateAndEventTypeAndEventName(startDate, endDate, eventType, eventName,eventCategory);
+            List<EventDetailForConsumer> events = eventService.getEventByStartDateAndEndDateAndEventTypeAndEventName(startDate, endDate, eventType, eventName,eventCategory, minPrice, maxPrice);
 
             if (events.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.OK)

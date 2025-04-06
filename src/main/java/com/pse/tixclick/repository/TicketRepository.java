@@ -1,5 +1,6 @@
 package com.pse.tixclick.repository;
 
+import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -19,4 +20,6 @@ public interface TicketRepository extends JpaRepository<Ticket, Integer> {
             "WHERE event_id = :eventId \n" +
             "ORDER BY price ASC;\n", nativeQuery = true)
     Optional<Ticket> findMinTicketByEvent_EventId(int eventId);
+
+
 }
