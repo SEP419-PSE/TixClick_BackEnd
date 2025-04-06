@@ -3,6 +3,7 @@ package com.pse.tixclick.service;
 import com.pse.tixclick.payload.dto.MemberDTO;
 import com.pse.tixclick.payload.entity.entity_enum.ESubRole;
 import com.pse.tixclick.payload.request.create.CreateMemberRequest;
+import com.pse.tixclick.payload.response.CreateMemerResponse;
 import com.pse.tixclick.payload.response.MemberDTOResponse;
 import com.pse.tixclick.payload.response.SearchAccountResponse;
 
@@ -16,6 +17,6 @@ public interface MemberService {
     List<MemberDTO>  getMembersByCompanyId(int companyId);
 
 
-    MemberDTO createMemberWithLink(String email, int companyId, ESubRole subRole);
+    CreateMemerResponse createMemberWithLink(String email, int companyId, ESubRole subRole);
 
 }

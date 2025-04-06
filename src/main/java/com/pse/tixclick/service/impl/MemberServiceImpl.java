@@ -13,6 +13,7 @@ import com.pse.tixclick.payload.entity.entity_enum.ERole;
 import com.pse.tixclick.payload.entity.entity_enum.EStatus;
 import com.pse.tixclick.payload.entity.entity_enum.ESubRole;
 import com.pse.tixclick.payload.request.create.CreateMemberRequest;
+import com.pse.tixclick.payload.response.CreateMemerResponse;
 import com.pse.tixclick.payload.response.MemberDTOResponse;
 import com.pse.tixclick.repository.AccountRepository;
 import com.pse.tixclick.repository.CompanyRepository;
@@ -177,7 +178,7 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
-    public MemberDTO createMemberWithLink(String email, int companyId, ESubRole subRole) {
+    public CreateMemerResponse createMemberWithLink(String email, int companyId, ESubRole subRole) {
         Optional<Account> existingAccount = accountRepository.findAccountByEmail(email);
         if (existingAccount.isPresent()) {
             throw new AppException(ErrorCode.ACCOUNT_ALREADY_EXISTS);
@@ -204,11 +205,7 @@ public class MemberServiceImpl implements MemberService {
         member.setStatus(EStatus.ACTIVE);
         memberRepository.saveAndFlush(member);
 
-        return modelMapper.map(member,MemberDTO.class);
-
-
-
-
+        return new CreateMemerResponse(account.getUserName(), "123456", account.getEmail());
     }
 
 
