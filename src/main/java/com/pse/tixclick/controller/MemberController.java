@@ -6,6 +6,7 @@ import com.pse.tixclick.payload.entity.entity_enum.ESubRole;
 import com.pse.tixclick.payload.request.create.CreateMemberRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
 import com.pse.tixclick.payload.response.CreateMemerResponse;
+import com.pse.tixclick.payload.response.GetMemberResponse;
 import com.pse.tixclick.payload.response.MemberDTOResponse;
 import com.pse.tixclick.service.MemberService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -115,13 +116,13 @@ public class MemberController {
     }
 
     @GetMapping("/get/{companyId}")
-    public ResponseEntity<ApiResponse<List<MemberDTO>>> getMembersByCompanyId(@PathVariable int companyId) {
+    public ResponseEntity<ApiResponse<List<GetMemberResponse>>> getMembersByCompanyId(@PathVariable int companyId) {
         try {
             // Gọi service để lấy danh sách thành viên theo id công ty
-            List<MemberDTO> members = memberService.getMembersByCompanyId(companyId);
+            List<GetMemberResponse> members = memberService.getMembersByCompanyId(companyId);
 
             // Tạo response
-            ApiResponse<List<MemberDTO>> response = ApiResponse.<List<MemberDTO>>builder()
+            ApiResponse<List<GetMemberResponse>> response = ApiResponse.<List<GetMemberResponse>>builder()
                     .code(HttpStatus.OK.value())
                     .message("Members retrieved successfully")
                     .result(members)
@@ -130,7 +131,7 @@ public class MemberController {
             return ResponseEntity.status(HttpStatus.OK).body(response);
 
         } catch (AppException e) {
-            ApiResponse<List<MemberDTO>> errorResponse = ApiResponse.<List<MemberDTO>>builder()
+            ApiResponse<List<GetMemberResponse>> errorResponse = ApiResponse.<List<GetMemberResponse>>builder()
                     .code(HttpStatus.BAD_REQUEST.value())
                     .message(e.getMessage()) // Lỗi từ service
                     .result(null)
@@ -138,7 +139,7 @@ public class MemberController {
 
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
         } catch (Exception e) {
-            ApiResponse<List<MemberDTO>> errorResponse = ApiResponse.<List<MemberDTO>>builder()
+            ApiResponse<List<GetMemberResponse>> errorResponse = ApiResponse.<List<GetMemberResponse>>builder()
                     .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .message("An error occurred while processing the request.")
                     .result(null)

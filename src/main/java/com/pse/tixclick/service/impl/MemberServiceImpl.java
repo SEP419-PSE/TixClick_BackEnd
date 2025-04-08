@@ -14,6 +14,7 @@ import com.pse.tixclick.payload.entity.entity_enum.EStatus;
 import com.pse.tixclick.payload.entity.entity_enum.ESubRole;
 import com.pse.tixclick.payload.request.create.CreateMemberRequest;
 import com.pse.tixclick.payload.response.CreateMemerResponse;
+import com.pse.tixclick.payload.response.GetMemberResponse;
 import com.pse.tixclick.payload.response.MemberDTOResponse;
 import com.pse.tixclick.repository.AccountRepository;
 import com.pse.tixclick.repository.CompanyRepository;
@@ -111,7 +112,7 @@ public class MemberServiceImpl implements MemberService {
                             invitedAccount.getAccountId(), createMemberRequest.getCompanyId());
 
                     if (existingMember.isPresent()) {
-                        log.error("Account with email " + email + " is already a member of the company.");
+                        sentEmails.add(email.getMail() + " đã tồn tại trong công ty");
                         skipThisEmail = true;
                     }
                 }
@@ -168,12 +169,22 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
-    public List<MemberDTO> getMembersByCompanyId(int companyId) {
+    public List<GetMemberResponse> getMembersByCompanyId(int companyId) {
         List<Member> members = memberRepository.findMembersByCompany_CompanyId(companyId)
                 .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
 
         return members.stream()
-                .map(member -> modelMapper.map(member, MemberDTO.class))
+                .map(member -> {
+                    GetMemberResponse response = new GetMemberResponse();
+                    response.setMemberId(member.getMemberId());
+                    response.setSubRole(String.valueOf(member.getSubRole()));
+                    response.setUserName(member.getAccount().getUserName());
+                    response.setEmail(member.getAccount().getEmail());
+                    response.setPhoneNumber(member.getAccount().getPhone());
+                    response.setLastName(member.getAccount().getLastName());
+                    response.setFirstName(member.getAccount().getFirstName());
+                    return response;
+                })
                 .collect(Collectors.toList());
     }
 
