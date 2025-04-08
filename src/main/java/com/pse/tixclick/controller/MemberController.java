@@ -2,6 +2,7 @@ package com.pse.tixclick.controller;
 
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.payload.dto.MemberDTO;
+import com.pse.tixclick.payload.entity.entity_enum.EStatus;
 import com.pse.tixclick.payload.entity.entity_enum.ESubRole;
 import com.pse.tixclick.payload.request.create.CreateMemberRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
@@ -184,6 +185,79 @@ public class MemberController {
                     .result(null)
                     .build();
             responseUrl.sendRedirect("http://your-frontend-url.com/confirmation?email=" + email);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+
+
+    @PutMapping("/update/{id}/{subrole}")
+    public ResponseEntity<ApiResponse<Boolean>> updateMember(
+            @PathVariable int id,
+            @PathVariable ESubRole subrole) {
+        try {
+            // Gọi service để cập nhật thành viên
+            boolean isUpdated = memberService.updateMember(id, subrole);
+
+            // Tạo response
+            ApiResponse<Boolean> response = ApiResponse.<Boolean>builder()
+                    .code(HttpStatus.OK.value())
+                    .message("Member updated successfully")
+                    .result(isUpdated)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+
+        } catch (AppException e) {
+            ApiResponse<Boolean> errorResponse = ApiResponse.<Boolean>builder()
+                    .code(HttpStatus.BAD_REQUEST.value())
+                    .message(e.getMessage()) // Lỗi từ service
+                    .result(null)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        } catch (Exception e) {
+            ApiResponse<Boolean> errorResponse = ApiResponse.<Boolean>builder()
+                    .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .message("An error occurred while processing the request.")
+                    .result(null)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+
+    @PutMapping("/update-status/{id}/{status}")
+    public ResponseEntity<ApiResponse<Boolean>> updateMemberStatus(
+            @PathVariable int id,
+            @PathVariable EStatus status) {
+        try {
+            // Gọi service để cập nhật trạng thái thành viên
+            boolean isUpdated = memberService.updateMemberStatus(id, status);
+
+            // Tạo response
+            ApiResponse<Boolean> response = ApiResponse.<Boolean>builder()
+                    .code(HttpStatus.OK.value())
+                    .message("Member status updated successfully")
+                    .result(isUpdated)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+
+        } catch (AppException e) {
+            ApiResponse<Boolean> errorResponse = ApiResponse.<Boolean>builder()
+                    .code(HttpStatus.BAD_REQUEST.value())
+                    .message(e.getMessage()) // Lỗi từ service
+                    .result(null)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        } catch (Exception e) {
+            ApiResponse<Boolean> errorResponse = ApiResponse.<Boolean>builder()
+                    .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .message("An error occurred while processing the request.")
+                    .result(null)
+                    .build();
+
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }

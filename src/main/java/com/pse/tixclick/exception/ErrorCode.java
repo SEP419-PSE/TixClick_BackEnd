@@ -121,6 +121,9 @@ public enum ErrorCode {
     MEMBER_ACTIVITY_NOT_FOUND(1103, "Không tìm thấy hoạt động thành viên", HttpStatus.NOT_FOUND),
     MEMBER_ACTIVITY_ALREADY_EXISTS(1104, "Hoạt động thành viên đã tồn tại", HttpStatus.BAD_REQUEST),
     INTERNAL_SERVER_ERROR(1105, "Internal server error", HttpStatus.INTERNAL_SERVER_ERROR),
+    CAN_NOT_UPDATE_OWNER(1106, "Không thể cập nhật owner", HttpStatus.BAD_REQUEST),
+    MEMBER_INACTIVE(1107, "Thành viên không hoạt động", HttpStatus.BAD_REQUEST),
+    CANNOT_UPDATE(1108, "Không thể cập nhật thành viên", HttpStatus.BAD_REQUEST),
     ;
 
 

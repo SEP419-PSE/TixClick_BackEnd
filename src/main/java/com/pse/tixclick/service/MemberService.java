@@ -1,6 +1,7 @@
 package com.pse.tixclick.service;
 
 import com.pse.tixclick.payload.dto.MemberDTO;
+import com.pse.tixclick.payload.entity.entity_enum.EStatus;
 import com.pse.tixclick.payload.entity.entity_enum.ESubRole;
 import com.pse.tixclick.payload.request.create.CreateMemberRequest;
 import com.pse.tixclick.payload.response.CreateMemerResponse;
@@ -20,6 +21,8 @@ public interface MemberService {
 
     CreateMemerResponse createMemberWithLink(String email, int companyId, ESubRole subRole);
 
+    boolean updateMember(int id, ESubRole status);
 
+    boolean updateMemberStatus(int id, EStatus status);
 
 }

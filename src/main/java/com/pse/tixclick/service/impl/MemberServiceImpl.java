@@ -219,6 +219,62 @@ public class MemberServiceImpl implements MemberService {
         return new CreateMemerResponse(account.getUserName(), "123456", account.getEmail());
     }
 
+    @Override
+    public boolean updateMember(int id, ESubRole status) {
+        Member member = memberRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
+
+        var context = SecurityContextHolder.getContext();
+        String name = context.getAuthentication().getName();
+        var member1 = memberRepository.findMemberByAccount_UserNameAndCompany_CompanyId(name, member.getCompany().getCompanyId())
+                .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
+
+        if (!member1.getSubRole().equals(ESubRole.OWNER) && !member1.getSubRole().equals(ESubRole.ADMIN)) {
+            throw new AppException(ErrorCode.INVALID_ROLE);
+
+        }
+
+        if (member.getSubRole().equals(ESubRole.OWNER)) {
+            throw new AppException(ErrorCode.CAN_NOT_UPDATE_OWNER);
+        }
+
+        if (member.getStatus().equals(EStatus.INACTIVE)) {
+            throw new AppException(ErrorCode.MEMBER_INACTIVE);
+        }
+
+        member.setSubRole(status);
+        memberRepository.save(member);
+        return true;
+    }
+
+    @Override
+    public boolean updateMemberStatus(int id, EStatus status) {
+        Member member = memberRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
+
+        var context = SecurityContextHolder.getContext();
+        String name = context.getAuthentication().getName();
+        var member1 = memberRepository.findMemberByAccount_UserNameAndCompany_CompanyId(name, member.getCompany().getCompanyId())
+                .orElseThrow(() -> new AppException(ErrorCode.CANNOT_UPDATE));
+
+        if (!member1.getSubRole().equals(ESubRole.OWNER) && !member1.getSubRole().equals(ESubRole.ADMIN)) {
+            throw new AppException(ErrorCode.INVALID_ROLE);
+
+        }
+
+        if (member.getSubRole().equals(ESubRole.OWNER)) {
+            throw new AppException(ErrorCode.CAN_NOT_UPDATE_OWNER);
+        }
+
+        if (member.getStatus().equals(EStatus.INACTIVE)) {
+            throw new AppException(ErrorCode.MEMBER_INACTIVE);
+        }
+
+        member.setStatus(status);
+        memberRepository.save(member);
+        return true;
+    }
+
 
 }
 
