@@ -3,10 +3,12 @@ package com.pse.tixclick.service.impl;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.MemberActivityDTO;
+import com.pse.tixclick.payload.entity.company.Member;
 import com.pse.tixclick.payload.entity.company.MemberActivity;
 import com.pse.tixclick.payload.entity.entity_enum.EStatus;
 import com.pse.tixclick.payload.entity.entity_enum.ESubRole;
 import com.pse.tixclick.payload.request.create.CreateMemberActivityRequest;
+import com.pse.tixclick.payload.response.BulkMemberActivityResult;
 import com.pse.tixclick.repository.EventActivityRepository;
 import com.pse.tixclick.repository.MemberActivityRepository;
 import com.pse.tixclick.repository.MemberRepository;
@@ -22,6 +24,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -33,42 +36,124 @@ public class MemberActivityServiceImpl implements MemberActivityService {
     MemberRepository memberRepository;
     EventActivityRepository eventActivityRepository;
     ModelMapper modelMapper;
+
     @Override
-    public List<MemberActivityDTO> addMemberActivities(CreateMemberActivityRequest request) {
-        var context  = SecurityContextHolder.getContext();
+    public BulkMemberActivityResult addMemberActivities(CreateMemberActivityRequest request) {
+        var context = SecurityContextHolder.getContext();
         String userName = context.getAuthentication().getName();
 
         var eventActivity = eventActivityRepository.findById(request.getEventActivityId())
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_ACTIVITY_NOT_FOUND));
 
-        var role = memberRepository.findMemberByAccount_UserNameAndCompany_CompanyId(userName, eventActivity.getEvent().getCompany().getCompanyId())
-                .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
+        var role = memberRepository.findMemberByAccount_UserNameAndCompany_CompanyId(
+                userName,
+                eventActivity.getEvent().getCompany().getCompanyId()
+        ).orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
 
-        if(role.getSubRole() != ESubRole.ADMIN && role.getSubRole() != ESubRole.OWNER){
+        if (role.getSubRole() != ESubRole.ADMIN && role.getSubRole() != ESubRole.OWNER) {
             throw new AppException(ErrorCode.NOT_PERMISSION);
+        }
+
+        List<MemberActivityDTO> success = new ArrayList<>();
+        List<BulkMemberActivityResult.FailedMember> failed = new ArrayList<>();
+
+        for (Integer memberId : request.getMemberIds()) {
+            try {
+                var member = memberRepository.findById(memberId)
+                        .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
+
+                var optionalActivity = memberActivityRepository
+                        .findMemberActivitiesByMemberAndEventActivity_EventActivityId(member, eventActivity.getEventActivityId());
+
+                MemberActivity memberActivity;
+
+                if (optionalActivity.isPresent()) {
+                    memberActivity = optionalActivity.get();
+
+                    if (memberActivity.getStatus() == EStatus.INACTIVE) {
+                        memberActivity.setStatus(EStatus.ACTIVE);
+                        memberActivityRepository.save(memberActivity);
+                    } else {
+                        failed.add(new BulkMemberActivityResult.FailedMember(memberId, "Already active"));
+                        continue;
+                    }
+
+                } else {
+                    memberActivity = new MemberActivity();
+                    memberActivity.setMember(member);
+                    memberActivity.setEventActivity(eventActivity);
+                    memberActivity.setStatus(EStatus.ACTIVE);
+                    memberActivityRepository.save(memberActivity);
+                }
+
+                MemberActivityDTO dto = modelMapper.map(memberActivity, MemberActivityDTO.class);
+                success.add(dto);
+
+            } catch (AppException ex) {
+                failed.add(new BulkMemberActivityResult.FailedMember(memberId, ex.getMessage()));
+            } catch (Exception e) {
+                failed.add(new BulkMemberActivityResult.FailedMember(memberId, "Unexpected error"));
+            }
+        }
+
+        return new BulkMemberActivityResult(success, failed);
+    }
+
+
+
+    @Override
+    public List<MemberActivityDTO> getMemberActivitiesByEventActivityId(int eventActivityId) {
+        var eventActivity = eventActivityRepository.findById(eventActivityId)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_ACTIVITY_NOT_FOUND));
+
+        var memberActivities = memberActivityRepository.findMemberActivitiesByEventActivity_EventActivityIdAndStatus(eventActivity.getEventActivityId(),EStatus.ACTIVE);
+
+        if (memberActivities.isEmpty()) {
+            throw new AppException(ErrorCode.MEMBER_ACTIVITY_NOT_FOUND);
         }
 
         List<MemberActivityDTO> dtos = new ArrayList<>();
 
-        for (Integer memberId : request.getMemberIds()) {
-            var member = memberRepository.findById(memberId)
-                    .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
-
-            var memberActivity = new MemberActivity();
-            memberActivity.setStatus(EStatus.ACTIVE);
-            memberActivity.setMember(member);
-            memberActivity.setEventActivity(eventActivity);
-
-            // Lưu vào DB
-            memberActivityRepository.save(memberActivity);
-
+        for (MemberActivity memberActivity : memberActivities) {
             // Sử dụng ModelMapper để chuyển đổi Entity sang DTO
             MemberActivityDTO dto = modelMapper.map(memberActivity, MemberActivityDTO.class);
             dtos.add(dto);
         }
 
         return dtos;
-
-
     }
+
+    @Override
+    public boolean deleteMemberActivity(int memberActivityId, int companyId) {
+        var context = SecurityContextHolder.getContext();
+        String userName = context.getAuthentication().getName();
+
+        // Tìm Member theo account và công ty
+        Optional<Member> optionalMember = memberRepository.findMemberByAccount_UserNameAndCompany_CompanyId(
+                userName,
+                companyId
+        );
+
+        Member member = optionalMember.orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
+
+        // Kiểm tra quyền hạn
+        if (member.getSubRole() != ESubRole.ADMIN && member.getSubRole() != ESubRole.OWNER) {
+            throw new AppException(ErrorCode.NOT_PERMISSION);
+        }
+
+        // Tìm activity
+        var memberActivity = memberActivityRepository.findById(memberActivityId)
+                .orElseThrow(() -> new AppException(ErrorCode.MEMBER_ACTIVITY_NOT_FOUND));
+
+        if (memberActivity.getStatus() == EStatus.INACTIVE) {
+            throw new AppException(ErrorCode.MEMBER_ACTIVITY_NOT_FOUND);
+        }
+
+        // Cập nhật trạng thái
+        memberActivity.setStatus(EStatus.INACTIVE);
+        memberActivityRepository.save(memberActivity);
+
+        return true;
+    }
+
 }

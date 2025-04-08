@@ -118,6 +118,9 @@ public enum ErrorCode {
     EVENT_NOT_HAVE_SEATMAP(1100, "Sự kiện không có seatmap", HttpStatus.BAD_REQUEST),
     EVENT_ONLINE(1101, "Sự kiện online không có seatmap", HttpStatus.BAD_REQUEST),
     ACCOUNT_ALREADY_EXISTS(1102, "Tài khoản đã tồn tại", HttpStatus.BAD_REQUEST),
+    MEMBER_ACTIVITY_NOT_FOUND(1103, "Không tìm thấy hoạt động thành viên", HttpStatus.NOT_FOUND),
+    MEMBER_ACTIVITY_ALREADY_EXISTS(1104, "Hoạt động thành viên đã tồn tại", HttpStatus.BAD_REQUEST),
+    INTERNAL_SERVER_ERROR(1105, "Internal server error", HttpStatus.INTERNAL_SERVER_ERROR),
     ;
 
 

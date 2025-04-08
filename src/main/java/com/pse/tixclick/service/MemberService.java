@@ -20,4 +20,6 @@ public interface MemberService {
 
     CreateMemerResponse createMemberWithLink(String email, int companyId, ESubRole subRole);
 
+
+
 }
