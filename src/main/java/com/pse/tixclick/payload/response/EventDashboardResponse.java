@@ -3,6 +3,8 @@ package com.pse.tixclick.payload.response;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.List;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -26,5 +28,6 @@ public class EventDashboardResponse {
     Integer countTicketSold;
     Double totalRevenue;
 
+    List<EventActivityResponse> eventActivityDTOList;
 
 }

@@ -621,15 +621,18 @@ public class EventServiceImpl implements EventService {
     @Override
     public List<EventDashboardResponse> getEventDashboardByCompanyId(int companyId) {
         var context = SecurityContextHolder.getContext();
-        String name = context.getAuthentication().getName();
-        var account = accountRepository.findAccountByUserName(name)
+        String username = context.getAuthentication().getName();
+
+        var account = accountRepository.findAccountByUserName(username)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
         var company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new AppException(ErrorCode.ACCOUNT_NOT_CREATE_COMPANY));
 
         if (company.getStatus() != ECompanyStatus.ACTIVE) {
             throw new AppException(ErrorCode.COMPANY_NOT_ACTIVE);
         }
+
         if (company.getCompanyId() != companyId) {
             throw new AppException(ErrorCode.INVALID_COMPANY);
         }
@@ -638,6 +641,7 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
 
         List<EventDashboardResponse> eventDashboardResponses = new ArrayList<>();
+
         for (Event event : events) {
             EventDashboardResponse response = new EventDashboardResponse();
             response.setEventId(event.getEventId());
@@ -653,11 +657,46 @@ public class EventServiceImpl implements EventService {
             response.setStartDate(String.valueOf(event.getStartDate()));
             response.setEndDate(String.valueOf(event.getEndDate()));
             response.setEventCategory(event.getCategory() != null ? event.getCategory().getCategoryName() : null);
-            // Lấy danh sách TicketMapping liên quan đến sự kiện
+
+            // Dùng ModelMapper để map sang DTO
+            List<EventActivityDTO> eventActivityDTOList = event.getEventActivities().stream()
+                    .map(activity -> modelMapper.map(activity, EventActivityDTO.class))
+                    .collect(Collectors.toList());
+
+            // Ánh xạ từ EventActivityDTO sang EventActivityResponse
+            List<EventActivityResponse> eventActivityResponseList = modelMapper.map(eventActivityDTOList, new TypeToken<List<EventActivityResponse>>() {}.getType());
+
+            for (EventActivityResponse activityResponse : eventActivityResponseList) {
+                // Lấy danh sách TicketMapping liên quan đến EventActivity
+                List<TicketMapping> ticketMappingList = ticketMappingRepository.findTicketMappingsByEventActivity_EventActivityId(activityResponse.getEventActivityId());
+
+                // Nếu không có TicketMapping, tiếp tục với việc lấy vé từ các Ticket
+                List<TicketDTO> ticketDTOS = new ArrayList<>();
+
+                if (!ticketMappingList.isEmpty()) {
+                    // Lấy danh sách Ticket từ TicketMapping
+                    for (TicketMapping ticketMapping : ticketMappingList) {
+                        Optional<Ticket> ticketOpt = ticketRepository.findById(ticketMapping.getTicket().getTicketId());
+                        ticketOpt.ifPresent(ticket -> ticketDTOS.add(modelMapper.map(ticket, TicketDTO.class)));
+                    }
+                } else {
+                    // Nếu không có TicketMapping, lấy Ticket trực tiếp từ EventActivity hoặc Zone
+                    // Bạn có thể thêm logic để lấy vé từ Zone hoặc Seat nếu cần
+                    // Trong trường hợp này, tôi chỉ lấy Ticket mặc định nếu không có TicketMapping
+                    List<Ticket> tickets = ticketRepository.findTicketsByEvent_EventId(event.getEventId());
+                    ticketDTOS.addAll(tickets.stream()
+                            .map(ticket -> modelMapper.map(ticket, TicketDTO.class))
+                            .collect(Collectors.toList()));
+                }
+
+                // Gán danh sách TicketDTO vào EventActivityResponse
+                activityResponse.setTickets(ticketDTOS);
+            }
+            // Gán vào response
+            response.setEventActivityDTOList(eventActivityResponseList);
+
+            // Tính tổng số vé bán được & tổng doanh thu
             Integer totalTicketSold = ticketPurchaseRepository.getTotalTicketsSoldByEventId(event.getEventId());
-
-
-            // Tính tổng doanh thu từ các vé đã bán
             Double totalRevenue = ticketPurchaseRepository.getTotalPriceByEventId(event.getEventId());
 
             response.setCountTicketSold(totalTicketSold);
@@ -665,6 +704,7 @@ public class EventServiceImpl implements EventService {
 
             eventDashboardResponses.add(response);
         }
+
         return eventDashboardResponses;
     }
 

@@ -19,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -37,6 +38,8 @@ public class AccountServiceImpl implements AccountService {
     private final AccountRepository accountRepository;
     private final RoleRepository roleRepository;
     private final ModelMapper accountMapper;
+    @Autowired
+    PasswordEncoder passwordEncoder;
 
     @Override
     public boolean changePasswordWithOtp(String email, String newPassword, String oldPassword) {
@@ -45,7 +48,6 @@ public class AccountServiceImpl implements AccountService {
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
         // Check if the old password matches the current password
-        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
         if (!passwordEncoder.matches(oldPassword, account.getPassword())) {
             // Handle incorrect old password scenario
             throw new AppException(ErrorCode.PASSWORD_NOT_CORRECT);  // Or another appropriate exception
