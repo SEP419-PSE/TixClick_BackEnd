@@ -183,6 +183,7 @@ public class MemberServiceImpl implements MemberService {
                     response.setPhoneNumber(member.getAccount().getPhone());
                     response.setLastName(member.getAccount().getLastName());
                     response.setFirstName(member.getAccount().getFirstName());
+                    response.setStatus(String.valueOf(member.getStatus()));
                     return response;
                 })
                 .collect(Collectors.toList());

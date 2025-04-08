@@ -16,6 +16,8 @@ public class GetMemberResponse {
     String phoneNumber;
     String lastName;
     String firstName;
+    String status;
+
 
 
 
