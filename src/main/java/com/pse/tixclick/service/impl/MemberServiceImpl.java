@@ -239,9 +239,7 @@ public class MemberServiceImpl implements MemberService {
             throw new AppException(ErrorCode.CAN_NOT_UPDATE_OWNER);
         }
 
-        if (member.getStatus().equals(EStatus.INACTIVE)) {
-            throw new AppException(ErrorCode.MEMBER_INACTIVE);
-        }
+
 
         member.setSubRole(status);
         memberRepository.save(member);
