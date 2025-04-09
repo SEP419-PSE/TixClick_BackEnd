@@ -66,4 +66,25 @@ public class VoucherController {
                             .build());
         }
     }
+
+    @PutMapping("/change-status/{voucherId}")
+    public ResponseEntity<ApiResponse<String>> changeVoucherStatus(@PathVariable int voucherId) {
+        try {
+            String message = voucherService.changeVoucherStatus(voucherId);
+            return ResponseEntity.ok(
+                    ApiResponse.<String>builder()
+                            .code(200)
+                            .message(message)
+                            .result(null)
+                            .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(400)
+                    .body(ApiResponse.<String>builder()
+                            .code(400)
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        }
+    }
 }

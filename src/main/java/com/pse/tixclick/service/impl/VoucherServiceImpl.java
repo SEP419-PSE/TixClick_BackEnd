@@ -63,4 +63,18 @@ public class VoucherServiceImpl implements VoucherService {
                 .map(voucher -> modelMapper.map(voucher, VoucherDTO.class))
                 .toList();
     }
+
+    @Override
+    public String changeVoucherStatus(int voucherId) {
+        Voucher voucher = voucherRepository.findById(voucherId)
+                .orElseThrow(() -> new IllegalArgumentException("Voucher not found"));
+
+        if (voucher.getStatus().equals("ACTIVE")) {
+            voucher.setStatus("INACTIVE");
+        } else {
+            return "Voucher is already inactive";
+        }
+        voucherRepository.save(voucher);
+        return "Voucher status changed to inactive";
+    }
 }
