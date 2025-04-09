@@ -158,12 +158,16 @@ public class EventServiceImpl implements EventService {
             event.setLocation(eventRequest.getLocation());
         }
 
-        if (eventRequest.getStatus() != null) {
+        if (eventRequest.getStatus() != null ) {
             event.setStatus(EEventStatus.valueOf(eventRequest.getStatus()));
         }
 
         if (eventRequest.getTypeEvent() != null) {
-            event.setTypeEvent(eventRequest.getTypeEvent());
+            String type = eventRequest.getTypeEvent().toUpperCase();
+            if (!type.equals("ONLINE") && !type.equals("OFFLINE")) {
+                throw new AppException(ErrorCode.INVALID_EVENT_TYPE);
+            }
+            event.setTypeEvent(type);
         }
 
         if (eventRequest.getCategoryId() != 0) {

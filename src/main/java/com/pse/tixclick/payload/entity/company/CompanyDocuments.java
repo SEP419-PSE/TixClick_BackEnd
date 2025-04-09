@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 public class CompanyDocuments {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int contract;
+    private int companyDocumentId;
 
     @ManyToOne
     @JoinColumn(name="company_id", nullable = false)

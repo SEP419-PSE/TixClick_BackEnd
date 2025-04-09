@@ -65,8 +65,8 @@ public class EventController {
     @PutMapping("/update")
     public ResponseEntity<ApiResponse<EventDTO>> updateEvent(
             @ModelAttribute UpdateEventRequest eventDTO,
-            @RequestParam("logoURL") MultipartFile logoURL,
-            @RequestParam("bannerURL") MultipartFile bannerURL
+            @RequestParam(value = "logoURL", required = false) MultipartFile logoURL,
+            @RequestParam(value = "bannerURL", required = false) MultipartFile bannerURL
     ) {
         try {
             EventDTO updatedEvent = eventService.updateEvent(eventDTO, logoURL, bannerURL);
