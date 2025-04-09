@@ -61,10 +61,7 @@ public class ContractDetailServiceImpl implements ContractDetailService {
 
     @Override
     public List<ContractDetailDTO> createContractDetail(CreateContractDetailRequest createContractDetailRequests) {
-        if(appUtils.getAccountFromAuthentication() == null){
-            throw new AppException(ErrorCode.NEEDED_LOGIN);
-        }
-        else if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.MANAGER)) {
+        if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.MANAGER)) {
             throw new AppException(ErrorCode.NOT_PERMISSION);
         }
 

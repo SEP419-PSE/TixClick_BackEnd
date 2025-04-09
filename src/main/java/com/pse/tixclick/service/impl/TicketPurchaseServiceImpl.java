@@ -78,10 +78,7 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
 
     @Override
     public List<TicketPurchaseDTO> createTicketPurchase(ListTicketPurchaseRequest createTicketPurchaseRequest) {
-        if(appUtils.getAccountFromAuthentication() == null){
-            throw new AppException(ErrorCode.NEEDED_LOGIN);
-        }
-        else if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.BUYER)) {
+        if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.BUYER)) {
             throw new AppException(ErrorCode.NOT_PERMISSION);
         }
 
@@ -414,10 +411,7 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
     }
     @Override
     public String checkinTicketPurchase(int checkinId) {
-        if(appUtils.getAccountFromAuthentication() == null){
-            throw new AppException(ErrorCode.NEEDED_LOGIN);
-        }
-        else if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.ORGANIZER)) {
+        if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.ORGANIZER)) {
             throw new AppException(ErrorCode.NOT_PERMISSION);
         }
         CheckinLog checkinLog = checkinLogRepository
@@ -522,10 +516,7 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
 
     @Override
     public List<MyTicketDTO> getTicketPurchasesByAccount() {
-        if(appUtils.getAccountFromAuthentication() == null){
-            throw new AppException(ErrorCode.NEEDED_LOGIN);
-        }
-        else if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.BUYER)) {
+        if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.BUYER)) {
             throw new AppException(ErrorCode.NOT_PERMISSION);
         }
 
@@ -573,10 +564,7 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
 
     @Override
     public TicketQrCodeDTO decryptQrCode(String qrCode){
-        if(appUtils.getAccountFromAuthentication() == null){
-            throw new AppException(ErrorCode.NEEDED_LOGIN);
-        }
-        else if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.ORGANIZER)) {
+        if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.ORGANIZER)) {
             throw new AppException(ErrorCode.NOT_PERMISSION);
         }
 
