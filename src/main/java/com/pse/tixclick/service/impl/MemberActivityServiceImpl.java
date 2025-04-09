@@ -9,6 +9,8 @@ import com.pse.tixclick.payload.entity.entity_enum.EStatus;
 import com.pse.tixclick.payload.entity.entity_enum.ESubRole;
 import com.pse.tixclick.payload.request.create.CreateMemberActivityRequest;
 import com.pse.tixclick.payload.response.BulkMemberActivityResult;
+import com.pse.tixclick.payload.response.GetMemberActivityResponse;
+import com.pse.tixclick.payload.response.GetMemberResponse;
 import com.pse.tixclick.repository.EventActivityRepository;
 import com.pse.tixclick.repository.MemberActivityRepository;
 import com.pse.tixclick.repository.MemberRepository;
@@ -25,6 +27,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -102,26 +105,43 @@ public class MemberActivityServiceImpl implements MemberActivityService {
 
 
     @Override
-    public List<MemberActivityDTO> getMemberActivitiesByEventActivityId(int eventActivityId) {
+    public List<GetMemberActivityResponse> getMemberActivitiesByEventActivityId(int eventActivityId) {
         var eventActivity = eventActivityRepository.findById(eventActivityId)
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_ACTIVITY_NOT_FOUND));
 
-        var memberActivities = memberActivityRepository.findMemberActivitiesByEventActivity_EventActivityIdAndStatus(eventActivity.getEventActivityId(),EStatus.ACTIVE);
+        List<MemberActivity> memberActivities = memberActivityRepository
+                .findMemberActivitiesByEventActivity_EventActivityIdAndStatus(
+                        eventActivityId, EStatus.ACTIVE);
 
         if (memberActivities.isEmpty()) {
             throw new AppException(ErrorCode.MEMBER_ACTIVITY_NOT_FOUND);
         }
 
-        List<MemberActivityDTO> dtos = new ArrayList<>();
+        return memberActivities.stream().map(memberActivity -> {
+            var member = memberActivity.getMember();
+            var account = member.getAccount();
 
-        for (MemberActivity memberActivity : memberActivities) {
-            // Sử dụng ModelMapper để chuyển đổi Entity sang DTO
-            MemberActivityDTO dto = modelMapper.map(memberActivity, MemberActivityDTO.class);
-            dtos.add(dto);
-        }
+            GetMemberResponse memberResponse = GetMemberResponse.builder()
+                    .memberId(member.getMemberId())
+                    .userName(account.getUserName())
+                    .email(account.getEmail())
+                    .phoneNumber(account.getPhone())
+                    .firstName(account.getFirstName())
+                    .lastName(account.getLastName())
+                    .subRole(String.valueOf(member.getSubRole()))
+                    .status(String.valueOf(member.getStatus()))
+                    .build();
 
-        return dtos;
+            return GetMemberActivityResponse.builder()
+                    .memberActivityId(memberActivity.getMemberActivityId())
+                    .eventActivityId(memberActivity.getEventActivity().getEventActivityId())
+                    .status(String.valueOf(memberActivity.getStatus()))
+                    .member(memberResponse)
+                    .build();
+        }).collect(Collectors.toList());
     }
+
+
 
     @Override
     public boolean deleteMemberActivity(int memberActivityId, int companyId) {

@@ -9,18 +9,10 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
-public class GetMemberResponse {
-    int memberId;
-    String subRole;
-    String userName;
-    String email;
-    String phoneNumber;
-    String lastName;
-    String firstName;
+public class GetMemberActivityResponse {
+    GetMemberResponse member;
+    int memberActivityId;
     String status;
-
-
-
+    int eventActivityId;
 
 }
-

@@ -5,6 +5,7 @@ import com.pse.tixclick.payload.dto.MemberActivityDTO;
 import com.pse.tixclick.payload.request.create.CreateMemberActivityRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
 import com.pse.tixclick.payload.response.BulkMemberActivityResult;
+import com.pse.tixclick.payload.response.GetMemberActivityResponse;
 import com.pse.tixclick.service.MemberActivityService;
 import com.pse.tixclick.service.MemberService;
 import lombok.AccessLevel;
@@ -57,12 +58,12 @@ public class MemberActivityController {
 
 
     @GetMapping("/{eventActivityId}")
-    public ResponseEntity<ApiResponse<List<MemberActivityDTO>>> getMemberActivitiesByEventActivityId(
+    public ResponseEntity<ApiResponse<List<GetMemberActivityResponse>>> getMemberActivitiesByEventActivityId(
             @PathVariable int eventActivityId) {
         try {
-            List<MemberActivityDTO> result = memberActivityService.getMemberActivitiesByEventActivityId(eventActivityId);
+            List<GetMemberActivityResponse> result = memberActivityService.getMemberActivitiesByEventActivityId(eventActivityId);
             return ResponseEntity.ok(
-                    ApiResponse.<List<MemberActivityDTO>>builder()
+                    ApiResponse.<List<GetMemberActivityResponse>>builder()
                             .code(HttpStatus.OK.value())
                             .message("Member activities retrieved successfully")
                             .result(result)
@@ -70,14 +71,14 @@ public class MemberActivityController {
             );
         } catch (AppException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.<List<MemberActivityDTO>>builder()
+                    .body(ApiResponse.<List<GetMemberActivityResponse>>builder()
                             .code(HttpStatus.BAD_REQUEST.value())
                             .message(e.getMessage())
                             .result(null)
                             .build());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.<List<MemberActivityDTO>>builder()
+                    .body(ApiResponse.<List<GetMemberActivityResponse>>builder()
                             .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .message("Internal Server Error: " + e.getMessage())
                             .result(null)
