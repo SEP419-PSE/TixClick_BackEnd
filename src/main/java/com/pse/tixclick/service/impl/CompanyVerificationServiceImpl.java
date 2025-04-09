@@ -24,6 +24,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -153,7 +154,7 @@ public class CompanyVerificationServiceImpl implements CompanyVerificationServic
         String username = context.getAuthentication().getName();
         List<CompanyVerification> companyVerificationList = companyVerificationRepository.findCompanyVerificationsByAccount_UserName(username);
         if(companyVerificationList.isEmpty()) {
-            throw new AppException(ErrorCode.COMPANY_VERIFICATION_NOT_FOUND);
+            return Collections.emptyList();
         }
         return companyVerificationList.stream()
                 .map(companyVerification -> modelMapper.map(companyVerification, CompanyVerificationDTO.class))

@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -92,7 +93,14 @@ public class CompanyVerificationController {
     public ResponseEntity<ApiResponse<List<CompanyVerificationDTO>>> getCompanyVerificationsByManager() {
         try {
             List<CompanyVerificationDTO> result = companyVerificationService.getCompanyVerificationsByManager();
-
+            if (result.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.OK)
+                        .body(ApiResponse.<List<CompanyVerificationDTO>>builder()
+                                .code(HttpStatus.OK.value())
+                                .message("No company verifications found")
+                                .result(Collections.emptyList())
+                                .build());
+            }
             return ResponseEntity.ok(
                     ApiResponse.<List<CompanyVerificationDTO>>builder()
                             .code(HttpStatus.OK.value())
