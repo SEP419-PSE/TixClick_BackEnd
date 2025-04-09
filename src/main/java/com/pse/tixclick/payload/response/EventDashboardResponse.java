@@ -27,6 +27,7 @@ public class EventDashboardResponse {
     String eventCategory;
     Integer countTicketSold;
     Double totalRevenue;
+    boolean haveSeatmap;
 
     List<EventActivityResponse> eventActivityDTOList;
 

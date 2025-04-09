@@ -657,8 +657,9 @@ public class EventServiceImpl implements EventService {
             response.setStartDate(String.valueOf(event.getStartDate()));
             response.setEndDate(String.valueOf(event.getEndDate()));
             response.setEventCategory(event.getCategory() != null ? event.getCategory().getCategoryName() : null);
+            response.setHaveSeatmap(event.getSeatMap() != null);
 
-            // Dùng ModelMapper để map sang DTO
+                        // Dùng ModelMapper để map sang DTO
             List<EventActivityDTO> eventActivityDTOList = event.getEventActivities().stream()
                     .map(activity -> modelMapper.map(activity, EventActivityDTO.class))
                     .collect(Collectors.toList());

@@ -35,11 +35,10 @@ import java.util.stream.Collectors;
 @Slf4j
 @Transactional
 public class AccountServiceImpl implements AccountService {
-    private final AccountRepository accountRepository;
-    private final RoleRepository roleRepository;
-    private final ModelMapper accountMapper;
-    @Autowired
-    PasswordEncoder passwordEncoder;
+    final AccountRepository accountRepository;
+    final RoleRepository roleRepository;
+    final ModelMapper accountMapper;
+    final PasswordEncoder passwordEncoder;
 
     @Override
     public boolean changePasswordWithOtp(String email, String newPassword, String oldPassword) {
@@ -71,7 +70,7 @@ public class AccountServiceImpl implements AccountService {
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
         // Sử dụng AccountMapper để chuyển đổi đối tượng Account thành AccountDTO
-        return accountMapper.map(user,AccountDTO.class);
+        return accountMapper.map(user, AccountDTO.class);
     }
 
     @Override
@@ -194,7 +193,7 @@ public class AccountServiceImpl implements AccountService {
         Account user = accountRepository.findAccountByUserName(userName)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-        if(user.getPinCode() != null && !user.getPinCode().isEmpty()) {
+        if (user.getPinCode() != null && !user.getPinCode().isEmpty()) {
             throw new AppException(ErrorCode.INVALID_PIN_CODE);
         }
         // Mã hóa PIN bằng BCrypt
@@ -215,7 +214,7 @@ public class AccountServiceImpl implements AccountService {
         Account user = accountRepository.findAccountByUserName(userName)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-        if(user.getPinCode() == null || user.getPinCode().isEmpty()) {
+        if (user.getPinCode() == null || user.getPinCode().isEmpty()) {
             throw new AppException(ErrorCode.INVALID_PIN_CODE);
         }
 
@@ -231,8 +230,8 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public List<SearchAccountResponse> searchAccount(String email) {
-        if(email == null || email.isEmpty()) {
-           return List.of(); // Trả về danh sách rỗng nếu email không hợp lệ
+        if (email == null || email.isEmpty()) {
+            return List.of(); // Trả về danh sách rỗng nếu email không hợp lệ
         }
         List<Account> accounts = accountRepository.searchAccountByEmail(email);
         // Kiểm tra xem có tài khoản nào được tìm thấy không
@@ -249,8 +248,6 @@ public class AccountServiceImpl implements AccountService {
                 .avatar(account.getAvatarURL())
                 .build()).collect(Collectors.toList());
     }
-
-
 
 
 }
