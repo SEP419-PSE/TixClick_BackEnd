@@ -497,7 +497,7 @@ public class EventServiceImpl implements EventService {
 
         // Kiểm tra xem sự kiện có seat map không
         boolean isHaveSeatMap = seatMapRepository.findSeatMapByEvent_EventId(eventId).isPresent();
-
+        int eventCatetoryId = event.getCategory() != null ? event.getCategory().getEventCategoryId() : 0;
         return new EventDetailForConsumer(
                 event.getEventName(),
                 event.getLocation(),
@@ -511,6 +511,7 @@ public class EventServiceImpl implements EventService {
                 event.getTypeEvent(),
                 event.getDescription(),
                 event.getCategory().getCategoryName(),
+                eventCatetoryId,
                 eventActivityResponseList,
                 isHaveSeatMap,
                 minPrice
@@ -594,6 +595,7 @@ public class EventServiceImpl implements EventService {
                     double minEventPrice = ticketRepository.findMinTicketByEvent_EventId(event.getEventId())
                             .map(Ticket::getPrice)
                             .orElse(0.0);
+                    int eventCategoryId = event.getCategory() != null ? event.getCategory().getEventCategoryId() : 0;
 
                     return new EventDetailForConsumer(
                             event.getEventName(),
@@ -608,6 +610,7 @@ public class EventServiceImpl implements EventService {
                             event.getTypeEvent(),
                             event.getDescription(),
                             event.getCategory() != null ? event.getCategory().getCategoryName() : null,
+                            eventCategoryId,
                             eventActivityResponseList,
                             isHaveSeatMap,
                             minEventPrice
