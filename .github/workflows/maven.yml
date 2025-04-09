@@ -42,6 +42,8 @@ jobs:
           CNAME=${{ env.CONTAINER_NAME }}
           echo ":: Running new container - $CNAME"
           docker run -d -p 8443:8443 --name $CNAME myapp:latest
+          docker run -d -p 8080:8080 --name $CNAME myapp:latest
+
       - name: Cleanup Unused Docker Images
         run: |
           echo "Cleaning up unused Docker images..."
