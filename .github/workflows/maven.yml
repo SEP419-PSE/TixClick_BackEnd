@@ -9,6 +9,7 @@ jobs:
 
     env:
       CONTAINER_NAME: myappCommandContainer
+
     steps:
       - uses: actions/checkout@v3
 
@@ -20,16 +21,12 @@ jobs:
       - name: Stop and Remove Existing Container if Any
         run: |
           CNAME=${{ env.CONTAINER_NAME }}
-
-          # Check if the container exists
           if [ "$(docker ps -aq -f name=$CNAME)" ]; then
               if [ "$(docker ps -aq -f status=exited -f name=$CNAME)" ]; then
                   echo ":: Container $CNAME exists and is exited"
-                  echo ":: Removing exited container - $CNAME"
                   docker rm $CNAME
               else
                   echo ":: Container $CNAME exists and is running"
-                  echo ":: Stopping and removing running container - $CNAME"
                   docker stop $CNAME
                   docker rm $CNAME
               fi
@@ -41,8 +38,11 @@ jobs:
         run: |
           CNAME=${{ env.CONTAINER_NAME }}
           echo ":: Running new container - $CNAME"
-          docker run -d -p 8443:8443 --name $CNAME myapp:latest
-          docker run -d -p 8080:8080 --name $CNAME myapp:latest
+          docker run -d \
+            -p 8443:8443 \
+            -p 8080:8080 \
+            --name $CNAME \
+            myapp:latest
 
       - name: Cleanup Unused Docker Images
         run: |
