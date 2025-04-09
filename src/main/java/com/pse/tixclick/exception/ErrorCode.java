@@ -124,6 +124,7 @@ public enum ErrorCode {
     CAN_NOT_UPDATE_OWNER(1106, "Không thể cập nhật owner", HttpStatus.BAD_REQUEST),
     MEMBER_INACTIVE(1107, "Thành viên không hoạt động", HttpStatus.BAD_REQUEST),
     CANNOT_UPDATE(1108, "Không thể cập nhật thành viên", HttpStatus.BAD_REQUEST),
+    EVENT_TYPE_NOT_ONLINE(1109, "Sự kiện không phải là sự kiện online", HttpStatus.BAD_REQUEST),
     ;
 
 

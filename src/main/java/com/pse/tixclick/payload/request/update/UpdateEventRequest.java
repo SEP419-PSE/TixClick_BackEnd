@@ -25,4 +25,5 @@ public class UpdateEventRequest {
     String typeEvent;
     String description;
     int categoryId;
+    String urlOnline;
 }

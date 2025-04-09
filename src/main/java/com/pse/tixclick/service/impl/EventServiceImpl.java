@@ -137,7 +137,9 @@ public class EventServiceImpl implements EventService {
         String name = context.getAuthentication().getName();
         var event = eventRepository.findEventByEventIdAndOrganizer_UserName(eventRequest.getEventId(), name)
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
-
+        if(event.getStatus() != EEventStatus.DRAFT) {
+            throw new AppException(ErrorCode.INVALID_EVENT_STATUS);
+        }
         // Chỉ cập nhật nếu giá trị không null hoặc không phải chuỗi trống
         if (eventRequest.getEventName() != null && !eventRequest.getEventName().trim().isEmpty()) {
             event.setEventName(eventRequest.getEventName());
@@ -154,12 +156,20 @@ public class EventServiceImpl implements EventService {
             event.setEndDate(eventRequest.getEndDate());
         }
 
-        if (eventRequest.getLocation() != null) {
-            event.setLocation(eventRequest.getLocation());
-        }
 
         if (eventRequest.getStatus() != null ) {
             event.setStatus(EEventStatus.valueOf(eventRequest.getStatus()));
+        }
+        if (eventRequest.getUrlOnline() != null && !eventRequest.getUrlOnline().trim().isEmpty()) {
+            if ("ONLINE".equalsIgnoreCase(event.getTypeEvent())) {
+                event.setUrlOnline(eventRequest.getUrlOnline());
+                event.setLocation(null);
+                event.setLocationName(null);
+            } else {
+                // Nếu không phải ONLINE thì bỏ qua phần set urlOnline
+                // Có thể log ra nếu cần debug
+                System.out.println("Event type is not ONLINE, skip setting urlOnline.");
+            }
         }
 
         if (eventRequest.getTypeEvent() != null) {
@@ -175,9 +185,17 @@ public class EventServiceImpl implements EventService {
                     .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
             event.setCategory(category);
         }
-        if (eventRequest.getLocationName() != null && !eventRequest.getLocationName().trim().isEmpty()) {
-            event.setLocationName(eventRequest.getLocationName());
+
+        if(event.getTypeEvent().equals("OFFLINE")) {
+            event.setUrlOnline(null);
+            if (eventRequest.getLocationName() != null && !eventRequest.getLocationName().trim().isEmpty()) {
+                event.setLocationName(eventRequest.getLocationName());
+            }
+            if (eventRequest.getLocation() != null) {
+                event.setLocation(eventRequest.getLocation());
+            }
         }
+
 
         // Xử lý upload file nếu có
         if (logoURL != null && !logoURL.isEmpty()) {
