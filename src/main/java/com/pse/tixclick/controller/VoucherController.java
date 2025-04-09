@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/voucher")
 @Slf4j
@@ -44,4 +46,24 @@ public class VoucherController {
         }
     }
 
+    @GetMapping("/all")
+    public ResponseEntity<ApiResponse<List<VoucherDTO>>> getAllVouchers() {
+        try {
+            List<VoucherDTO> voucherDTOList = voucherService.getAllVouchers();
+            return ResponseEntity.ok(
+                    ApiResponse.<List<VoucherDTO>>builder()
+                            .code(200)
+                            .message("Vouchers retrieved successfully")
+                            .result(voucherDTOList)
+                            .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(400)
+                    .body(ApiResponse.<List<VoucherDTO>>builder()
+                            .code(400)
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        }
+    }
 }

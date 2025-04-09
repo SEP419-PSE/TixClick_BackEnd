@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -53,5 +54,13 @@ public class VoucherServiceImpl implements VoucherService {
         voucherRepository.save(voucher);
 
         return modelMapper.map(voucher, VoucherDTO.class);
+    }
+
+    @Override
+    public List<VoucherDTO> getAllVouchers() {
+        List<Voucher> vouchers = voucherRepository.findAll();
+        return vouchers.stream()
+                .map(voucher -> modelMapper.map(voucher, VoucherDTO.class))
+                .toList();
     }
 }
