@@ -9,4 +9,6 @@ public interface VoucherService {
     VoucherDTO createVoucher(CreateVoucherRequest createVoucherRequest);
 
     List<VoucherDTO> getAllVouchers();
+
+    String changeVoucherStatus(int voucherId);
 }
