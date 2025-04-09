@@ -16,12 +16,10 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Table(name = "ticket_type")
 @Entity
 public class  Ticket {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ticket_type_id") // tên cột trong DB
     int ticketId;
 
     @Column(columnDefinition = "NVARCHAR(255)")
