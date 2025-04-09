@@ -23,7 +23,7 @@ public class EventDetailForConsumer {
     String status;
     String typeEvent;
     String description;
-    String categoryId;
+    String eventCategory;
    List<EventActivityResponse> eventActivityDTOList;
    boolean isHaveSeatMap;
    double price;
