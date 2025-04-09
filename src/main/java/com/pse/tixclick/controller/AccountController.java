@@ -17,6 +17,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -69,7 +70,7 @@ public class AccountController {
 
     @GetMapping("/my-profile")
     public ResponseEntity<ApiResponse<AccountDTO>> getProfile() {
-        try{
+        try {
             // Gọi service để lấy thông tin tài khoản của người dùng hiện tại
             AccountDTO accountDTO = accountService.myProfile();
 
@@ -171,7 +172,7 @@ public class AccountController {
 
     @GetMapping("/all")
     public ResponseEntity<ApiResponse<List<AccountDTO>>> getAllAccounts() {
-        try{
+        try {
             // Gọi service để lấy danh sách tất cả tài khoản
             List<AccountDTO> accountDTOS = accountService.getAllAccount();
 
@@ -205,7 +206,7 @@ public class AccountController {
 
     @GetMapping("/count-buyers")
     public ResponseEntity<ApiResponse<Integer>> countBuyers() {
-        try{
+        try {
             // Gọi service để lấy số lượng người mua
             int count = accountService.countTotalBuyers();
 
@@ -239,7 +240,7 @@ public class AccountController {
 
     @GetMapping("/count-admins")
     public ResponseEntity<ApiResponse<Integer>> countAdmins() {
-        try{
+        try {
             // Gọi service để lấy số lượng quản trị viên
             int count = accountService.countTotalAdmins();
 
@@ -273,7 +274,7 @@ public class AccountController {
 
     @GetMapping("/count-organizers")
     public ResponseEntity<ApiResponse<Integer>> countOrganizers() {
-        try{
+        try {
             // Gọi service để lấy số lượng tổ chức viên
             int count = accountService.countTotalOrganizers();
 
@@ -307,7 +308,7 @@ public class AccountController {
 
     @GetMapping("/count-managers")
     public ResponseEntity<ApiResponse<Integer>> countManagers() {
-       try{
+        try {
             // Gọi service để lấy số lượng quản lý viên
             int count = accountService.countTotalManagers();
 
@@ -336,12 +337,12 @@ public class AccountController {
                     .build();
 
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
-       }
+        }
     }
 
     @GetMapping("/count-accounts")
     public ResponseEntity<ApiResponse<Integer>> countAccounts() {
-        try{
+        try {
             // Gọi service để lấy số lượng tài khoản
             int count = accountService.countTotalAccounts();
 
@@ -375,7 +376,7 @@ public class AccountController {
 
     @GetMapping("/role-manager-admin")
     public ResponseEntity<ApiResponse<List<AccountDTO>>> getAccountsByRoleManagerAndAdmin() {
-        try{
+        try {
             // Gọi service để lấy danh sách tài khoản theo vai trò quản lý viên và quản trị viên
             List<AccountDTO> accountDTOS = accountService.getAccountsByRoleManagerAndAdmin();
 
@@ -409,35 +410,35 @@ public class AccountController {
 
     @PostMapping("/register-pin-code")
     public ResponseEntity<ApiResponse<String>> registerPinCode(@RequestParam String pinCode) {
-       try{
-              String pin = accountService.registerPinCode(pinCode);
-              ApiResponse<String> apiResponse = ApiResponse.<String>builder()
-                     .code(HttpStatus.OK.value())
-                     .message("Pin code registered successfully")
-                     .result(pin)
-                     .build();
-              return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
-         } catch (AppException e) {
-              ApiResponse<String> errorResponse = ApiResponse.<String>builder()
-                     .code(HttpStatus.BAD_REQUEST.value())
-                     .message(e.getMessage())
-                     .result(null)
-                     .build();
-              return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
-       } catch (Exception e) {
-              ApiResponse<String> errorResponse = ApiResponse.<String>builder()
-                     .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                     .message("An unexpected error occurred.")
-                     .result(null)
-                     .build();
-              return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
-       }
+        try {
+            String pin = accountService.registerPinCode(pinCode);
+            ApiResponse<String> apiResponse = ApiResponse.<String>builder()
+                    .code(HttpStatus.OK.value())
+                    .message("Pin code registered successfully")
+                    .result(pin)
+                    .build();
+            return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+        } catch (AppException e) {
+            ApiResponse<String> errorResponse = ApiResponse.<String>builder()
+                    .code(HttpStatus.BAD_REQUEST.value())
+                    .message(e.getMessage())
+                    .result(null)
+                    .build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        } catch (Exception e) {
+            ApiResponse<String> errorResponse = ApiResponse.<String>builder()
+                    .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .message("An unexpected error occurred.")
+                    .result(null)
+                    .build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
 
     }
 
     @PostMapping("/login-with-pin-code")
     public ResponseEntity<ApiResponse<String>> loginWithPinCode(@RequestParam String pinCode) {
-        try{
+        try {
             String pin = accountService.loginWithPinCode(pinCode);
             ApiResponse<String> apiResponse = ApiResponse.<String>builder()
                     .code(HttpStatus.OK.value())
@@ -463,31 +464,23 @@ public class AccountController {
     }
 
     @GetMapping("/search-account")
-    public ResponseEntity<ApiResponse<SearchAccountResponse>> searchAccount(@RequestParam String email) {
-        try{
-            SearchAccountResponse searchAccountResponse = accountService.searchAccount(email);
-            ApiResponse<SearchAccountResponse> apiResponse = ApiResponse.<SearchAccountResponse>builder()
+    public ResponseEntity<ApiResponse<List<SearchAccountResponse>>> searchAccount(@RequestParam String email) {
+
+        List<SearchAccountResponse> searchAccountResponse = accountService.searchAccount(email);
+        if (searchAccountResponse.isEmpty()) {
+            ApiResponse<List<SearchAccountResponse>> apiResponse = ApiResponse.<List<SearchAccountResponse>>builder()
                     .code(HttpStatus.OK.value())
-                    .message("Account retrieved successfully")
-                    .result(searchAccountResponse)
+                    .message("No accounts found")
+                    .result(Collections.emptyList())
                     .build();
-            return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
-        } catch (AppException e) {
-            ApiResponse<SearchAccountResponse> errorResponse = ApiResponse.<SearchAccountResponse>builder()
-                    .code(HttpStatus.BAD_REQUEST.value())
-                    .message(e.getMessage())
-                    .result(null)
-                    .build();
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
-        } catch (Exception e) {
-            ApiResponse<SearchAccountResponse> errorResponse = ApiResponse.<SearchAccountResponse>builder()
-                    .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                    .message("An unexpected error occurred.")
-                    .result(null)
-                    .build();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
+        ApiResponse<List<SearchAccountResponse>> apiResponse = ApiResponse.<List<SearchAccountResponse>>builder()
+                .code(HttpStatus.OK.value())
+                .message("Account retrieved successfully")
+                .result(searchAccountResponse)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+
+
     }
-
-
 }

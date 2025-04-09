@@ -3,6 +3,7 @@ package com.pse.tixclick.repository;
 import com.pse.tixclick.payload.entity.Account;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -103,4 +104,10 @@ public interface AccountRepository extends JpaRepository<Account, Integer> {
     int countTotalAccounts();
 
     List<Account> findAccountsByRole_RoleId(int roleId);
+
+    @Query(value = "SELECT * " +
+            "FROM account " +
+            "WHERE email LIKE CONCAT('%', :email, '%@gmail.com')", nativeQuery = true)
+    List<Account> searchAccountByEmail(@Param("email") String email);
+
 }

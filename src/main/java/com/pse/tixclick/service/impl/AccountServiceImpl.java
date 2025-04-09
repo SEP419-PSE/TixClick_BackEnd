@@ -19,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -26,6 +27,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -33,9 +35,10 @@ import java.util.Optional;
 @Slf4j
 @Transactional
 public class AccountServiceImpl implements AccountService {
-    private final AccountRepository accountRepository;
-    private final RoleRepository roleRepository;
-    private final ModelMapper accountMapper;
+    final AccountRepository accountRepository;
+    final RoleRepository roleRepository;
+    final ModelMapper accountMapper;
+    final PasswordEncoder passwordEncoder;
 
     @Override
     public boolean changePasswordWithOtp(String email, String newPassword, String oldPassword) {
@@ -44,7 +47,6 @@ public class AccountServiceImpl implements AccountService {
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
         // Check if the old password matches the current password
-        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
         if (!passwordEncoder.matches(oldPassword, account.getPassword())) {
             // Handle incorrect old password scenario
             throw new AppException(ErrorCode.PASSWORD_NOT_CORRECT);  // Or another appropriate exception
@@ -68,7 +70,7 @@ public class AccountServiceImpl implements AccountService {
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
         // Sử dụng AccountMapper để chuyển đổi đối tượng Account thành AccountDTO
-        return accountMapper.map(user,AccountDTO.class);
+        return accountMapper.map(user, AccountDTO.class);
     }
 
     @Override
@@ -191,7 +193,7 @@ public class AccountServiceImpl implements AccountService {
         Account user = accountRepository.findAccountByUserName(userName)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-        if(user.getPinCode() != null && !user.getPinCode().isEmpty()) {
+        if (user.getPinCode() != null && !user.getPinCode().isEmpty()) {
             throw new AppException(ErrorCode.INVALID_PIN_CODE);
         }
         // Mã hóa PIN bằng BCrypt
@@ -212,7 +214,7 @@ public class AccountServiceImpl implements AccountService {
         Account user = accountRepository.findAccountByUserName(userName)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-        if(user.getPinCode() == null || user.getPinCode().isEmpty()) {
+        if (user.getPinCode() == null || user.getPinCode().isEmpty()) {
             throw new AppException(ErrorCode.INVALID_PIN_CODE);
         }
 
@@ -227,32 +229,24 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public SearchAccountResponse searchAccount(String email) {
-        Account account = accountRepository.findAccountByEmail(email)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+    public List<SearchAccountResponse> searchAccount(String email) {
+        if (email == null || email.isEmpty()) {
+            return List.of(); // Trả về danh sách rỗng nếu email không hợp lệ
+        }
+        List<Account> accounts = accountRepository.searchAccountByEmail(email);
+        // Kiểm tra xem có tài khoản nào được tìm thấy không
+        if (accounts.isEmpty()) {
+            return List.of(); // Trả về danh sách rỗng nếu không tìm thấy tài khoản
+        }
 
-        return SearchAccountResponse.builder()
+        // Duyệt qua danh sách Account và chuyển thành SearchAccountResponse
+        return accounts.stream().map(account -> SearchAccountResponse.builder()
                 .userName(account.getUserName())
                 .email(account.getEmail())
                 .firstName(account.getFirstName())
                 .lastName(account.getLastName())
                 .avatar(account.getAvatarURL())
-                .build();
-    }
-
-    @Override
-    public SearchAccountResponse searchAccountWithCompany(String email) {
-        Account account = accountRepository.findAccountByEmail(email)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-
-
-        return SearchAccountResponse.builder()
-                .userName(account.getUserName())
-                .email(account.getEmail())
-                .firstName(account.getFirstName())
-                .lastName(account.getLastName())
-                .avatar(account.getAvatarURL())
-                .build();
+                .build()).collect(Collectors.toList());
     }
 
 

@@ -1,7 +1,11 @@
 package com.pse.tixclick.service;
 
 import com.pse.tixclick.payload.dto.MemberDTO;
+import com.pse.tixclick.payload.entity.entity_enum.EStatus;
+import com.pse.tixclick.payload.entity.entity_enum.ESubRole;
 import com.pse.tixclick.payload.request.create.CreateMemberRequest;
+import com.pse.tixclick.payload.response.CreateMemerResponse;
+import com.pse.tixclick.payload.response.GetMemberResponse;
 import com.pse.tixclick.payload.response.MemberDTOResponse;
 import com.pse.tixclick.payload.response.SearchAccountResponse;
 
@@ -12,7 +16,13 @@ public interface MemberService {
 
     boolean deleteMember(int id);
 
-    List<MemberDTO>  getMembersByCompanyId(int companyId);
+    List<GetMemberResponse>  getMembersByCompanyId(int companyId);
 
+
+    CreateMemerResponse createMemberWithLink(String email, int companyId, ESubRole subRole);
+
+    boolean updateMember(int id, ESubRole status);
+
+    boolean updateMemberStatus(int id, EStatus status);
 
 }

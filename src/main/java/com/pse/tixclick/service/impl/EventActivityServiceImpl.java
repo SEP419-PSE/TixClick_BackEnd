@@ -167,9 +167,7 @@ public class EventActivityServiceImpl implements EventActivityService {
 
             LocalDate dateEvent = request.getDateEvent(); // Lấy ngày từ request
 
-            if (dateEvent.isBefore(event.getStartDate()) || dateEvent.isAfter(event.getEndDate())) {
-                throw new IllegalArgumentException("Ngày sự kiện phải nằm trong khoảng từ hôm nay đến 6 tháng sau.");
-            }
+
 
             // Tạo và lưu EventActivity
             EventActivity newEventActivity = new EventActivity();

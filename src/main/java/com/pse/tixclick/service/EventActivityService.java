@@ -6,7 +6,7 @@ import com.pse.tixclick.payload.request.create.CreateEventActivityRequest;
 
 import java.util.List;
 
-public interface EventActivityService {
+public interface   EventActivityService {
     EventActivityDTO createEventActivity(CreateEventActivityRequest eventActivityRequest);
 
     EventActivityDTO updateEventActivity(CreateEventActivityRequest eventActivityRequest, int id);
@@ -16,4 +16,6 @@ public interface EventActivityService {
     List<EventActivityDTO> getEventActivityByEventId(int eventId);
 
     List<CreateEventActivityAndTicketRequest> createEventActivityAndTicket(List<CreateEventActivityAndTicketRequest> request);
+
+
 }

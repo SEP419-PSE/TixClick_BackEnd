@@ -38,6 +38,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -288,7 +289,7 @@ public class CompanyServiceImpl implements CompanyService {
         List<CompanyVerification> verifications = companyVerificationRepository.findCompanyVerificationsByAccount_UserName(userName);
 
         if (verifications.isEmpty()) {
-            throw new AppException(ErrorCode.COMPANY_NOT_EXISTED);
+            return Collections.emptyList();
         }
 
         return verifications.stream().map(verification -> {

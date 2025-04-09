@@ -6,6 +6,7 @@ import com.pse.tixclick.payload.entity.entity_enum.EEventStatus;
 import com.pse.tixclick.payload.entity.entity_enum.ETypeEvent;
 import com.pse.tixclick.payload.request.create.CreateEventRequest;
 import com.pse.tixclick.payload.request.update.UpdateEventRequest;
+import com.pse.tixclick.payload.response.EventDashboardResponse;
 import com.pse.tixclick.payload.response.EventDetailForConsumer;
 import com.pse.tixclick.payload.response.EventForConsumerResponse;
 import com.pse.tixclick.payload.response.EventResponse;
@@ -64,6 +65,7 @@ public interface EventService {
 
     List<EventForConsumerResponse> getEventsForConsumerInMonth(int month);
 
-    List<EventDTO>  getEventByStartDateAndEndDateAndEventTypeAndEventName(String startDate, String endDate, String eventType, String eventName,List<String> eventCategory);
+    List<EventDetailForConsumer>  getEventByStartDateAndEndDateAndEventTypeAndEventName(String startDate, String endDate, String eventType, String eventName,List<String> eventCategory, Double minPrice, Double maxPrice);
 
+    List<EventDashboardResponse> getEventDashboardByCompanyId(int companyId);
 }

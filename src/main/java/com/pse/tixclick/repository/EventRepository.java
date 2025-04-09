@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -50,4 +51,23 @@ public interface EventRepository extends JpaRepository<Event,Integer> {
     Optional<List<Event>> findEventsByCompany_CompanyId(int companyId);
 
     Optional<Event> findEventByEventIdAndCompany_RepresentativeId_UserName(int eventId, String userName);
+
+    @Query("SELECT e FROM Event e " +
+            "JOIN e.tickets t " +
+            "WHERE (:startDate IS NULL OR e.startDate >= :startDate) " +
+            "AND (:endDate IS NULL OR e.endDate <= :endDate) " +
+            "AND (:eventType IS NULL OR e.typeEvent = :eventType) " +
+            "AND (:eventName IS NULL OR LOWER(e.eventName) LIKE LOWER(CONCAT('%', :eventName, '%'))) " +
+            "AND (:eventCategories IS NULL OR e.category.categoryName IN :eventCategories) " +
+            "AND t.price >= :minPrice " +
+            "AND (:maxPrice IS NULL OR t.price <= :maxPrice) " + // maxPrice có thể null
+            "ORDER BY e.eventName")
+    List<Event> findEventsByFilter(@Param("startDate") LocalDate startDate,
+                                   @Param("endDate") LocalDate endDate,
+                                   @Param("eventType") String eventType,
+                                   @Param("eventName") String eventName,
+                                   @Param("eventCategories") List<String> eventCategories,
+                                   @Param("minPrice") double minPrice,
+                                   @Param("maxPrice") Double maxPrice); // maxPrice là Optional Double
 }
+

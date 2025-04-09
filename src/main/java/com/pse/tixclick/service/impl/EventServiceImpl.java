@@ -10,10 +10,7 @@ import com.pse.tixclick.payload.entity.company.Company;
 import com.pse.tixclick.payload.entity.company.Contract;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
 import com.pse.tixclick.payload.entity.ticket.TicketMapping;
-import com.pse.tixclick.payload.response.EventActivityResponse;
-import com.pse.tixclick.payload.response.EventDetailForConsumer;
-import com.pse.tixclick.payload.response.EventForConsumerResponse;
-import com.pse.tixclick.payload.response.EventResponse;
+import com.pse.tixclick.payload.response.*;
 import com.pse.tixclick.repository.*;
 import com.pse.tixclick.utils.AppUtils;
 import com.pse.tixclick.exception.AppException;
@@ -59,21 +56,19 @@ public class EventServiceImpl implements EventService {
     TicketRepository ticketRepository;
     SeatMapRepository seatMapRepository;
     TicketMappingRepository ticketMappingRepository;
-
-    @Autowired
+    TicketPurchaseRepository ticketPurchaseRepository;
     AppUtils appUtils;
-
-    @Autowired
     OrderRepository orderRepository;
 
-    @Autowired
-    TicketPurchaseRepository ticketPurchaseRepository;
+
 
     @Override
     public EventDTO createEvent(CreateEventRequest request, MultipartFile logoURL, MultipartFile bannerURL) throws IOException {
         if (request == null || request.getEventName() == null || request.getCategoryId() == 0) {
             throw new AppException(ErrorCode.INVALID_EVENT_DATA);
         }
+
+
         var context = SecurityContextHolder.getContext();
         String name = context.getAuthentication().getName();
         var organnizer = accountRepository.findAccountByUserName(name)
@@ -94,11 +89,21 @@ public class EventServiceImpl implements EventService {
         Event event = new Event();
         event.setEventName(request.getEventName());
         event.setLocation(request.getLocation());
+        String typeEvent = request.getTypeEvent().toUpperCase();
+
+        // Kiểm tra xem typeEvent có phải là "ONLINE" hoặc "OFFLINE" không (có thể sử dụng toUpperCase() để kiểm tra không phân biệt chữ hoa chữ thường)
+        if ("ONLINE".equalsIgnoreCase(typeEvent) || "OFFLINE".equalsIgnoreCase(typeEvent)) {
+            // Chuyển typeEvent về chữ in hoa trước khi gán vào event
+            event.setTypeEvent(typeEvent.toUpperCase());
+        } else {
+            // Nếu không phải ONLINE hoặc OFFLINE, có thể xử lý thêm tùy theo yêu cầu
+            // Ví dụ: throw exception, log error hoặc gán một giá trị mặc định
+            throw new IllegalArgumentException("Invalid event type. Must be ONLINE or OFFLINE.");
+        }
         event.setTypeEvent(request.getTypeEvent());
         event.setDescription(request.getDescription());
         event.setCategory(category);
-        event.setLocationName(request.getLocationName());
-        event.setLocation(request.getLocation());
+
         event.setStatus(EEventStatus.DRAFT);
         event.setStartDate(request.getStartDate());
         event.setEndDate(request.getEndDate());
@@ -107,6 +112,15 @@ public class EventServiceImpl implements EventService {
         event.setOrganizer(organnizer);
         event.setCountView(0);
         event.setCompany(company);
+        if("ONLINE".equals(request.getTypeEvent().toUpperCase())) {
+            event.setUrlOnline(request.getUrlOnline());
+            event.setLocationName(null);
+            event.setLocation(null);
+        } else if("OFFLINE".equals(request.getTypeEvent().toUpperCase())) {
+            event.setUrlOnline(null);
+            event.setLocationName(request.getLocationName());
+            event.setLocation(request.getLocation());
+        }
 
 
         // Lưu vào database
@@ -123,7 +137,9 @@ public class EventServiceImpl implements EventService {
         String name = context.getAuthentication().getName();
         var event = eventRepository.findEventByEventIdAndOrganizer_UserName(eventRequest.getEventId(), name)
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
-
+        if(event.getStatus() != EEventStatus.DRAFT) {
+            throw new AppException(ErrorCode.INVALID_EVENT_STATUS);
+        }
         // Chỉ cập nhật nếu giá trị không null hoặc không phải chuỗi trống
         if (eventRequest.getEventName() != null && !eventRequest.getEventName().trim().isEmpty()) {
             event.setEventName(eventRequest.getEventName());
@@ -140,16 +156,28 @@ public class EventServiceImpl implements EventService {
             event.setEndDate(eventRequest.getEndDate());
         }
 
-        if (eventRequest.getLocation() != null) {
-            event.setLocation(eventRequest.getLocation());
-        }
 
-        if (eventRequest.getStatus() != null) {
+        if (eventRequest.getStatus() != null ) {
             event.setStatus(EEventStatus.valueOf(eventRequest.getStatus()));
+        }
+        if (eventRequest.getUrlOnline() != null && !eventRequest.getUrlOnline().trim().isEmpty()) {
+            if ("ONLINE".equalsIgnoreCase(event.getTypeEvent())) {
+                event.setUrlOnline(eventRequest.getUrlOnline());
+                event.setLocation(null);
+                event.setLocationName(null);
+            } else {
+                // Nếu không phải ONLINE thì bỏ qua phần set urlOnline
+                // Có thể log ra nếu cần debug
+                System.out.println("Event type is not ONLINE, skip setting urlOnline.");
+            }
         }
 
         if (eventRequest.getTypeEvent() != null) {
-            event.setTypeEvent(eventRequest.getTypeEvent());
+            String type = eventRequest.getTypeEvent().toUpperCase();
+            if (!type.equals("ONLINE") && !type.equals("OFFLINE")) {
+                throw new AppException(ErrorCode.INVALID_EVENT_TYPE);
+            }
+            event.setTypeEvent(type);
         }
 
         if (eventRequest.getCategoryId() != 0) {
@@ -157,9 +185,17 @@ public class EventServiceImpl implements EventService {
                     .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
             event.setCategory(category);
         }
-        if (eventRequest.getLocationName() != null && !eventRequest.getLocationName().trim().isEmpty()) {
-            event.setLocationName(eventRequest.getLocationName());
+
+        if(event.getTypeEvent().equals("OFFLINE")) {
+            event.setUrlOnline(null);
+            if (eventRequest.getLocationName() != null && !eventRequest.getLocationName().trim().isEmpty()) {
+                event.setLocationName(eventRequest.getLocationName());
+            }
+            if (eventRequest.getLocation() != null) {
+                event.setLocation(eventRequest.getLocation());
+            }
         }
+
 
         // Xử lý upload file nếu có
         if (logoURL != null && !logoURL.isEmpty()) {
@@ -483,7 +519,7 @@ public class EventServiceImpl implements EventService {
 
         // Kiểm tra xem sự kiện có seat map không
         boolean isHaveSeatMap = seatMapRepository.findSeatMapByEvent_EventId(eventId).isPresent();
-
+        int eventCatetoryId = event.getCategory() != null ? event.getCategory().getEventCategoryId() : 0;
         return new EventDetailForConsumer(
                 event.getEventName(),
                 event.getLocation(),
@@ -497,6 +533,7 @@ public class EventServiceImpl implements EventService {
                 event.getTypeEvent(),
                 event.getDescription(),
                 event.getCategory().getCategoryName(),
+                eventCatetoryId,
                 eventActivityResponseList,
                 isHaveSeatMap,
                 minPrice
@@ -555,37 +592,153 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public List<EventDTO> getEventByStartDateAndEndDateAndEventTypeAndEventName(
-            String startDate, String endDate, String eventType, String eventName, List<String> eventCategories) {
+    public List<EventDetailForConsumer> getEventByStartDateAndEndDateAndEventTypeAndEventName(
+            String startDate, String endDate, String eventType, String eventName, List<String> eventCategories, Double minPrice, Double maxPrice) {
 
+        // Chuyển đổi startDate và endDate từ String sang LocalDate
         LocalDate start = (startDate != null && !startDate.isEmpty()) ? LocalDate.parse(startDate) : null;
         LocalDate end = (endDate != null && !endDate.isEmpty()) ? LocalDate.parse(endDate) : null;
 
-        List<Event> events = eventRepository.findAll().stream()
-                // Lọc theo status hợp lệ
-                .filter(event -> event.getStatus() == EEventStatus.SCHEDULED
-                        || event.getStatus() == EEventStatus.ON_GOING
-                        || event.getStatus() == EEventStatus.SOLD_OUT)
-                // Lọc theo khoảng thời gian (chỉ lọc nếu startDate và endDate có giá trị)
-                .filter(event -> (start == null || !event.getStartDate().isBefore(start)) &&
-                        (end == null || !event.getEndDate().isAfter(end)))
-                // Lọc theo loại sự kiện (bỏ qua nếu eventType rỗng hoặc null)
-                .filter(event -> eventType == null || eventType.isEmpty() || event.getTypeEvent().equalsIgnoreCase(eventType))
-                // Lọc theo tên sự kiện (bỏ qua nếu eventName rỗng hoặc null)
-                .filter(event -> eventName == null || eventName.isEmpty() || event.getEventName().toLowerCase().contains(eventName.toLowerCase()))
-                // Lọc theo danh sách categoryName (nếu eventCategories có giá trị)
-                .filter(event -> eventCategories == null || eventCategories.isEmpty() ||
-                        (event.getCategory() != null && eventCategories.contains(event.getCategory().getCategoryName())))
-                .toList();
+        // Lấy danh sách sự kiện từ repository với các bộ lọc
+        List<Event> events = eventRepository.findEventsByFilter(start, end, eventType, eventName, eventCategories, minPrice, maxPrice);
 
-        return events.stream()
-                .map(event -> modelMapper.map(event, EventDTO.class))
+        // Chuyển đổi danh sách sự kiện thành danh sách EventDetailForConsumer
+        List<EventDetailForConsumer> eventDetails = events.stream()
+                .map(event -> {
+                    Company company = event.getCompany();
+                    boolean isHaveSeatMap = event.getSeatMap() != null;
+                    List<EventActivityDTO> eventActivityDTOList = event.getEventActivities().stream()
+                            .map(activity -> modelMapper.map(activity, EventActivityDTO.class))
+                            .collect(Collectors.toList());
+
+                    List<EventActivityResponse> eventActivityResponseList = modelMapper.map(eventActivityDTOList, new TypeToken<List<EventActivityResponse>>() {}.getType());
+
+                    // Lấy giá ticket thấp nhất của sự kiện
+                    double minEventPrice = ticketRepository.findMinTicketByEvent_EventId(event.getEventId())
+                            .map(Ticket::getPrice)
+                            .orElse(0.0);
+                    int eventCategoryId = event.getCategory() != null ? event.getCategory().getEventCategoryId() : 0;
+
+                    return new EventDetailForConsumer(
+                            event.getEventName(),
+                            event.getLocation(),
+                            event.getLocationName(),
+                            event.getLogoURL(),
+                            event.getBannerURL(),
+                            company != null ? company.getLogoURL() : null,
+                            company != null ? company.getCompanyName() : null,
+                            company != null ? company.getDescription() : null,
+                            event.getStatus().name(),
+                            event.getTypeEvent(),
+                            event.getDescription(),
+                            event.getCategory() != null ? event.getCategory().getCategoryName() : null,
+                            eventCategoryId,
+                            eventActivityResponseList,
+                            isHaveSeatMap,
+                            minEventPrice
+                    );
+                })
                 .collect(Collectors.toList());
+
+        return eventDetails;
+    }
+
+    @Override
+    public List<EventDashboardResponse> getEventDashboardByCompanyId(int companyId) {
+        var context = SecurityContextHolder.getContext();
+        String username = context.getAuthentication().getName();
+
+        var account = accountRepository.findAccountByUserName(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        var company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new AppException(ErrorCode.ACCOUNT_NOT_CREATE_COMPANY));
+
+        if (company.getStatus() != ECompanyStatus.ACTIVE) {
+            throw new AppException(ErrorCode.COMPANY_NOT_ACTIVE);
+        }
+
+        if (company.getCompanyId() != companyId) {
+            throw new AppException(ErrorCode.INVALID_COMPANY);
+        }
+
+        List<Event> events = eventRepository.findEventsByCompany_CompanyId(companyId)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+
+        List<EventDashboardResponse> eventDashboardResponses = new ArrayList<>();
+
+        for (Event event : events) {
+            EventDashboardResponse response = new EventDashboardResponse();
+            response.setEventId(event.getEventId());
+            response.setEventName(event.getEventName());
+            response.setDescription(event.getDescription());
+            response.setLocation(event.getLocation());
+            response.setLocationName(event.getLocationName());
+            response.setLogoURL(event.getLogoURL());
+            response.setBannerURL(event.getBannerURL());
+            response.setStatus(event.getStatus().name());
+            response.setCountView(event.getCountView());
+            response.setTypeEvent(event.getTypeEvent());
+            response.setStartDate(String.valueOf(event.getStartDate()));
+            response.setEndDate(String.valueOf(event.getEndDate()));
+            response.setEventCategory(event.getCategory() != null ? event.getCategory().getCategoryName() : null);
+            response.setHaveSeatMap(event.getSeatMap() != null);
+
+                        // Dùng ModelMapper để map sang DTO
+            List<EventActivityDTO> eventActivityDTOList = event.getEventActivities().stream()
+                    .map(activity -> modelMapper.map(activity, EventActivityDTO.class))
+                    .collect(Collectors.toList());
+
+            // Ánh xạ từ EventActivityDTO sang EventActivityResponse
+            List<EventActivityResponse> eventActivityResponseList = modelMapper.map(eventActivityDTOList, new TypeToken<List<EventActivityResponse>>() {}.getType());
+
+            for (EventActivityResponse activityResponse : eventActivityResponseList) {
+                // Lấy danh sách TicketMapping liên quan đến EventActivity
+                List<TicketMapping> ticketMappingList = ticketMappingRepository.findTicketMappingsByEventActivity_EventActivityId(activityResponse.getEventActivityId());
+
+                // Nếu không có TicketMapping, tiếp tục với việc lấy vé từ các Ticket
+                List<TicketDTO> ticketDTOS = new ArrayList<>();
+
+                if (!ticketMappingList.isEmpty()) {
+                    // Lấy danh sách Ticket từ TicketMapping
+                    for (TicketMapping ticketMapping : ticketMappingList) {
+                        Optional<Ticket> ticketOpt = ticketRepository.findById(ticketMapping.getTicket().getTicketId());
+                        ticketOpt.ifPresent(ticket -> ticketDTOS.add(modelMapper.map(ticket, TicketDTO.class)));
+                    }
+                } else {
+                    // Nếu không có TicketMapping, lấy Ticket trực tiếp từ EventActivity hoặc Zone
+                    // Bạn có thể thêm logic để lấy vé từ Zone hoặc Seat nếu cần
+                    // Trong trường hợp này, tôi chỉ lấy Ticket mặc định nếu không có TicketMapping
+                    List<Ticket> tickets = ticketRepository.findTicketsByEvent_EventId(event.getEventId());
+                    ticketDTOS.addAll(tickets.stream()
+                            .map(ticket -> modelMapper.map(ticket, TicketDTO.class))
+                            .collect(Collectors.toList()));
+                }
+
+                // Gán danh sách TicketDTO vào EventActivityResponse
+                activityResponse.setTickets(ticketDTOS);
+            }
+            // Gán vào response
+            response.setEventActivityDTOList(eventActivityResponseList);
+
+            // Tính tổng số vé bán được & tổng doanh thu
+            Integer totalTicketSold = ticketPurchaseRepository.getTotalTicketsSoldByEventId(event.getEventId());
+            Double totalRevenue = ticketPurchaseRepository.getTotalPriceByEventId(event.getEventId());
+
+            response.setCountTicketSold(totalTicketSold);
+            response.setTotalRevenue(totalRevenue);
+
+            eventDashboardResponses.add(response);
+        }
+
+        return eventDashboardResponses;
     }
 
 
-
-
-
-
 }
+
+
+
+
+
+

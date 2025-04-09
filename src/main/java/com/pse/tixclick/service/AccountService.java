@@ -33,9 +33,8 @@ AccountService {
     String registerPinCode(String pinCode);
     String loginWithPinCode(String pinCode);
 
-    SearchAccountResponse searchAccount(String email);
+    List<SearchAccountResponse> searchAccount(String email);
 
-    SearchAccountResponse searchAccountWithCompany(String email);
 
 
 }
