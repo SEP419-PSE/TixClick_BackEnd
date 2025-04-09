@@ -11,4 +11,7 @@ import java.util.Optional;
 public interface VoucherRepository extends JpaRepository<Voucher, Integer> {
     @Query("SELECT v FROM Voucher v WHERE v.voucherCode = :code")
     Optional<Voucher> findByVoucherCode(@Param("code") String code);
+
+    @Query("SELECT CASE WHEN COUNT(v) > 0 THEN true ELSE false END FROM Voucher v WHERE v.voucherCode = :code")
+    boolean existsByVoucherCode(@Param("code") String code);
 }
