@@ -20,7 +20,7 @@ import com.pse.tixclick.payload.entity.ticket.TicketMapping;
 import com.pse.tixclick.payload.entity.ticket.TicketPurchase;
 import com.pse.tixclick.payload.response.PayOSResponse;
 import com.pse.tixclick.payload.response.PaymentResponse;
-import com.pse.tixclick.payos.PayOSUtils;
+import com.pse.tixclick.payment.PayOSUtils;
 import com.pse.tixclick.repository.*;
 import com.pse.tixclick.service.PaymentService;
 import com.pse.tixclick.utils.AppUtils;
@@ -442,7 +442,13 @@ public class PaymentServiceImpl implements PaymentService {
                                 .findTicketMappingByTicketIdAndEventActivityId(ticketPurchase.getTicket().getTicketId(), ticketPurchase.getEventActivity().getEventActivityId())
                                 .orElseThrow(() -> new AppException(ErrorCode.TICKET_MAPPING_NOT_FOUND));
 
-                        ticketMapping.setQuantity(ticketMapping.getQuantity() + ticketPurchase.getQuantity());
+                        if(ticketMapping.getQuantity() == 0) {
+                            ticketMapping.setQuantity(ticketPurchase.getQuantity());
+                            ticketMapping.setStatus(true);
+                        }else {
+                            ticketMapping.setQuantity(ticketMapping.getQuantity() + ticketPurchase.getQuantity());
+                        }
+
                         ticketMappingRepository.save(ticketMapping);
 
                         ticketPurchase.setStatus(ETicketPurchaseStatus.CANCELLED);
