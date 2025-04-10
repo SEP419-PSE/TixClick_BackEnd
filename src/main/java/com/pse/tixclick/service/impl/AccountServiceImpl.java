@@ -147,27 +147,27 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public int countTotalBuyers() {
-        return Optional.of(accountRepository.countTotalBuyers()).orElse(0);
+        return Optional.ofNullable(accountRepository.countTotalBuyers()).orElse(0);
     }
 
     @Override
     public int countTotalAdmins() {
-        return Optional.of(accountRepository.countTotalAdmins()).orElse(0);
+        return Optional.ofNullable(accountRepository.countTotalAdmins()).orElse(0);
     }
 
     @Override
     public int countTotalOrganizers() {
-        return Optional.of(accountRepository.countTotalOrganizers()).orElse(0);
+        return Optional.ofNullable(accountRepository.countTotalOrganizers()).orElse(0);
     }
 
     @Override
     public int countTotalManagers() {
-        return Optional.of(accountRepository.countTotalManagers()).orElse(0);
+        return Optional.ofNullable(accountRepository.countTotalManagers()).orElse(0);
     }
 
     @Override
     public int countTotalAccounts() {
-        return Optional.of(accountRepository.countTotalAccounts()).orElse(0);
+        return Optional.ofNullable(accountRepository.countTotalAccounts()).orElse(0);
     }
 
     @Override
