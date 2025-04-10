@@ -572,8 +572,8 @@ public class EventController {
             @RequestParam(required = false) String eventType,
             @RequestParam(required = false) String eventName,
             @RequestParam(required = false) List<String> eventCategory,
-            @RequestParam(required = false) double minPrice,
-            @RequestParam(required = false) Double maxPrice){
+            @RequestParam(required = false) Double minPrice, // Đổi từ double → Double
+            @RequestParam(required = false) Double maxPrice) {
         try {
             List<EventDetailForConsumer> events = eventService.getEventByStartDateAndEndDateAndEventTypeAndEventName(startDate, endDate, eventType, eventName,eventCategory, minPrice, maxPrice);
 

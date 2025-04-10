@@ -39,6 +39,19 @@ import java.util.stream.Collectors;
 public class TicketPurchaseServiceImpl implements TicketPurchaseService {
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(50);
 
+    @Override
+    public int printActiveThreads() {
+        if (scheduler instanceof ThreadPoolExecutor) {
+            ThreadPoolExecutor executor = (ThreadPoolExecutor) scheduler;
+            int activeCount = executor.getActiveCount();
+            System.out.println("Số lượng luồng đang hoạt động: " + activeCount);
+            return activeCount;
+        } else {
+            System.out.println("Không thể lấy số lượng luồng đang hoạt động.");
+        }
+        return 0;
+    }
+
     @Autowired
     AppUtils appUtils;
 
@@ -78,8 +91,14 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
 
     @Override
     public List<TicketPurchaseDTO> createTicketPurchase(ListTicketPurchaseRequest createTicketPurchaseRequest) {
-        if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.BUYER)) {
+        if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.BUYER) &&
+                !appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.ORGANIZER)) {
             throw new AppException(ErrorCode.NOT_PERMISSION);
+        }
+        Optional<Event> eventOptional = eventRepository
+                .findById(createTicketPurchaseRequest.getTicketPurchaseRequests().stream().findFirst().get().getEventId());
+        if(eventOptional.get().getOrganizer().getAccountId() == (appUtils.getAccountFromAuthentication().getAccountId())){
+            throw new AppException(ErrorCode.NOT_PERMISSION_ORGANIZER);
         }
 
         List<TicketPurchaseDTO> ticketPurchaseDTOList = new ArrayList<>();
@@ -465,6 +484,7 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
 
     @Override
     public int countTotalCheckins() {
+        printActiveThreads();
         return Optional.of(checkinLogRepository.countTotalCheckins()).orElse(0);
     }
 

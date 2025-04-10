@@ -54,7 +54,6 @@ public class AuthenServiceImpl implements AuthenService {// Để lưu thời gi
     EmailService emailService;
 
 
-
     @Value("${app.jwt-secret}")
     private String SIGNER_KEY;
 
@@ -63,12 +62,10 @@ public class AuthenServiceImpl implements AuthenService {// Để lưu thời gi
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
         // Check user
 
-        try {
-            String pong = stringRedisTemplate.getConnectionFactory().getConnection().ping();
-            log.info("✅ Redis ping: {}", pong);
-        } catch (Exception e) {
-            log.error("❌ Redis connection failed: {}", e.getMessage(), e);
-        }
+
+        String pong = stringRedisTemplate.getConnectionFactory().getConnection().ping();
+        log.info("✅ Redis ping: {}", pong);
+
 
         var user = userRepository
                 .findAccountByUserName(loginRequest.getUserName())

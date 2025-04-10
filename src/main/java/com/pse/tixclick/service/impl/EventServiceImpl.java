@@ -521,6 +521,7 @@ public class EventServiceImpl implements EventService {
         boolean isHaveSeatMap = seatMapRepository.findSeatMapByEvent_EventId(eventId).isPresent();
         int eventCatetoryId = event.getCategory() != null ? event.getCategory().getEventCategoryId() : 0;
         return new EventDetailForConsumer(
+                event.getEventId(),
                 event.getEventName(),
                 event.getLocation(),
                 event.getLocationName(),
@@ -620,6 +621,7 @@ public class EventServiceImpl implements EventService {
                     int eventCategoryId = event.getCategory() != null ? event.getCategory().getEventCategoryId() : 0;
 
                     return new EventDetailForConsumer(
+                            event.getEventId(),
                             event.getEventName(),
                             event.getLocation(),
                             event.getLocationName(),

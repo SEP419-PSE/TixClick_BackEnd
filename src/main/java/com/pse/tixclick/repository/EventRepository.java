@@ -61,6 +61,7 @@ public interface EventRepository extends JpaRepository<Event,Integer> {
             "AND (:eventCategories IS NULL OR e.category.categoryName IN :eventCategories) " +
             "AND t.price >= :minPrice " +
             "AND (:maxPrice IS NULL OR t.price <= :maxPrice) " + // maxPrice có thể null
+            "AND e.status = 'SCHEDULED' " +
             "ORDER BY e.eventName")
     List<Event> findEventsByFilter(@Param("startDate") LocalDate startDate,
                                    @Param("endDate") LocalDate endDate,
@@ -69,5 +70,6 @@ public interface EventRepository extends JpaRepository<Event,Integer> {
                                    @Param("eventCategories") List<String> eventCategories,
                                    @Param("minPrice") double minPrice,
                                    @Param("maxPrice") Double maxPrice); // maxPrice là Optional Double
+
 }
 
