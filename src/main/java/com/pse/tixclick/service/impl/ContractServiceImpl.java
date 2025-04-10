@@ -115,7 +115,14 @@ public class ContractServiceImpl implements ContractService {
 
     @Override
     public List<ContractAndDocumentsDTO> getAllContracts() {
-        List<Contract> contracts = contractRepository.findAll();
+        var context = SecurityContextHolder.getContext();
+        String userName = context.getAuthentication().getName();
+        var account = accountRepository.findAccountByUserName(userName)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        if (account.getRole().getRoleName() != ERole.MANAGER) {
+            throw new AppException(ErrorCode.USER_NOT_MANAGER);
+        }
+        List<Contract> contracts = contractRepository.findContractsByAccount_AccountId(account.getAccountId());
 
         if (contracts.isEmpty()) {
             return null;
@@ -188,6 +195,9 @@ public class ContractServiceImpl implements ContractService {
                 contractVerification.setStatus(EVerificationStatus.APPROVED);
                 contractVerification.setNote("Contract approved");
                 contractVerificationRepository.save(contractVerification);
+
+                contract.setStatus(EContractStatus.APPROVED);
+                contractRepository.save(contract);
 
                 var event = contract.getEvent();
                 var seatMap = event.getSeatMap();

@@ -7,10 +7,14 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface ContractRepository extends JpaRepository<Contract,Integer> {
     @Query(value = "SELECT c FROM Contract c WHERE c.event.eventId = :eventId")
     Contract findByEventId(@Param("eventId") int eventId);
 
     boolean existsByEvent(Event event);
+
+    List<Contract> findContractsByAccount_AccountId(int accountId);
 }
