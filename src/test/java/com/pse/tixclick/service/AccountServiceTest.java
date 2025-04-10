@@ -8,6 +8,7 @@ import com.pse.tixclick.payload.entity.Role;
 import com.pse.tixclick.payload.entity.entity_enum.ERole;
 import com.pse.tixclick.payload.request.create.CreateAccountRequest;
 import com.pse.tixclick.payload.request.update.UpdateAccountRequest;
+import com.pse.tixclick.payload.response.SearchAccountResponse;
 import com.pse.tixclick.repository.AccountRepository;
 import com.pse.tixclick.repository.RoleRepository;
 import com.pse.tixclick.service.impl.AccountServiceImpl;
@@ -17,12 +18,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -44,6 +48,7 @@ public class AccountServiceTest {
 
     @Mock
     private ModelMapper modelMapper;
+
 
     @InjectMocks
     private AccountServiceImpl accountService;
@@ -70,6 +75,8 @@ public class AccountServiceTest {
         role = new Role();
         role.setRoleId(1);
         role.setRoleName(ERole.BUYER);
+
+
 
         // Expected DTO result
         accountDTO = new AccountDTO();
@@ -405,4 +412,377 @@ public class AccountServiceTest {
         assertEquals(0, result);
         verify(accountRepository).countTotalBuyers();
     }
+
+    @Test
+    void getAccountsByRoleManagerAndAdmin_ShouldReturnMappedAccountDTOList() {
+        // Arrange
+        Account account1 = new Account();
+        account1.setUserName("manager1");
+        account1.setEmail("manager1@example.com");
+
+        Account account2 = new Account();
+        account2.setUserName("admin1");
+        account2.setEmail("admin1@example.com");
+
+        List<Account> mockAccounts = List.of(account1, account2);
+
+        AccountDTO dto1 = new AccountDTO();
+        dto1.setUserName("manager1");
+        dto1.setEmail("manager1@example.com");
+
+        AccountDTO dto2 = new AccountDTO();
+        dto2.setUserName("admin1");
+        dto2.setEmail("admin1@example.com");
+
+        when(accountRepository.findAccountsByRoleManagerAndAdmin()).thenReturn(mockAccounts);
+        when(modelMapper.map(account1, AccountDTO.class)).thenReturn(dto1);
+        when(modelMapper.map(account2, AccountDTO.class)).thenReturn(dto2);
+
+        // Act
+        List<AccountDTO> result = accountService.getAccountsByRoleManagerAndAdmin();
+
+        // Assert
+        assertEquals(2, result.size());
+        assertEquals("manager1@example.com", result.get(0).getEmail());
+        assertEquals("admin1@example.com", result.get(1).getEmail());
+
+        verify(accountRepository).findAccountsByRoleManagerAndAdmin();
+        verify(modelMapper).map(account1, AccountDTO.class);
+        verify(modelMapper).map(account2, AccountDTO.class);
+    }
+
+    @Test
+    void registerPinCode_SuccessfulRegistration() {
+        // Arrange
+        String pinCode = "123456";
+        String username = "testuser";
+
+        // Mock SecurityContext + Authentication
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getName()).thenReturn(username);
+
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+
+        Account account = new Account();
+        account.setUserName(username);
+        account.setPinCode(null); // No existing PIN
+
+        when(accountRepository.findAccountByUserName(username)).thenReturn(Optional.of(account));
+        when(accountRepository.save(any(Account.class))).thenAnswer(invocation -> {
+            Account saved = invocation.getArgument(0);
+            account.setPinCode(saved.getPinCode()); // Capture the encoded pin
+            return saved;
+        });
+
+        // Act
+        String result = accountService.registerPinCode(pinCode);
+
+        // Assert
+        assertEquals("PIN code registered successfully.", result);
+        assertNotNull(account.getPinCode());
+
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        assertTrue(passwordEncoder.matches(pinCode, account.getPinCode())); // Check encoded pin matches
+
+        verify(accountRepository, times(1)).save(account);
+    }
+
+
+    @Test
+    void registerPinCode_ShouldFail_WhenPinIsInvalidFormat() {
+        // Arrange
+        String invalidPin = "abc123"; // hoặc "12345", "1234567", ...
+
+        // Act & Assert
+        AppException exception = assertThrows(AppException.class, () -> {
+            accountService.registerPinCode(invalidPin);
+        });
+
+        assertEquals(ErrorCode.INVALID_PIN_CODE, exception.getErrorCode());
+        verify(accountRepository, never()).save(any());
+    }
+
+
+    @Test
+    void registerPinCode_ShouldFail_WhenUserNotFound() {
+        // Arrange
+        String pin = "123456";
+        String username = "testuser";
+
+        // Mock SecurityContext và Authentication
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getName()).thenReturn(username);
+
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+
+        // Giả lập user không tồn tại
+        when(accountRepository.findAccountByUserName(username)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        AppException exception = assertThrows(AppException.class, () -> {
+            accountService.registerPinCode(pin);
+        });
+
+        assertEquals(ErrorCode.USER_NOT_EXISTED, exception.getErrorCode());
+        verify(accountRepository, never()).save(any());
+    }
+
+
+    @Test
+    void registerPinCode_ShouldFail_WhenUserAlreadyHasPin() {
+        // Arrange
+        String pin = "123456";
+        String username = "testuser";
+        Account account = new Account();
+        account.setUserName(username);
+        account.setPinCode("$2a$10$HashedPin..."); // Giả sử đã có PIN rồi
+
+        // Mock SecurityContext và Authentication
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getName()).thenReturn(username);
+
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+        when(accountRepository.findAccountByUserName(username)).thenReturn(Optional.of(account));
+
+        // Act & Assert
+        AppException exception = assertThrows(AppException.class, () -> {
+            accountService.registerPinCode(pin);
+        });
+
+        assertEquals(ErrorCode.INVALID_PIN_CODE, exception.getErrorCode());
+        verify(accountRepository, never()).save(any());
+    }
+
+    @Test
+    void loginWithPinCode_ShouldSucceed_WhenPinIsCorrect() {
+        // Arrange
+        String rawPin = "123456";
+        String username = "testuser";
+        PasswordEncoder encoder = new BCryptPasswordEncoder();
+        String hashedPin = encoder.encode(rawPin);
+
+        Account account = new Account();
+        account.setUserName(username);
+        account.setPinCode(hashedPin);
+
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getName()).thenReturn(username);
+
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+
+        when(accountRepository.findAccountByUserName(username)).thenReturn(Optional.of(account));
+
+        // Act
+        String result = accountService.loginWithPinCode(rawPin);
+
+        // Assert
+        assertEquals("Login successful.", result);
+    }
+
+    @Test
+    void loginWithPinCode_ShouldFail_WhenUserNotFound() {
+        // Arrange
+        String pin = "123456";
+        String username = "ghost";
+
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getName()).thenReturn(username);
+
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+
+        when(accountRepository.findAccountByUserName(username)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        AppException exception = assertThrows(AppException.class, () -> {
+            accountService.loginWithPinCode(pin);
+        });
+
+        assertEquals(ErrorCode.USER_NOT_EXISTED, exception.getErrorCode());
+    }
+
+    @Test
+    void loginWithPinCode_ShouldFail_WhenUserHasNoPinCode() {
+        // Arrange
+        String pin = "123456";
+        String username = "testuser";
+
+        Account account = new Account();
+        account.setUserName(username);
+        account.setPinCode(null); // No PIN
+
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getName()).thenReturn(username);
+
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+
+        when(accountRepository.findAccountByUserName(username)).thenReturn(Optional.of(account));
+
+        // Act & Assert
+        AppException exception = assertThrows(AppException.class, () -> {
+            accountService.loginWithPinCode(pin);
+        });
+
+        assertEquals(ErrorCode.INVALID_PIN_CODE, exception.getErrorCode());
+    }
+
+
+    @Test
+    void loginWithPinCode_ShouldFail_WhenPinIsIncorrect() {
+        // Arrange
+        String correctPin = "123456";
+        String wrongPin = "000000";
+        String username = "testuser";
+
+        PasswordEncoder encoder = new BCryptPasswordEncoder();
+        String hashedPin = encoder.encode(correctPin); // đúng mã hóa
+
+        Account account = new Account();
+        account.setUserName(username);
+        account.setPinCode(hashedPin); // gán pin đúng, sẽ so sánh sai bên dưới
+
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getName()).thenReturn(username);
+
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+
+        when(accountRepository.findAccountByUserName(username)).thenReturn(Optional.of(account));
+
+        // Act & Assert
+        AppException exception = assertThrows(AppException.class, () -> {
+            accountService.loginWithPinCode(wrongPin);
+        });
+
+        assertEquals(ErrorCode.INVALID_PIN_CODE, exception.getErrorCode());
+    }
+
+
+    @Test
+    void searchAccount_ShouldReturnMatchingAccounts_WhenEmailExists() {
+        // Arrange
+        String email = "test@example.com";
+        Account account = new Account();
+        account.setUserName("testuser");
+        account.setEmail(email);
+        account.setFirstName("Test");
+        account.setLastName("User");
+        account.setAvatarURL("avatar.jpg");
+
+        when(accountRepository.searchAccountByEmail(email)).thenReturn(List.of(account));
+
+        // Act
+        List<SearchAccountResponse> result = accountService.searchAccount(email);
+
+        // Assert
+        assertEquals(1, result.size());
+
+        SearchAccountResponse response = result.get(0);
+        assertEquals("testuser", response.getUserName());
+        assertEquals("test@example.com", response.getEmail());
+        assertEquals("Test", response.getFirstName());
+        assertEquals("User", response.getLastName());
+        assertEquals("avatar.jpg", response.getAvatar());
+    }
+
+    @Test
+    void searchAccount_ShouldReturnEmptyList_WhenEmailIsNull() {
+        // Act
+        List<SearchAccountResponse> result = accountService.searchAccount(null);
+
+        // Assert
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        verify(accountRepository, never()).searchAccountByEmail(any());
+    }
+
+
+    @Test
+    void searchAccount_ShouldReturnEmptyList_WhenEmailIsEmpty() {
+        // Act
+        List<SearchAccountResponse> result = accountService.searchAccount("");
+
+        // Assert
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        verify(accountRepository, never()).searchAccountByEmail(any());
+    }
+
+
+    @Test
+    void searchAccount_ShouldReturnEmptyList_WhenNoAccountsFound() {
+        // Arrange
+        String email = "notfound@example.com";
+        when(accountRepository.searchAccountByEmail(email)).thenReturn(List.of());
+
+        // Act
+        List<SearchAccountResponse> result = accountService.searchAccount(email);
+
+        // Assert
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void countTotalAdmins_ShouldReturnCorrectCount() {
+        // Arrange
+        when(accountRepository.countTotalAdmins()).thenReturn(5);
+
+        // Act
+        int result = accountService.countTotalAdmins();
+
+        // Assert
+        assertEquals(5, result);
+        verify(accountRepository, times(1)).countTotalAdmins();
+    }
+
+    @Test
+    void countTotalOrganizers_ShouldReturnCorrectCount() {
+        // Arrange
+        when(accountRepository.countTotalOrganizers()).thenReturn(7);
+
+        // Act
+        int result = accountService.countTotalOrganizers();
+
+        // Assert
+        assertEquals(7, result);
+        verify(accountRepository, times(1)).countTotalOrganizers();
+    }
+    @Test
+    void countTotalManagers_ShouldReturnCorrectCount() {
+        // Arrange
+        when(accountRepository.countTotalManagers()).thenReturn(5);
+
+        // Act
+        int result = accountService.countTotalManagers();
+
+        // Assert
+        assertEquals(5, result);
+        verify(accountRepository, times(1)).countTotalManagers();
+    }
+    @Test
+    void countTotalAccounts_ShouldReturnCorrectCount() {
+        // Arrange
+        when(accountRepository.countTotalAccounts()).thenReturn(10);
+
+        // Act
+        int result = accountService.countTotalAccounts();
+
+        // Assert
+        assertEquals(10, result);
+        verify(accountRepository, times(1)).countTotalAccounts();
+    }
+
 }
