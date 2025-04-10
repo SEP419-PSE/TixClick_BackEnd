@@ -486,6 +486,6 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     private String getBaseUrl(HttpServletRequest request) {
-        return "http://tixclick.site";
+        return "https://tixclick.site";
     }
 }
