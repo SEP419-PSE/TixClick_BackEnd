@@ -138,13 +138,13 @@ public class PaymentServiceImpl implements PaymentService {
                 .build();
 
         // Xây dựng returnUrl và cancelUrl
-        String returnUrl = baseUrl + "/payment-return" +
+        String returnUrl = baseUrl + "/payment/queue" +
                 "?orderId=" + order.getOrderId() +
                 "&userName=" + account.getUserName() +
                 "&amount=" + itemData.getPrice() +
                 "&name=" + itemData.getName();
 
-        String cancelUrl = baseUrl + "/payment-return"  +
+        String cancelUrl = baseUrl + "/payment/queue"  +
                 "?orderId=" + order.getOrderId() +
                 "&userName=" + account.getUserName() +
                 "&amount=" + itemData.getPrice() +
