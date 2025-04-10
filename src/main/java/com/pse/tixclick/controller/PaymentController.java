@@ -48,8 +48,8 @@ public class PaymentController {
 
     @GetMapping("/payos_call_back")
     public void payOSCallbackHandler(HttpServletRequest request, HttpServletResponse response) throws Exception {
-        String url = "https://tixclick.site/payment-return";
-        String urlFail = "https://tixclick.site/payment-return";
+        String url = "http://localhost:5173/payment-return";
+        String urlFail = "http://localhost:5173/payment-return";
 
         PaymentResponse payment = paymentService.handleCallbackPayOS(request);
         if (payment.getCode().equals("00")) {
