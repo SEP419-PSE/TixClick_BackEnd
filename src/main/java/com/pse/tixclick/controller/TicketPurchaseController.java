@@ -219,4 +219,16 @@ public class TicketPurchaseController {
                         .build()
         );
     }
+
+    @GetMapping("/print_active_threads")
+    public ResponseEntity<ApiResponse<Integer>> printActiveThreads() {
+        int activeThreads = ticketPurchaseService.printActiveThreads();
+        return ResponseEntity.ok(
+                ApiResponse.<Integer>builder()
+                        .code(200)
+                        .message("Active threads count")
+                        .result(activeThreads)
+                        .build()
+        );
+    }
 }

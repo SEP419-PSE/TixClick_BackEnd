@@ -70,5 +70,6 @@ public interface EventRepository extends JpaRepository<Event,Integer> {
                                    @Param("eventCategories") List<String> eventCategories,
                                    @Param("minPrice") double minPrice,
                                    @Param("maxPrice") Double maxPrice); // maxPrice là Optional Double
+
 }
 

@@ -25,4 +25,6 @@ public interface TicketPurchaseService {
     TicketQrCodeDTO decryptQrCode(String qrCode);
 
     int countTicketPurchaseStatusByPurchased();
+
+    int printActiveThreads();
 }
