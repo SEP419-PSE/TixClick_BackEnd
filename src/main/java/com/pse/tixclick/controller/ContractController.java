@@ -78,10 +78,10 @@ public class ContractController {
 
     @PutMapping("/approve")
     public ResponseEntity<ApiResponse<String>> approveContract(
-            @RequestParam int contractVerificationId,
+            @RequestParam int contractId,
             @RequestParam EVerificationStatus status) {
         try {
-            String result = contractService.approveContract(contractVerificationId, status);
+            String result = contractService.approveContract(contractId, status);
             return ResponseEntity.ok(
                     ApiResponse.<String>builder()
                             .code(HttpStatus.OK.value())
