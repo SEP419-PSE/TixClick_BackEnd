@@ -785,4 +785,54 @@ public class AccountServiceTest {
         verify(accountRepository, times(1)).countTotalAccounts();
     }
 
+    @Test
+    void countTotalAccounts_ShouldReturnZero_WhenRepositoryReturnsNull() {
+        // Arrange
+        when(accountRepository.countTotalAccounts()).thenReturn(null);
+
+        // Act
+        int result = accountService.countTotalAccounts();
+
+        // Assert
+        assertEquals(0, result);
+        verify(accountRepository, times(1)).countTotalAccounts();
+    }
+    @Test
+    void countTotalManagers_ShouldReturnZero_WhenRepositoryReturnsNull() {
+        // Arrange
+        when(accountRepository.countTotalManagers()).thenReturn(null);
+
+        // Act
+        int result = accountService.countTotalManagers();
+
+        // Assert
+        assertEquals(0, result);
+        verify(accountRepository, times(1)).countTotalManagers();
+    }
+    @Test
+    void countTotalOrganizers_ShouldReturnZero_WhenRepositoryReturnsNull() {
+        // Arrange
+        when(accountRepository.countTotalOrganizers()).thenReturn(null);
+
+        // Act
+        int result = accountService.countTotalOrganizers();
+
+        // Assert
+        assertEquals(0, result);
+        verify(accountRepository, times(1)).countTotalOrganizers();
+    }
+    @Test
+    void countTotalAdmins_ShouldReturnZero_WhenRepositoryReturnsNull() {
+        // Arrange
+        when(accountRepository.countTotalAdmins()).thenReturn(null);
+
+        // Act
+        int result = accountService.countTotalAdmins();
+
+        // Assert
+        assertEquals(0, result);
+        verify(accountRepository, times(1)).countTotalAdmins();
+    }
+
+
 }
