@@ -12,6 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class EventDetailForConsumer {
+    int eventId;
     String eventName;
     String location;
     String locationName;
