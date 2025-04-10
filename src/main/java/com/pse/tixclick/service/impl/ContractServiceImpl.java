@@ -53,6 +53,7 @@ public class ContractServiceImpl implements ContractService {
     EmailService emailService;
     TicketMappingRepository ticketMappingRepository;
     ContractDetailRepository contractDetailRepository;
+    AccountRepository accountRepository1;
 
     @Override
     public ContractDTO createContract(CreateContractRequest request) {
