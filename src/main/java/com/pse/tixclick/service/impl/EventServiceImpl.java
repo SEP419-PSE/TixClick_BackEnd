@@ -8,10 +8,12 @@ import com.pse.tixclick.payload.dto.UpcomingEventDTO;
 import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.company.Company;
 import com.pse.tixclick.payload.entity.company.Contract;
+import com.pse.tixclick.payload.entity.entity_enum.EContractStatus;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
 import com.pse.tixclick.payload.entity.ticket.TicketMapping;
 import com.pse.tixclick.payload.response.*;
 import com.pse.tixclick.repository.*;
+import com.pse.tixclick.service.TicketMappingService;
 import com.pse.tixclick.utils.AppUtils;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
@@ -59,6 +61,7 @@ public class EventServiceImpl implements EventService {
     TicketPurchaseRepository ticketPurchaseRepository;
     AppUtils appUtils;
     OrderRepository orderRepository;
+    TicketMappingService ticketMappingService;
 
 
 
@@ -443,6 +446,7 @@ public class EventServiceImpl implements EventService {
         contract.setCommission("0");
         contract.setContractType("STANDARD");
         contract.setContractName("Hợp đồng cho sự kiện " + event.getEventName());
+        contract.setStatus(EContractStatus.PENDING);
         contractRepository.save(contract);
         String fullName = event.getOrganizer().getFirstName() + " " + event.getOrganizer().getLastName();
         emailService.sendEventApprovalRequest(manager.getEmail(), event.getEventName(), fullName);
@@ -510,6 +514,7 @@ public class EventServiceImpl implements EventService {
                         .map(ticket -> modelMapper.map(ticket, TicketDTO.class))
                         .collect(Collectors.toList()));
             }
+            activityResponse.setSoldOut(ticketMappingService.checkTicketMappingExist(activityResponse.getEventActivityId(), ticketDTOS.get(0).getTicketId()));
 
             // Gán danh sách TicketDTO vào EventActivityResponse
             activityResponse.setTickets(ticketDTOS);

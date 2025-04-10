@@ -5,6 +5,7 @@ import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.*;
 import com.pse.tixclick.payload.entity.company.Contract;
+import com.pse.tixclick.payload.entity.company.ContractDetail;
 import com.pse.tixclick.payload.entity.company.ContractVerification;
 import com.pse.tixclick.payload.entity.entity_enum.*;
 import com.pse.tixclick.payload.entity.event.EventActivity;
@@ -15,6 +16,7 @@ import com.pse.tixclick.payload.entity.seatmap.ZoneActivity;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
 import com.pse.tixclick.payload.entity.ticket.TicketMapping;
 import com.pse.tixclick.payload.request.create.CreateContractRequest;
+import com.pse.tixclick.payload.response.ContractAndContractDetailResponse;
 import com.pse.tixclick.repository.*;
 import com.pse.tixclick.service.ContractService;
 import jakarta.mail.MessagingException;
@@ -27,7 +29,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -48,6 +52,7 @@ public class ContractServiceImpl implements ContractService {
     SeatRepository seatRepository;
     EmailService emailService;
     TicketMappingRepository ticketMappingRepository;
+    ContractDetailRepository contractDetailRepository;
 
     @Override
     public ContractDTO createContract(CreateContractRequest request) {
@@ -118,7 +123,6 @@ public class ContractServiceImpl implements ContractService {
         List<ContractAndDocumentsDTO> contractDTOS = contracts.stream()
                 .map(contract -> {
                     ContractAndDocumentsDTO contractAndDocumentsDTO = new ContractAndDocumentsDTO();
-
                     if (contract.getContractDocuments() != null) {
                         contractAndDocumentsDTO.setContractDocumentDTOS(
                                 contract.getContractDocuments().stream()
@@ -137,14 +141,27 @@ public class ContractServiceImpl implements ContractService {
     }
 
     @Override
-    public String approveContract(int contractVerificationId, EVerificationStatus status) throws MessagingException {
+    public String approveContract(int contractId, EVerificationStatus status) throws MessagingException {
         var context = SecurityContextHolder.getContext();
         String userName = context.getAuthentication().getName();
         var account = accountRepository.findAccountByUserName(userName)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        Contract contract = contractRepository.findById(contractId)
+                .orElseThrow(() -> new AppException(ErrorCode.CONTRACT_NOT_FOUND));
+        Collection<ContractVerification> verifications = contract.getContractVerifications();
 
-        ContractVerification contractVerification = contractVerificationRepository.findById(contractVerificationId)
+        if (verifications == null || verifications.isEmpty() || verifications.size() > 1) {
+            throw new AppException(ErrorCode.CONTRACT_VERIFICATION_NOT_FOUND);
+        }
+
+// Lấy phần tử duy nhất từ collection
+        ContractVerification verification = verifications.iterator().next();
+
+// Tìm lại trong repository nếu cần thông tin đầy đủ
+        ContractVerification contractVerification = contractVerificationRepository.findById(verification.getContractVerificationId())
                 .orElseThrow(() -> new AppException(ErrorCode.CONTRACT_VERIFICATION_NOT_FOUND));
+
+
 
         // Kiểm tra xem user có phải là người xét duyệt hợp đồng hay không
         if (account.getAccountId() != contractVerification.getAccount().getAccountId()) {
@@ -168,9 +185,9 @@ public class ContractServiceImpl implements ContractService {
                 );
 
                 contractVerification.setStatus(EVerificationStatus.APPROVED);
+                contractVerification.setNote("Contract approved");
                 contractVerificationRepository.save(contractVerification);
 
-                var contract = contractVerification.getContract();
                 var event = contract.getEvent();
                 var seatMap = event.getSeatMap();
 
@@ -239,6 +256,45 @@ public class ContractServiceImpl implements ContractService {
                 contractVerificationRepository.save(contractVerification);
                 return "Contract status set to pending";
         }
+    }
+
+    @Override
+    public ContractAndContractDetailResponse createContractAndContractDetail(ContractAndContractDetailResponse request) {
+        // Lấy contract theo ID
+        Contract contract = contractRepository.findById(request.getContractId())
+                .orElseThrow(() -> new AppException(ErrorCode.CONTRACT_NOT_FOUND));
+
+        // Cập nhật thông tin contract
+        contract.setContractName(request.getContractName());
+        contract.setTotalAmount(request.getTotalAmount());
+        contract.setCommission(request.getCommission());
+        contract.setContractType(request.getContractType());
+        contract.setStartDate(request.getStartDate());
+        contract.setEndDate(request.getEndDate());
+        contract.setStatus(EContractStatus.PENDING); // Gán trạng thái đang duyệt
+        contractRepository.save(contract);
+
+        // Xử lý từng contract detail
+        for (ContractDetailDTO dto : request.getContractDetailDTOS()) {
+            ContractDetail contractDetail = new ContractDetail();
+            contractDetail.setContract(contract);
+            contractDetail.setContractDetailName(dto.getContractDetailName());
+            contractDetail.setContractDetailCode(dto.getContractDetailCode());
+            contractDetail.setDescription(dto.getDescription());
+            contractDetail.setAmount(dto.getContractAmount());
+            contractDetail.setPayDate(dto.getContractPayDate());
+            contractDetail.setStatus(dto.getStatus().toUpperCase()); // Enum safe
+
+            contractDetailRepository.save(contractDetail);
+        }
+        ContractVerification contractVerification = new ContractVerification();
+        contractVerification.setContract(contract);
+        contractVerification.setAccount(contract.getAccount());
+        contractVerification.setStatus(EVerificationStatus.PENDING);
+        contractVerification.setVerifyDate(null);
+        contractVerification.setNote("Awaiting verification");
+        contractVerificationRepository.save(contractVerification);
+        return request;
     }
 
 

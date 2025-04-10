@@ -18,4 +18,6 @@ public interface TicketMappingRepository extends JpaRepository<TicketMapping, In
     List<TicketMapping> findTicketMappingsByEventActivity_EventActivityId(int eventActivityId);
 
     List<TicketMapping> findTicketMappingsByEventActivity_Event(Event event);
+
+    List<TicketMapping> findTicketMappingsByEventActivity_EventActivityIdAndTicket_TicketIdAndQuantity(int eventActivityId, int ticketId, int quantity);
 }

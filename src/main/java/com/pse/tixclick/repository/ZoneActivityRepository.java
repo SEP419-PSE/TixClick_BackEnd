@@ -1,5 +1,6 @@
 package com.pse.tixclick.repository;
 
+import com.pse.tixclick.payload.entity.seatmap.Zone;
 import com.pse.tixclick.payload.entity.seatmap.ZoneActivity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -18,4 +19,6 @@ public interface ZoneActivityRepository extends JpaRepository<ZoneActivity, Inte
 
     @Query("SELECT z FROM ZoneActivity z WHERE z.zone.zoneId = :zoneId")
     List<ZoneActivity> findByZoneId(@Param("zoneId") int zoneId);
+
+    List<ZoneActivity> findZoneActivitiesByEventActivity_EventActivityIdAndZone_Ticket_TicketId(int eventActivityId, int ticketId);
 }

@@ -281,6 +281,9 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
                     throw new AppException(ErrorCode.TICKET_MAPPING_NOT_ENOUGH);
                 }
                 ticketMapping.setQuantity(ticketMapping.getQuantity() - createTicketPurchaseRequest1.getQuantity());
+                if (ticketMapping.getQuantity() == 0) {
+                    ticketMapping.setStatus(false);
+                }
                 ticketMappingRepository.save(ticketMapping);
 
                 Event event = eventRepository.findById(createTicketPurchaseRequest1.getEventId())
@@ -418,7 +421,14 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
                             .findTicketMappingByTicketIdAndEventActivityId(ticketPurchase.getTicket().getTicketId(), ticketPurchase.getEventActivity().getEventActivityId())
                             .orElseThrow(() -> new AppException(ErrorCode.TICKET_MAPPING_NOT_FOUND));
 
-                    ticketMapping.setQuantity(ticketMapping.getQuantity() + ticketPurchase.getQuantity());
+                    if (ticketMapping.getQuantity() == 0) {
+                        ticketMapping.setQuantity(ticketPurchase.getQuantity());
+                        ticketMapping.setStatus(true);
+                    }
+                    else {
+                        ticketMapping.setQuantity(ticketMapping.getQuantity() + ticketPurchase.getQuantity());
+                    }
+
                     ticketMappingRepository.save(ticketMapping);
 
                     ticketPurchase.setStatus(ETicketPurchaseStatus.EXPIRED);

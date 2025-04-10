@@ -2,14 +2,12 @@ package com.pse.tixclick.controller;
 
 import com.pse.tixclick.payload.dto.OrderDTO;
 import com.pse.tixclick.payload.dto.PaymentDTO;
-import com.pse.tixclick.payload.dto.SeatDTO;
 import com.pse.tixclick.payload.dto.TicketQrCodeDTO;
 import com.pse.tixclick.payload.request.create.CreateOrderRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
 import com.pse.tixclick.payload.response.PayOSResponse;
 import com.pse.tixclick.payload.response.PaymentResponse;
 import com.pse.tixclick.payload.response.ResponseObject;
-import com.pse.tixclick.payos.PayOSUtils;
 import com.pse.tixclick.service.OrderService;
 import com.pse.tixclick.service.PaymentService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,7 +21,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
 import java.util.List;
 
 @RestController
