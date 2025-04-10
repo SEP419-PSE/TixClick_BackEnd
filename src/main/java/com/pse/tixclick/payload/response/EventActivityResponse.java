@@ -40,5 +40,7 @@ public class EventActivityResponse {
 
     int createdBy;
 
+    boolean soldOut;
+
     List<TicketDTO> tickets;
 }

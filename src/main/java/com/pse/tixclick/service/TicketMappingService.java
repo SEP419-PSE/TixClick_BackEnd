@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface TicketMappingService {
     List<TicketMappingResponse> getAllTicketMappingByEventActivityId(int eventActivityId);
+    boolean checkTicketMappingExist(int eventActivityId, int ticketId);
 }
