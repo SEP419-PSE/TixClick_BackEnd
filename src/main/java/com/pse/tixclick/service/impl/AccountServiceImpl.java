@@ -147,7 +147,7 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public int countTotalBuyers() {
-        return Optional.of(accountRepository.countTotalBuyers()).orElse(0);
+        return Optional.ofNullable(accountRepository.countTotalBuyers()).orElse(0);
     }
 
     @Override
