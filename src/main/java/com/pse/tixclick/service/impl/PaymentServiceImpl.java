@@ -108,10 +108,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public PayOSResponse createPaymentLink(int orderId, long expiredTime, HttpServletRequest request) throws Exception {
-        if(appUtils.getAccountFromAuthentication() == null){
-            throw new AppException(ErrorCode.NEEDED_LOGIN);
-        }
-        else if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.BUYER)) {
+        if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.BUYER)) {
             throw new AppException(ErrorCode.NOT_PERMISSION);
         }
 
@@ -141,13 +138,13 @@ public class PaymentServiceImpl implements PaymentService {
                 .build();
 
         // Xây dựng returnUrl và cancelUrl
-        String returnUrl = baseUrl + "/payment-return" +
+        String returnUrl = baseUrl + "/payment/queue" +
                 "?orderId=" + order.getOrderId() +
                 "&userName=" + account.getUserName() +
                 "&amount=" + itemData.getPrice() +
                 "&name=" + itemData.getName();
 
-        String cancelUrl = baseUrl + "/payment-return"  +
+        String cancelUrl = baseUrl + "/payment/queue"  +
                 "?orderId=" + order.getOrderId() +
                 "&userName=" + account.getUserName() +
                 "&amount=" + itemData.getPrice() +
@@ -489,6 +486,6 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     private String getBaseUrl(HttpServletRequest request) {
-        return "http://tixclick.site";
+        return "http://localhost:5173";
     }
 }
