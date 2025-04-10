@@ -131,7 +131,7 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList(
                 "http://localhost:5173",
-                "http://localhost:8080",
+                "http://localhost:8081",
                 "http://160.191.175.172:5173",
                 "https://tixclick.site",
                 "http://192.168.1.15:19006"
