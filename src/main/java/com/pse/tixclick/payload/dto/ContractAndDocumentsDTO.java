@@ -13,4 +13,5 @@ import java.util.List;
 public class ContractAndDocumentsDTO {
     ContractDTO contractDTO;
     List<ContractDocumentDTO> contractDocumentDTOS;
+    int contractVerificationId;
 }

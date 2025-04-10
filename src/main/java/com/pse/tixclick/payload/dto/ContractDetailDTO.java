@@ -17,11 +17,11 @@ import java.time.LocalDate;
 public class ContractDetailDTO {
     private int contractDetailId;
 
-    private String contractName;
+    private String contractDetailName;
 
-    private String contractCode;
+    private String contractDetailCode;
 
-    private String contractDescription;
+    private String description;
 
     private double contractAmount;
 

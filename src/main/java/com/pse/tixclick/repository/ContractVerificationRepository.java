@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ContractVerificationRepository extends JpaRepository<ContractVerification,Integer> {
+    ContractVerification findByContract_ContractId(int contractId);
 }

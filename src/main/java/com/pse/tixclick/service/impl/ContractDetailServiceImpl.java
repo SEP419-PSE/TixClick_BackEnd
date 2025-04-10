@@ -93,9 +93,9 @@ public class ContractDetailServiceImpl implements ContractDetailService {
 
             ContractDetailDTO contractDetailDTO = new ContractDetailDTO();
             contractDetailDTO.setContractDetailId(contractDetail.getContractDetailId());
-            contractDetailDTO.setContractName(contractDetail.getContractDetailName());
-            contractDetailDTO.setContractCode(contractDetail.getContractDetailCode());
-            contractDetailDTO.setContractDescription(contractDetail.getDescription());
+            contractDetailDTO.setContractDetailName(contractDetail.getContractDetailName());
+            contractDetailDTO.setContractDetailCode(contractDetail.getContractDetailCode());
+            contractDetailDTO.setDescription(contractDetail.getDescription());
             contractDetailDTO.setContractAmount(contractDetail.getAmount());
             contractDetailDTO.setContractPayDate(contractDetail.getPayDate());
             contractDetailDTO.setStatus(contractDetail.getStatus());

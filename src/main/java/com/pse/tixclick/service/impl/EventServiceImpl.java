@@ -8,6 +8,7 @@ import com.pse.tixclick.payload.dto.UpcomingEventDTO;
 import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.company.Company;
 import com.pse.tixclick.payload.entity.company.Contract;
+import com.pse.tixclick.payload.entity.entity_enum.EContractStatus;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
 import com.pse.tixclick.payload.entity.ticket.TicketMapping;
 import com.pse.tixclick.payload.response.*;
@@ -443,6 +444,7 @@ public class EventServiceImpl implements EventService {
         contract.setCommission("0");
         contract.setContractType("STANDARD");
         contract.setContractName("Hợp đồng cho sự kiện " + event.getEventName());
+        contract.setStatus(EContractStatus.PENDING);
         contractRepository.save(contract);
         String fullName = event.getOrganizer().getFirstName() + " " + event.getOrganizer().getLastName();
         emailService.sendEventApprovalRequest(manager.getEmail(), event.getEventName(), fullName);

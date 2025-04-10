@@ -17,11 +17,14 @@ import com.pse.tixclick.payload.entity.Role;
 import com.pse.tixclick.payload.entity.entity_enum.ERole;
 import com.pse.tixclick.payload.request.IntrospectRequest;
 import com.pse.tixclick.payload.request.LoginRequest;
+import com.pse.tixclick.payload.request.SignUpRequest;
 import com.pse.tixclick.payload.response.IntrospectResponse;
+import com.pse.tixclick.payload.response.RefreshTokenResponse;
 import com.pse.tixclick.payload.response.TokenResponse;
 import com.pse.tixclick.repository.AccountRepository;
 import com.pse.tixclick.repository.RoleRepository;
 import com.pse.tixclick.service.impl.AuthenServiceImpl;
+import jakarta.mail.MessagingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -374,4 +377,338 @@ public class AuthenServiceTest {
         assertNotNull(response);
         assertFalse(response.isValid());
     }
+
+    @Test
+    void refreshToken_ShouldReturnAccessTokenOnly_WhenExpirationTimeMoreThanOneDay() throws Exception {
+        String refreshToken = "valid-refresh-token";
+        IntrospectRequest request = new IntrospectRequest(refreshToken);
+
+        Account account = new Account();
+        account.setAccountId(1);
+        account.setUserName("testuser");
+
+        Jwt.TokenPair tokenPair = new Jwt.TokenPair(
+                new Jwt.TokenInfo("new-access-token", new Date(System.currentTimeMillis() + 60000)),
+                new Jwt.TokenInfo("new-refresh-token", new Date(System.currentTimeMillis() + 604800000))
+        );
+
+        // Mock redis
+        ValueOperations<String, String> valueOperations = mock(ValueOperations.class);
+        when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get("REFRESH_TOKEN:testuser")).thenReturn(refreshToken);
+        when(stringRedisTemplate.getExpire("REFRESH_TOKEN:testuser", TimeUnit.SECONDS)).thenReturn(86401L);
+
+        // Mock jwt and repository
+        when(jwt.extractUserId(refreshToken)).thenReturn(1);
+        when(userRepository.findById(1)).thenReturn(Optional.of(account));
+        when(jwt.generateTokens(account)).thenReturn(tokenPair);
+
+        // Act
+        RefreshTokenResponse response = authenService.refreshToken(request);
+
+        // Assert
+        assertNotNull(response);
+        assertEquals("new-access-token", response.getAccessToken());
+        assertNull(response.getRefreshToken()); // Không cập nhật refresh token mới
+    }
+
+    @Test
+    void refreshToken_ShouldReturnNewRefreshToken_WhenExpirationTimeLessThanOneDay() throws Exception {
+        String refreshToken = "valid-refresh-token";
+        IntrospectRequest request = new IntrospectRequest(refreshToken);
+
+        Account account = new Account();
+        account.setAccountId(1);
+        account.setUserName("testuser");
+
+        Jwt.TokenPair tokenPair = new Jwt.TokenPair(
+                new Jwt.TokenInfo("new-access-token", new Date()),
+                new Jwt.TokenInfo("new-refresh-token", new Date())
+        );
+
+        ValueOperations<String, String> valueOperations = mock(ValueOperations.class);
+        when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get("REFRESH_TOKEN:testuser")).thenReturn(refreshToken);
+        when(stringRedisTemplate.getExpire("REFRESH_TOKEN:testuser", TimeUnit.SECONDS)).thenReturn(1000L);
+
+        when(jwt.extractUserId(refreshToken)).thenReturn(1);
+        when(userRepository.findById(1)).thenReturn(Optional.of(account));
+        when(jwt.generateTokens(account)).thenReturn(tokenPair);
+
+        RefreshTokenResponse response = authenService.refreshToken(request);
+
+        assertNotNull(response);
+        assertEquals("new-access-token", response.getAccessToken());
+        assertEquals("new-refresh-token", response.getRefreshToken());
+
+        verify(valueOperations).set(eq("REFRESH_TOKEN:testuser"), eq("new-refresh-token"), eq(7L), eq(TimeUnit.DAYS));
+    }
+
+    @Test
+    void refreshToken_ShouldThrowException_WhenTokenNotInRedis() throws Exception {
+        String refreshToken = "expired-refresh-token";
+        IntrospectRequest request = new IntrospectRequest(refreshToken);
+
+        Account account = new Account();
+        account.setAccountId(1);
+        account.setUserName("testuser");
+
+        ValueOperations<String, String> valueOperations = mock(ValueOperations.class);
+        when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get("REFRESH_TOKEN:testuser")).thenReturn(null); // Không có token
+
+        when(jwt.extractUserId(refreshToken)).thenReturn(1);
+        when(userRepository.findById(1)).thenReturn(Optional.of(account));
+
+        AppException ex = assertThrows(AppException.class, () -> authenService.refreshToken(request));
+        assertEquals(ErrorCode.INVALID_REFRESH_TOKEN, ex.getErrorCode());
+    }
+
+    @Test
+    void refreshToken_ShouldThrowException_WhenUserNotFound() throws Exception {
+        String refreshToken = "valid-refresh-token";
+        IntrospectRequest request = new IntrospectRequest(refreshToken);
+
+        when(jwt.extractUserId(refreshToken)).thenReturn(99);
+        when(userRepository.findById(99)).thenReturn(Optional.empty());
+
+        AppException ex = assertThrows(AppException.class, () -> authenService.refreshToken(request));
+        assertEquals(ErrorCode.USER_NOT_EXISTED, ex.getErrorCode());
+    }
+    @Test
+    void refreshToken_ShouldThrowException_WhenAccountUsernameIsNull() throws Exception {
+        String refreshToken = "valid-refresh-token";
+        IntrospectRequest request = new IntrospectRequest(refreshToken);
+
+        Account account = new Account(); // không set userName -> null
+        account.setAccountId(1);
+
+        when(jwt.extractUserId(refreshToken)).thenReturn(1);
+        when(userRepository.findById(1)).thenReturn(Optional.of(account));
+
+        AppException ex = assertThrows(AppException.class, () -> authenService.refreshToken(request));
+        assertEquals(ErrorCode.INVALID_REFRESH_TOKEN, ex.getErrorCode());
+    }
+
+    @Test
+    void register_ShouldReturnTrue_WhenRegistrationSuccessful() {
+        // Arrange
+        SignUpRequest request = SignUpRequest.builder()
+                .userName("testuser")
+                .password("password123")
+                .email("test@example.com")
+                .firstName("Test")
+                .lastName("User")
+                .build();
+
+        when(userRepository.findAccountByUserName("testuser")).thenReturn(Optional.empty());
+        when(userRepository.findAccountByEmail("test@example.com")).thenReturn(Optional.empty());
+
+        Role buyerRole = new Role();
+        buyerRole.setRoleName(ERole.BUYER);
+
+        when(roleRepository.findRoleByRoleName(ERole.BUYER)).thenReturn(Optional.of(buyerRole));
+        when(userRepository.save(any(Account.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // Act
+        boolean result = authenService.register(request);
+
+        // Assert
+        assertTrue(result);
+        verify(userRepository).save(any(Account.class));
+    }
+
+    @Test
+    void register_ShouldThrowException_WhenUsernameExists() {
+        SignUpRequest request = SignUpRequest.builder()
+                .userName("existingUser")
+                .password("password")
+                .email("test@example.com")
+                .build();
+
+        when(userRepository.findAccountByUserName("existingUser"))
+                .thenReturn(Optional.of(new Account()));
+
+        AppException exception = assertThrows(AppException.class, () -> authenService.register(request));
+        assertEquals(ErrorCode.USER_EXISTED, exception.getErrorCode());
+    }
+    @Test
+    void register_ShouldThrowException_WhenEmailExists() {
+        SignUpRequest request = SignUpRequest.builder()
+                .userName("newUser")
+                .password("password")
+                .email("existing@example.com")
+                .build();
+
+        when(userRepository.findAccountByUserName("newUser")).thenReturn(Optional.empty());
+        when(userRepository.findAccountByEmail("existing@example.com"))
+                .thenReturn(Optional.of(new Account()));
+
+        AppException exception = assertThrows(AppException.class, () -> authenService.register(request));
+        assertEquals(ErrorCode.EMAIL_TAKEN, exception.getErrorCode());
+    }
+
+    @Test
+    void register_ShouldThrowException_WhenRoleNotFound() {
+        SignUpRequest request = SignUpRequest.builder()
+                .userName("user123")
+                .password("pass")
+                .email("abc@example.com")
+                .build();
+
+        when(userRepository.findAccountByUserName("user123")).thenReturn(Optional.empty());
+        when(userRepository.findAccountByEmail("abc@example.com")).thenReturn(Optional.empty());
+        when(roleRepository.findRoleByRoleName(ERole.BUYER)).thenReturn(Optional.empty());
+
+        AppException exception = assertThrows(AppException.class, () -> authenService.register(request));
+        assertEquals(ErrorCode.ROLE_NOT_EXISTED, exception.getErrorCode());
+    }
+
+
+    @Test
+    void createAndSendOTP_ShouldStoreOTPAndSendEmail_WhenValidRequest() throws MessagingException {
+        // Arrange
+        String email = "test@example.com";
+        Account user = new Account();
+        user.setEmail(email);
+        user.setUserName("testuser");
+        user.setActive(false);
+
+        when(userRepository.findAccountByEmail(email)).thenReturn(Optional.of(user));
+
+        ValueOperations<String, String> valueOperations = Mockito.mock(ValueOperations.class);
+        when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get("OTP:" + email)).thenReturn(null);
+
+        // Act
+        authenService.createAndSendOTP(email);
+
+        // Assert
+        verify(stringRedisTemplate, atLeastOnce()).opsForValue();
+        verify(valueOperations).set(startsWith("OTP:"), anyString(), eq(15L), eq(TimeUnit.MINUTES));
+        verify(emailService).sendOTPtoActiveAccount(eq(email), anyString(), eq("testuser"));
+    }
+    @Test
+    void createAndSendOTP_ShouldThrowException_WhenUserNotFound() {
+        // Arrange
+        String email = "notfound@example.com";
+        when(userRepository.findAccountByEmail(email)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        AppException exception = assertThrows(AppException.class, () -> authenService.createAndSendOTP(email));
+        assertEquals(ErrorCode.USER_NOT_EXISTED, exception.getErrorCode());
+    }
+    @Test
+    void createAndSendOTP_ShouldThrowException_WhenUserIsActive() {
+        // Arrange
+        String email = "active@example.com";
+        Account user = new Account();
+        user.setEmail(email);
+        user.setActive(true); // already active
+
+        when(userRepository.findAccountByEmail(email)).thenReturn(Optional.of(user));
+
+        // Act & Assert
+        AppException exception = assertThrows(AppException.class, () -> authenService.createAndSendOTP(email));
+        assertEquals(ErrorCode.USER_ACTIVE, exception.getErrorCode());
+    }
+    @Test
+    void createAndSendOTP_ShouldThrowException_WhenOTPAlreadySent() {
+        // Arrange
+        String email = "test@example.com";
+        Account user = new Account();
+        user.setEmail(email);
+        user.setUserName("testuser");
+        user.setActive(false);
+
+        when(userRepository.findAccountByEmail(email)).thenReturn(Optional.of(user));
+
+        ValueOperations<String, String> valueOperations = Mockito.mock(ValueOperations.class);
+        when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get("OTP:" + email)).thenReturn("123456");
+
+        // Act & Assert
+        AppException exception = assertThrows(AppException.class, () -> authenService.createAndSendOTP(email));
+        assertEquals(ErrorCode.OTP_ALREADY_SENT, exception.getErrorCode());
+    }
+    @Test
+    void verifyOTP_ShouldReturnTrue_WhenOTPIsValid() {
+        // Arrange
+        String email = "test@example.com";
+        String otp = "123456";
+        Account user = new Account();
+        user.setEmail(email);
+        user.setActive(false);
+
+        ValueOperations<String, String> valueOps = Mockito.mock(ValueOperations.class);
+        when(stringRedisTemplate.opsForValue()).thenReturn(valueOps);
+        when(valueOps.get("OTP:" + email)).thenReturn(otp);
+        when(userRepository.findAccountByEmail(email)).thenReturn(Optional.of(user));
+
+        // Act
+        boolean result = authenService.verifyOTP(email, otp);
+
+        // Assert
+        assertTrue(result);
+        assertTrue(user.isActive()); // xác nhận đã active
+        verify(userRepository).save(user);
+        verify(stringRedisTemplate).delete("OTP:" + email);
+    }
+
+    @Test
+    void verifyOTP_ShouldReturnFalse_WhenOTPIsIncorrect() {
+        // Arrange
+        String email = "test@example.com";
+        String correctOtp = "123456";
+        String wrongOtp = "999999";
+
+        ValueOperations<String, String> valueOps = Mockito.mock(ValueOperations.class);
+        when(stringRedisTemplate.opsForValue()).thenReturn(valueOps);
+        when(valueOps.get("OTP:" + email)).thenReturn(correctOtp);
+
+        // Act
+        boolean result = authenService.verifyOTP(email, wrongOtp);
+
+        // Assert
+        assertFalse(result);
+        verify(userRepository, never()).save(any());
+        verify(stringRedisTemplate, never()).delete(anyString());
+    }
+
+    @Test
+    void verifyOTP_ShouldReturnFalse_WhenOTPIsNotFound() {
+        // Arrange
+        String email = "test@example.com";
+        String otp = "123456";
+
+        ValueOperations<String, String> valueOps = Mockito.mock(ValueOperations.class);
+        when(stringRedisTemplate.opsForValue()).thenReturn(valueOps);
+        when(valueOps.get("OTP:" + email)).thenReturn(null);
+
+        // Act
+        boolean result = authenService.verifyOTP(email, otp);
+
+        // Assert
+        assertFalse(result);
+        verify(userRepository, never()).save(any());
+        verify(stringRedisTemplate, never()).delete(anyString());
+    }
+
+    @Test
+    void verifyOTP_ShouldThrowException_WhenUserNotFound() {
+        // Arrange
+        String email = "test@example.com";
+        String otp = "123456";
+
+        ValueOperations<String, String> valueOps = Mockito.mock(ValueOperations.class);
+        when(stringRedisTemplate.opsForValue()).thenReturn(valueOps);
+        when(valueOps.get("OTP:" + email)).thenReturn(otp);
+
+        when(userRepository.findAccountByEmail(email)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        AppException exception = assertThrows(AppException.class, () -> authenService.verifyOTP(email, otp));
+        assertEquals(ErrorCode.USER_NOT_EXISTED, exception.getErrorCode());
+    }
+
 }

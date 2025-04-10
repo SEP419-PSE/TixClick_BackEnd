@@ -6,6 +6,7 @@ import com.pse.tixclick.payload.dto.ContractDTO;
 import com.pse.tixclick.payload.entity.entity_enum.EVerificationStatus;
 import com.pse.tixclick.payload.request.create.CreateContractRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
+import com.pse.tixclick.payload.response.ContractAndContractDetailResponse;
 import com.pse.tixclick.service.ContractService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
@@ -98,6 +99,35 @@ public class ContractController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.<String>builder()
+                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .message("Internal Server Error: " + e.getMessage())
+                            .result(null)
+                            .build());
+        }
+    }
+
+    @PostMapping("/createContractAndContractDetail")
+    public ResponseEntity<ApiResponse<ContractAndContractDetailResponse>> createContractAndContractDetail(
+            @Valid @RequestBody ContractAndContractDetailResponse request) {
+        try {
+            ContractAndContractDetailResponse result = contractService.createContractAndContractDetail(request);
+            return ResponseEntity.ok(
+                    ApiResponse.<ContractAndContractDetailResponse>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Contract and Contract Detail created successfully")
+                            .result(result)
+                            .build()
+            );
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.<ContractAndContractDetailResponse>builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<ContractAndContractDetailResponse>builder()
                             .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .message("Internal Server Error: " + e.getMessage())
                             .result(null)
