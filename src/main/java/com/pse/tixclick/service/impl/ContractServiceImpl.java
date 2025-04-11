@@ -236,7 +236,7 @@ public class ContractServiceImpl implements ContractService {
                                 seatActivity.setSeat(seat);
                                 seatActivity.setZoneActivity(zoneActivity);
                                 seatActivity.setEventActivity(eventActivity);
-                                seatActivity.setStatus(String.valueOf(ESeatActivityStatus.AVAILABLE)); // Trạng thái mặc định
+                                seatActivity.setStatus(ESeatActivityStatus.AVAILABLE); // Trạng thái mặc định
                                 seatActivities.add(seatActivity);
                             }
 
@@ -294,7 +294,7 @@ public class ContractServiceImpl implements ContractService {
             contractDetail.setDescription(dto.getDescription());
             contractDetail.setAmount(dto.getContractAmount());
             contractDetail.setPayDate(dto.getContractPayDate());
-            contractDetail.setStatus(dto.getStatus().toUpperCase()); // Enum safe
+            contractDetail.setStatus(EContractDetailStatus.valueOf(dto.getStatus().toUpperCase())); // Enum safe
 
             contractDetailRepository.save(contractDetail);
         }

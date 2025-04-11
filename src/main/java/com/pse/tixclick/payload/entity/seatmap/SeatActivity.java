@@ -1,5 +1,6 @@
 package com.pse.tixclick.payload.entity.seatmap;
 
+import com.pse.tixclick.payload.entity.entity_enum.ESeatActivityStatus;
 import com.pse.tixclick.payload.entity.event.EventActivity;
 import com.pse.tixclick.payload.entity.ticket.TicketPurchase;
 import jakarta.persistence.*;
@@ -20,8 +21,9 @@ public class SeatActivity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int seatActivityId;
 
+    @Enumerated(EnumType.STRING)
     @Column
-    private String status;
+    private ESeatActivityStatus status;
 
     @ManyToOne
     @JoinColumn(name = "seat_id", nullable = false)

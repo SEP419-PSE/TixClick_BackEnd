@@ -55,7 +55,7 @@ public class TransactionServiceImpl implements TransactionService {
                         transaction.getAmount(),
                         transaction.getDescription(),
                         transaction.getTransactionCode(),
-                        transaction.getType(),
+                        transaction.getType().name(),
                         transaction.getTransactionDate(),
                         Optional.ofNullable(transaction.getAccount()).map(Account::getAccountId).orElse(0),
                         Optional.ofNullable(transaction.getPayment()).map(Payment::getPaymentId).orElse(0),

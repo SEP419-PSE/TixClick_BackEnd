@@ -2,6 +2,7 @@ package com.pse.tixclick.payload.entity.payment;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.pse.tixclick.payload.entity.Account;
+import com.pse.tixclick.payload.entity.entity_enum.EOrderStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -24,8 +25,9 @@ public class  Order {
     @Column(nullable = false)
     private String orderCode;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String status;
+    private EOrderStatus status;
 
     @Column(nullable = false)
     private double totalAmount;

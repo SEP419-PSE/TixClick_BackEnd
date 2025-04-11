@@ -1,6 +1,7 @@
 package com.pse.tixclick.service.impl;
 
 import com.pse.tixclick.payload.dto.VoucherDTO;
+import com.pse.tixclick.payload.entity.entity_enum.EVoucherStatus;
 import com.pse.tixclick.payload.entity.payment.Voucher;
 import com.pse.tixclick.payload.request.create.CreateVoucherRequest;
 import com.pse.tixclick.repository.VoucherRepository;
@@ -47,7 +48,7 @@ public class VoucherServiceImpl implements VoucherService {
         voucher.setVoucherName(createVoucherRequest.getVoucherName());
         voucher.setVoucherCode(createVoucherRequest.getVoucherCode());
         voucher.setDiscount(createVoucherRequest.getDiscount());
-        voucher.setStatus("ACTIVE");
+        voucher.setStatus(EVoucherStatus.ACTIVE);
         voucher.setCreatedDate(LocalDateTime.now());
         voucher.setAccount(appUtils.getAccountFromAuthentication());
 
@@ -69,8 +70,8 @@ public class VoucherServiceImpl implements VoucherService {
         Voucher voucher = voucherRepository.findById(voucherId)
                 .orElseThrow(() -> new IllegalArgumentException("Voucher not found"));
 
-        if (voucher.getStatus().equals("ACTIVE")) {
-            voucher.setStatus("INACTIVE");
+        if (voucher.getStatus().equals(EVoucherStatus.ACTIVE)) {
+            voucher.setStatus(EVoucherStatus.INACTIVE);
         } else {
             return "Voucher is already inactive";
         }

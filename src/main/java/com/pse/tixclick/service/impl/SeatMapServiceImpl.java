@@ -391,12 +391,12 @@ public class SeatMapServiceImpl implements SeatMapService {
                 seatResponse.setColumn(seat.getColumnNumber());
                 seatResponse.setSeatTypeId(seat.getTicket().getTicketCode());
 
-                if (seatActivity.getStatus().equals(ESeatActivityStatus.SOLD.name())) {
+                if (seatActivity.getStatus().equals(ESeatActivityStatus.SOLD)) {
                     seatResponse.setStatus(false);
-                } else if (ESeatActivityStatus.valueOf(seatActivity.getStatus()) == ESeatActivityStatus.AVAILABLE) {
+                } else if (ESeatActivityStatus.valueOf(String.valueOf(seatActivity.getStatus())) == ESeatActivityStatus.AVAILABLE) {
                     seatResponse.setStatus(true);
 
-                } else if (seatActivity.getStatus().equals(ESeatActivityStatus.PENDING.name())) {
+                } else if (seatActivity.getStatus().equals(ESeatActivityStatus.PENDING)) {
                     seatResponse.setStatus(false);
                 }
 

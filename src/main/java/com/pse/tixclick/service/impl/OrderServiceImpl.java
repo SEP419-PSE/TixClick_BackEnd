@@ -60,7 +60,7 @@ public class OrderServiceImpl implements OrderService {
     public OrderDTO createOrder(CreateOrderRequest createOrderRequest) {
         Order order = new Order();
         order.setOrderCode(orderCodeAutomationCreating());
-        order.setStatus(EOrderStatus.PENDING.name());
+        order.setStatus(EOrderStatus.PENDING);
         order.setOrderDate(LocalDateTime.now());
         order.setAccount(appUtils.getAccountFromAuthentication());
         order.setTotalAmount(0);

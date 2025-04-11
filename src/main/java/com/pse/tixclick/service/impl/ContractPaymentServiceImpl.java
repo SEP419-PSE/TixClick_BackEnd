@@ -6,6 +6,7 @@ import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.ContractPaymentDTO;
 import com.pse.tixclick.payload.entity.company.ContractDetail;
+import com.pse.tixclick.payload.entity.entity_enum.EContractPaymentStatus;
 import com.pse.tixclick.payload.entity.entity_enum.ERole;
 import com.pse.tixclick.payload.entity.entity_enum.ETransactionStatus;
 import com.pse.tixclick.payload.entity.entity_enum.ETransactionType;
@@ -89,7 +90,7 @@ public class ContractPaymentServiceImpl implements ContractPaymentService {
                     String description = matchedTransaction.get("description").asText();
 
 
-                    contractPayment.setStatus("PAID");
+                    contractPayment.setStatus(EContractPaymentStatus.PAID);
                     contractPayment.setPaymentDate(LocalDateTime.now());
                     contractPaymentRepository.save(contractPayment);
                     // Lưu vào database
@@ -97,8 +98,8 @@ public class ContractPaymentServiceImpl implements ContractPaymentService {
                     transaction.setAmount(amount);
                     transaction.setDescription(description);
                     transaction.setTransactionCode(transactionCode);
-                    transaction.setType(ETransactionType.CONTRACT_PAYMENT.name());
-                    transaction.setStatus(ETransactionStatus.SUCCESS.name());
+                    transaction.setType(ETransactionType.CONTRACT_PAYMENT);
+                    transaction.setStatus(ETransactionStatus.SUCCESS);
                     transaction.setTransactionDate(LocalDateTime.now());
                     transaction.setContractPayment(contractPayment);
                     transaction.setAccount(account);
@@ -144,7 +145,7 @@ public class ContractPaymentServiceImpl implements ContractPaymentService {
             contractPaymentDTO.setPaymentAmount(contractPayment.getPaymentAmount());
             contractPaymentDTO.setPaymentDate(contractPayment.getPaymentDate());
             contractPaymentDTO.setPaymentMethod(contractPayment.getPaymentMethod());
-            contractPaymentDTO.setStatus(contractPayment.getStatus());
+            contractPaymentDTO.setStatus(String.valueOf(contractPayment.getStatus()));
             contractPaymentDTO.setNote(contractPayment.getNote());
             contractPaymentDTO.setContractDetailId(contractPayment.getContractDetail().getContractDetailId());
             contractPaymentDTO.setAccountNumber(contractPayment.getContractDetail().getContract().getCompany().getBankingCode());

@@ -1,6 +1,6 @@
 package com.pse.tixclick.payload.entity.entity_enum;
 
-public enum EContractDetailStatus {
+public enum EContractPaymentStatus {
     PENDING,
     PAID,
     OVERDUE,
