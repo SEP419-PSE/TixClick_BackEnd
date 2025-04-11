@@ -2,6 +2,7 @@ package com.pse.tixclick.payload.entity.payment;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.pse.tixclick.payload.entity.Account;
+import com.pse.tixclick.payload.entity.entity_enum.EPaymentStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -30,8 +31,9 @@ public class Payment {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime paymentDate;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String status;
+    private EPaymentStatus status;
 
     @Column(nullable = false)
     private String orderCode;

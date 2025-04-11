@@ -3,6 +3,7 @@ package com.pse.tixclick.payload.entity.payment;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.pse.tixclick.payload.entity.company.Contract;
 import com.pse.tixclick.payload.entity.company.ContractDetail;
+import com.pse.tixclick.payload.entity.entity_enum.EContractPaymentStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -30,8 +31,9 @@ public class ContractPayment {
     @Column(nullable = false)
     private String paymentMethod;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String status;
+    private EContractPaymentStatus status;
 
     @Column(nullable = false)
     private String note;

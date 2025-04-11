@@ -7,6 +7,7 @@ import com.pse.tixclick.payload.dto.ContractDetailDTO;
 import com.pse.tixclick.payload.entity.company.Contract;
 import com.pse.tixclick.payload.entity.company.ContractDetail;
 import com.pse.tixclick.payload.entity.entity_enum.EContractDetailStatus;
+import com.pse.tixclick.payload.entity.entity_enum.EContractPaymentStatus;
 import com.pse.tixclick.payload.entity.entity_enum.ERole;
 import com.pse.tixclick.payload.entity.payment.ContractPayment;
 import com.pse.tixclick.payload.request.create.ContractDetailRequest;
@@ -79,7 +80,7 @@ public class ContractDetailServiceImpl implements ContractDetailService {
             contractDetail.setPayDate(contractDetailRequest.getContractDetailPayDate());
             contractDetail.setContract(contract);
             contractDetail.setContractDetailCode(contractDetailRequest.getContractDetailCode());
-            contractDetail.setStatus(EContractDetailStatus.PENDING.name());
+            contractDetail.setStatus(EContractDetailStatus.PENDING);
             contractDetail.setPercentage(contractDetailRequest.getContractDetailPercentage());
             contractDetail = contractDetailRepository.save(contractDetail);
 
@@ -88,7 +89,7 @@ public class ContractDetailServiceImpl implements ContractDetailService {
             contractPayment.setContractDetail(contractDetail);
             contractPayment.setNote(contractDetailRequest.getContractDetailDescription());
             contractPayment.setPaymentMethod("Thanh Toan Ngan Hang");
-            contractPayment.setStatus(EContractDetailStatus.PENDING.name());
+            contractPayment.setStatus(EContractPaymentStatus.PENDING);
             contractPaymentRepository.save(contractPayment);
 
             ContractDetailDTO contractDetailDTO = new ContractDetailDTO();
@@ -98,7 +99,7 @@ public class ContractDetailServiceImpl implements ContractDetailService {
             contractDetailDTO.setDescription(contractDetail.getDescription());
             contractDetailDTO.setContractAmount(contractDetail.getAmount());
             contractDetailDTO.setContractPayDate(contractDetail.getPayDate());
-            contractDetailDTO.setStatus(contractDetail.getStatus());
+            contractDetailDTO.setStatus(String.valueOf(contractDetail.getStatus()));
             contractDetailDTO.setContractId(contract.getContractId());
 
             contractDetailDTOList.add(contractDetailDTO);

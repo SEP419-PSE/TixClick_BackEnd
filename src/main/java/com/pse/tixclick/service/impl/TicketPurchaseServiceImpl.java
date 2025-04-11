@@ -91,7 +91,7 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
 
     @Override
     public List<TicketPurchaseDTO> createTicketPurchase(ListTicketPurchaseRequest createTicketPurchaseRequest) {
-        if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.BUYER) &&
+        if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.BUYER) ||
                 !appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.ORGANIZER)) {
             throw new AppException(ErrorCode.NOT_PERMISSION);
         }
@@ -218,13 +218,13 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
 
                 Seat seat = seatRepository.findById(createTicketPurchaseRequest1.getSeatId())
                         .orElseThrow(() -> new AppException(ErrorCode.SEAT_NOT_FOUND));
-                if (seatActivity.getStatus().equals(ESeatActivityStatus.PENDING.name())) {
+                if (seatActivity.getStatus().equals(ESeatActivityStatus.PENDING)) {
                     throw new AppException(ErrorCode.SEAT_NOT_AVAILABLE);
                 }
-                if(seatActivity.getStatus().equals(ESeatActivityStatus.SOLD.name())){
+                if(seatActivity.getStatus().equals(ESeatActivityStatus.SOLD)){
                     throw new AppException(ErrorCode.SEAT_SOLD_OUT);
                 }
-                seatActivity.setStatus(ESeatActivityStatus.PENDING.name());
+                seatActivity.setStatus(ESeatActivityStatus.PENDING);
                 seatActivityRepository.save(seatActivity);
 
                 //Tạo TicketPurchase
@@ -395,7 +395,7 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
                             .findByEventActivityIdAndSeatId(ticketPurchase.getSeatActivity().getEventActivity().getEventActivityId(), ticketPurchase.getSeatActivity().getSeat().getSeatId())
                             .orElseThrow(() -> new AppException(ErrorCode.SEAT_ACTIVITY_NOT_FOUND));
 
-                    seatActivity.setStatus(ESeatActivityStatus.AVAILABLE.name());
+                    seatActivity.setStatus(ESeatActivityStatus.AVAILABLE);
 
                     ZoneActivity zoneActivity = zoneActivityRepository
                             .findByEventActivityIdAndZoneId(ticketPurchase.getZoneActivity().getEventActivity().getEventActivityId(), ticketPurchase.getZoneActivity().getZone().getZoneId())
@@ -455,16 +455,16 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
                 .findById(ticketPurchase.getEventActivity().getEventActivityId())
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_ACTIVITY_NOT_FOUND));
 
-        if (checkinLog.getCheckinStatus().equals(ECheckinLogStatus.PENDING.name())) {
+        if (checkinLog.getCheckinStatus().equals(ECheckinLogStatus.PENDING)) {
             checkinLog.setCheckinTime(LocalDateTime.now());
-            checkinLog.setCheckinStatus(ECheckinLogStatus.CHECKED_IN.name());
+            checkinLog.setCheckinStatus(ECheckinLogStatus.CHECKED_IN);
         }
-        else if (checkinLog.getCheckinStatus().equals(ECheckinLogStatus.CHECKED_IN.name())) {
+        else if (checkinLog.getCheckinStatus().equals(ECheckinLogStatus.CHECKED_IN)) {
             throw new AppException(ErrorCode.CHECKIN_LOG_CHECKED_IN);
         }
         else if(eventActivity.getEndTimeEvent().isBefore(LocalTime.now())) {
             checkinLog.setCheckinTime(LocalDateTime.now());
-            checkinLog.setCheckinStatus(ECheckinLogStatus.EXPIRED.name());
+            checkinLog.setCheckinStatus(ECheckinLogStatus.EXPIRED);
             throw new AppException(ErrorCode.CHECKIN_LOG_EXPIRED);
         }
 

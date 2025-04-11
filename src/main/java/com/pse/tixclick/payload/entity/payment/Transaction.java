@@ -2,6 +2,8 @@ package com.pse.tixclick.payload.entity.payment;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.pse.tixclick.payload.entity.Account;
+import com.pse.tixclick.payload.entity.entity_enum.ETransactionStatus;
+import com.pse.tixclick.payload.entity.entity_enum.ETransactionType;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -30,11 +32,13 @@ public class Transaction {
     @Column(nullable = false)
     private  String transactionCode;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String type;
+    private ETransactionType type;
 
+    @Enumerated(EnumType.STRING)
     @Column
-    private String status;
+    private ETransactionStatus status;
 
     @Column
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

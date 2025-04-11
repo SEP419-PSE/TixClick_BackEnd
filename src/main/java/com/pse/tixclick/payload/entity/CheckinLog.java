@@ -1,6 +1,7 @@
 package com.pse.tixclick.payload.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.pse.tixclick.payload.entity.entity_enum.ECheckinLogStatus;
 import com.pse.tixclick.payload.entity.ticket.TicketPurchase;
 import jakarta.persistence.*;
 import lombok.*;
@@ -29,8 +30,9 @@ public class CheckinLog {
     @Column
     private String checkinLocation;
 
+    @Enumerated(EnumType.STRING)
     @Column
-    private String checkinStatus;
+    private ECheckinLogStatus checkinStatus;
 
     @ManyToOne
     @JoinColumn(name = "account_id")
