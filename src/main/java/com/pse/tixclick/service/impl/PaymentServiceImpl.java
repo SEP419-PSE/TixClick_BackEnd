@@ -123,7 +123,7 @@ public class PaymentServiceImpl implements PaymentService {
                 .orElseThrow(() -> new AppException(ErrorCode.ACCOUNT_NOT_FOUND));
 
         List<Payment> paymentHistory = paymentRepository.findByOrderId(order.getOrderId());
-        if (!paymentHistory.isEmpty() && paymentHistory.stream().anyMatch(payment -> payment.getStatus().equals("SUCCESSFUL"))) {
+        if (!paymentHistory.isEmpty() && paymentHistory.stream().anyMatch(payment -> payment.getStatus().equals(EPaymentStatus.SUCCESSFULLY))) {
             throw new RuntimeException("Payment is already completed");
         }
 
@@ -164,7 +164,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         Payment payment = new Payment();
         payment.setAmount(order.getTotalAmount());
-        payment.setStatus(EPaymentStatus.PENDING.name());
+        payment.setStatus(EPaymentStatus.PENDING);
         payment.setPaymentDate(LocalDateTime.now());
         payment.setOrderCode(order.getOrderCode());
         payment.setOrder(order);
@@ -193,7 +193,7 @@ public class PaymentServiceImpl implements PaymentService {
         Payment payment = paymentRepository.findPaymentByOrderCode(orderCode);
 
         if (code.equals("00") && status.equals("PAID")) {
-            payment.setStatus(EPaymentStatus.SUCCESSFULLY.name());
+            payment.setStatus(EPaymentStatus.SUCCESSFULLY);
             payment.setPaymentDate(LocalDateTime.now());
             paymentRepository.save(payment);
 
@@ -201,7 +201,7 @@ public class PaymentServiceImpl implements PaymentService {
                     .findById(Integer.valueOf(orderId))
                     .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
 
-            order.setStatus(EOrderStatus.SUCCESSFUL.name());
+            order.setStatus(EOrderStatus.SUCCESSFUL);
             orderRepository.save(order);
 
             Account account = accountRepository
@@ -267,12 +267,12 @@ public class PaymentServiceImpl implements PaymentService {
                                 .findById(ticketPurchase.getSeatActivity().getSeat().getSeatId())
                                 .orElseThrow(() -> new AppException(ErrorCode.SEAT_NOT_FOUND));
 
-                        seatActivity.setStatus(ESeatActivityStatus.SOLD.name());
+                        seatActivity.setStatus(ESeatActivityStatus.SOLD);
                         seatActivityRepository.save(seatActivity);
 
                         List<SeatActivity> seatActivities = seatActivityRepository.findBySeatId(ticketPurchase.getSeatActivity().getSeat().getSeatId());
                         boolean allSeatUnavailable = seatActivities.stream()
-                                .allMatch(seatActivity1 -> seatActivity.getStatus().equals(ESeatActivityStatus.SOLD.name()));
+                                .allMatch(seatActivity1 -> seatActivity.getStatus().equals(ESeatActivityStatus.SOLD));
                         if (allSeatUnavailable) {
                             seat.setStatus(false);
                         }
@@ -300,7 +300,7 @@ public class PaymentServiceImpl implements PaymentService {
                 checkinLog.setTicketPurchase(ticketPurchase);
                 checkinLog.setAccount(account);
                 checkinLog.setCheckinLocation(event.getLocation());
-                checkinLog.setCheckinStatus(ECheckinLogStatus.PENDING.name());
+                checkinLog.setCheckinStatus(ECheckinLogStatus.PENDING);
                 checkinLogRepository.save(checkinLog);
 
                 TicketQrCodeDTO ticketQrCodeDTO = new TicketQrCodeDTO();
@@ -331,22 +331,22 @@ public class PaymentServiceImpl implements PaymentService {
             transaction.setDescription("Thanh toan don hang: " + orderCode);
             transaction.setAccount(account);
             transaction.setPayment(payment);
-            transaction.setStatus(ETransactionStatus.SUCCESS.name());
+            transaction.setStatus(ETransactionStatus.SUCCESS);
             transaction.setContractPayment(null);
-            transaction.setType(ETransactionType.DIRECT_PAYMENT.name());
+            transaction.setType(ETransactionType.DIRECT_PAYMENT);
             transactionRepository.save(transaction);
 
             return new PaymentResponse(status, "SUCCESSFUL", mapper.map(payment, PaymentResponse.class));
         }
         else {
-            payment.setStatus(EPaymentStatus.FAILURE.name());
+            payment.setStatus(EPaymentStatus.FAILURE);
             paymentRepository.save(payment);
 
             Order order = orderRepository
                     .findById(Integer.valueOf(orderId))
                     .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
 
-            order.setStatus(EOrderStatus.FAILURE.name());
+            order.setStatus(EOrderStatus.FAILURE);
             orderRepository.save(order);
 
             Account account = accountRepository
@@ -419,12 +419,12 @@ public class PaymentServiceImpl implements PaymentService {
                                 .findById(ticketPurchase.getSeatActivity().getSeat().getSeatId())
                                 .orElseThrow(() -> new AppException(ErrorCode.SEAT_NOT_FOUND));
 
-                        seatActivity.setStatus(ESeatActivityStatus.AVAILABLE.name());
+                        seatActivity.setStatus(ESeatActivityStatus.AVAILABLE);
                         seatActivityRepository.save(seatActivity);
 
                         List<SeatActivity> seatActivities = seatActivityRepository.findBySeatId(ticketPurchase.getSeatActivity().getSeat().getSeatId());
                         boolean allSeatUnavailable = seatActivities.stream()
-                                .allMatch(seatActivity1 -> seatActivity.getStatus().equals(ESeatActivityStatus.SOLD.name()));
+                                .allMatch(seatActivity1 -> seatActivity.getStatus().equals(ESeatActivityStatus.SOLD));
                         if (!allSeatUnavailable) {
                             seat.setStatus(true);
                         }
@@ -465,9 +465,9 @@ public class PaymentServiceImpl implements PaymentService {
             transaction.setDescription("Thanh toan don hang: " + orderCode);
             transaction.setAccount(account);
             transaction.setPayment(payment);
-            transaction.setStatus(ETransactionStatus.FAILED.name());
+            transaction.setStatus(ETransactionStatus.FAILED);
             transaction.setContractPayment(null);
-            transaction.setType(ETransactionType.DIRECT_PAYMENT.name());
+            transaction.setType(ETransactionType.DIRECT_PAYMENT);
             transactionRepository.save(transaction);
             return new PaymentResponse(status, "CANCELLED", mapper.map(payment, PaymentResponse.class));
         }

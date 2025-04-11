@@ -2,6 +2,7 @@ package com.pse.tixclick.payload.entity.company;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.pse.tixclick.payload.entity.Account;
+import com.pse.tixclick.payload.entity.entity_enum.EContractDetailStatus;
 import com.pse.tixclick.payload.entity.payment.ContractPayment;
 import jakarta.persistence.*;
 import lombok.*;
@@ -37,8 +38,9 @@ public class ContractDetail {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDate payDate;
 
+    @Enumerated(EnumType.STRING)
     @Column
-    private String status;
+    private EContractDetailStatus status;
 
     @Column
     private double percentage;
