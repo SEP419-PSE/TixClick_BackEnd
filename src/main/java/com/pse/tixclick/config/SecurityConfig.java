@@ -64,9 +64,9 @@ public class SecurityConfig {
             "/ticket/**",
             "/company/**",
             "/member/**",
-            "/swagger-ui/**",
+            "/api/swagger-ui/**",
             "/v3/api-docs/**",
-            "/swagger-ui.html",
+            "/api/swagger-ui/index.html",
             "/oauth2/**",
             "/seat-map/**",
             "/contract/**",
@@ -96,7 +96,7 @@ public class SecurityConfig {
                 .oauth2Login(oauth2 -> oauth2
                         .successHandler((request, response, authentication) -> {
                             String referer = request.getHeader("Referer");
-                            if (referer != null && referer.contains("/swagger-ui")) {
+                            if (referer != null && referer.contains("/api/swagger-ui")) {
                                 response.sendRedirect(referer);
                             } else {
                                 response.sendRedirect("/auth/google/success");
