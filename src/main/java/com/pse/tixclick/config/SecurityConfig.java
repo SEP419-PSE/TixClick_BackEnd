@@ -135,6 +135,7 @@ public class SecurityConfig {
                 "http://160.191.175.172:5173",
                 "https://tixclick.site",
                 "http://192.168.1.15:19006",
+                "http://160.191.175.172:8080",
                 "https://pay.payos.vn/"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));

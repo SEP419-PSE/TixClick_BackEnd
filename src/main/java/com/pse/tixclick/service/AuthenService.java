@@ -22,10 +22,10 @@ public interface AuthenService {
 
     RefreshTokenResponse refreshToken(IntrospectRequest refreshToken) throws JOSEException, ParseException;
 
-    boolean register(SignUpRequest signUpRequest);
+    boolean register(SignUpRequest signUpRequest) throws MessagingException;
 
     void createAndSendOTP(String email) throws MessagingException;
-    boolean verifyOTP(String email, String otpCode);
+    TokenResponse verifyOTP(String email, String otpCode);
 
     GetToken getToken();
 

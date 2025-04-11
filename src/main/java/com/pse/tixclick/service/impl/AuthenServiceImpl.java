@@ -193,14 +193,14 @@ public class AuthenServiceImpl implements AuthenService {// Để lưu thời gi
 
 
     @Override
-    public boolean register(SignUpRequest signUpRequest) {
+    public boolean register(SignUpRequest signUpRequest) throws MessagingException {
 
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
 
 
         // Kiểm tra xem username đã tồn tại chưa
         if (userRepository.findAccountByUserName(signUpRequest.getUserName()).isPresent()) {
-            throw new AppException(ErrorCode.USER_EXISTED);
+            throw new AppException(ErrorCode.USERNAME_TAKEN);
         }
 
         // Kiểm tra xem email đã tồn tại chưa
@@ -219,7 +219,8 @@ public class AuthenServiceImpl implements AuthenService {// Để lưu thời gi
         newUser.setActive(false);
         newUser.setRole(role);
 
-        userRepository.save(newUser);
+        userRepository.saveAndFlush(newUser);
+        createAndSendOTP(signUpRequest.getEmail());
         return true;
     }
 
@@ -255,9 +256,7 @@ public class AuthenServiceImpl implements AuthenService {// Để lưu thời gi
 
 
     @Override
-    public boolean verifyOTP(String email, String otpCode) {
-
-
+    public TokenResponse verifyOTP(String email, String otpCode) {
         String storedOTP = stringRedisTemplate.opsForValue().get("OTP:" + email);
 
         // Kiểm tra OTP có tồn tại và khớp với mã người dùng nhập không
@@ -268,10 +267,27 @@ public class AuthenServiceImpl implements AuthenService {// Để lưu thời gi
             user.setActive(true);
             userRepository.save(user);
             stringRedisTemplate.delete("OTP:" + email);
-            return true;
+
+            String key = "REFRESH_TOKEN:" + user.getUserName();
+            var tokenPair = jwt.generateTokens(user);
+            String token = tokenPair.refreshToken().token();
+
+            // Lưu Refresh token vào Redis (7 ngày)
+            stringRedisTemplate.opsForValue()
+                    .set(key, token, 7, TimeUnit.DAYS);
+
+            return TokenResponse.builder()
+                    .accessToken(tokenPair.accessToken().token())
+                    .refreshToken(tokenPair.refreshToken().token())
+                    .status(user.isActive())
+                    .roleName(String.valueOf(user.getRole().getRoleName()))
+                    .build();
         }
-        return false;
+
+        // Nếu OTP sai
+        throw new AppException(ErrorCode.INVALID_OTP);
     }
+
 
 
     @Override
