@@ -397,6 +397,7 @@ public class AuthenServiceImpl implements AuthenService {// Để lưu thời gi
                     .accessToken(tokenPair.accessToken().token())
                     .refreshToken(tokenPair.refreshToken().token())
                     .status(user.isActive())
+                    .roleName(String.valueOf(user.getRole().getRoleName()))
                     .build();
 
         } catch (AppException e) {
