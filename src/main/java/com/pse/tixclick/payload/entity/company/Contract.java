@@ -53,7 +53,7 @@ public class Contract {
     @JoinColumn(name="manager_id", nullable = false)
     private Account account;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name="event_id", nullable = false)
     private Event event;
 

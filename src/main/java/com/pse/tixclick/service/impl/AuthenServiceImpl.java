@@ -72,7 +72,10 @@ public class AuthenServiceImpl implements AuthenService {// Để lưu thời gi
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
         if (!user.isActive()) {
-            throw new AppException(ErrorCode.USER_NOT_ACTIVE);
+            return TokenResponse.builder()
+                    .email(user.getEmail())
+                    .status(false)
+                    .build();
         }
 
         // Validate password
@@ -104,7 +107,6 @@ public class AuthenServiceImpl implements AuthenService {// Để lưu thời gi
                 .refreshToken(tokenPair.refreshToken().token())
                 .status(user.isActive())
                 .roleName(String.valueOf(user.getRole().getRoleName()))
-                .email(user.getEmail())
                 .build();
     }
 

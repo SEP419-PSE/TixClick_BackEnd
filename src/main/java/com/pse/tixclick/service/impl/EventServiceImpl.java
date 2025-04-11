@@ -6,6 +6,7 @@ import com.pse.tixclick.payload.dto.EventActivityDTO;
 import com.pse.tixclick.payload.dto.TicketDTO;
 import com.pse.tixclick.payload.dto.UpcomingEventDTO;
 import com.pse.tixclick.payload.entity.Account;
+import com.pse.tixclick.payload.entity.Notification;
 import com.pse.tixclick.payload.entity.company.Company;
 import com.pse.tixclick.payload.entity.company.Contract;
 import com.pse.tixclick.payload.entity.entity_enum.EContractStatus;
@@ -62,6 +63,7 @@ public class EventServiceImpl implements EventService {
     AppUtils appUtils;
     OrderRepository orderRepository;
     TicketMappingService ticketMappingService;
+    NotificationRepository notificationRepository;
 
 
 
@@ -437,7 +439,12 @@ public class EventServiceImpl implements EventService {
         eventRepository.save(event);
         Account manager = accountRepository.findManagerWithLeastVerifications()
                 .orElseThrow(() -> new AppException(ErrorCode.MANAGER_NOT_FOUND));
-
+        List<Contract> contractList = contractRepository.findContractsByEvent_EventId(eventId);
+        for (Contract contract : contractList) {
+            if (contract.getStatus().equals(EContractStatus.APPROVED)) {
+                throw new AppException(ErrorCode.EVENT_ALREADY_APPROVED);
+            }
+        }
         Contract contract = new Contract();
         contract.setEvent(event);
         contract.setCompany(event.getCompany());
@@ -452,6 +459,16 @@ public class EventServiceImpl implements EventService {
         emailService.sendEventApprovalRequest(manager.getEmail(), event.getEventName(), fullName);
 
         messagingTemplate.convertAndSendToUser(manager.getUserName(),"/queue/notifications", "Có sự kiện mới cần duyệt");
+        Notification notification = new Notification();
+        notification.setMessage("Có sự kiện mới cần duyệt");
+        notification.setAccount(manager);
+        notification.setRead(false);
+        notification.setCreatedDate(LocalDate.now().atStartOfDay());
+        notification.setReadDate(null);
+
+        notificationRepository.save(notification);
+
+
         return "Yêu cầu đã được gửi";
 
     }
