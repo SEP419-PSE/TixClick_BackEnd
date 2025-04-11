@@ -13,6 +13,7 @@ import com.pse.tixclick.repository.AccountRepository;
 import com.pse.tixclick.repository.RoleRepository;
 import com.pse.tixclick.service.AuthenService;
 import jakarta.mail.MessagingException;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +23,9 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.io.IOException;
 import java.text.ParseException;
 import java.util.stream.Collectors;
 
@@ -255,30 +258,22 @@ public class AuthenController {
 //    }
 
     @GetMapping("/google/success")
-    public ResponseEntity<ApiResponse<TokenResponse>> facebookLoginSuccess(
-            @AuthenticationPrincipal OAuth2User principal
-    ) {
-        try {
-            TokenResponse tokenResponse = authenService.signupAndLoginWithGoogle(principal);
+    public void googleLoginSuccess(
+            @AuthenticationPrincipal OAuth2User principal,
+            HttpServletResponse response
+    ) throws IOException {
+        TokenResponse tokenResponse = authenService.signupAndLoginWithGoogle(principal);
 
-            ApiResponse<TokenResponse> apiResponse = ApiResponse.<TokenResponse>builder()
-                    .code(HttpStatus.OK.value())
-                    .message("Google login successful")
-                    .result(tokenResponse)
-                    .build();
+        String redirectUrl = UriComponentsBuilder
+                .fromUriString("http://localhost:5173/success")
+                .queryParam("accessToken", tokenResponse.getAccessToken())
+                .queryParam("refreshToken", tokenResponse.getRefreshToken())
+                .build()
+                .toUriString();
 
-            return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
-
-        } catch (AppException e) {
-            ApiResponse<TokenResponse> errorResponse = ApiResponse.<TokenResponse>builder()
-                    .code(e.getErrorCode().getCode()) // Lấy mã lỗi từ ErrorCode
-                    .message(e.getErrorCode().getMessage()) // Lấy message từ ErrorCode
-                    .result(null)
-                    .build();
-
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
-        }
+        response.sendRedirect(redirectUrl);
     }
+
 
 
     @PostMapping("/login_with_manager_and_admin")
