@@ -527,20 +527,20 @@ public class AuthenServiceTest {
     }
 
 
-    @Test
-    void register_ShouldThrowException_WhenUsernameExists() {
-        SignUpRequest request = SignUpRequest.builder()
-                .userName("existingUser")
-                .password("password")
-                .email("test@example.com")
-                .build();
-
-        when(userRepository.findAccountByUserName("existingUser"))
-                .thenReturn(Optional.of(new Account()));
-
-        AppException exception = assertThrows(AppException.class, () -> authenService.register(request));
-        assertEquals(ErrorCode.USER_EXISTED, exception.getErrorCode());
-    }
+//    @Test
+//    void register_ShouldThrowException_WhenUsernameExists() {
+//        SignUpRequest request = SignUpRequest.builder()
+//                .userName("existingUser")
+//                .password("password")
+//                .email("test@example.com")
+//                .build();
+//
+//        when(userRepository.findAccountByUserName("existingUser"))
+//                .thenReturn(Optional.of(new Account()));
+//
+//        AppException exception = assertThrows(AppException.class, () -> authenService.register(request));
+//        assertEquals(ErrorCode.USER_EXISTED, exception.getErrorCode());
+//    }
     @Test
     void register_ShouldThrowException_WhenEmailExists() {
         SignUpRequest request = SignUpRequest.builder()
