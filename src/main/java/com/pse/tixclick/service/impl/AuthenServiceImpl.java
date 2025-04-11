@@ -234,23 +234,28 @@ public class AuthenServiceImpl implements AuthenService {// Để lưu thời gi
             throw new AppException(ErrorCode.USER_ACTIVE);
         }
 
-        // Kiểm tra xem OTP đã tồn tại trong Redis chưa
-        String existingOTP = stringRedisTemplate.opsForValue().get("OTP:" + email);
-        if (existingOTP != null) {
-            throw new AppException(ErrorCode.OTP_ALREADY_SENT);
+        String otpKey = "OTP:" + email;
+        String timeKey = "OTP_TIME:" + email;
+
+        // Kiểm tra thời gian gửi gần nhất
+        String lastSentTimeStr = stringRedisTemplate.opsForValue().get(timeKey);
+        if (lastSentTimeStr != null) {
+            long lastSentTime = Long.parseLong(lastSentTimeStr);
+            long now = System.currentTimeMillis();
+            if (now - lastSentTime < 30_000) { // 30 giây
+                throw new AppException(ErrorCode.OTP_ALREADY_SENT_RECENTLY);
+            }
         }
 
         // Tạo OTP mới
         String otpCode = generateOTP();
 
-        // Lưu OTP vào Redis với thời gian hết hạn là 15 phút
-        String key = "OTP:" + email;
-        stringRedisTemplate.opsForValue().set(key, otpCode, 15, TimeUnit.MINUTES);
-        // In ra log để kiểm tra key và value
-        String savedOtp = stringRedisTemplate.opsForValue().get(key);
-        System.out.println("🔹 OTP stored in Redis: Key = " + key + ", Value = " + savedOtp);
+        // Lưu OTP và thời gian gửi vào Redis
+        stringRedisTemplate.opsForValue().set(otpKey, otpCode, 15, TimeUnit.MINUTES);
+        stringRedisTemplate.opsForValue().set(timeKey, String.valueOf(System.currentTimeMillis()), 15, TimeUnit.MINUTES);
 
-        // Gửi OTP qua email
+        System.out.println("🔹 OTP stored in Redis: Key = " + otpKey + ", Value = " + otpCode);
+
         emailService.sendOTPtoActiveAccount(email, otpCode, user.getUserName());
     }
 
