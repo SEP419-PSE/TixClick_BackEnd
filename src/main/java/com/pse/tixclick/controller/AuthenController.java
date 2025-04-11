@@ -265,7 +265,7 @@ public class AuthenController {
         TokenResponse tokenResponse = authenService.signupAndLoginWithGoogle(principal);
 
         String redirectUrl = UriComponentsBuilder
-                .fromUriString("http://localhost:5173/success")
+                .fromUriString("http://localhost:5173/login-google-success")
                 .queryParam("accessToken", tokenResponse.getAccessToken())
                 .queryParam("refreshToken", tokenResponse.getRefreshToken())
                 .build()
