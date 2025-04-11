@@ -259,7 +259,7 @@ public class AuthenController {
             @AuthenticationPrincipal OAuth2User principal
     ) {
         try {
-            TokenResponse tokenResponse = authenService.signupAndLoginWithFacebook(principal);
+            TokenResponse tokenResponse = authenService.signupAndLoginWithGoogle(principal);
 
             ApiResponse<TokenResponse> apiResponse = ApiResponse.<TokenResponse>builder()
                     .code(HttpStatus.OK.value())

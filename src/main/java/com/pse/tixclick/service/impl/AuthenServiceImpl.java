@@ -104,6 +104,7 @@ public class AuthenServiceImpl implements AuthenService {// Để lưu thời gi
                 .refreshToken(tokenPair.refreshToken().token())
                 .status(user.isActive())
                 .roleName(String.valueOf(user.getRole().getRoleName()))
+                .email(user.getEmail())
                 .build();
     }
 
@@ -353,7 +354,7 @@ public class AuthenServiceImpl implements AuthenService {// Để lưu thời gi
 
 
     @Override
-    public TokenResponse signupAndLoginWithFacebook(OAuth2User principal) {
+    public TokenResponse signupAndLoginWithGoogle(OAuth2User principal) {
         try {
             String email = principal.getAttribute("email");
             String firstName = principal.getAttribute("given_name");  // Lấy first name

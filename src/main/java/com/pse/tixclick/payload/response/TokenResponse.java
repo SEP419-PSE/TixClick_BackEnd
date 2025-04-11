@@ -14,5 +14,6 @@ public class TokenResponse {
     String accessToken;
     String refreshToken;
     String roleName;
+    String email;
     boolean status;
 }
