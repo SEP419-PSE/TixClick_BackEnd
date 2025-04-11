@@ -55,31 +55,30 @@ public class SecurityConfig {
 //            "/background/**",
 //    };
     private final String[] PUBLIC_ENDPOINTS = {
-            "/account/**",
-            "/auth/**",
-            "/company-account/**",
-            "/event/**",
-            "event-image/**",
-            "/event-activity/**",
-            "/ticket/**",
-            "/company/**",
-            "/member/**",
+            "/api/account/**",
+            "/api/auth/**",
+            "/api/company-account/**",
+            "/api/event/**",
+            "/api/event-activity/**",
+            "/api/ticket/**",
+            "/api/company/**",
+            "/api/member/**",
             "/api/swagger-ui/**",
             "/api/v3/api-docs/**",
             "/api/swagger-ui/index.html",
-            "/oauth2/**",
-            "/seat-map/**",
-            "/contract/**",
-            "/company-document/**",
-            "/company-verification/**",
-            "/member-activity/**",
-            "/contract-document/**",
-            "/background/**",
+            "/api/oauth2/**",
+            "/api/seat-map/**",
+            "/api/contract/**",
+            "/api/company-document/**",
+            "/api/company-verification/**",
+            "/api/member-activity/**",
+            "/api/contract-document/**",
+            "/api/background/**",
             "/ws/**",
-            "/ticket-purchase/**",
-            "/transaction/**",
-            "/payment/**",
-            "notification/**",
+            "/api/ticket-purchase/**",
+            "/api/transaction/**",
+            "/api/payment/**",
+            "/apinotification/**",
             "/api/tickets/**",
     };
     @Bean
@@ -99,7 +98,7 @@ public class SecurityConfig {
                             if (referer != null && referer.contains("/api/swagger-ui")) {
                                 response.sendRedirect(referer);
                             } else {
-                                response.sendRedirect("/auth/google/success");
+                                response.sendRedirect("/api/auth/google/success");
                             }
                         })
                 )
