@@ -71,5 +71,7 @@ public interface EventRepository extends JpaRepository<Event, Integer> {
                                    @Param("minPrice") double minPrice,
                                    @Param("maxPrice") Double maxPrice); // maxPrice là Optional Double
 
+    @Query("SELECT e FROM Event e WHERE e.eventCode = :eventCode")
+    Optional<Event> findEventByEventCode(@Param("eventCode") String eventCode);
 }
 

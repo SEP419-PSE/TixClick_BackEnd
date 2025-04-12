@@ -36,6 +36,9 @@ public class Company {
     @Column(columnDefinition = "NVARCHAR(255)")
     private String address;
 
+    @Column(columnDefinition = "NVARCHAR(255)")
+    private String email;
+
     @Column
     private String logoURL;
 
