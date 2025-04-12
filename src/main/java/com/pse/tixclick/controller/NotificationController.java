@@ -10,6 +10,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,6 +23,7 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class NotificationController {
     NotificationService notificationService;
+    SimpMessagingTemplate messagingTemplate;
 
     @GetMapping("/notifications")
     public ResponseEntity<ApiResponse<List<NotificationDTO>>> getNotificationsByAccount(){
@@ -66,4 +68,11 @@ public class NotificationController {
                     .build());
         }
     }
+
+    @GetMapping("/test")
+    public void test() {
+        // Gửi thông báo đến người dùng 'huy2' trên kênh '/user/queue/notifications'
+        messagingTemplate.convertAndSendToUser("huy2", "/specific/messages", "Hello, this is a test message!");
+    }
+
 }

@@ -86,6 +86,7 @@ public class SecurityConfig {
             "/api/payment/**",
             "/apinotification/**",
             "/api/tickets/**",
+            "/api/notification/**",
     };
 
     @Bean

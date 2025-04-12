@@ -458,7 +458,7 @@ public class EventServiceImpl implements EventService {
         String fullName = event.getOrganizer().getFirstName() + " " + event.getOrganizer().getLastName();
         emailService.sendEventApprovalRequest(manager.getEmail(), event.getEventName(), fullName);
 
-        messagingTemplate.convertAndSendToUser(manager.getUserName(),"/queue/notifications", "Có sự kiện mới cần duyệt");
+        messagingTemplate.convertAndSendToUser(manager.getUserName(),"/specific/messages", "Có sự kiện mới cần duyệt");
         Notification notification = new Notification();
         notification.setMessage("Có sự kiện mới cần duyệt");
         notification.setAccount(manager);

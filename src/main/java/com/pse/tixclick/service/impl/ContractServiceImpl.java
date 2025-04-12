@@ -25,6 +25,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.modelmapper.ModelMapper;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -54,6 +55,7 @@ public class ContractServiceImpl implements ContractService {
     TicketMappingRepository ticketMappingRepository;
     ContractDetailRepository contractDetailRepository;
     AccountRepository accountRepository1;
+    SimpMessagingTemplate messagingTemplate;
 
     @Override
     public ContractDTO createContract(CreateContractRequest request) {
@@ -185,7 +187,11 @@ public class ContractServiceImpl implements ContractService {
             case APPROVED:
                 String fullName = contractVerification.getContract().getCompany().getRepresentativeId().getFirstName() + " " +
                         contractVerification.getContract().getCompany().getRepresentativeId().getLastName();
-
+                messagingTemplate.convertAndSendToUser(
+                        contractVerification.getContract().getCompany().getRepresentativeId().getUserName(),
+                        "/specific/messages",
+                        "Your contract has been approved. Please check your email for details."
+                );
                 emailService.sendEventStartNotification(
                         contractVerification.getContract().getCompany().getRepresentativeId().getEmail(),
                         contractVerification.getContract().getEvent().getEventName(),
