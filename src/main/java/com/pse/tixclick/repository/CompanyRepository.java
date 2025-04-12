@@ -3,6 +3,7 @@ package com.pse.tixclick.repository;
 import com.pse.tixclick.payload.entity.company.Company;
 import com.pse.tixclick.payload.entity.entity_enum.ECompanyStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import javax.swing.text.html.Option;
@@ -20,4 +21,7 @@ public interface CompanyRepository extends JpaRepository<Company,Integer> {
     boolean existsByRepresentativeId_UserName(String userName);
 
     Optional<Company>  findCompanyByRepresentativeId_UserName(String userName);
+
+    @Query("SELECT c FROM Company c WHERE c.email = :email")
+    Optional<Company> findCompanyByEmail(String email);
 }

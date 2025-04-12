@@ -25,5 +25,4 @@ public class ContractAndContractDetailResponse {
     int eventId;
     int companyId;
     List<ContractDetailDTO>  contractDetailDTOS;
-
 }

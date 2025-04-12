@@ -35,6 +35,9 @@ public class Event {
     @Column(columnDefinition = "NVARCHAR(255)")
     String location;
 
+    @Column
+    String eventCode;
+
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     EEventStatus status;
