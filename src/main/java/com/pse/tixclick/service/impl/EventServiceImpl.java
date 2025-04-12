@@ -39,6 +39,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -462,7 +463,7 @@ public class EventServiceImpl implements EventService {
         notification.setMessage("Có sự kiện mới cần duyệt");
         notification.setAccount(manager);
         notification.setRead(false);
-        notification.setCreatedDate(LocalDate.now().atStartOfDay());
+        notification.setCreatedDate(LocalDateTime.now());
         notification.setReadDate(null);
 
         notificationRepository.saveAndFlush(notification);
