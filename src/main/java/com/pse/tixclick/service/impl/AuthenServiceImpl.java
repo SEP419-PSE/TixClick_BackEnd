@@ -358,6 +358,7 @@ public class AuthenServiceImpl implements AuthenService {// Để lưu thời gi
     @Override
     public TokenResponse signupAndLoginWithGoogle(OAuth2User principal) {
         try {
+            System.out.println("OAuth2 principal: " + principal.getAttributes());
             String email = principal.getAttribute("email");
             String firstName = principal.getAttribute("given_name");  // Lấy first name
             String lastName = principal.getAttribute("family_name");

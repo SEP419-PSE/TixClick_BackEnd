@@ -39,6 +39,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -297,8 +298,11 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public List<EventDTO> getEventByStatus(EEventStatus status) {
-        List<Event> events = eventRepository.findEventsByStatus(status)
-                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+        List<Event> events = eventRepository.findEventsByStatus(status);
+        if (events.isEmpty()) {
+            throw new AppException(ErrorCode.EVENT_NOT_FOUND);
+        }
+
         return modelMapper.map(events, new TypeToken<List<EventDTO>>() {
         }.getType());
     }
@@ -317,8 +321,10 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public List<EventDTO> getEventByCompleted() {
-        List<Event> events = eventRepository.findEventsByStatus(EEventStatus.valueOf("COMPLETED"))
-                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+        List<Event> events = eventRepository.findEventsByStatus(EEventStatus.valueOf("COMPLETED"));
+        if (events.isEmpty()) {
+            throw new AppException(ErrorCode.EVENT_NOT_FOUND);
+        }
         return modelMapper.map(events, new TypeToken<List<EventDTO>>() {
         }.getType());
     }
@@ -396,8 +402,11 @@ public class EventServiceImpl implements EventService {
             upcomingEventDTOs.add(dto);
         }
 
+        Collections.reverse(upcomingEventDTOs); // Đảo ngược thứ tự
+
         return upcomingEventDTOs;
     }
+
 
     @Override
     public List<UpcomingEventDTO> getTopPerformingEvents() {
@@ -458,15 +467,15 @@ public class EventServiceImpl implements EventService {
         String fullName = event.getOrganizer().getFirstName() + " " + event.getOrganizer().getLastName();
         emailService.sendEventApprovalRequest(manager.getEmail(), event.getEventName(), fullName);
 
-        messagingTemplate.convertAndSendToUser(manager.getUserName(),"/queue/notifications", "Có sự kiện mới cần duyệt");
         Notification notification = new Notification();
         notification.setMessage("Có sự kiện mới cần duyệt");
         notification.setAccount(manager);
         notification.setRead(false);
-        notification.setCreatedDate(LocalDate.now().atStartOfDay());
+        notification.setCreatedDate(LocalDateTime.now());
         notification.setReadDate(null);
 
-        notificationRepository.save(notification);
+        notificationRepository.saveAndFlush(notification);
+        messagingTemplate.convertAndSendToUser(manager.getUserName(),"/specific/messages", "Có sự kiện mới cần duyệt");
 
 
         return "Yêu cầu đã được gửi";
@@ -475,17 +484,24 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public List<EventForConsumerResponse> getEventsForConsumerByStatusScheduled() {
-        List<Event> events = eventRepository.findEventsByStatus(EEventStatus.SCHEDULED)
-                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+        List<Event> events = eventRepository.findEventsByStatus(EEventStatus.SCHEDULED);
+        if (events.isEmpty()) {
+            throw new AppException(ErrorCode.EVENT_NOT_FOUND);
+        }
 
-        return events.stream()
+        List<EventForConsumerResponse> responses = events.stream()
                 .map(event -> new EventForConsumerResponse(
                         event.getBannerURL(),
                         event.getEventId(),
                         event.getLogoURL()
                 ))
                 .collect(Collectors.toList());
+
+        Collections.reverse(responses); // Đảo ngược danh sách
+
+        return responses;
     }
+
 
     @Override
     public EventDetailForConsumer getEventDetailForConsumer(int eventId) {
@@ -584,19 +600,23 @@ public class EventServiceImpl implements EventService {
             throw new AppException(ErrorCode.EVENT_NOT_FOUND);
         }
 
-        return events.stream()
+        List<EventForConsumerResponse> responses = events.stream()
                 .map(event -> new EventForConsumerResponse(
                         event.getBannerURL(),
                         event.getEventId(),
                         event.getLogoURL()
                 ))
                 .collect(Collectors.toList());
+
+        Collections.reverse(responses); // Đảo ngược danh sách
+
+        return responses;
     }
+
 
     @Override
     public List<EventForConsumerResponse> getEventsForConsumerInMonth(int month) {
-        List<Event> events = eventRepository.findAll().stream()
-                .filter(event -> (event.getStatus() == EEventStatus.SCHEDULED || event.getStatus() == EEventStatus.ON_GOING))
+        List<Event> events = eventRepository.findEventsByStatus(EEventStatus.SCHEDULED).stream()
                 .filter(event -> event.getEventActivities().stream()
                         .anyMatch(eventActivity -> eventActivity.getDateEvent().getMonthValue() == month))
                 .toList();
@@ -605,14 +625,19 @@ public class EventServiceImpl implements EventService {
             throw new AppException(ErrorCode.EVENT_NOT_FOUND);
         }
 
-        return events.stream()
+        List<EventForConsumerResponse> responses = events.stream()
                 .map(event -> new EventForConsumerResponse(
                         event.getBannerURL(),
                         event.getEventId(),
                         event.getLogoURL()
                 ))
                 .collect(Collectors.toList());
+
+        Collections.reverse(responses); // Đảo ngược danh sách
+
+        return responses;
     }
+
 
     @Override
     public List<EventDetailForConsumer> getEventByStartDateAndEndDateAndEventTypeAndEventName(

@@ -1,15 +1,19 @@
 package com.pse.tixclick.config;
 
+import com.pse.tixclick.payload.response.TokenResponse;
+import com.pse.tixclick.service.AuthenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.oauth2.client.oidc.web.logout.OidcClientInitiatedLogoutSuccessHandler;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
@@ -28,11 +32,13 @@ public class SecurityConfig {
 
     @Autowired
     private CustomJwtDecoder customJwtDecoder;
+    @Autowired
+    private AuthenService authenService; // Thêm AuthenService vào
 
     @Autowired
     private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;  // Thêm EntryPoint vào
 
-//    private final String[] PUBLIC_ENDPOINTS = {
+    //    private final String[] PUBLIC_ENDPOINTS = {
 //            "/account/**",
 //            "/auth/**",
 //            "/company-account/**",
@@ -80,10 +86,13 @@ public class SecurityConfig {
             "/api/payment/**",
             "/apinotification/**",
             "/api/tickets/**",
+            "/api/notification/**",
     };
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.GET, PUBLIC_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
@@ -100,7 +109,7 @@ public class SecurityConfig {
                             } else {
                                 response.sendRedirect("/api/auth/google/success");
                             }
-                        })
+                        })// 🔥 redirect về endpoint của bạn
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwtConfigurer -> jwtConfigurer

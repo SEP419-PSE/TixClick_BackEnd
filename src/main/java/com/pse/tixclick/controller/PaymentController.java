@@ -21,6 +21,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -45,14 +46,23 @@ public class PaymentController {
 
     @GetMapping("/payos_call_back")
     public void payOSCallbackHandler(HttpServletRequest request, HttpServletResponse response) throws Exception {
-        String url = "https://tixclick.stie/payment/queue";
-        String urlFail = "https://tixclick.stie/payment/queue";
+        String mainUrl = "https://localhost:5173/payment/queue";
+        String fallbackUrl = "http://tixclick.site/payment/queue"; // hoặc URL khác nếu cần
 
         PaymentResponse payment = paymentService.handleCallbackPayOS(request);
-        if (payment.getCode().equals("00")) {
-            response.sendRedirect(url);
-        } else {
-            response.sendRedirect(urlFail);
+
+        String redirectUrl = mainUrl;
+        if (!"00".equals(payment.getCode())) {
+            redirectUrl = mainUrl; // vẫn là mainUrl nếu thất bại, nhưng vẫn xử lý fallback bên dưới
+        }
+
+        try {
+            // Redirect đến mainUrl
+            response.sendRedirect(redirectUrl);
+        } catch (IOException e) {
+            // Nếu không redirect được (ví dụ: timeout, domain lỗi...), fallback về localhost
+            System.err.println("Redirect đến mainUrl thất bại, thử lại với fallback: " + e.getMessage());
+            response.sendRedirect(fallbackUrl);
         }
     }
 
