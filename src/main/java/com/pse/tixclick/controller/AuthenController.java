@@ -257,23 +257,34 @@ public class AuthenController {
 //        return ResponseEntity.ok(new ApiResponse<>(200, "GitHub login successful", tokenResponse));
 //    }
 
+//    @GetMapping("/google/success")
+//    public void googleLoginSuccess(
+//            @AuthenticationPrincipal OAuth2User principal,
+//            HttpServletResponse response
+//    ) throws IOException {
+//        TokenResponse tokenResponse = authenService.signupAndLoginWithGoogle(principal);
+//
+//        String redirectUrl = UriComponentsBuilder
+//                .fromUriString("http://localhost:5173/login-google-success")
+//                .queryParam("accessToken", tokenResponse.getAccessToken())
+//                .queryParam("refreshToken", tokenResponse.getRefreshToken())
+//                .build()
+//                .toUriString();
+//
+//        response.sendRedirect(redirectUrl);
+//    }
     @GetMapping("/google/success")
-    public void googleLoginSuccess(
-            @AuthenticationPrincipal OAuth2User principal,
-            HttpServletResponse response
-    ) throws IOException {
+    public ResponseEntity<ApiResponse<TokenResponse>> googleLoginSuccess(
+            @AuthenticationPrincipal OAuth2User principal
+    ) {
         TokenResponse tokenResponse = authenService.signupAndLoginWithGoogle(principal);
-
-        String redirectUrl = UriComponentsBuilder
-                .fromUriString("http://localhost:5173/login-google-success")
-                .queryParam("accessToken", tokenResponse.getAccessToken())
-                .queryParam("refreshToken", tokenResponse.getRefreshToken())
-                .build()
-                .toUriString();
-
-        response.sendRedirect(redirectUrl);
+        ApiResponse<TokenResponse> apiResponse = ApiResponse.<TokenResponse>builder()
+                .code(HttpStatus.OK.value())
+                .message("Google login successful")
+                .result(tokenResponse)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
     }
-
 
 
     @PostMapping("/login_with_manager_and_admin")
