@@ -29,6 +29,7 @@ public class NotificationController {
     public ResponseEntity<ApiResponse<List<NotificationDTO>>> getNotificationsByAccount(){
         try{
             List<NotificationDTO> notifications = notificationService.getNotificationByAccountId();
+
             return ResponseEntity.ok(ApiResponse.<List<NotificationDTO>>builder()
                     .code(HttpStatus.OK.value())
                     .message("Get notifications successfully")

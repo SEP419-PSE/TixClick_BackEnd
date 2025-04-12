@@ -16,6 +16,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -33,14 +34,19 @@ public class NotificationServiceImpl implements NotificationService {
         String username = context.getAuthentication().getName();
 
         var account = accountRepository.findAccountByUserName(username)
-                .orElseThrow(()-> new AppException(ErrorCode.USER_NOT_EXISTED));
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
         List<Notification> notifications = notificationRepository.findNotificationsByAccount_UserName(username);
 
-        return notifications.stream()
+        List<NotificationDTO> dtoList = notifications.stream()
                 .map(notification -> modelMapper.map(notification, NotificationDTO.class))
                 .collect(Collectors.toList());
+
+        Collections.reverse(dtoList); // Đảo ngược thứ tự
+
+        return dtoList;
     }
+
 
     @Override
     public String readNotification(int id) {
