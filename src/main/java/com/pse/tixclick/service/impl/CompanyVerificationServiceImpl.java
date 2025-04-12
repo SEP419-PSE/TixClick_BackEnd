@@ -123,18 +123,16 @@ public class CompanyVerificationServiceImpl implements CompanyVerificationServic
                 break;
 
             case REJECTED:
-
+                companyVerification.setStatus(EVerificationStatus.REJECTED);
                 company.setStatus(ECompanyStatus.REJECTED);
                 break;
 
             case PENDING:
 
-                company.setStatus(ECompanyStatus.PENDING);
-                break;
+                throw new AppException(ErrorCode.COMPANY_VERIFICATION_PENDING);
 
             default:
-
-                company.setStatus(ECompanyStatus.INACTIVE);
+                company.setStatus(ECompanyStatus.REJECTED);
                 break;
         }
 

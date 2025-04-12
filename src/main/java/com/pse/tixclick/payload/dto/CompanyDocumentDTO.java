@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CompanyDocumentDTO {
-    int contractId;
+    int companyDocumentId;
     int companyId;
     String fileName;
     String fileURL;
