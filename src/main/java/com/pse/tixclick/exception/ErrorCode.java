@@ -126,6 +126,10 @@ public enum ErrorCode {
     CANNOT_UPDATE(1108, "Không thể cập nhật thành viên", HttpStatus.BAD_REQUEST),
     EVENT_TYPE_NOT_ONLINE(1109, "Sự kiện không phải là sự kiện online", HttpStatus.BAD_REQUEST),
     NOT_PERMISSION_ORGANIZER(1110, "Bạn không có quyền mua vé sự kiện này", HttpStatus.FORBIDDEN),
+    INVALID_OTP(1111, "Mã OTP không hợp lệ", HttpStatus.BAD_REQUEST),
+    USERNAME_TAKEN(1112, "Tên tài khoản đã tồn tại", HttpStatus.BAD_REQUEST),
+    OTP_ALREADY_SENT_RECENTLY(1113, "Mã OTP đã được gửi gần đây", HttpStatus.BAD_REQUEST),
+    EVENT_ALREADY_APPROVED(1114, "Sự kiện đã được phê duyệt", HttpStatus.BAD_REQUEST),
     ;
 
 

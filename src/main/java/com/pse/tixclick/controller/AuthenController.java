@@ -12,6 +12,8 @@ import com.pse.tixclick.payload.response.TokenResponse;
 import com.pse.tixclick.repository.AccountRepository;
 import com.pse.tixclick.repository.RoleRepository;
 import com.pse.tixclick.service.AuthenService;
+import jakarta.mail.MessagingException;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +23,9 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.io.IOException;
 import java.text.ParseException;
 import java.util.stream.Collectors;
 
@@ -96,6 +100,8 @@ public class AuthenController {
                     .message(e.getMessage())
                     .result("Registration failed")
                     .build());
+        } catch (MessagingException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -154,35 +160,36 @@ public class AuthenController {
     }
 
     @PostMapping("/verify-otp")
-    public ResponseEntity<ApiResponse<Boolean>> verifyOTP(@RequestParam String email, @RequestParam String otpCode) {
+    public ResponseEntity<ApiResponse<TokenResponse>> verifyOTP(@RequestParam String email, @RequestParam String otpCode) {
         try {
             // Gọi service để xác thực mã OTP
-            boolean isValid = authenService.verifyOTP(email, otpCode);
+            TokenResponse isValid = authenService.verifyOTP(email, otpCode);
 
-            // Kiểm tra nếu OTP không hợp lệ
-            if (!isValid) {
-                ApiResponse<Boolean> errorResponse = ApiResponse.<Boolean>builder()
-                        .code(HttpStatus.BAD_REQUEST.value())
-                        .message("OTP verification failed")
-                        .result(false)
-                        .build();
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);  // Trả về BAD_REQUEST
-            }
+
 
             // Nếu OTP hợp lệ
-            ApiResponse<Boolean> apiResponse = ApiResponse.<Boolean>builder()
+            ApiResponse<TokenResponse> apiResponse = ApiResponse.<TokenResponse>builder()
                     .code(HttpStatus.OK.value())
                     .message("OTP verification successful")
-                    .result(true)
+                    .result(isValid)
                     .build();
             return ResponseEntity.status(HttpStatus.OK).body(apiResponse);  // Trả về OK
 
-        } catch (Exception e) {
+        } catch (AppException e) {
+            // Nếu OTP không hợp lệ, trả về phản hồi với mã trạng thái BAD_REQUEST
+            ApiResponse<TokenResponse> errorResponse = ApiResponse.<TokenResponse>builder()
+                    .code(HttpStatus.BAD_REQUEST.value())
+                    .message(e.getMessage())
+                    .result(null)
+                    .build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);  // Trả về BAD_REQUEST
+        }
+        catch (Exception e) {
             // Xử lý ngoại lệ nếu có lỗi xảy ra
-            ApiResponse<Boolean> errorResponse = ApiResponse.<Boolean>builder()
+            ApiResponse<TokenResponse> errorResponse = ApiResponse.<TokenResponse>builder()
                     .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .message("An error occurred during OTP verification")
-                    .result(false)
+                    .result(null)
                     .build();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);  // Trả về INTERNAL_SERVER_ERROR
         }
@@ -251,30 +258,22 @@ public class AuthenController {
 //    }
 
     @GetMapping("/google/success")
-    public ResponseEntity<ApiResponse<TokenResponse>> facebookLoginSuccess(
-            @AuthenticationPrincipal OAuth2User principal
-    ) {
-        try {
-            TokenResponse tokenResponse = authenService.signupAndLoginWithFacebook(principal);
+    public void googleLoginSuccess(
+            @AuthenticationPrincipal OAuth2User principal,
+            HttpServletResponse response
+    ) throws IOException {
+        TokenResponse tokenResponse = authenService.signupAndLoginWithGoogle(principal);
 
-            ApiResponse<TokenResponse> apiResponse = ApiResponse.<TokenResponse>builder()
-                    .code(HttpStatus.OK.value())
-                    .message("Google login successful")
-                    .result(tokenResponse)
-                    .build();
+        String redirectUrl = UriComponentsBuilder
+                .fromUriString("http://localhost:5173/login-google-success")
+                .queryParam("accessToken", tokenResponse.getAccessToken())
+                .queryParam("refreshToken", tokenResponse.getRefreshToken())
+                .build()
+                .toUriString();
 
-            return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
-
-        } catch (AppException e) {
-            ApiResponse<TokenResponse> errorResponse = ApiResponse.<TokenResponse>builder()
-                    .code(e.getErrorCode().getCode()) // Lấy mã lỗi từ ErrorCode
-                    .message(e.getErrorCode().getMessage()) // Lấy message từ ErrorCode
-                    .result(null)
-                    .build();
-
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
-        }
+        response.sendRedirect(redirectUrl);
     }
+
 
 
     @PostMapping("/login_with_manager_and_admin")

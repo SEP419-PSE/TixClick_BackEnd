@@ -17,4 +17,6 @@ public interface ContractRepository extends JpaRepository<Contract,Integer> {
     boolean existsByEvent(Event event);
 
     List<Contract> findContractsByAccount_AccountId(int accountId);
+
+    List<Contract> findContractsByEvent_EventId(int eventId);
 }

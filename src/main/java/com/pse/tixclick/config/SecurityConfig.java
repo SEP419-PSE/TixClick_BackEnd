@@ -18,7 +18,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import javax.naming.AuthenticationException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -33,40 +32,58 @@ public class SecurityConfig {
     @Autowired
     private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;  // Thêm EntryPoint vào
 
+//    private final String[] PUBLIC_ENDPOINTS = {
+//            "/account/**",
+//            "/auth/**",
+//            "/company-account/**",
+//            "/event/**",
+//            "event-image/**",
+//            "/event-activity/**",
+//            "/ticket/**",
+//            "/company/**",
+//            "/member/**",
+//            "/swagger-ui/**",
+//            "/v3/api-docs/**",
+//            "/swagger-ui.html",
+//            "/oauth2/**",
+//            "/seat-map/**",
+//            "/contract/**",
+//            "/company-document/**",
+//            "/company-verification/**",
+//            "/member-activity/**",
+//            "/contract-document/**",
+//            "/background/**",
+//    };
     private final String[] PUBLIC_ENDPOINTS = {
-            "/account/**",
-            "/auth/**",
-            "/company-account/**",
-            "/event/**",
-            "event-image/**",
-            "/event-activity/**",
-            "/ticket/**",
-            "/company/**",
-            "/member/**",
-            "/swagger-ui/**",
-            "/v3/api-docs/**",
-            "/swagger-ui.html",
-            "/oauth2/**",
-            "/seat-map/**",
-            "/contract/**",
-            "/company-document/**",
-            "/company-verification/**",
-            "/member-activity/**",
-            "/contract-document/**",
-            "/background/**",
+            "/api/account/**",
+            "/api/auth/**",
+            "/api/company-account/**",
+            "/api/event/**",
+            "/api/event-activity/**",
+            "/api/ticket/**",
+            "/api/company/**",
+            "/api/member/**",
+            "/api/swagger-ui/**",
+            "/api/v3/api-docs/**",
+            "/api/swagger-ui/index.html",
+            "/api/oauth2/**",
+            "/api/seat-map/**",
+            "/api/contract/**",
+            "/api/company-document/**",
+            "/api/company-verification/**",
+            "/api/member-activity/**",
+            "/api/contract-document/**",
+            "/api/background/**",
             "/ws/**",
-            "/**",
-            "/ticket-purchase/**",
-            "/transaction/**",
-            "/payment/**",
-            "notification/**",
+            "/api/ticket-purchase/**",
+            "/api/transaction/**",
+            "/api/payment/**",
+            "/apinotification/**",
             "/api/tickets/**",
     };
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.GET, PUBLIC_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
@@ -78,10 +95,10 @@ public class SecurityConfig {
                 .oauth2Login(oauth2 -> oauth2
                         .successHandler((request, response, authentication) -> {
                             String referer = request.getHeader("Referer");
-                            if (referer != null && referer.contains("/swagger-ui")) {
+                            if (referer != null && referer.contains("/api/swagger-ui")) {
                                 response.sendRedirect(referer);
                             } else {
-                                response.sendRedirect("/auth/google/success");
+                                response.sendRedirect("/api/auth/google/success");
                             }
                         })
                 )
@@ -90,15 +107,13 @@ public class SecurityConfig {
                                 .decoder(customJwtDecoder)
                                 .jwtAuthenticationConverter(jwtAuthenticationConverter())
                         )
-                        .authenticationEntryPoint(customAuthenticationEntryPoint) // Xử lý lỗi token không hợp lệ
-                )
-                .exceptionHandling(exceptionHandling -> exceptionHandling
-                        .authenticationEntryPoint(customAuthenticationEntryPoint) // Thêm ở cấp cao hơn để chắc chắn
+                        .authenticationEntryPoint(customAuthenticationEntryPoint) // Bắt lỗi Token hết hạn
                 )
                 .csrf(AbstractHttpConfigurer::disable);
 
         return http.build();
     }
+
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
         JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
@@ -114,18 +129,6 @@ public class SecurityConfig {
         return new OidcClientInitiatedLogoutSuccessHandler(clientRegistrationRepository);
     }
 
-    //    @Bean
-//    public CorsConfigurationSource corsConfigurationSource() {
-//        CorsConfiguration configuration = new CorsConfiguration();
-//        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173")); // React frontend
-//        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-//        configuration.setAllowedHeaders(Arrays.asList("*"));
-//        configuration.setAllowCredentials(true);
-//
-//        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-//        source.registerCorsConfiguration("/**", configuration);
-//        return source;
-//    }
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
@@ -135,6 +138,7 @@ public class SecurityConfig {
                 "http://160.191.175.172:5173",
                 "https://tixclick.site",
                 "http://192.168.1.15:19006",
+                "http://160.191.175.172:8080",
                 "https://pay.payos.vn/"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
