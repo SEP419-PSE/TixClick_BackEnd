@@ -167,8 +167,9 @@ public class ContractServiceImpl implements ContractService {
 
             ContractPayment contractPayment = new ContractPayment();
             contractPayment.setPaymentAmount(dto.getContractDetailAmount());
+            contractPayment.setPaymentDate(dto.getContractDetailPayDate().atStartOfDay());
             contractPayment.setContractDetail(contractDetail);
-            contractPayment.setNote(dto.getContractDetailDescription());
+            contractPayment.setNote(dto.getContractDetailName());
             contractPayment.setPaymentMethod("Thanh Toan Ngan Hang");
             contractPayment.setStatus(EContractPaymentStatus.PENDING);
             contractPaymentRepository.save(contractPayment);
@@ -220,11 +221,11 @@ public class ContractServiceImpl implements ContractService {
         if (type != null && type.contains("Trường hợp thanh toán 1 lần")) {
             dto.setContractType(EContractType.ONE_TIME.name());
             List<ContractDetailRequest> contractDetails = new ArrayList<>();
-            contractDetails.add(parseContractDetailOneTime(text));
+            contractDetails.add(parseContractDetailOneTime(text, dto.getContractCode()));
             dto.setContractDetails(contractDetails);
         } else {
             dto.setContractType(EContractType.INSTALLMENT.name());
-            dto.setContractDetails(parseContractDetailInstallment(text));
+            dto.setContractDetails(parseContractDetailInstallment(text, dto.getContractCode()));
         }
         return dto;
     }
@@ -250,14 +251,14 @@ public class ContractServiceImpl implements ContractService {
         return null;
     }
 
-    private ContractDetailRequest parseContractDetailOneTime(String text) {
+    private ContractDetailRequest parseContractDetailOneTime(String text, String contractCode) {
         // Cải tiến biểu thức chính quy để chỉ khớp với phần trăm trong phần thanh toán một lần
         Pattern p = Pattern.compile("Bên A sẽ thanh toán một lần cho Bên B (\\d{1,3})% giá trị của hợp đồng", Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
         Matcher m = p.matcher(text);
 
         if (m.find()) {
             ContractDetailRequest pmt = new ContractDetailRequest();
-            pmt.setContractDetailName("Thanh toán một lần");
+            pmt.setContractDetailName("Thanh toán một lần" + " - " + contractCode);
 
             // Lấy phần trăm thanh toán (phần trăm từ "Bên A sẽ thanh toán một lần")
             String percentageStr = m.group(1).trim();
@@ -296,7 +297,7 @@ public class ContractServiceImpl implements ContractService {
 
 
 
-    private List<ContractDetailRequest> parseContractDetailInstallment(String text) {
+    private List<ContractDetailRequest> parseContractDetailInstallment(String text, String contractCode) {
         List<ContractDetailRequest> list = new ArrayList<>();
 
         Pattern p = Pattern.compile("Lần (\\d+):.*?([\\d,\\.]+)%.*?([\\d\\.]+) VNĐ.*?ngày (\\d{2}/\\d{2}/\\d{4})", Pattern.DOTALL);
@@ -304,7 +305,7 @@ public class ContractServiceImpl implements ContractService {
 
         while (m.find()) {
             ContractDetailRequest pmt = new ContractDetailRequest();
-            pmt.setContractDetailName("Lần" + String.valueOf(Integer.parseInt(m.group(1))));
+            pmt.setContractDetailName("Lần " + String.valueOf(Integer.parseInt(m.group(1))) + " - " + contractCode);
             pmt.setContractDetailPercentage(Double.parseDouble(m.group(2).replace(",", "")));
             pmt.setContractDetailCode(contractCodeAutomationCreating());
             pmt.setContractDetailAmount(Double.parseDouble(m.group(3).replace(".", "")));

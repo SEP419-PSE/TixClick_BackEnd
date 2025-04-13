@@ -72,7 +72,7 @@ public class SecurityConfig {
             "/api/swagger-ui/**",
             "/api/v3/api-docs/**",
             "/api/swagger-ui/index.html",
-            "/api/oauth2/**",
+            "/oauth2/**",
             "/api/seat-map/**",
             "/api/contract/**",
             "/api/company-document/**",
