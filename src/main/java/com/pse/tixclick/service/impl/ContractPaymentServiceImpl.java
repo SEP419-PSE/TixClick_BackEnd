@@ -6,10 +6,7 @@ import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.ContractPaymentDTO;
 import com.pse.tixclick.payload.entity.company.ContractDetail;
-import com.pse.tixclick.payload.entity.entity_enum.EContractPaymentStatus;
-import com.pse.tixclick.payload.entity.entity_enum.ERole;
-import com.pse.tixclick.payload.entity.entity_enum.ETransactionStatus;
-import com.pse.tixclick.payload.entity.entity_enum.ETransactionType;
+import com.pse.tixclick.payload.entity.entity_enum.*;
 import com.pse.tixclick.payload.entity.payment.ContractPayment;
 import com.pse.tixclick.payload.entity.payment.Transaction;
 import com.pse.tixclick.payload.request.ContractPaymentRequest;
@@ -104,6 +101,11 @@ public class ContractPaymentServiceImpl implements ContractPaymentService {
                     transaction.setContractPayment(contractPayment);
                     transaction.setAccount(account);
                     transactionRepository.save(transaction);
+
+                    ContractDetail contractDetail = contractPayment.getContractDetail();
+                    contractDetail.setStatus(EContractDetailStatus.PAID);
+
+                    contractDetailRepository.save(contractDetail);
 
                     // Tự động chuyển hướng sang trang success
                     return new ContractPaymentRequest(transactionCode, true);
