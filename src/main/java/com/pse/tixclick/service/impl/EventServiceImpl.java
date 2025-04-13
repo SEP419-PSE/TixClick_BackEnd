@@ -859,6 +859,29 @@ public class EventServiceImpl implements EventService {
         return true;
     }
 
+    @Override
+    public List<EventForConsumerResponse> getEventsForConsumerByCountViewTop10() {
+        List<Event> events = eventRepository.findEventsByStatus(EEventStatus.SCHEDULED);
+        if (events.isEmpty()) {
+            throw new AppException(ErrorCode.EVENT_NOT_FOUND);
+        }
+
+        // Sắp xếp theo lượt xem giảm dần và lấy top 5
+        List<Event> top5Events = events.stream()
+                .sorted(Comparator.comparingInt(Event::getCountView).reversed())
+                .limit(10)
+                .collect(Collectors.toList());
+
+        // Chuyển sang DTO và trả về (không cần reverse nữa nếu đã sort đúng thứ tự)
+        return top5Events.stream()
+                .map(event -> new EventForConsumerResponse(
+                        event.getBannerURL(),
+                        event.getEventId(),
+                        event.getLogoURL()
+                ))
+                .collect(Collectors.toList());
+    }
+
 
 }
 

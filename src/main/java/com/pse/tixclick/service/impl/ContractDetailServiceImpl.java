@@ -140,8 +140,9 @@ public class ContractDetailServiceImpl implements ContractDetailService {
                 continue;
             }
             var company = contractDetail.getContract().getCompany();
-            String description = String.format("TIXCLICK %s - THANH TOAN HOP DONG %s",
+            String description = String.format("%s - THANH TOAN HOP DONG %s",
                     contractDetail.getContractDetailCode(), contractDetail.getContractDetailName());
+
 
 
             return QRCompanyResponse.builder()

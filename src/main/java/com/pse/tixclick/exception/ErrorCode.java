@@ -135,6 +135,7 @@ public enum ErrorCode {
     EVENT_NOT_APPROVED(1117, "Sự kiện chưa được phê duyệt", HttpStatus.BAD_REQUEST),
     EVENT_SCHEDULED(1118, "Sự kiện đã được lên lịch", HttpStatus.BAD_REQUEST),
     CONTRACT_EXISTED(1119, "Hợp đồng đã tồn tại", HttpStatus.BAD_REQUEST),
+    TRANSACTION_NOT_FOUND(1120, "Không tìm thấy giao dịch", HttpStatus.NOT_FOUND),
     ;
 
 

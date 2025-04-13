@@ -55,20 +55,11 @@ public class ContractPaymentServiceImpl implements ContractPaymentService {
     public ContractPaymentRequest getContractPayment(String transactionCode, int paymentId) {
         ObjectMapper objectMapper = new ObjectMapper();
         String jsonResponse = cassoService.getTransactions(null, 1, 10, "DESC");
-        HashMap<String, JsonNode> transactionMap = new HashMap<>();
 
         try {
             JsonNode root = objectMapper.readTree(jsonResponse);
             if (root.has("data") && root.get("data").has("records")) {
                 JsonNode records = root.get("data").get("records");
-
-                for (JsonNode record : records) {
-                    String description = record.get("description").asText();
-                    String extractedCode = description.length() >= 5 ? description.substring(0, 8) : description;
-
-                    System.out.println("Extracted Code: '" + extractedCode + "'");
-                    transactionMap.put(extractedCode, record);
-                }
 
                 transactionCode = transactionCode.trim();
 
@@ -81,44 +72,49 @@ public class ContractPaymentServiceImpl implements ContractPaymentService {
                 var account = accountRepository.findAccountByUserName(userName)
                         .orElseThrow(() -> new AppException(ErrorCode.ACCOUNT_NOT_FOUND));
 
-                if (transactionMap.containsKey(transactionCode)) {
-                    JsonNode matchedTransaction = transactionMap.get(transactionCode);
-                    double amount = matchedTransaction.get("amount").asDouble();
-                    String description = matchedTransaction.get("description").asText();
+                for (JsonNode record : records) {
+                    String description = record.get("description").asText().trim();
+                    String extractedCode = description.length() >= 8 ? description.substring(0, 8) : description;
 
+                    if (extractedCode.equalsIgnoreCase(transactionCode)) {
+                        double amount = record.get("amount").asDouble();
 
-                    contractPayment.setStatus(EContractPaymentStatus.PAID);
-                    contractPayment.setPaymentDate(LocalDateTime.now());
-                    contractPaymentRepository.save(contractPayment);
-                    // Lưu vào database
-                    Transaction transaction = new Transaction();
-                    transaction.setAmount(amount);
-                    transaction.setDescription(description);
-                    transaction.setTransactionCode(transactionCode);
-                    transaction.setType(ETransactionType.CONTRACT_PAYMENT);
-                    transaction.setStatus(ETransactionStatus.SUCCESS);
-                    transaction.setTransactionDate(LocalDateTime.now());
-                    transaction.setContractPayment(contractPayment);
-                    transaction.setAccount(account);
-                    transactionRepository.save(transaction);
+                        // Cập nhật trạng thái thanh toán
+                        contractPayment.setStatus(EContractPaymentStatus.PAID);
+                        contractPayment.setPaymentDate(LocalDateTime.now());
+                        contractPaymentRepository.save(contractPayment);
 
-                    ContractDetail contractDetail = contractPayment.getContractDetail();
-                    contractDetail.setStatus(EContractDetailStatus.PAID);
+                        // Lưu thông tin giao dịch
+                        Transaction transaction = new Transaction();
+                        transaction.setAmount(amount);
+                        transaction.setDescription(description);
+                        transaction.setTransactionCode(transactionCode);
+                        transaction.setType(ETransactionType.CONTRACT_PAYMENT);
+                        transaction.setStatus(ETransactionStatus.SUCCESS);
+                        transaction.setTransactionDate(LocalDateTime.now());
+                        transaction.setContractPayment(contractPayment);
+                        transaction.setAccount(account);
+                        transactionRepository.save(transaction);
 
-                    contractDetailRepository.save(contractDetail);
+                        // Cập nhật trạng thái chi tiết hợp đồng
+                        ContractDetail contractDetail = contractPayment.getContractDetail();
+                        contractDetail.setStatus(EContractDetailStatus.PAID);
+                        contractDetailRepository.save(contractDetail);
 
-                    // Tự động chuyển hướng sang trang success
-                    return new ContractPaymentRequest(transactionCode, true);
-                } else {
-                    return new ContractPaymentRequest(transactionCode, false);
+                        return new ContractPaymentRequest(transactionCode, true);
+                    }
                 }
+
+                // Không tìm thấy transactionCode
+                throw new AppException(ErrorCode.TRANSACTION_NOT_FOUND);
             } else {
-                return new ContractPaymentRequest(transactionCode, false);
+                throw new AppException(ErrorCode.TRANSACTION_NOT_FOUND);
             }
         } catch (IOException e) {
-            return new ContractPaymentRequest(transactionCode, false);
+            throw new AppException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
+
 
 
 

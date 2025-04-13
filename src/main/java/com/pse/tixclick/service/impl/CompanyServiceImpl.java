@@ -498,7 +498,9 @@ public class CompanyServiceImpl implements CompanyService {
             contractResponses.add(contractResponse);
         }
 
-        return new GetTransactionPaymenByCompanyIdResponse(contractResponses);
+        Collections.reverse(contractResponses);
+
+        return new GetTransactionPaymenByCompanyIdResponse(contractRegsponses);
     }
 
 

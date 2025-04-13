@@ -3,7 +3,6 @@ package com.pse.tixclick.service;
 import com.pse.tixclick.payload.dto.EventDTO;
 import com.pse.tixclick.payload.dto.UpcomingEventDTO;
 import com.pse.tixclick.payload.entity.entity_enum.EEventStatus;
-import com.pse.tixclick.payload.entity.entity_enum.ETypeEvent;
 import com.pse.tixclick.payload.request.create.CreateEventRequest;
 import com.pse.tixclick.payload.request.update.UpdateEventRequest;
 import com.pse.tixclick.payload.response.EventDashboardResponse;
@@ -70,4 +69,6 @@ public interface EventService {
     List<EventDashboardResponse> getEventDashboardByCompanyId(int companyId);
 
     boolean appoveEvent(int eventId, EEventStatus status) throws MessagingException;
+
+    List<EventForConsumerResponse> getEventsForConsumerByCountViewTop10();
 }
