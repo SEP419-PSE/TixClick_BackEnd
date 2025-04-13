@@ -171,19 +171,44 @@ public class ContractDetailServiceImpl implements ContractDetailService {
 
             List<ContractDetail> contractDetails = contractDetailRepository.findByContractId(contract.getContractId());
             for (ContractDetail contractDetail : contractDetails) {
+                if(contractDetail.getStatus() == EContractDetailStatus.PAID) {
+                    continue; // Bỏ qua nếu đã thanh toán
+                }
+                if(contractDetail.getStatus() == EContractDetailStatus.OVERDUE) {
+                    continue; // Bỏ qua nếu đã quá hạn
+                }
                 double newTotalAmount = totalAmount * contractDetail.getPercentage();
 
-                LocalDate threeDaysBefore = contractDetail.getPayDate().minusDays(3);
-                if (threeDaysBefore.isEqual(LocalDate.now())) {
-                    emailService.sendContractPaymentWarningToManager(contract.getAccount().getEmail(), contract.getCompany().getCompanyName(), newTotalAmount, contractDetail.getPayDate(), contract.getContractId(), contractDetail.getContractDetailId(), contractDetail.getContractDetailName(), contract.getEvent().getEventName());
-                }
                 ContractPayment contractPayment = contractPaymentRepository
                         .findByContractDetailId(contractDetail.getContractDetailId())
                         .orElseThrow(() -> new AppException(ErrorCode.CONTRACT_PAYMENT_NOT_FOUND));
 
+                LocalDate today = LocalDate.now();
+                LocalDate payDate = contractDetail.getPayDate();
+                LocalDate threeDaysBefore = payDate.minusDays(3);
+
+                // Gửi cảnh báo trước 3 ngày
+                if (threeDaysBefore.isEqual(today)) {
+                    emailService.sendContractPaymentWarningToManager(
+                            contract.getAccount().getEmail(),
+                            contract.getCompany().getCompanyName(),
+                            newTotalAmount,
+                            payDate,
+                            contract.getContractId(),
+                            contractDetail.getContractDetailId(),
+                            contractDetail.getContractDetailName(),
+                            contract.getEvent().getEventName()
+                    );
+                }
+                // Nếu quá hạn, set status OVERDUE
+                if (payDate.isBefore(today)) {
+                    contractDetail.setStatus(EContractDetailStatus.OVERDUE); // giả định bạn có enum này
+                    contractDetailRepository.save(contractDetail);
+                }
+
                 contractPayment.setPaymentAmount(newTotalAmount);
                 contractPaymentRepository.save(contractPayment);
-             }
+            }
         }
     }
 }
