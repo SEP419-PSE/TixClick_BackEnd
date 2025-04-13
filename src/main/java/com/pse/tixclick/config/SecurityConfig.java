@@ -75,6 +75,7 @@ public class SecurityConfig {
             "/api/v3/api-docs/**",
             "/api/swagger-ui/index.html",
             "/oauth2/**",
+            "login/oauth2/code/google",
             "/api/seat-map/**",
             "/api/contract/**",
             "/api/company-document/**",
