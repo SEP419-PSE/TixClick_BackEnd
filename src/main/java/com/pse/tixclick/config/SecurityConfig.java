@@ -2,6 +2,7 @@ package com.pse.tixclick.config;
 
 import com.pse.tixclick.payload.response.TokenResponse;
 import com.pse.tixclick.service.AuthenService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,6 +29,7 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@Slf4j
 public class SecurityConfig {
 
     @Autowired
@@ -103,6 +105,8 @@ public class SecurityConfig {
                 )
                 .oauth2Login(oauth2 -> oauth2
                         .successHandler((request, response, authentication) -> {
+                            String redirectUri = request.getRequestURL().toString(); // URL request hiện tại (bao gồm cả code)
+                            log.info("Google OAuth2 redirect URI: {}", redirectUri);
                             String referer = request.getHeader("Referer");
                             if (referer != null && referer.contains("/api/swagger-ui")) {
                                 response.sendRedirect(referer);
