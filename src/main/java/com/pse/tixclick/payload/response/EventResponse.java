@@ -15,7 +15,10 @@ public class EventResponse {
     String description;
     String bannerURL;
     String logoURL;
-    String location;
+    String eventCode;
+    String city;
+    String district;
+    String ward;
     String status;
     String typeEvent;
     int organizerId;

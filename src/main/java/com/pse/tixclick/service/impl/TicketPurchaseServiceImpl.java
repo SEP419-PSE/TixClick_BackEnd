@@ -565,7 +565,25 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
                     if (myTicket.getEvent() != null) {
                         myTicketDTO.setEventId(myTicket.getEvent().getEventId());
                         myTicketDTO.setEventName(myTicket.getEvent().getEventName());
-                        myTicketDTO.setLocation(myTicket.getEvent().getLocation());
+                        StringBuilder locationBuilder = new StringBuilder();
+                        if (myTicket.getEvent().getWard() != null) {
+                            locationBuilder.append(myTicket.getEvent().getWard()).append(", ");
+                        }
+                        if (myTicket.getEvent().getDistrict() != null) {
+                            locationBuilder.append(myTicket.getEvent().getDistrict()).append(", ");
+                        }
+                        if (myTicket.getEvent().getCity() != null) {
+                            locationBuilder.append(myTicket.getEvent().getCity());
+                        }
+                        if (locationBuilder.length() > 0) {
+                            if (locationBuilder.lastIndexOf(", ") == locationBuilder.length() - 2) {
+                                locationBuilder.delete(locationBuilder.length() - 2, locationBuilder.length());
+                            }
+
+                            myTicketDTO.setLocation(locationBuilder.toString());
+                        } else {
+                            myTicketDTO.setLocation(null);
+                        }
                     }
                     if (myTicket.getEventActivity() != null) {
                         myTicketDTO.setEventDate(myTicket.getEventActivity().getDateEvent());

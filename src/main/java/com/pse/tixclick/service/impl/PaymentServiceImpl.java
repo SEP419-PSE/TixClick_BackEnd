@@ -299,7 +299,27 @@ public class PaymentServiceImpl implements PaymentService {
                 checkinLog.setCheckinDevice("Mobile");
                 checkinLog.setTicketPurchase(ticketPurchase);
                 checkinLog.setAccount(account);
-                checkinLog.setCheckinLocation(event.getLocation());
+
+
+                StringBuilder locationBuilder = new StringBuilder();
+
+                if (event.getWard() != null && !event.getWard().trim().isEmpty()) {
+                    locationBuilder.append(event.getWard()).append(", ");
+                }
+
+                if (event.getDistrict() != null && !event.getDistrict().trim().isEmpty()) {
+                    locationBuilder.append(event.getDistrict()).append(", ");
+                }
+
+                if (event.getCity() != null && !event.getCity().trim().isEmpty()) {
+                    locationBuilder.append(event.getCity());
+                }
+
+                if (locationBuilder.length() > 0 && locationBuilder.lastIndexOf(", ") == locationBuilder.length() - 2) {
+                    locationBuilder.delete(locationBuilder.length() - 2, locationBuilder.length());
+                }
+
+                checkinLog.setCheckinLocation(locationBuilder.toString());
                 checkinLog.setCheckinStatus(ECheckinLogStatus.PENDING);
                 checkinLogRepository.save(checkinLog);
 

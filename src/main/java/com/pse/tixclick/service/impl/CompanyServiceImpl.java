@@ -500,7 +500,7 @@ public class CompanyServiceImpl implements CompanyService {
 
         Collections.reverse(contractResponses);
 
-        return new GetTransactionPaymenByCompanyIdResponse(contractRegsponses);
+        return new GetTransactionPaymenByCompanyIdResponse(contractResponses);
     }
 
 
