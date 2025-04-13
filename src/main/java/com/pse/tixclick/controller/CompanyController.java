@@ -328,4 +328,32 @@ public class CompanyController {
                             .build());
         }
     }
+
+    @GetMapping("/transactions-payment/{companyId}")
+    public ResponseEntity<ApiResponse<GetTransactionPaymenByCompanyIdResponse>> getTransactionPaymentContractByCompanyId(@PathVariable int companyId) {
+        try {
+            GetTransactionPaymenByCompanyIdResponse transactionPayment = companyService.getTransactionPaymentContractByCompanyId(companyId);
+            return ResponseEntity.ok(
+                    ApiResponse.<GetTransactionPaymenByCompanyIdResponse>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Get transaction payment by company id successfully")
+                            .result(transactionPayment)
+                            .build()
+            );
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.<GetTransactionPaymenByCompanyIdResponse>builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<GetTransactionPaymenByCompanyIdResponse>builder()
+                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .message("Internal server error")
+                            .result(null)
+                            .build());
+        }
+    }
 }
