@@ -129,47 +129,36 @@ public class ContractDetailServiceImpl implements ContractDetailService {
 
     @Override
     public QRCompanyResponse getQRCompany(int contractDetailId) {
-        var contractDetail = contractDetailRepository.findById(contractDetailId)
-                .orElseThrow(() -> new AppException(ErrorCode.CONTRACT_NOT_FOUND));
+        var contract = contractDetailRepository
+                .findById(contractDetailId)
+                .orElseThrow(() -> new AppException(ErrorCode.CONTRACT_DETAIL_NOT_FOUND));
 
-        var contract = contractDetail.getContract();
-        if (contract == null) {
-            throw new AppException(ErrorCode.CONTRACT_NOT_FOUND);
+        List<ContractDetail> contractDetails = contractDetailRepository.findByContractId(contract.getContract().getContractId());
+
+        for (ContractDetail contractDetail : contractDetails) {
+            if(contractDetail.getStatus().equals(EContractDetailStatus.PAID)){
+                continue;
+            }
+            var company = contractDetail.getContract().getCompany();
+            String description = String.format("TIXCLICK %s - THANH TOAN HOP DONG %s",
+                    contractDetail.getContractDetailCode(), contractDetail.getContractDetailName());
+
+
+            return QRCompanyResponse.builder()
+                    .bankID(company.getBankingName())
+                    .accountID(company.getBankingCode())
+                    .dueDate(contractDetail.getPayDate())
+                    .amount(contractDetail.getAmount())
+                    .status(contractDetail.getStatus())
+                    .description(description)
+                    .build();
+
         }
 
-        var company = contract.getCompany();
-        if (company == null) {
-            throw new AppException(ErrorCode.COMPANY_NOT_FOUND);
-        }
+        throw new AppException(ErrorCode.CONTRACT_DETAIL_NOT_FOUND);
 
-        // Kiểm tra các giá trị không được null
-        if (contractDetail.getContractDetailCode() == null) {
-            throw new AppException(ErrorCode.CONTRACT_DETAIL_CODE_NOT_FOUND);
-        }
 
-        if (contract.getContractName() == null) {
-            throw new AppException(ErrorCode.CONTRACT_NAME_NOT_FOUND);
-        }
 
-        if (company.getBankingName() == null) {
-            throw new AppException(ErrorCode.BANKING_NAME_NOT_FOUND);
-        }
-
-        if (company.getBankingCode() == null) {
-            throw new AppException(ErrorCode.BANKING_CODE_NOT_FOUND);
-        }
-
-        String description = String.format("TIXCLICK %s - THANH TOAN HOP DONG %s",
-                contractDetail.getContractDetailCode(), contract.getContractName());
-
-        return QRCompanyResponse.builder()
-                .bankID(company.getBankingName())
-                .accountID(company.getBankingCode())
-                .dueDate(contractDetail.getPayDate())
-                .amount(contractDetail.getAmount())
-                .status(contractDetail.getStatus())
-                .description(description)
-                .build();
     }
 
     @Scheduled(cron = "0 0 0 * * ?")
