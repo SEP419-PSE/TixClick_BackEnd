@@ -116,6 +116,7 @@ public class CompanyServiceImpl implements CompanyService {
                 company.getCodeTax(),
                 company.getBankingName(),
                 company.getBankingCode(),
+                company.getOwnerCard(),
                 company.getNationalId(),
                 company.getLogoURL(),
                 company.getAddress(),
@@ -345,6 +346,7 @@ public class CompanyServiceImpl implements CompanyService {
         company.setDescription(createCompanyRequest.getDescription());
         company.setRepresentativeId(account);
         company.setCodeTax(createCompanyRequest.getCodeTax());
+        company.setOwnerCard(createCompanyRequest.getOwnerCard());
         company.setBankingCode(createCompanyRequest.getBankingCode());
         company.setBankingName(createCompanyRequest.getBankingName());
         company.setNationalId(createCompanyRequest.getNationalId());
@@ -417,6 +419,7 @@ public class CompanyServiceImpl implements CompanyService {
                 company.getCodeTax(),
                 company.getBankingName(),
                 company.getBankingCode(),
+                company.getOwnerCard(),
                 company.getNationalId(),
                 company.getLogoURL(),
                 company.getAddress(),

@@ -27,6 +27,9 @@ public class Company {
     @Column(columnDefinition = "NVARCHAR(255)", nullable = false)
     private String bankingName;
 
+    @Column(columnDefinition = "NVARCHAR(255)")
+    private String ownerCard;
+
     @Column(columnDefinition = "NVARCHAR(255)", nullable = false)
     private String bankingCode;
 
