@@ -8,6 +8,7 @@ import com.pse.tixclick.payload.request.create.CreateEventRequest;
 import com.pse.tixclick.payload.request.update.UpdateEventRequest;
 import com.pse.tixclick.payload.response.*;
 import com.pse.tixclick.service.EventService;
+import jakarta.mail.MessagingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -652,6 +653,8 @@ public class EventController {
                             .message(e.getMessage())
                             .result(null)
                             .build());
+        } catch (MessagingException e) {
+            throw new RuntimeException(e);
         }
     }
 }

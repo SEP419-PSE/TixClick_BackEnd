@@ -17,10 +17,6 @@ public class UpdateEventRequest {
     String eventName;
     String location;
     String locationName;
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    LocalDate startDate;
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    LocalDate endDate;
     String status;
     String typeEvent;
     String description;

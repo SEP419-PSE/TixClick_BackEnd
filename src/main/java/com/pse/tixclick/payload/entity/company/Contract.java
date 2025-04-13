@@ -67,6 +67,5 @@ public class Contract {
     @OneToMany(mappedBy = "contract", fetch = FetchType.LAZY)
     private Collection<ContractDocument> contractDocuments;
 
-    @OneToMany(mappedBy = "contract", fetch = FetchType.LAZY)
-    private Collection<ContractVerification> contractVerifications;
+
 }

@@ -111,8 +111,6 @@ public class EventServiceImpl implements EventService {
         event.setCategory(category);
 
         event.setStatus(EEventStatus.DRAFT);
-        event.setStartDate(request.getStartDate());
-        event.setEndDate(request.getEndDate());
         event.setLogoURL(logocode);
         event.setBannerURL(bannercode);
         event.setOrganizer(organnizer);
@@ -155,12 +153,6 @@ public class EventServiceImpl implements EventService {
             event.setDescription(eventRequest.getDescription());
         }
 
-        if(eventRequest.getStartDate() != null) {
-            event.setStartDate(eventRequest.getStartDate());
-        }
-        if(eventRequest.getEndDate() != null) {
-            event.setEndDate(eventRequest.getEndDate());
-        }
 
 
         if (eventRequest.getStatus() != null ) {
@@ -648,7 +640,30 @@ public class EventServiceImpl implements EventService {
         LocalDate end = (endDate != null && !endDate.isEmpty()) ? LocalDate.parse(endDate) : null;
 
         // Lấy danh sách sự kiện từ repository với các bộ lọc
-        List<Event> events = eventRepository.findEventsByFilter(start, end, eventType, eventName, eventCategories, minPrice, maxPrice);
+        List<Event> events = eventRepository.findEventsByFilter(
+                eventType,
+                eventName,
+                eventCategories,
+                minPrice,
+                maxPrice
+        );
+        // Lọc danh sách sự kiện theo ngày bắt đầu và kết thúc
+        if (start != null && end != null) {
+            events = events.stream()
+                    .filter(event -> event.getEventActivities().stream()
+                            .anyMatch(activity -> !activity.getDateEvent().isBefore(start) && !activity.getDateEvent().isAfter(end)))
+                    .collect(Collectors.toList());
+        } else if (start != null) {
+            events = events.stream()
+                    .filter(event -> event.getEventActivities().stream()
+                            .anyMatch(activity -> !activity.getDateEvent().isBefore(start)))
+                    .collect(Collectors.toList());
+        } else if (end != null) {
+            events = events.stream()
+                    .filter(event -> event.getEventActivities().stream()
+                            .anyMatch(activity -> !activity.getDateEvent().isAfter(end)))
+                    .collect(Collectors.toList());
+        }
 
         // Chuyển đổi danh sách sự kiện thành danh sách EventDetailForConsumer
         List<EventDetailForConsumer> eventDetails = events.stream()
@@ -728,8 +743,6 @@ public class EventServiceImpl implements EventService {
             response.setStatus(event.getStatus().name());
             response.setCountView(event.getCountView());
             response.setTypeEvent(event.getTypeEvent());
-            response.setStartDate(String.valueOf(event.getStartDate()));
-            response.setEndDate(String.valueOf(event.getEndDate()));
             response.setEventCategory(event.getCategory() != null ? event.getCategory().getCategoryName() : null);
             response.setHaveSeatMap(event.getSeatMap() != null);
 
@@ -784,16 +797,65 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public boolean appoveEvent(int eventId, EEventStatus status) {
+    public boolean appoveEvent(int eventId, EEventStatus status) throws MessagingException {
         var context = SecurityContextHolder.getContext();
         String name = context.getAuthentication().getName();
+
         var event = eventRepository.findEventByEventIdAndOrganizer_UserName(eventId, name)
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+
         if (event.getStatus() != EEventStatus.PENDING) {
             throw new AppException(ErrorCode.EVENT_NOT_PENDING_APPROVAL);
         }
-        event.setStatus(status);
-        eventRepository.save(event);
+
+        switch (status) {
+            case APPROVED -> {
+                event.setStatus(EEventStatus.APPROVED);
+
+                // Gửi email thông báo cho người tổ chức sự kiện
+                String fullName = event.getOrganizer().getFirstName() + " " + event.getOrganizer().getLastName();
+                emailService.sendEventApprovalNotification(
+                        event.getOrganizer().getEmail(),
+                        event.getEventName(),
+                        fullName
+                );
+
+                Notification notification = new Notification();
+                notification.setMessage("Sự kiện của bạn đã được phê duyệt");
+                notification.setAccount(event.getOrganizer());
+                notification.setRead(false);
+                notification.setCreatedDate(LocalDateTime.now());
+                notification.setReadDate(null);
+                notificationRepository.saveAndFlush(notification);
+                messagingTemplate.convertAndSendToUser(event.getOrganizer().getUserName(),"/specific/messages", "Sự kiện của bạn đã được phê duyệt");
+            }
+
+            case REJECTED -> {
+                event.setStatus(EEventStatus.REJECTED);
+
+                // Gửi email thông báo từ chối sự kiện
+                String fullName = event.getOrganizer().getFirstName() + " " + event.getOrganizer().getLastName();
+                emailService.sendEventRejectionNotification(
+                        event.getOrganizer().getEmail(),
+                        event.getEventName(),
+                        fullName
+                );
+                Notification notification = new Notification();
+                notification.setMessage("Sự kiện của bạn đã bị từ chối");
+                notification.setAccount(event.getOrganizer());
+                notification.setRead(false);
+                notification.setCreatedDate(LocalDateTime.now());
+                notification.setReadDate(null);
+                notificationRepository.saveAndFlush(notification);
+                messagingTemplate.convertAndSendToUser(event.getOrganizer().getUserName(),"/specific/messages", "Sự kiện của bạn đã bị từ chối");
+            }
+
+
+            default -> throw new AppException(ErrorCode.INVALID_EVENT_STATUS);
+        }
+
+        eventRepository.save(event); // Đừng quên lưu lại trạng thái đã cập nhật
+
         return true;
     }
 

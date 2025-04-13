@@ -58,14 +58,6 @@ public class Event {
     String description;
 
     @Column
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    LocalDate startDate;
-
-    @Column
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    LocalDate endDate;
-
-    @Column
     String UrlOnline;
 
     @OneToMany(mappedBy = "event")

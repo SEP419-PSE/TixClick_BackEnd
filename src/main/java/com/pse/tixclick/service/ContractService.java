@@ -13,11 +13,9 @@ import java.io.IOException;
 import java.util.List;
 
 public interface ContractService {
-    ContractDTO createContract(CreateContractRequest request);
 
     List<ContractAndDocumentsDTO> getAllContracts();
 
-    String approveContract(int contractId, EVerificationStatus status) throws MessagingException;
 
     CreateContractAndDetailRequest createContractAndContractDetail(MultipartFile file) throws IOException;
 }

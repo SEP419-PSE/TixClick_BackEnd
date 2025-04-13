@@ -18,10 +18,6 @@ public class CreateEventRequest {
     String typeEvent;
     String description;
     String urlOnline;
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    LocalDate startDate;
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    LocalDate endDate;
     String locationName;
     int categoryId;
     int companyId;

@@ -173,6 +173,40 @@ public class EmailService {
 
         sendNewMailCompany(to, subject, body, null);  // Truyền null vì không có fullname
     }
+
+    public void sendEventApprovalNotification(String to, String eventName, String fullname) throws MessagingException {
+        String subject = "Event Approved - TixClick";
+        String body = "<html>" +
+                "<body>" +
+                "<h2 style=\"color: #0D6EFD;\">Event Approval Notification</h2>" +
+                "<p>Dear " + fullname + ",</p>" +
+                "<p>We are pleased to inform you that your event <strong>" + eventName + "</strong> has been <strong>approved</strong>.</p>" +
+                "<p>Our team is now preparing the contract. We will contact you shortly for the next steps.</p>" +
+                "<p>Thank you for choosing TixClick!</p>" +
+                "<p>Best regards,<br/>TixClick Team</p>" +
+                "</body>" +
+                "</html>";
+
+        sendNewMail(to, subject, body, fullname);
+    }
+
+    public void sendEventRejectionNotification(String to, String eventName, String fullname) throws MessagingException {
+        String subject = "Event Rejected - TixClick";
+        String body = "<html>" +
+                "<body>" +
+                "<h2 style=\"color: #dc3545;\">Event Rejection Notification</h2>" +
+                "<p>Dear " + fullname + ",</p>" +
+                "<p>We regret to inform you that your event <strong>" + eventName + "</strong> has been <strong>rejected</strong>.</p>" +
+                "<p>Please review the submission criteria and make the necessary adjustments before resubmitting.</p>" +
+                "<p>If you have any questions, feel free to contact our support team.</p>" +
+                "<p>Best regards,<br/>TixClick Team</p>" +
+                "</body>" +
+                "</html>";
+
+        sendNewMail(to, subject, body, fullname);
+    }
+
+
     @Async
     public void sendNewMailCompany(String to, String subject, String body, String fullname) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();

@@ -69,5 +69,5 @@ public interface EventService {
 
     List<EventDashboardResponse> getEventDashboardByCompanyId(int companyId);
 
-    boolean appoveEvent(int eventId, EEventStatus status);
+    boolean appoveEvent(int eventId, EEventStatus status) throws MessagingException;
 }

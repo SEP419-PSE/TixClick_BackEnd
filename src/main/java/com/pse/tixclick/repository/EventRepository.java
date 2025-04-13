@@ -54,22 +54,20 @@ public interface EventRepository extends JpaRepository<Event, Integer> {
 
     @Query("SELECT e FROM Event e " +
             "JOIN e.tickets t " +
-            "WHERE (:startDate IS NULL OR e.startDate >= :startDate) " +
-            "AND (:endDate IS NULL OR e.endDate <= :endDate) " +
-            "AND (:eventType IS NULL OR e.typeEvent = :eventType) " +
+            "WHERE (:eventType IS NULL OR e.typeEvent = :eventType) " +
             "AND (:eventName IS NULL OR LOWER(e.eventName) LIKE LOWER(CONCAT('%', :eventName, '%'))) " +
             "AND (:eventCategories IS NULL OR e.category.categoryName IN :eventCategories) " +
             "AND t.price >= :minPrice " +
-            "AND (:maxPrice IS NULL OR t.price <= :maxPrice) " + // maxPrice có thể null
+            "AND (:maxPrice IS NULL OR t.price <= :maxPrice) " +
             "AND e.status = 'SCHEDULED' " +
             "ORDER BY e.eventName")
-    List<Event> findEventsByFilter(@Param("startDate") LocalDate startDate,
-                                   @Param("endDate") LocalDate endDate,
-                                   @Param("eventType") String eventType,
-                                   @Param("eventName") String eventName,
-                                   @Param("eventCategories") List<String> eventCategories,
-                                   @Param("minPrice") double minPrice,
-                                   @Param("maxPrice") Double maxPrice); // maxPrice là Optional Double
+    List<Event> findEventsByFilter(
+            @Param("eventType") String eventType,
+            @Param("eventName") String eventName,
+            @Param("eventCategories") List<String> eventCategories,
+            @Param("minPrice") double minPrice,
+            @Param("maxPrice") Double maxPrice);
+
 
     @Query("SELECT e FROM Event e WHERE e.eventCode = :eventCode")
     Optional<Event> findEventByEventCode(@Param("eventCode") String eventCode);
