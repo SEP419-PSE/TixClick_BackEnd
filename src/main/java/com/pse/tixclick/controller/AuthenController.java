@@ -44,8 +44,7 @@ public class AuthenController {
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<TokenResponse>> login(@RequestBody LoginRequest loginRequest) {
 
-        try
-        {
+        try {
             TokenResponse tokenResponse = authenService.login(loginRequest);
             ApiResponse<TokenResponse> apiResponse = ApiResponse.<TokenResponse>builder()
                     .code(HttpStatus.OK.value())
@@ -166,7 +165,6 @@ public class AuthenController {
             TokenResponse isValid = authenService.verifyOTP(email, otpCode);
 
 
-
             // Nếu OTP hợp lệ
             ApiResponse<TokenResponse> apiResponse = ApiResponse.<TokenResponse>builder()
                     .code(HttpStatus.OK.value())
@@ -183,8 +181,7 @@ public class AuthenController {
                     .result(null)
                     .build();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);  // Trả về BAD_REQUEST
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             // Xử lý ngoại lệ nếu có lỗi xảy ra
             ApiResponse<TokenResponse> errorResponse = ApiResponse.<TokenResponse>builder()
                     .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
@@ -257,7 +254,7 @@ public class AuthenController {
 //        return ResponseEntity.ok(new ApiResponse<>(200, "GitHub login successful", tokenResponse));
 //    }
 
-//    @GetMapping("/google/success")
+    //    @GetMapping("/google/success")
 //    public void googleLoginSuccess(
 //            @AuthenticationPrincipal OAuth2User principal,
 //            HttpServletResponse response
@@ -274,16 +271,19 @@ public class AuthenController {
 //        response.sendRedirect(redirectUrl);
 //    }
     @GetMapping("/google/success")
-    public ResponseEntity<ApiResponse<TokenResponse>> googleLoginSuccess(
-            @AuthenticationPrincipal OAuth2User principal
-    ) {
+    public void googleLoginSuccess(
+            @AuthenticationPrincipal OAuth2User principal,
+            HttpServletResponse response
+    ) throws IOException {
+        // Lấy token từ service
         TokenResponse tokenResponse = authenService.signupAndLoginWithGoogle(principal);
-        ApiResponse<TokenResponse> apiResponse = ApiResponse.<TokenResponse>builder()
-                .code(HttpStatus.OK.value())
-                .message("Google login successful")
-                .result(tokenResponse)
-                .build();
-        return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+
+        // Tạo URL với các query parameters
+        String redirectUrl = "http://localhost:5173/login-google-success/accessToken=" + tokenResponse.getAccessToken()
+                + "&refreshToken=" + tokenResponse.getRefreshToken();
+
+        // Thực hiện redirect đến URL với các query parameters
+        response.sendRedirect(redirectUrl);
     }
 
 
