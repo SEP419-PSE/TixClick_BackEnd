@@ -353,36 +353,40 @@ public class CompanyServiceImpl implements CompanyService {
         company.setStatus(ECompanyStatus.PENDING);
         companyRepository.save(company);
 
+        var manager = accountRepository.findManagerWithLeastVerifications();
+        if (manager == null) {
+            throw new AppException(ErrorCode.MANAGER_NOT_FOUND);
+        }
+
         // Create verification
         CreateCompanyVerificationRequest createCompanyVerificationRequest = new CreateCompanyVerificationRequest();
         createCompanyVerificationRequest.setCompanyId(company.getCompanyId());
         createCompanyVerificationRequest.setStatus(EVerificationStatus.PENDING);
+        createCompanyVerificationRequest.setSubmitById(manager.get().getAccountId());
 
         var companyVerification = companyVerificationService.createCompanyVerification(createCompanyVerificationRequest);
 
 
 
-        // Gửi email cho manager chính
-        var companyManager = accountRepository.findById(companyVerification.getSubmitById())
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
 
         String notificationMessage = "Công ty mới cần duyệt: " + company.getCompanyName();
 
-        messagingTemplate.convertAndSendToUser(companyManager.getUserName(), "/specific/messages", notificationMessage);
+        messagingTemplate.convertAndSendToUser(manager.get().getUserName(), "/specific/messages", notificationMessage);
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-        int count = notificationRepository.countNotificationByAccountId(companyManager.getUserName());
+        int count = notificationRepository.countNotificationByAccountId(manager.get().getUserName());
         log.info("Count: {}", count);
 
         if(count >= 10) {
-            Notification notification = notificationRepository.findTopByAccount_UserNameOrderByCreatedDateAsc(companyManager.getUserName())
+            Notification notification = notificationRepository.findTopByAccount_UserNameOrderByCreatedDateAsc(manager.get().getUserName())
                     .orElseThrow(() -> new AppException(ErrorCode.NOTIFICATION_NOT_EXISTED));
             notificationRepository.delete(notification);
         }
         Notification notification = new Notification();
 
-        notification.setAccount(companyManager);
+        notification.setAccount(manager.get());
         notification.setMessage(notificationMessage);
         notification.setRead(false);
         notification.setCreatedDate(LocalDateTime.now());
@@ -390,12 +394,12 @@ public class CompanyServiceImpl implements CompanyService {
         notificationRepository.save(notification);
 
 
-        String fullname = (companyManager.getFirstName() != null ? companyManager.getFirstName() : "") +
+        String fullname = (manager.get().getFirstName() != null ? manager.get().getFirstName() : "") +
                 " " +
-                (companyManager.getLastName() != null ? companyManager.getLastName() : "");
+                (manager.get().getLastName() != null ? manager.get().getLastName() : "");
         fullname = fullname.trim();
 
-        emailService.sendCompanyCreationRequestNotification(companyManager.getEmail(), company.getCompanyName(), fullname);
+        emailService.sendCompanyCreationRequestNotification(manager.get().getEmail(), company.getCompanyName(), fullname);
 
         // Create documents
         CreateCompanyDocumentRequest createCompanyDocumentRequest = new CreateCompanyDocumentRequest();
