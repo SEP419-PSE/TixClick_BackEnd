@@ -165,7 +165,9 @@ public class ContractDetailServiceImpl implements ContractDetailService {
         return QRCompanyResponse.builder()
                 .bankID(company.getBankingName())
                 .accountID(company.getBankingCode())
-                .amount(contractDetail.getAmount()) // Đảm bảo amount hợp lệ
+                .dueDate(contractDetail.getPayDate())
+                .amount(contractDetail.getAmount())
+                .status(contractDetail.getStatus())
                 .description(description)
                 .build();
     }
