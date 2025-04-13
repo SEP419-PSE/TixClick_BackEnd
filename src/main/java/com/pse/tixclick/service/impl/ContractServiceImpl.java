@@ -92,7 +92,7 @@ public class ContractServiceImpl implements ContractService {
         var event = eventRepository.findEventByEventId(request.getEventId())
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
 
-        if (event.getStatus() != EEventStatus.PENDING_APPROVAL) {
+        if (event.getStatus() != EEventStatus.PENDING) {
             throw new AppException(ErrorCode.STATUS_NOT_CORRECT);
         }
 

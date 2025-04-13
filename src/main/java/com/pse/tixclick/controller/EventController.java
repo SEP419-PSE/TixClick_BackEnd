@@ -633,5 +633,26 @@ public class EventController {
                             .build());
         }
     }
+
+    @PostMapping("/approve/{eventId}/{status}")
+    public ResponseEntity<ApiResponse<Boolean>> appoveEvent(@PathVariable int eventId, @PathVariable EEventStatus status) {
+        try {
+            boolean isUpdated = eventService.appoveEvent(eventId, status);
+            return ResponseEntity.ok(
+                    ApiResponse.<Boolean>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Event approved successfully")
+                            .result(isUpdated)
+                            .build()
+            );
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.<Boolean>builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        }
+    }
 }
 

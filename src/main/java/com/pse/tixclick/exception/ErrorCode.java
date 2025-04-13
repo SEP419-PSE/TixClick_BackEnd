@@ -131,6 +131,7 @@ public enum ErrorCode {
     OTP_ALREADY_SENT_RECENTLY(1113, "Mã OTP đã được gửi gần đây", HttpStatus.BAD_REQUEST),
     EVENT_ALREADY_APPROVED(1114, "Sự kiện đã được phê duyệt", HttpStatus.BAD_REQUEST),
     COMPANY_VERIFICATION_PENDING(1115, "Xác minh công ty đang chờ xử lý", HttpStatus.BAD_REQUEST),
+    EVENT_NOT_PENDING_APPROVAL(1116, "Sự kiện không đang chờ phê duyệt", HttpStatus.BAD_REQUEST),
     ;
 
 

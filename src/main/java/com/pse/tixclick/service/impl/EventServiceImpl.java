@@ -261,7 +261,7 @@ public class EventServiceImpl implements EventService {
     public List<EventResponse> getAllEventScheduledAndPendingApproved() {
         List<Event> events = eventRepository.findAll();
         return events.stream()
-                .filter(event -> event.getStatus() == EEventStatus.SCHEDULED || event.getStatus() == EEventStatus.PENDING_APPROVAL)
+                .filter(event -> event.getStatus() == EEventStatus.SCHEDULED || event.getStatus() == EEventStatus.PENDING)
                 .map(event -> {
             EventResponse response = new EventResponse();
             response.setEventId(event.getEventId());
@@ -439,12 +439,12 @@ public class EventServiceImpl implements EventService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
 
-        if (event.getStatus() != EEventStatus.DRAFT && event.getStatus() != EEventStatus.PENDING_APPROVAL
+        if (event.getStatus() != EEventStatus.DRAFT && event.getStatus() != EEventStatus.PENDING
                 && event.getStatus() != EEventStatus.REJECTED) {
             throw new AppException(ErrorCode.INVALID_EVENT_STATUS);
         }
 
-        event.setStatus(EEventStatus.PENDING_APPROVAL);
+        event.setStatus(EEventStatus.PENDING);
         eventRepository.save(event);
         Account manager = accountRepository.findManagerWithLeastVerifications()
                 .orElseThrow(() -> new AppException(ErrorCode.MANAGER_NOT_FOUND));
@@ -593,7 +593,7 @@ public class EventServiceImpl implements EventService {
         List<Event> events = eventRepository.findScheduledEvents().stream()
                 .filter(event -> event.getEventActivities().stream()
                         .anyMatch(eventActivity -> appUtils.isWeekend(eventActivity.getDateEvent())))
-                .filter(event -> event.getStatus() == EEventStatus.SCHEDULED || event.getStatus() == EEventStatus.ON_GOING)
+                .filter(event -> event.getStatus() == EEventStatus.SCHEDULED)
                 .toList();
 
         if (events.isEmpty()) {
@@ -781,6 +781,20 @@ public class EventServiceImpl implements EventService {
         }
 
         return eventDashboardResponses;
+    }
+
+    @Override
+    public boolean appoveEvent(int eventId, EEventStatus status) {
+        var context = SecurityContextHolder.getContext();
+        String name = context.getAuthentication().getName();
+        var event = eventRepository.findEventByEventIdAndOrganizer_UserName(eventId, name)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+        if (event.getStatus() != EEventStatus.PENDING) {
+            throw new AppException(ErrorCode.EVENT_NOT_PENDING_APPROVAL);
+        }
+        event.setStatus(status);
+        eventRepository.save(event);
+        return true;
     }
 
 

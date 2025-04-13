@@ -68,4 +68,6 @@ public interface EventService {
     List<EventDetailForConsumer>  getEventByStartDateAndEndDateAndEventTypeAndEventName(String startDate, String endDate, String eventType, String eventName,List<String> eventCategory, Double minPrice, Double maxPrice);
 
     List<EventDashboardResponse> getEventDashboardByCompanyId(int companyId);
+
+    boolean appoveEvent(int eventId, EEventStatus status);
 }
