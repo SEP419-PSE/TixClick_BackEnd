@@ -67,7 +67,7 @@ public class ContractPaymentServiceImpl implements ContractPaymentService {
 
                 for (JsonNode record : records) {
                     String description = record.get("description").asText();
-                    String extractedCode = description.length() >= 5 ? description.substring(0, 5) : description;
+                    String extractedCode = description.length() >= 5 ? description.substring(0, 8) : description;
 
                     System.out.println("Extracted Code: '" + extractedCode + "'");
                     transactionMap.put(extractedCode, record);
