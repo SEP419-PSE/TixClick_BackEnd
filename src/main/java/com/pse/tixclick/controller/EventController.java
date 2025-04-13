@@ -8,6 +8,7 @@ import com.pse.tixclick.payload.request.create.CreateEventRequest;
 import com.pse.tixclick.payload.request.update.UpdateEventRequest;
 import com.pse.tixclick.payload.response.*;
 import com.pse.tixclick.service.EventService;
+import jakarta.mail.MessagingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -631,6 +632,29 @@ public class EventController {
                             .message("An error occurred while retrieving the events for company id: " + companyId)
                             .result(null)
                             .build());
+        }
+    }
+
+    @PostMapping("/approve/{eventId}/{status}")
+    public ResponseEntity<ApiResponse<Boolean>> appoveEvent(@PathVariable int eventId, @PathVariable EEventStatus status) {
+        try {
+            boolean isUpdated = eventService.appoveEvent(eventId, status);
+            return ResponseEntity.ok(
+                    ApiResponse.<Boolean>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Event approved successfully")
+                            .result(isUpdated)
+                            .build()
+            );
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.<Boolean>builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        } catch (MessagingException e) {
+            throw new RuntimeException(e);
         }
     }
 }

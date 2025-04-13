@@ -36,6 +36,9 @@ public class Contract {
     @Column(nullable = false)
     private String contractType;
 
+    @Column(columnDefinition = "NVARCHAR(255)")
+    private String contractCode;
+
     @Column
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDate startDate;
@@ -67,6 +70,5 @@ public class Contract {
     @OneToMany(mappedBy = "contract", fetch = FetchType.LAZY)
     private Collection<ContractDocument> contractDocuments;
 
-    @OneToMany(mappedBy = "contract", fetch = FetchType.LAZY)
-    private Collection<ContractVerification> contractVerifications;
+
 }

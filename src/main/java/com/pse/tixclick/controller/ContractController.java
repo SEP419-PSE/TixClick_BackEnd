@@ -28,34 +28,7 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ContractController {
     ContractService contractService;
-    @PostMapping
-    public ResponseEntity<ApiResponse<ContractDTO>> createContract(
-            @RequestBody CreateContractRequest request) {
-        try {
-            ContractDTO result = contractService.createContract(request);
-            return ResponseEntity.ok(
-                    ApiResponse.<ContractDTO>builder()
-                            .code(HttpStatus.OK.value())
-                            .message("Contract created successfully")
-                            .result(result)
-                            .build()
-            );
-        } catch (AppException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.<ContractDTO>builder()
-                            .code(HttpStatus.BAD_REQUEST.value())
-                            .message(e.getMessage())
-                            .result(null)
-                            .build());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.<ContractDTO>builder()
-                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                            .message("Internal Server Error: " + e.getMessage())
-                            .result(null)
-                            .build());
-        }
-    }
+
 
     @GetMapping("/all")
     public ResponseEntity<ApiResponse<List<ContractAndDocumentsDTO>>> getAllContracts() {
@@ -78,35 +51,6 @@ public class ContractController {
         }
     }
 
-    @PutMapping("/approve")
-    public ResponseEntity<ApiResponse<String>> approveContract(
-            @RequestParam int contractId,
-            @RequestParam EVerificationStatus status) {
-        try {
-            String result = contractService.approveContract(contractId, status);
-            return ResponseEntity.ok(
-                    ApiResponse.<String>builder()
-                            .code(HttpStatus.OK.value())
-                            .message("Contract approved successfully")
-                            .result(result)
-                            .build()
-            );
-        } catch (AppException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.<String>builder()
-                            .code(HttpStatus.BAD_REQUEST.value())
-                            .message(e.getMessage())
-                            .result(null)
-                            .build());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.<String>builder()
-                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                            .message("Internal Server Error: " + e.getMessage())
-                            .result(null)
-                            .build());
-        }
-    }
 
     @PostMapping("/createContractAndContractDetail")
     public ResponseEntity<ApiResponse<CreateContractAndDetailRequest>> createContractAndContractDetail(@RequestParam("file") MultipartFile file){

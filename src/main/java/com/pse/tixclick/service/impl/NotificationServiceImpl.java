@@ -57,4 +57,21 @@ public class NotificationServiceImpl implements NotificationService {
         return "Notification read successfully";
     }
 
+    @Override
+    public int countUnreadNotification() {
+        var context = SecurityContextHolder.getContext();
+        String username = context.getAuthentication().getName();
+
+        var account = accountRepository.findAccountByUserName(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        List<Notification> notifications = notificationRepository.findNotificationsByAccount_UserName(username);
+        if (notifications.isEmpty()) {
+            return 0;
+        }
+        return (int) notifications.stream()
+                .filter(notification -> !notification.isRead())
+                .count();
+    }
+
 }

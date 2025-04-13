@@ -21,8 +21,6 @@ public class EventDashboardResponse {
     String logoURL;
     String bannerURL;
     String description;
-    String startDate;
-    String endDate;
     String urlOnline;
     String eventCategory;
     Integer countTicketSold;

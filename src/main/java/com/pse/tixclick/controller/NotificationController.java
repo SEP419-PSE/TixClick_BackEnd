@@ -76,4 +76,26 @@ public class NotificationController {
         messagingTemplate.convertAndSendToUser("huy2", "/specific/messages", "Hello, this is a test message!");
     }
 
+    @GetMapping("/count-unread-notification")
+    public ResponseEntity<ApiResponse<Integer>> countUnreadNotification(){
+        try{
+            int count = notificationService.countUnreadNotification();
+            return ResponseEntity.ok(ApiResponse.<Integer>builder()
+                    .code(HttpStatus.OK.value())
+                    .message("Count unread notifications successfully")
+                    .result(count)
+                    .build());
+        }catch (AppException e){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.<Integer>builder()
+                    .code(HttpStatus.BAD_REQUEST.value())
+                    .message(e.getMessage())
+                    .build());
+        } catch (Exception e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.<Integer>builder()
+                    .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .message(e.getMessage())
+                    .build());
+        }
+    }
+
 }
