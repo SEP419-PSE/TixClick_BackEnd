@@ -117,6 +117,17 @@ public class ContractServiceImpl implements ContractService {
 
         Event event = eventRepository.findEventByEventCode(request.getEventCode())
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+        if(event.getStatus().equals(EEventStatus.SCHEDULED)) {
+            throw new AppException(ErrorCode.EVENT_SCHEDULED);
+        }
+        if(!event.getStatus().equals(EEventStatus.APPROVED)) {
+            throw new AppException(ErrorCode.EVENT_NOT_APPROVED);
+        }
+
+        Contract existingContract = contractRepository.findByContractCode(request.getContractCode());
+        if (existingContract != null) {
+            throw new AppException(ErrorCode.CONTRACT_EXISTED);
+        }
 
         Account managerA = accountRepository.findAccountByEmail(request.getEmailA())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
@@ -132,6 +143,7 @@ public class ContractServiceImpl implements ContractService {
         contract.setCommission(request.getCommission());
         contract.setContractType(request.getContractType());
         contract.setStartDate(request.getContractStartDate());
+        contract.setContractCode(request.getContractCode());
         contract.setEndDate(request.getContractEndDate());
         contract.setStatus(EContractStatus.PENDING); // Gán trạng thái đang duyệt
         contract.setEvent(event);
@@ -144,7 +156,7 @@ public class ContractServiceImpl implements ContractService {
             ContractDetail contractDetail = new ContractDetail();
             contractDetail.setContract(contract);
             contractDetail.setContractDetailName(dto.getContractDetailName());
-            contractDetail.setContractDetailCode(contractCodeAutomationCreating());
+            contractDetail.setContractDetailCode(dto.getContractDetailCode());
             contractDetail.setDescription(dto.getContractDetailDescription());
             contractDetail.setPercentage(dto.getContractDetailPercentage());
             contractDetail.setAmount(dto.getContractDetailAmount());
@@ -161,6 +173,8 @@ public class ContractServiceImpl implements ContractService {
             contractPayment.setStatus(EContractPaymentStatus.PENDING);
             contractPaymentRepository.save(contractPayment);
         }
+        event.setStatus(EEventStatus.SCHEDULED);
+        eventRepository.save(event);
         contractDocumentService.uploadContractDocument(file, contract.getContractId());
 
         return request;
@@ -171,6 +185,7 @@ public class ContractServiceImpl implements ContractService {
         CreateContractAndDetailRequest dto = new CreateContractAndDetailRequest();
 
         // Các trường trong CreateContractAndDetailRequest
+        dto.setContractCode(extract(text, "Số:\\s*(\\S+?)\\)"));
         dto.setContractName(extract(text, "HỢP ĐỒNG CUNG ỨNG DỊCH VỤ TỔ CHỨC SỰ KIỆN"));
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 

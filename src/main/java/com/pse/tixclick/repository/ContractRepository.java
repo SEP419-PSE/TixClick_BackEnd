@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ContractRepository extends JpaRepository<Contract,Integer> {
@@ -19,4 +20,8 @@ public interface ContractRepository extends JpaRepository<Contract,Integer> {
     List<Contract> findContractsByAccount_AccountId(int accountId);
 
     List<Contract> findContractsByEvent_EventId(int eventId);
+
+    @Query(value = "SELECT c FROM Contract c WHERE c.contractCode = :contractCode")
+    Contract findByContractCode(@Param("contractCode") String contractCode);
+
 }

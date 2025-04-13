@@ -14,6 +14,7 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CreateContractAndDetailRequest {
     String contractName;
+    String contractCode;
     LocalDate contractStartDate;
     LocalDate contractEndDate;
     String representativeA;
