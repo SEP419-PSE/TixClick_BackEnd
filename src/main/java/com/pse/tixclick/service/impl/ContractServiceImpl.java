@@ -326,20 +326,8 @@ public class ContractServiceImpl implements ContractService {
     }
 
     private String contractCodeAutomationCreating() {
-        Account account = appUtils.getAccountFromAuthentication();
-        int accountId = account.getAccountId(); // Giả định bạn có hàm lấy userId
-
-        // Lấy thời gian hiện tại
-        String date = new SimpleDateFormat("yyyyMMdd").format(new Date());
-
-        // Tạo phần số thứ tự tự động hoặc ngẫu nhiên cho mã đơn hàng
-        String uniqueId = String.format("%04d", new Random().nextInt(10000));
-
-        return accountId + date  + uniqueId;
+        // Tạo 6 số ngẫu nhiên (dẫn đầu bằng 0 nếu cần)
+        String randomSixDigits = String.format("%06d", new Random().nextInt(1000000));
+        return "TX" + randomSixDigits;
     }
-
-
-
-
-
 }

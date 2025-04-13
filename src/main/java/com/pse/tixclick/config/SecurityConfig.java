@@ -75,6 +75,7 @@ public class SecurityConfig {
             "/api/v3/api-docs/**",
             "/api/swagger-ui/index.html",
             "/oauth2/**",
+            "login/oauth2/code/google",
             "/api/seat-map/**",
             "/api/contract/**",
             "/api/company-document/**",
@@ -86,9 +87,10 @@ public class SecurityConfig {
             "/api/ticket-purchase/**",
             "/api/transaction/**",
             "/api/payment/**",
-            "/apinotification/**",
+            "/api/notification/**",
             "/api/tickets/**",
             "/api/notification/**",
+            "/api/test-oauth2/**"
     };
 
     @Bean
@@ -104,17 +106,14 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
+                        .loginPage("/oauth2/authorization/google") // Chỉ rõ login page
                         .successHandler((request, response, authentication) -> {
-                            String redirectUri = request.getRequestURL().toString(); // URL request hiện tại (bao gồm cả code)
-                            log.info("Google OAuth2 redirect URI: {}", redirectUri);
-                            String referer = request.getHeader("Referer");
-                            if (referer != null && referer.contains("/api/swagger-ui")) {
-                                response.sendRedirect(referer);
-                            } else {
-                                response.sendRedirect("/api/auth/google/success");
-                            }
-                        })// 🔥 redirect về endpoint của bạn
+                            String redirectUri = request.getRequestURL().toString();
+                            log.info("✅ Google OAuth2 redirect URI: {}", redirectUri);
+                            response.sendRedirect("/api/auth/google/success");
+                        })
                 )
+
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwtConfigurer -> jwtConfigurer
                                 .decoder(customJwtDecoder)
