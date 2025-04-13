@@ -8,4 +8,6 @@ public interface NotificationService {
     List<NotificationDTO> getNotificationByAccountId();
 
     String readNotification(int id);
+
+    int countUnreadNotification();
 }

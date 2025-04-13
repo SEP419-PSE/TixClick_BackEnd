@@ -253,7 +253,7 @@ public class EventServiceImpl implements EventService {
     public List<EventResponse> getAllEventScheduledAndPendingApproved() {
         List<Event> events = eventRepository.findAll();
         return events.stream()
-                .filter(event -> event.getStatus() == EEventStatus.APPROVED || event.getStatus() == EEventStatus.PENDING)
+                .filter(event -> event.getStatus() == EEventStatus.APPROVED || event.getStatus() == EEventStatus.PENDING || event.getStatus() == EEventStatus.REJECTED)
                 .map(event -> {
             EventResponse response = new EventResponse();
             response.setEventId(event.getEventId());
