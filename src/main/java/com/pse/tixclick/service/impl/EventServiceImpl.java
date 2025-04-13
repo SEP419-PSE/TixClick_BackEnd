@@ -801,7 +801,7 @@ public class EventServiceImpl implements EventService {
         var context = SecurityContextHolder.getContext();
         String name = context.getAuthentication().getName();
 
-        var event = eventRepository.findEventByEventIdAndOrganizer_UserName(eventId, name)
+        var event = eventRepository.findEventByEventId(eventId)
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
 
         if (event.getStatus() != EEventStatus.PENDING) {
