@@ -34,6 +34,9 @@ Event {
     String locationName;
 
     @Column(columnDefinition = "NVARCHAR(255)")
+    String address;  // Địa chỉ
+
+    @Column(columnDefinition = "NVARCHAR(255)")
     String city;  // Thành phố (HCM, Hà Nội, Đà Nẵng)
 
     @Column(columnDefinition = "NVARCHAR(255)")

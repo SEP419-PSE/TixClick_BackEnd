@@ -16,6 +16,7 @@ public class EventDTO {
     int eventId;
     String eventName;
     String eventCode;
+    String address;
     String city;
     String district;
     String ward;

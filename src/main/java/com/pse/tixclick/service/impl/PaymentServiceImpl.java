@@ -303,6 +303,10 @@ public class PaymentServiceImpl implements PaymentService {
 
                 StringBuilder locationBuilder = new StringBuilder();
 
+                if(event.getAddress() != null && !event.getAddress().trim().isEmpty()) {
+                    locationBuilder.append(event.getAddress()).append(", ");
+                }
+
                 if (event.getWard() != null && !event.getWard().trim().isEmpty()) {
                     locationBuilder.append(event.getWard()).append(", ");
                 }

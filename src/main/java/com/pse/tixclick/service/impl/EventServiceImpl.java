@@ -122,12 +122,14 @@ public class EventServiceImpl implements EventService {
         if("ONLINE".equals(request.getTypeEvent().toUpperCase())) {
             event.setUrlOnline(request.getUrlOnline());
             event.setLocationName(null);
+            event.setAddress(null);
             event.setWard(null);
             event.setDistrict(null);
             event.setCity(null);
         } else if("OFFLINE".equals(request.getTypeEvent().toUpperCase())) {
             event.setUrlOnline(null);
             event.setLocationName(request.getLocationName());
+            event.setAddress(request.getAddress());
             event.setWard(request.getWard());
             event.setDistrict(request.getDistrict());
             event.setCity(request.getCity());
@@ -174,6 +176,7 @@ public class EventServiceImpl implements EventService {
         if (eventRequest.getUrlOnline() != null && !eventRequest.getUrlOnline().trim().isEmpty()) {
             if ("ONLINE".equalsIgnoreCase(event.getTypeEvent())) {
                 event.setUrlOnline(eventRequest.getUrlOnline());
+                event.setAddress(null);
                 event.setWard(null);  // Xóa các địa chỉ khi là sự kiện ONLINE
                 event.setDistrict(null);
                 event.setCity(null);
@@ -213,6 +216,9 @@ public class EventServiceImpl implements EventService {
             }
             if (eventRequest.getCity() != null && !eventRequest.getCity().trim().isEmpty()) {
                 event.setCity(eventRequest.getCity());
+            }
+            if (eventRequest.getAddress() != null && !eventRequest.getAddress().trim().isEmpty()) {
+                event.setAddress(eventRequest.getAddress());
             }
         }
 

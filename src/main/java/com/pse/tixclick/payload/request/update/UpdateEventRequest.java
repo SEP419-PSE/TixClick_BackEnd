@@ -15,6 +15,7 @@ import java.time.LocalDate;
 public class UpdateEventRequest {
     int eventId;
     String eventName;
+    String address;
     String ward;
     String district;
     String city;
