@@ -177,7 +177,7 @@ public class ContractDocumentController {
 
     @GetMapping(value = "/all_by_event/{eventId}")
     public ResponseEntity<ApiResponse<List<ContractDocumentDTO>>> getContractDocumentsByEvent(
-            @RequestParam("eventId") int eventId) {
+            @PathVariable("eventId") int eventId)  {
         try {
             List<ContractDocumentDTO> documentDTOs = contractDocumentService.getContractDocumentsByEvent(eventId);
             return ResponseEntity.ok(
