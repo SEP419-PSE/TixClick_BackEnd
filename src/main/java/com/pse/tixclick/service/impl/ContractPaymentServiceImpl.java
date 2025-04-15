@@ -4,7 +4,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
+import com.pse.tixclick.payload.dto.ContractAndContractPaymentDTO;
+import com.pse.tixclick.payload.dto.ContractDTO;
 import com.pse.tixclick.payload.dto.ContractPaymentDTO;
+import com.pse.tixclick.payload.entity.company.Contract;
 import com.pse.tixclick.payload.entity.company.ContractDetail;
 import com.pse.tixclick.payload.entity.entity_enum.*;
 import com.pse.tixclick.payload.entity.payment.ContractPayment;
@@ -50,6 +53,9 @@ public class ContractPaymentServiceImpl implements ContractPaymentService {
 
     @Autowired
     AppUtils appUtils;
+
+    @Autowired
+    ContractRepository contractRepository;
 
     @Override
     public ContractPaymentRequest getContractPayment(String transactionCode, int paymentId) {
@@ -115,42 +121,67 @@ public class ContractPaymentServiceImpl implements ContractPaymentService {
         }
     }
 
-
-
-
     @Override
-    public List<ContractPaymentDTO> getAllContractPaymentByContract(int contractId) {
+    public List<ContractAndContractPaymentDTO> getAllContractPaymentByContract() {
         if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.MANAGER)) {
             throw new AppException(ErrorCode.NOT_PERMISSION);
         }
-        List<ContractDetail> contractDetails = contractDetailRepository.findByContractId(contractId);
-        if (contractDetails.isEmpty()) {
-            throw new AppException(ErrorCode.CONTRACT_DETAIL_NOT_FOUND);
-        }
 
-        List<ContractPayment> contractPayments = new ArrayList<>();
-        for (ContractDetail detail : contractDetails) {
-            ContractPayment contractPayment = contractPaymentRepository
-                    .findByContractDetailId(detail.getContractDetailId())
-                    .orElseThrow(() -> new AppException(ErrorCode.CONTRACT_PAYMENT_NOT_FOUND));
-            contractPayments.add(contractPayment);
-        }
+        List<Contract> contracts = contractRepository.findContractsByAccount_AccountId(appUtils.getAccountFromAuthentication().getAccountId());
 
-        List<ContractPaymentDTO> contractPaymentDTOS = new ArrayList<>();
-        for (ContractPayment contractPayment : contractPayments) {
-            ContractPaymentDTO contractPaymentDTO = new ContractPaymentDTO();
-            contractPaymentDTO.setContractPaymentId(contractPayment.getContractPaymentId());
-            contractPaymentDTO.setPaymentAmount(contractPayment.getPaymentAmount());
-            contractPaymentDTO.setPaymentDate(contractPayment.getPaymentDate());
-            contractPaymentDTO.setPaymentMethod(contractPayment.getPaymentMethod());
-            contractPaymentDTO.setStatus(String.valueOf(contractPayment.getStatus()));
-            contractPaymentDTO.setNote(contractPayment.getNote());
-            contractPaymentDTO.setContractDetailId(contractPayment.getContractDetail().getContractDetailId());
-            contractPaymentDTO.setAccountNumber(contractPayment.getContractDetail().getContract().getCompany().getBankingCode());
-            contractPaymentDTO.setBankName(contractPayment.getContractDetail().getContract().getCompany().getBankingName());
-            contractPaymentDTOS.add(contractPaymentDTO);
+        if (contracts.isEmpty()) {
+            throw new AppException(ErrorCode.CONTRACT_NOT_FOUND);
         }
+        List<ContractAndContractPaymentDTO> contractAndContractPaymentDTOs = new ArrayList<>();
 
-        return contractPaymentDTOS;
+        for(Contract contract : contracts) {
+            List<ContractDetail> contractDetails = contractDetailRepository.findByContractId(contract.getContractId());
+            if (contractDetails.isEmpty()) {
+                throw new AppException(ErrorCode.CONTRACT_DETAIL_NOT_FOUND);
+            }
+            ContractDTO contractDTO = new ContractDTO();
+            contractDTO.setContractId(contract.getContractId());
+            contractDTO.setContractName(contract.getContractName());
+            contractDTO.setTotalAmount(contract.getTotalAmount());
+            contractDTO.setCommission(contract.getCommission());
+            contractDTO.setContractType(contract.getContractType());
+            contractDTO.setStartDate(contract.getStartDate());
+            contractDTO.setEndDate(contract.getEndDate());
+            contractDTO.setStatus(contract.getStatus().toString());
+            contractDTO.setAccountId(contract.getAccount().getAccountId());
+            contractDTO.setEventId(contract.getEvent().getEventId());
+            contractDTO.setCompanyId(contract.getCompany().getCompanyId());
+
+
+            List<ContractPayment> contractPayments = new ArrayList<>();
+            for (ContractDetail detail : contractDetails) {
+                ContractPayment contractPayment = contractPaymentRepository
+                        .findByContractDetailId(detail.getContractDetailId())
+                        .orElseThrow(() -> new AppException(ErrorCode.CONTRACT_PAYMENT_NOT_FOUND));
+                contractPayments.add(contractPayment);
+            }
+
+            List<ContractPaymentDTO> contractPaymentDTOS = new ArrayList<>();
+            for (ContractPayment contractPayment : contractPayments) {
+                ContractPaymentDTO contractPaymentDTO = new ContractPaymentDTO();
+                contractPaymentDTO.setContractPaymentId(contractPayment.getContractPaymentId());
+                contractPaymentDTO.setPaymentAmount(contractPayment.getPaymentAmount());
+                contractPaymentDTO.setPaymentDate(contractPayment.getPaymentDate());
+                contractPaymentDTO.setPaymentMethod(contractPayment.getPaymentMethod());
+                contractPaymentDTO.setStatus(String.valueOf(contractPayment.getStatus()));
+                contractPaymentDTO.setNote(contractPayment.getNote());
+                contractPaymentDTO.setContractDetailId(contractPayment.getContractDetail().getContractDetailId());
+                contractPaymentDTO.setAccountNumber(contractPayment.getContractDetail().getContract().getCompany().getBankingCode());
+                contractPaymentDTO.setBankName(contractPayment.getContractDetail().getContract().getCompany().getBankingName());
+                contractPaymentDTOS.add(contractPaymentDTO);
+            }
+
+            ContractAndContractPaymentDTO contractAndContractPaymentDTO = new ContractAndContractPaymentDTO();
+            contractAndContractPaymentDTO.setContractDTO(contractDTO);
+            contractAndContractPaymentDTO.setContractPaymentDTOList(contractPaymentDTOS);
+
+            contractAndContractPaymentDTOs.add(contractAndContractPaymentDTO);
+        }
+        return contractAndContractPaymentDTOs;
     }
 }

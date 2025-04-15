@@ -115,6 +115,10 @@ public class ContractServiceImpl implements ContractService {
         String text = extractTextFromPdf(file);
         CreateContractAndDetailRequest request = parse(text);
 
+        if(request == null) {
+            throw new AppException(ErrorCode.CONTRACT_SCANNING_FAILED);
+        }
+
         Event event = eventRepository.findEventByEventCode(request.getEventCode())
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
         if(event.getStatus().equals(EEventStatus.SCHEDULED)) {
@@ -131,6 +135,10 @@ public class ContractServiceImpl implements ContractService {
 
         Account managerA = accountRepository.findAccountByEmail(request.getEmailA())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        if (managerA.getRole().getRoleName() != ERole.MANAGER) {
+            throw new AppException(ErrorCode.USER_NOT_MANAGER);
+        }
 
         Company company = companyRepository.findCompanyByEmail(request.getEmailB())
                 .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_FOUND));
