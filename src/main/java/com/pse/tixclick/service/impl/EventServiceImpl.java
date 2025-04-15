@@ -35,6 +35,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -116,14 +117,14 @@ public class EventServiceImpl implements EventService {
         event.setOrganizer(organnizer);
         event.setCountView(0);
         event.setCompany(company);
-        if("ONLINE".equals(request.getTypeEvent().toUpperCase())) {
+        if ("ONLINE".equals(request.getTypeEvent().toUpperCase())) {
             event.setUrlOnline(request.getUrlOnline());
             event.setLocationName(null);
             event.setAddress(null);
             event.setWard(null);
             event.setDistrict(null);
             event.setCity(null);
-        } else if("OFFLINE".equals(request.getTypeEvent().toUpperCase())) {
+        } else if ("OFFLINE".equals(request.getTypeEvent().toUpperCase())) {
             event.setUrlOnline(null);
             event.setLocationName(request.getLocationName());
             event.setAddress(request.getAddress());
@@ -284,32 +285,32 @@ public class EventServiceImpl implements EventService {
         return events.stream()
                 .filter(event -> event.getStatus() == EEventStatus.APPROVED || event.getStatus() == EEventStatus.PENDING || event.getStatus() == EEventStatus.REJECTED)
                 .map(event -> {
-            EventResponse response = new EventResponse();
-            response.setEventId(event.getEventId());
-            response.setBannerURL(event.getBannerURL());
-            response.setLogoURL(event.getLogoURL());
-            response.setDescription(event.getDescription());
-            response.setLocationName(event.getLocationName());
-            response.setEventName(event.getEventName());
-            response.setEventCode(event.getEventCode());
-            response.setCity(event.getCity());
-            response.setDistrict(event.getDistrict());
-            response.setWard(event.getWard());
-            response.setStatus(String.valueOf(event.getStatus()));
-            response.setTypeEvent(event.getTypeEvent());
+                    EventResponse response = new EventResponse();
+                    response.setEventId(event.getEventId());
+                    response.setBannerURL(event.getBannerURL());
+                    response.setLogoURL(event.getLogoURL());
+                    response.setDescription(event.getDescription());
+                    response.setLocationName(event.getLocationName());
+                    response.setEventName(event.getEventName());
+                    response.setEventCode(event.getEventCode());
+                    response.setCity(event.getCity());
+                    response.setDistrict(event.getDistrict());
+                    response.setWard(event.getWard());
+                    response.setStatus(String.valueOf(event.getStatus()));
+                    response.setTypeEvent(event.getTypeEvent());
 
-            if (event.getOrganizer() != null) {
-                response.setOrganizerId(event.getOrganizer().getAccountId());
-                response.setOrganizerName(event.getOrganizer().getUserName());
-            }
+                    if (event.getOrganizer() != null) {
+                        response.setOrganizerId(event.getOrganizer().getAccountId());
+                        response.setOrganizerName(event.getOrganizer().getUserName());
+                    }
 
-            if (event.getCompany() != null) {
-                response.setCompanyId(event.getCompany().getCompanyId());
-                response.setCompanyName(event.getCompany().getCompanyName());
-            }
+                    if (event.getCompany() != null) {
+                        response.setCompanyId(event.getCompany().getCompanyId());
+                        response.setCompanyName(event.getCompany().getCompanyName());
+                    }
 
-            return response;
-        }).collect(Collectors.toList());
+                    return response;
+                }).collect(Collectors.toList());
     }
 
 
@@ -352,7 +353,6 @@ public class EventServiceImpl implements EventService {
         return modelMapper.map(events, new TypeToken<List<EventDTO>>() {
         }.getType());
     }
-
 
 
     @Override
@@ -435,27 +435,27 @@ public class EventServiceImpl implements EventService {
     @Override
     public List<UpcomingEventDTO> getTopPerformingEvents() {
 
-            List<Event> events = eventRepository.findScheduledEvents();
-            List<UpcomingEventDTO> upcomingEventDTOs = new ArrayList<>();
+        List<Event> events = eventRepository.findScheduledEvents();
+        List<UpcomingEventDTO> upcomingEventDTOs = new ArrayList<>();
 
-            for (Event event : events) {
-                int eventId = event.getEventId();
+        for (Event event : events) {
+            int eventId = event.getEventId();
 
-                int totalTicketsSold = ticketPurchaseRepository.countTotalTicketSold(eventId);
+            int totalTicketsSold = ticketPurchaseRepository.countTotalTicketSold(eventId);
 
-                double totalRevenue = orderRepository.sumTotalTransaction(eventId);
+            double totalRevenue = orderRepository.sumTotalTransaction(eventId);
 
-                UpcomingEventDTO dto = new UpcomingEventDTO();
-                dto.setEventName(event.getEventName());
-                dto.setTicketSold(totalTicketsSold);
-                dto.setRevenue(totalRevenue);
+            UpcomingEventDTO dto = new UpcomingEventDTO();
+            dto.setEventName(event.getEventName());
+            dto.setTicketSold(totalTicketsSold);
+            dto.setRevenue(totalRevenue);
 
-                upcomingEventDTOs.add(dto);
-            }
-            // Sắp xếp danh sách theo revenue giảm dần
-            upcomingEventDTOs.sort((a, b) -> Double.compare(b.getRevenue(), a.getRevenue()));
+            upcomingEventDTOs.add(dto);
+        }
+        // Sắp xếp danh sách theo revenue giảm dần
+        upcomingEventDTOs.sort((a, b) -> Double.compare(b.getRevenue(), a.getRevenue()));
 
-            return upcomingEventDTOs;
+        return upcomingEventDTOs;
     }
 
     @Override
@@ -499,7 +499,7 @@ public class EventServiceImpl implements EventService {
         notification.setReadDate(null);
 
         notificationRepository.saveAndFlush(notification);
-        messagingTemplate.convertAndSendToUser(manager.getUserName(),"/specific/messages", "Có sự kiện mới cần duyệt");
+        messagingTemplate.convertAndSendToUser(manager.getUserName(), "/specific/messages", "Có sự kiện mới cần duyệt");
 
 
         return "Yêu cầu đã được gửi";
@@ -548,7 +548,8 @@ public class EventServiceImpl implements EventService {
                 .collect(Collectors.toList());
 
         // Ánh xạ từ EventActivityDTO sang EventActivityResponse
-        List<EventActivityResponse> eventActivityResponseList = modelMapper.map(eventActivityDTOList, new TypeToken<List<EventActivityResponse>>() {}.getType());
+        List<EventActivityResponse> eventActivityResponseList = modelMapper.map(eventActivityDTOList, new TypeToken<List<EventActivityResponse>>() {
+        }.getType());
 
         // Lấy công ty của sự kiện
         Company company = event.getCompany();
@@ -586,7 +587,6 @@ public class EventServiceImpl implements EventService {
             // Gán danh sách TicketDTO vào EventActivityResponse
             activityResponse.setTickets(ticketDTOS);
         }
-
 
 
         // Kiểm tra xem sự kiện có seat map không
@@ -729,7 +729,8 @@ public class EventServiceImpl implements EventService {
                             .map(activity -> modelMapper.map(activity, EventActivityDTO.class))
                             .collect(Collectors.toList());
 
-                    List<EventActivityResponse> eventActivityResponseList = modelMapper.map(eventActivityDTOList, new TypeToken<List<EventActivityResponse>>() {}.getType());
+                    List<EventActivityResponse> eventActivityResponseList = modelMapper.map(eventActivityDTOList, new TypeToken<List<EventActivityResponse>>() {
+                    }.getType());
 
                     // Lấy giá ticket thấp nhất của sự kiện
                     double minEventPrice = ticketRepository.findMinTicketByEvent_EventId(event.getEventId())
@@ -808,13 +809,14 @@ public class EventServiceImpl implements EventService {
             response.setEventCategory(event.getCategory() != null ? event.getCategory().getCategoryName() : null);
             response.setHaveSeatMap(event.getSeatMap() != null);
 
-                        // Dùng ModelMapper để map sang DTO
+            // Dùng ModelMapper để map sang DTO
             List<EventActivityDTO> eventActivityDTOList = event.getEventActivities().stream()
                     .map(activity -> modelMapper.map(activity, EventActivityDTO.class))
                     .collect(Collectors.toList());
 
             // Ánh xạ từ EventActivityDTO sang EventActivityResponse
-            List<EventActivityResponse> eventActivityResponseList = modelMapper.map(eventActivityDTOList, new TypeToken<List<EventActivityResponse>>() {}.getType());
+            List<EventActivityResponse> eventActivityResponseList = modelMapper.map(eventActivityDTOList, new TypeToken<List<EventActivityResponse>>() {
+            }.getType());
 
             for (EventActivityResponse activityResponse : eventActivityResponseList) {
                 // Lấy danh sách TicketMapping liên quan đến EventActivity
@@ -889,7 +891,7 @@ public class EventServiceImpl implements EventService {
                 notification.setCreatedDate(LocalDateTime.now());
                 notification.setReadDate(null);
                 notificationRepository.saveAndFlush(notification);
-                messagingTemplate.convertAndSendToUser(event.getOrganizer().getUserName(),"/specific/messages", "Sự kiện của bạn đã được phê duyệt");
+                messagingTemplate.convertAndSendToUser(event.getOrganizer().getUserName(), "/specific/messages", "Sự kiện của bạn đã được phê duyệt");
             }
 
             case REJECTED -> {
@@ -909,7 +911,7 @@ public class EventServiceImpl implements EventService {
                 notification.setCreatedDate(LocalDateTime.now());
                 notification.setReadDate(null);
                 notificationRepository.saveAndFlush(notification);
-                messagingTemplate.convertAndSendToUser(event.getOrganizer().getUserName(),"/specific/messages", "Sự kiện của bạn đã bị từ chối");
+                messagingTemplate.convertAndSendToUser(event.getOrganizer().getUserName(), "/specific/messages", "Sự kiện của bạn đã bị từ chối");
             }
 
 
@@ -963,16 +965,29 @@ public class EventServiceImpl implements EventService {
             throw new AppException(ErrorCode.EVENT_NOT_APPROVED);
         }
 
-        // Chuẩn bị các danh sách response
         List<EventActivityDashbroadResponse> activityDashboardList = new ArrayList<>();
         List<CompanyDashboardResponse.TicketReVenueDashBoardResponse> ticketRevenueList = new ArrayList<>();
         List<CompanyDashboardResponse.EventActivityRevenueReportResponse> revenueReportList = new ArrayList<>();
+
+        // Lấy ngày bán sớm nhất và muộn nhất của tất cả eventActivities
+        LocalDate earliestStart = event.getEventActivities().stream()
+                .map(a -> a.getStartTicketSale().toLocalDate())
+                .min(LocalDate::compareTo)
+                .orElse(LocalDate.now());
+
+        LocalDate latestEnd = event.getEventActivities().stream()
+                .map(a -> a.getEndTicketSale().toLocalDate())
+                .max(LocalDate::compareTo)
+                .orElse(LocalDate.now());
+
+        // Map để tính tổng doanh thu theo từng loại vé
+        Map<String, Double> ticketRevenueMap = new HashMap<>();
 
         for (EventActivity activity : event.getEventActivities()) {
             EventActivityDashbroadResponse activityResponse = new EventActivityDashbroadResponse();
             activityResponse.setEventActivity(activity.getActivityName());
 
-            // Lấy ticket theo mapping hoặc full event
+            // Lấy danh sách ticket của activity
             List<Ticket> tickets;
             List<TicketMapping> mappings = ticketMappingRepository
                     .findTicketMappingsByEventActivity_EventActivityId(activity.getEventActivityId());
@@ -987,52 +1002,53 @@ public class EventServiceImpl implements EventService {
 
             List<EventActivityDashbroadResponse.TicketDashBoardResponse> ticketDashboard = new ArrayList<>();
 
+            // Tính doanh thu cho từng ticket
             for (Ticket ticket : tickets) {
-                LocalDateTime startDate = activity.getStartTicketSale();
-                LocalDateTime endDate = activity.getEndTicketSale();
                 double ticketPrice = ticket.getPrice();
 
-                // Đếm số lượng vé đã bán
                 int soldCount = ticketPurchaseRepository
                         .countTicketPurchasedByEventActivityIdAndTicketId(
                                 activity.getEventActivityId(), ticket.getTicketId());
 
                 double totalRevenue = ticketPrice * soldCount;
 
-                // Tổng doanh thu theo vé
-                ticketRevenueList.add(new CompanyDashboardResponse.TicketReVenueDashBoardResponse(
-                        ticket.getTicketName(), totalRevenue
-                ));
+                // Tính tổng doanh thu cho từng loại vé
+                ticketRevenueMap.merge(ticket.getTicketName(), totalRevenue, Double::sum);
 
-                // Tổng số vé đã bán theo vé
                 ticketDashboard.add(new EventActivityDashbroadResponse.TicketDashBoardResponse(
                         ticket.getTicketName(), soldCount
                 ));
-
-                // Doanh thu từng ngày từ OrderDetail
-                List<RevenueByDateProjection> dailyRevenue = orderDetailRepository.getRevenueByDayForTicket(
-                        activity.getEventActivityId(),
-                        ticket.getTicketId(),
-                        startDate,
-                        endDate
-                );
-
-                // Map vào 1 list chung
-                revenueReportList.addAll(
-                        dailyRevenue.stream()
-                                .map(r -> new CompanyDashboardResponse.EventActivityRevenueReportResponse(
-                                        r.getOrderDay().toString(),
-                                        r.getTotalRevenue()
-                                ))
-                                .collect(Collectors.toList())
-                );
             }
 
             activityResponse.setTicketDashBoardResponseList(ticketDashboard);
             activityDashboardList.add(activityResponse);
         }
 
-        // Gộp response lại
+        // Gọi repository lấy doanh thu theo ngày dựa trên toàn bộ range
+        List<RevenueByDateProjection> dailyRevenue = orderRepository.getRevenueByEventIdAndDateRange(
+                event.getEventId(),
+                earliestStart,
+                latestEnd
+        );
+
+        // Mapping doanh thu theo ngày vào list
+        revenueReportList.addAll(
+                dailyRevenue.stream()
+                        .map(r -> new CompanyDashboardResponse.EventActivityRevenueReportResponse(
+                                r.getOrderDay().toString(),
+                                r.getTotalRevenue()
+                        ))
+                        .collect(Collectors.toList())
+        );
+
+        // Chuyển map doanh thu theo loại vé sang list
+        ticketRevenueList = ticketRevenueMap.entrySet().stream()
+                .map(entry -> new CompanyDashboardResponse.TicketReVenueDashBoardResponse(
+                        entry.getKey(), entry.getValue()
+                ))
+                .collect(Collectors.toList());
+
+        // Gộp tất cả thông tin vào response cuối cùng
         CompanyDashboardResponse finalResponse = new CompanyDashboardResponse();
         finalResponse.setEventActivityDashbroadResponseList(activityDashboardList);
         finalResponse.setTicketReVenueDashBoardResponseList(ticketRevenueList);
@@ -1040,6 +1056,7 @@ public class EventServiceImpl implements EventService {
 
         return List.of(finalResponse);
     }
+
 
 
 

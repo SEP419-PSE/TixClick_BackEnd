@@ -14,24 +14,7 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetail, Intege
     @Query("SELECT od FROM OrderDetail od WHERE od.order.orderId = :id")
     List<OrderDetail> findByOrderId(@Param("id") int orderId);
 
-    @Query("""
-    SELECT CAST(o.orderDate AS date) AS orderDay, SUM(od.amount) AS totalRevenue
-    FROM OrderDetail od
-    JOIN od.order o
-    JOIN od.ticketPurchase tp
-    WHERE tp.eventActivity.eventActivityId = :eventActivityId
-      AND tp.ticket.ticketId = :ticketId
-      AND o.orderDate BETWEEN :startDate AND :endDate
-      AND o.status = 'COMPLETED'
-    GROUP BY CAST(o.orderDate AS date)
-    ORDER BY CAST(o.orderDate AS date)
-""")
-    List<RevenueByDateProjection> getRevenueByDayForTicket(
-            @Param("eventActivityId") int eventActivityId,
-            @Param("ticketId") int ticketId,
-            @Param("startDate") LocalDateTime startDate,
-            @Param("endDate") LocalDateTime endDate
-    );
+
 
 
 }
