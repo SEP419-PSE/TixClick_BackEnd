@@ -33,5 +33,6 @@ public interface CompanyService {
     CompanyAndDocumentResponse createCompanyAndDocument(CreateCompanyRequest createCompanyRequest, MultipartFile logoURL, List<MultipartFile> companyDocument) throws IOException, MessagingException;
     CompanyDTO isAccountHaveCompany();
 
+    GetTransactionPaymenByCompanyIdResponse getTransactionPaymentContractByCompanyId(int companyId);
 
 }

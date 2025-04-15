@@ -21,7 +21,8 @@ import java.util.Collection;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Table(name = "events")
 @Entity
-public class Event {
+public class
+Event {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     int eventId;
@@ -33,7 +34,16 @@ public class Event {
     String locationName;
 
     @Column(columnDefinition = "NVARCHAR(255)")
-    String location;
+    String address;  // Địa chỉ
+
+    @Column(columnDefinition = "NVARCHAR(255)")
+    String city;  // Thành phố (HCM, Hà Nội, Đà Nẵng)
+
+    @Column(columnDefinition = "NVARCHAR(255)")
+    String district;  // Quận/Huyện
+
+    @Column(columnDefinition = "NVARCHAR(255)")
+    String ward;  // Phường/Xã
 
     @Column
     String eventCode;

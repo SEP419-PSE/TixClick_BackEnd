@@ -90,7 +90,8 @@ public class SecurityConfig {
             "/api/notification/**",
             "/api/tickets/**",
             "/api/notification/**",
-            "/api/test-oauth2/**"
+            "/api/test-oauth2/**",
+
     };
 
     @Bean

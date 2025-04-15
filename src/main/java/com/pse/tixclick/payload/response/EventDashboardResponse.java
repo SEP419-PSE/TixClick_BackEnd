@@ -13,8 +13,12 @@ import java.util.List;
 public class EventDashboardResponse {
     int eventId;
     String eventName;
+    String eventCode;
     String locationName;
-    String location;
+    String address;
+    String city;
+    String district;
+    String ward;
     String status;
     String typeEvent;
     int countView;

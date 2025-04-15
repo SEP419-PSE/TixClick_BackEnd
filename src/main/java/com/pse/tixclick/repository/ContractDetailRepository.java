@@ -15,4 +15,6 @@ public interface ContractDetailRepository extends JpaRepository<ContractDetail, 
     @Query(value = "SELECT cd FROM ContractDetail cd WHERE cd.contractPayment.contractPaymentId = :contractPaymentId")
     ContractDetail findByContractPaymentId(@Param("contractPaymentId") int contractPaymentId);
 
+    List<ContractDetail> findContractDetailsByContract_ContractId(int contractId);
+
 }

@@ -6,19 +6,19 @@ import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.CompanyDTO;
 import com.pse.tixclick.payload.dto.CompanyDocumentDTO;
+import com.pse.tixclick.payload.dto.ContractDetailDTO;
 import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.Notification;
 import com.pse.tixclick.payload.entity.company.Company;
 import com.pse.tixclick.payload.entity.company.CompanyVerification;
+import com.pse.tixclick.payload.entity.company.Contract;
+import com.pse.tixclick.payload.entity.company.ContractDetail;
 import com.pse.tixclick.payload.entity.entity_enum.*;
 import com.pse.tixclick.payload.request.create.CreateCompanyDocumentRequest;
 import com.pse.tixclick.payload.request.create.CreateCompanyRequest;
 import com.pse.tixclick.payload.request.create.CreateCompanyVerificationRequest;
 import com.pse.tixclick.payload.request.update.UpdateCompanyRequest;
-import com.pse.tixclick.payload.response.CompanyAndDocumentResponse;
-import com.pse.tixclick.payload.response.CreateCompanyResponse;
-import com.pse.tixclick.payload.response.GetByCompanyResponse;
-import com.pse.tixclick.payload.response.GetByCompanyWithVerificationResponse;
+import com.pse.tixclick.payload.response.*;
 import com.pse.tixclick.repository.*;
 import com.pse.tixclick.service.CompanyDocumentService;
 import com.pse.tixclick.service.CompanyService;
@@ -38,6 +38,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -60,6 +61,8 @@ public class CompanyServiceImpl implements CompanyService {
     CompanyDocumentService companyDocumentService;
     NotificationRepository notificationRepository;
     CompanyDocumentRepository companyDocumentRepository;
+    ContractRepository contractRepository;
+    ContractDetailRepository contractDetailRepository;
     @Override
     public CreateCompanyResponse createCompany(CreateCompanyRequest createCompanyRequest, MultipartFile file) throws IOException, MessagingException {
         var context = SecurityContextHolder.getContext();
@@ -445,6 +448,62 @@ public class CompanyServiceImpl implements CompanyService {
         }
         return modelMapper.map(company.get(), CompanyDTO.class);
     }
+
+    @Override
+    public GetTransactionPaymenByCompanyIdResponse getTransactionPaymentContractByCompanyId(int companyId) {
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_FOUND));
+
+        List<Contract> contractList = contractRepository.findContractsByCompany_CompanyId(companyId);
+
+        if (contractList.isEmpty()) {
+            return new GetTransactionPaymenByCompanyIdResponse(List.of());
+        }
+
+        List<ContractResponse> contractResponses = new ArrayList<>();
+
+        for (Contract contract : contractList) {
+            List<ContractDetail> contractDetails = contractDetailRepository.findContractDetailsByContract_ContractId(contract.getContractId());
+
+            List<ContractDetailDTO> contractDetailDTOList = new ArrayList<>();
+            for (ContractDetail detail : contractDetails) {
+                ContractDetailDTO detailDTO = ContractDetailDTO.builder()
+                        .contractDetailId(detail.getContractDetailId())
+                        .contractDetailName(detail.getContractDetailName())
+                        .contractDetailCode(detail.getContractDetailCode())
+                        .description(detail.getDescription())
+                        .contractAmount(detail.getAmount())
+                        .contractPayDate(detail.getPayDate())
+                        .status(String.valueOf(detail.getStatus()))
+                        .contractId(detail.getContract().getContractId())
+                        .build();
+                contractDetailDTOList.add(detailDTO);
+            }
+
+            ContractResponse contractResponse = new ContractResponse(
+                    contract.getContractId(),
+                    contract.getContractName(),
+                    contract.getTotalAmount(),
+                    contract.getCommission(),
+                    contract.getContractType(),
+                    contract.getStartDate(),
+                    contract.getEndDate(),
+                    String.valueOf(contract.getStatus()),
+                    contract.getAccount().getAccountId(),
+                    contract.getEvent().getEventId(),
+                    contract.getCompany().getCompanyId(),
+                    contractDetailDTOList
+            );
+
+            contractResponses.add(contractResponse);
+        }
+
+        Collections.reverse(contractResponses);
+
+        return new GetTransactionPaymenByCompanyIdResponse(contractResponses);
+    }
+
+
 
 
 }

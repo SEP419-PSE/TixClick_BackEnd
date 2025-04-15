@@ -657,5 +657,27 @@ public class EventController {
             throw new RuntimeException(e);
         }
     }
+
+    @GetMapping("/consumer/top-10")
+    public ResponseEntity<ApiResponse<List<EventForConsumerResponse>>> getEventsForConsumerByCountViewTop10() {
+        List<EventForConsumerResponse> events = eventService.getEventsForConsumerByCountViewTop10();
+
+        if (events.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.<List<EventForConsumerResponse>>builder()
+                            .code(HttpStatus.NOT_FOUND.value())
+                            .message("No top 5 events found")
+                            .result(null)
+                            .build());
+        }
+
+        return ResponseEntity.ok(
+                ApiResponse.<List<EventForConsumerResponse>>builder()
+                        .code(HttpStatus.OK.value())
+                        .message("Get all top 10  events successfully")
+                        .result(events)
+                        .build()
+        );
+    }
 }
 

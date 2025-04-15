@@ -15,14 +15,13 @@ import java.time.LocalDate;
 public class EventDTO {
     int eventId;
     String eventName;
-    String location;
+    String eventCode;
+    String address;
+    String city;
+    String district;
+    String ward;
     String locationName;
     int countView;
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    LocalDate endDate;
-
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    LocalDate startDate;
     String logoURL;
     String bannerURL;
     String urlOnline;

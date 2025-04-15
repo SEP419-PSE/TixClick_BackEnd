@@ -31,6 +31,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -72,6 +73,7 @@ public class AuthenServiceTest {
     @Mock
     EmailService emailService;
 
+    @Spy
     @InjectMocks
     private AuthenServiceImpl authenService;
 
@@ -150,7 +152,7 @@ public class AuthenServiceTest {
         assertEquals(ErrorCode.USER_NOT_EXISTED, exception.getErrorCode());
     }
     @Test
-    void login_ShouldThrowException_WhenUserIsInactive() {
+    void login_ShouldReturnTokenResponseWithInactiveStatus_WhenUserIsInactive() {
         // Arrange
         String username = "inactiveUser";
         String rawPassword = "password";
@@ -164,15 +166,22 @@ public class AuthenServiceTest {
         user.setPassword(encodedPassword);
         user.setRole(role);
         user.setActive(false); // not active
+        user.setEmail("inactive@example.com");
 
         LoginRequest request = new LoginRequest(username, rawPassword);
 
         when(userRepository.findAccountByUserName(username)).thenReturn(Optional.of(user));
 
-        // Act & Assert
-        AppException exception = assertThrows(AppException.class, () -> authenService.login(request));
-        assertEquals(ErrorCode.USER_NOT_ACTIVE, exception.getErrorCode());
+        // Act
+        TokenResponse response = authenService.login(request);
+
+        // Assert
+        assertFalse(response.isStatus());
+        assertEquals("inactive@example.com", response.getEmail());
+        assertNull(response.getAccessToken()); // vì không generate token nếu inactive
+        assertNull(response.getRefreshToken());
     }
+
 
     @Test
     void login_ShouldThrowException_WhenPasswordIsIncorrect() {
@@ -508,9 +517,10 @@ public class AuthenServiceTest {
         buyerRole.setRoleName(ERole.BUYER);
         when(roleRepository.findRoleByRoleName(ERole.BUYER)).thenReturn(Optional.of(buyerRole));
 
-        when(userRepository.saveAndFlush(any(Account.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(userRepository.saveAndFlush(any(Account.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
-        // Nếu bạn dùng spy hoặc mock cho authenService, bạn cần mock phương thức createAndSendOTP
+        // Bypass send OTP
         doNothing().when(authenService).createAndSendOTP("test@example.com");
 
         // Act
@@ -527,20 +537,21 @@ public class AuthenServiceTest {
     }
 
 
-//    @Test
-//    void register_ShouldThrowException_WhenUsernameExists() {
-//        SignUpRequest request = SignUpRequest.builder()
-//                .userName("existingUser")
-//                .password("password")
-//                .email("test@example.com")
-//                .build();
-//
-//        when(userRepository.findAccountByUserName("existingUser"))
-//                .thenReturn(Optional.of(new Account()));
-//
-//        AppException exception = assertThrows(AppException.class, () -> authenService.register(request));
-//        assertEquals(ErrorCode.USER_EXISTED, exception.getErrorCode());
-//    }
+    @Test
+    void register_ShouldThrowException_WhenUsernameExists() {
+        SignUpRequest request = SignUpRequest.builder()
+                .userName("existingUser")
+                .password("password")
+                .email("test@example.com")
+                .build();
+
+        when(userRepository.findAccountByUserName("existingUser"))
+                .thenReturn(Optional.of(new Account()));
+
+        AppException exception = assertThrows(AppException.class, () -> authenService.register(request));
+        assertEquals(ErrorCode.USERNAME_TAKEN, exception.getErrorCode());
+    }
+
     @Test
     void register_ShouldThrowException_WhenEmailExists() {
         SignUpRequest request = SignUpRequest.builder()
@@ -585,18 +596,27 @@ public class AuthenServiceTest {
 
         when(userRepository.findAccountByEmail(email)).thenReturn(Optional.of(user));
 
+        // Mock Redis operations
         ValueOperations<String, String> valueOperations = Mockito.mock(ValueOperations.class);
         when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
-        when(valueOperations.get("OTP:" + email)).thenReturn(null);
+
+        // Không có thời gian gửi trước đó -> hợp lệ để gửi mới
+        when(valueOperations.get("OTP_TIME:" + email)).thenReturn(null);
 
         // Act
         authenService.createAndSendOTP(email);
 
         // Assert
         verify(stringRedisTemplate, atLeastOnce()).opsForValue();
+
+        // Verify OTP và TIME đều được set trong Redis
         verify(valueOperations).set(startsWith("OTP:"), anyString(), eq(15L), eq(TimeUnit.MINUTES));
+        verify(valueOperations).set(startsWith("OTP_TIME:"), anyString(), eq(15L), eq(TimeUnit.MINUTES));
+
+        // Verify email được gửi
         verify(emailService).sendOTPtoActiveAccount(eq(email), anyString(), eq("testuser"));
     }
+
     @Test
     void createAndSendOTP_ShouldThrowException_WhenUserNotFound() {
         // Arrange
@@ -622,7 +642,7 @@ public class AuthenServiceTest {
         assertEquals(ErrorCode.USER_ACTIVE, exception.getErrorCode());
     }
     @Test
-    void createAndSendOTP_ShouldThrowException_WhenOTPAlreadySent() {
+    void createAndSendOTP_ShouldThrowException_WhenOTPSentRecently() {
         // Arrange
         String email = "test@example.com";
         Account user = new Account();
@@ -634,12 +654,16 @@ public class AuthenServiceTest {
 
         ValueOperations<String, String> valueOperations = Mockito.mock(ValueOperations.class);
         when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
-        when(valueOperations.get("OTP:" + email)).thenReturn("123456");
+
+        // Giả lập thời gian gửi gần nhất cách hiện tại chưa tới 30s
+        long now = System.currentTimeMillis();
+        when(valueOperations.get("OTP_TIME:" + email)).thenReturn(String.valueOf(now - 10_000)); // chỉ mới 10s trước
 
         // Act & Assert
         AppException exception = assertThrows(AppException.class, () -> authenService.createAndSendOTP(email));
-        assertEquals(ErrorCode.OTP_ALREADY_SENT, exception.getErrorCode());
+        assertEquals(ErrorCode.OTP_ALREADY_SENT_RECENTLY, exception.getErrorCode());
     }
+
     @Test
     void verifyOTP_ShouldReturnTokenResponse_WhenOTPIsValid() {
         // Arrange
@@ -746,5 +770,45 @@ public class AuthenServiceTest {
         AppException exception = assertThrows(AppException.class, () -> authenService.verifyOTP(email, otp));
         assertEquals(ErrorCode.USER_NOT_EXISTED, exception.getErrorCode());
     }
+
+    @Test
+    void loginWithManagerAndAdmin_ShouldReturnToken_WhenValidManagerAccount() {
+        // Arrange
+        String username = "managerUser";
+        String rawPassword = "password123";
+        String encodedPassword = new BCryptPasswordEncoder().encode(rawPassword);
+
+        Role role = new Role();
+        role.setRoleName(ERole.MANAGER);
+
+        Account user = new Account();
+        user.setUserName(username);
+        user.setPassword(encodedPassword);
+        user.setActive(true);
+        user.setRole(role);
+
+        LoginRequest request = new LoginRequest(username, rawPassword);
+
+        when(userRepository.findAccountByUserName(username)).thenReturn(Optional.of(user));
+
+        // Tạo TokenPair giả
+        Jwt.TokenInfo accessToken = new Jwt.TokenInfo ("mockAccessToken", new Date(System.currentTimeMillis() + 3600 * 1000));
+        Jwt.TokenInfo refreshToken = new Jwt.TokenInfo ("mockRefreshToken", new Date(System.currentTimeMillis() + 7 * 24 * 3600 * 1000));
+        Jwt.TokenPair mockTokenPair = new Jwt.TokenPair(accessToken, refreshToken);
+
+        when(jwt.generateTokens(user)).thenReturn(mockTokenPair);
+
+        // Act
+        TokenResponse response = authenService.loginWithManagerAndAdmin(request);
+
+        // Assert
+        assertEquals("mockAccessToken", response.getAccessToken());
+        assertEquals("mockRefreshToken", response.getRefreshToken());
+        assertTrue(response.isStatus());
+        assertEquals("MANAGER", response.getRoleName());
+    }
+
+
+
 
 }

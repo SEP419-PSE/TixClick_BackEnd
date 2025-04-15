@@ -14,7 +14,10 @@ import java.time.LocalDate;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CreateEventRequest {
     String eventName;
-    String location;
+    String address;
+    String ward;
+    String district;
+    String city;
     String typeEvent;
     String description;
     String urlOnline;

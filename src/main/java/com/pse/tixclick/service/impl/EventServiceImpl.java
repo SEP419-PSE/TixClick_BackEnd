@@ -10,6 +10,7 @@ import com.pse.tixclick.payload.entity.Notification;
 import com.pse.tixclick.payload.entity.company.Company;
 import com.pse.tixclick.payload.entity.company.Contract;
 import com.pse.tixclick.payload.entity.entity_enum.EContractStatus;
+import com.pse.tixclick.payload.entity.event.EventActivity;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
 import com.pse.tixclick.payload.entity.ticket.TicketMapping;
 import com.pse.tixclick.payload.response.*;
@@ -93,8 +94,11 @@ public class EventServiceImpl implements EventService {
         String bannercode = cloudinary.uploadImageToCloudinary(bannerURL);
         // Tạo đối tượng Event từ request
         Event event = new Event();
+
+        // Tạo eventCode từ tên sự kiện và mã danh mục, có thể kết hợp thêm các phần tử khác như ngày tháng để đảm bảo tính duy nhất
+        String eventCode = category.getCategoryName().toUpperCase() + System.currentTimeMillis();
+        event.setEventCode(eventCode);  // Gán eventCode cho sự kiện
         event.setEventName(request.getEventName());
-        event.setLocation(request.getLocation());
         String typeEvent = request.getTypeEvent().toUpperCase();
 
         // Kiểm tra xem typeEvent có phải là "ONLINE" hoặc "OFFLINE" không (có thể sử dụng toUpperCase() để kiểm tra không phân biệt chữ hoa chữ thường)
@@ -106,7 +110,6 @@ public class EventServiceImpl implements EventService {
             // Ví dụ: throw exception, log error hoặc gán một giá trị mặc định
             throw new IllegalArgumentException("Invalid event type. Must be ONLINE or OFFLINE.");
         }
-        event.setTypeEvent(request.getTypeEvent());
         event.setDescription(request.getDescription());
         event.setCategory(category);
 
@@ -119,11 +122,17 @@ public class EventServiceImpl implements EventService {
         if("ONLINE".equals(request.getTypeEvent().toUpperCase())) {
             event.setUrlOnline(request.getUrlOnline());
             event.setLocationName(null);
-            event.setLocation(null);
+            event.setAddress(null);
+            event.setWard(null);
+            event.setDistrict(null);
+            event.setCity(null);
         } else if("OFFLINE".equals(request.getTypeEvent().toUpperCase())) {
             event.setUrlOnline(null);
             event.setLocationName(request.getLocationName());
-            event.setLocation(request.getLocation());
+            event.setAddress(request.getAddress());
+            event.setWard(request.getWard());
+            event.setDistrict(request.getDistrict());
+            event.setCity(request.getCity());
         }
 
 
@@ -139,11 +148,16 @@ public class EventServiceImpl implements EventService {
     public EventDTO updateEvent(UpdateEventRequest eventRequest, MultipartFile logoURL, MultipartFile bannerURL) throws IOException {
         var context = SecurityContextHolder.getContext();
         String name = context.getAuthentication().getName();
+
+        // Lấy sự kiện từ database
         var event = eventRepository.findEventByEventIdAndOrganizer_UserName(eventRequest.getEventId(), name)
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
-        if(event.getStatus() != EEventStatus.DRAFT) {
+
+        // Kiểm tra trạng thái sự kiện, chỉ cho phép cập nhật nếu sự kiện ở trạng thái DRAFT
+        if (event.getStatus() != EEventStatus.DRAFT) {
             throw new AppException(ErrorCode.INVALID_EVENT_STATUS);
         }
+
         // Chỉ cập nhật nếu giá trị không null hoặc không phải chuỗi trống
         if (eventRequest.getEventName() != null && !eventRequest.getEventName().trim().isEmpty()) {
             event.setEventName(eventRequest.getEventName());
@@ -153,23 +167,26 @@ public class EventServiceImpl implements EventService {
             event.setDescription(eventRequest.getDescription());
         }
 
-
-
-        if (eventRequest.getStatus() != null ) {
+        // Cập nhật trạng thái sự kiện nếu có
+        if (eventRequest.getStatus() != null) {
             event.setStatus(EEventStatus.valueOf(eventRequest.getStatus()));
         }
+
+        // Cập nhật URL online nếu sự kiện là ONLINE
         if (eventRequest.getUrlOnline() != null && !eventRequest.getUrlOnline().trim().isEmpty()) {
             if ("ONLINE".equalsIgnoreCase(event.getTypeEvent())) {
                 event.setUrlOnline(eventRequest.getUrlOnline());
-                event.setLocation(null);
+                event.setAddress(null);
+                event.setWard(null);  // Xóa các địa chỉ khi là sự kiện ONLINE
+                event.setDistrict(null);
+                event.setCity(null);
                 event.setLocationName(null);
             } else {
-                // Nếu không phải ONLINE thì bỏ qua phần set urlOnline
-                // Có thể log ra nếu cần debug
                 System.out.println("Event type is not ONLINE, skip setting urlOnline.");
             }
         }
 
+        // Cập nhật loại sự kiện
         if (eventRequest.getTypeEvent() != null) {
             String type = eventRequest.getTypeEvent().toUpperCase();
             if (!type.equals("ONLINE") && !type.equals("OFFLINE")) {
@@ -178,22 +195,32 @@ public class EventServiceImpl implements EventService {
             event.setTypeEvent(type);
         }
 
+        // Cập nhật danh mục sự kiện nếu có
         if (eventRequest.getCategoryId() != 0) {
             var category = eventCategoryRepository.findById(eventRequest.getCategoryId())
                     .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
             event.setCategory(category);
         }
 
-        if(event.getTypeEvent().equals("OFFLINE")) {
-            event.setUrlOnline(null);
+        // Cập nhật thông tin địa chỉ nếu sự kiện là OFFLINE
+        if ("OFFLINE".equals(event.getTypeEvent())) {
+            event.setUrlOnline(null);  // Đảm bảo rằng không có URL online cho sự kiện OFFLINE
             if (eventRequest.getLocationName() != null && !eventRequest.getLocationName().trim().isEmpty()) {
                 event.setLocationName(eventRequest.getLocationName());
             }
-            if (eventRequest.getLocation() != null) {
-                event.setLocation(eventRequest.getLocation());
+            if (eventRequest.getWard() != null && !eventRequest.getWard().trim().isEmpty()) {
+                event.setWard(eventRequest.getWard());
+            }
+            if (eventRequest.getDistrict() != null && !eventRequest.getDistrict().trim().isEmpty()) {
+                event.setDistrict(eventRequest.getDistrict());
+            }
+            if (eventRequest.getCity() != null && !eventRequest.getCity().trim().isEmpty()) {
+                event.setCity(eventRequest.getCity());
+            }
+            if (eventRequest.getAddress() != null && !eventRequest.getAddress().trim().isEmpty()) {
+                event.setAddress(eventRequest.getAddress());
             }
         }
-
 
         // Xử lý upload file nếu có
         if (logoURL != null && !logoURL.isEmpty()) {
@@ -205,12 +232,14 @@ public class EventServiceImpl implements EventService {
             String bannerUrl = cloudinary.uploadImageToCloudinary(bannerURL);
             event.setBannerURL(bannerUrl);
         }
+
         // Lưu thay đổi vào database
         event = eventRepository.save(event);
 
         // Chuyển đổi sang DTO và trả về
         return modelMapper.map(event, EventDTO.class);
     }
+
 
     @Override
     public boolean deleteEvent(int id) {
@@ -231,7 +260,10 @@ public class EventServiceImpl implements EventService {
             response.setDescription(event.getDescription());
             response.setLocationName(event.getLocationName());
             response.setEventName(event.getEventName());
-            response.setLocation(event.getLocation());
+            response.setEventCode(event.getEventCode());
+            response.setCity(event.getCity());
+            response.setDistrict(event.getDistrict());
+            response.setWard(event.getWard());
             response.setStatus(String.valueOf(event.getStatus()));
             response.setTypeEvent(event.getTypeEvent());
 
@@ -262,7 +294,10 @@ public class EventServiceImpl implements EventService {
             response.setDescription(event.getDescription());
             response.setLocationName(event.getLocationName());
             response.setEventName(event.getEventName());
-            response.setLocation(event.getLocation());
+            response.setEventCode(event.getEventCode());
+            response.setCity(event.getCity());
+            response.setDistrict(event.getDistrict());
+            response.setWard(event.getWard());
             response.setStatus(String.valueOf(event.getStatus()));
             response.setTypeEvent(event.getTypeEvent());
 
@@ -481,11 +516,21 @@ public class EventServiceImpl implements EventService {
             throw new AppException(ErrorCode.EVENT_NOT_FOUND);
         }
 
+        var earliestEventDate = events.stream()
+                .flatMap(event -> event.getEventActivities().stream())
+                .filter(eventActivity -> eventActivity.getDateEvent().isAfter(LocalDate.now()))
+                .map(EventActivity::getDateEvent)  // Chỉ lấy dateEvent
+                .min(Comparator.naturalOrder())  // Lấy dateEvent sớm nhất
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_ACTIVITY_NOT_FOUND));  // Nếu không tìm thấy thì throw exception
+
+
         List<EventForConsumerResponse> responses = events.stream()
                 .map(event -> new EventForConsumerResponse(
                         event.getBannerURL(),
                         event.getEventId(),
-                        event.getLogoURL()
+                        event.getLogoURL(),
+                        earliestEventDate
+
                 ))
                 .collect(Collectors.toList());
 
@@ -553,7 +598,10 @@ public class EventServiceImpl implements EventService {
         return new EventDetailForConsumer(
                 event.getEventId(),
                 event.getEventName(),
-                event.getLocation(),
+                event.getAddress(),
+                event.getWard(),
+                event.getDistrict(),
+                event.getCity(),
                 event.getLocationName(),
                 event.getLogoURL(),
                 event.getBannerURL(),
@@ -596,7 +644,12 @@ public class EventServiceImpl implements EventService {
                 .map(event -> new EventForConsumerResponse(
                         event.getBannerURL(),
                         event.getEventId(),
-                        event.getLogoURL()
+                        event.getLogoURL(),
+                        event.getEventActivities().stream()
+                                .filter(eventActivity -> appUtils.isWeekend(eventActivity.getDateEvent()))
+                                .map(EventActivity::getDateEvent)
+                                .findFirst()
+                                .orElse(null) // Nếu không tìm thấy ngày nào thì trả về null
                 ))
                 .collect(Collectors.toList());
 
@@ -621,7 +674,12 @@ public class EventServiceImpl implements EventService {
                 .map(event -> new EventForConsumerResponse(
                         event.getBannerURL(),
                         event.getEventId(),
-                        event.getLogoURL()
+                        event.getLogoURL(),
+                        event.getEventActivities().stream()
+                                .filter(eventActivity -> eventActivity.getDateEvent().getMonthValue() == month)
+                                .map(EventActivity::getDateEvent)
+                                .findFirst()
+                                .orElse(null) // Nếu không tìm thấy ngày nào thì trả về null
                 ))
                 .collect(Collectors.toList());
 
@@ -685,7 +743,10 @@ public class EventServiceImpl implements EventService {
                     return new EventDetailForConsumer(
                             event.getEventId(),
                             event.getEventName(),
-                            event.getLocation(),
+                            event.getAddress(),
+                            event.getWard(),
+                            event.getDistrict(),
+                            event.getCity(),
                             event.getLocationName(),
                             event.getLogoURL(),
                             event.getBannerURL(),
@@ -736,7 +797,11 @@ public class EventServiceImpl implements EventService {
             response.setEventId(event.getEventId());
             response.setEventName(event.getEventName());
             response.setDescription(event.getDescription());
-            response.setLocation(event.getLocation());
+            response.setAddress(event.getAddress());
+            response.setEventCode(event.getEventCode());
+            response.setCity(event.getCity());
+            response.setDistrict(event.getDistrict());
+            response.setWard(event.getWard());
             response.setLocationName(event.getLocationName());
             response.setLogoURL(event.getLogoURL());
             response.setBannerURL(event.getBannerURL());
@@ -857,6 +922,34 @@ public class EventServiceImpl implements EventService {
         eventRepository.save(event); // Đừng quên lưu lại trạng thái đã cập nhật
 
         return true;
+    }
+
+    @Override
+    public List<EventForConsumerResponse> getEventsForConsumerByCountViewTop10() {
+        List<Event> events = eventRepository.findEventsByStatus(EEventStatus.SCHEDULED);
+        if (events.isEmpty()) {
+            throw new AppException(ErrorCode.EVENT_NOT_FOUND);
+        }
+
+        // Sắp xếp theo lượt xem giảm dần và lấy top 5
+        List<Event> top5Events = events.stream()
+                .sorted(Comparator.comparingInt(Event::getCountView).reversed())
+                .limit(10)
+                .collect(Collectors.toList());
+
+        // Chuyển sang DTO và trả về (không cần reverse nữa nếu đã sort đúng thứ tự)
+        return top5Events.stream()
+                .map(event -> new EventForConsumerResponse(
+                        event.getBannerURL(),
+                        event.getEventId(),
+                        event.getLogoURL(),
+                        event.getEventActivities().stream()
+                                .filter(eventActivity -> appUtils.isWeekend(eventActivity.getDateEvent()))
+                                .map(EventActivity::getDateEvent)
+                                .findFirst()
+                                .orElse(null) // Nếu không tìm thấy ngày nào thì trả về null
+                ))
+                .collect(Collectors.toList());
     }
 
 
