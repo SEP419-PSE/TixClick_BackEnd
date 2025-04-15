@@ -966,28 +966,35 @@ public class EventServiceImpl implements EventService {
         }
 
         List<EventActivityDashbroadResponse> activityDashboardList = new ArrayList<>();
-        List<CompanyDashboardResponse.TicketReVenueDashBoardResponse> ticketRevenueList = new ArrayList<>();
-        List<CompanyDashboardResponse.EventActivityRevenueReportResponse> revenueReportList = new ArrayList<>();
-
-        // Lấy ngày bán sớm nhất và muộn nhất của tất cả eventActivities
-        LocalDate earliestStart = event.getEventActivities().stream()
-                .map(a -> a.getStartTicketSale().toLocalDate())
-                .min(LocalDate::compareTo)
-                .orElse(LocalDate.now());
-
-        LocalDate latestEnd = event.getEventActivities().stream()
-                .map(a -> a.getEndTicketSale().toLocalDate())
-                .max(LocalDate::compareTo)
-                .orElse(LocalDate.now());
-
-        // Map để tính tổng doanh thu theo từng loại vé
+        List<CompanyDashboardResponse.EventActivityDateDashbroadResponse> activityRevenueDateList = new ArrayList<>();
         Map<String, Double> ticketRevenueMap = new HashMap<>();
 
         for (EventActivity activity : event.getEventActivities()) {
-            EventActivityDashbroadResponse activityResponse = new EventActivityDashbroadResponse();
-            activityResponse.setEventActivity(activity.getActivityName());
+            // Lấy khoảng thời gian bán vé
+            LocalDate earliestStart = activity.getStartTicketSale().toLocalDate();
+            LocalDate latestEnd = activity.getEndTicketSale().toLocalDate();
 
-            // Lấy danh sách ticket của activity
+            // Lấy doanh thu theo ngày
+            List<RevenueByDateProjection> dailyRevenue = orderRepository
+                    .getRevenueByEventIdAndEventActivityIdAndDateRange(
+                            event.getEventId(),
+                            activity.getEventActivityId(),
+                            earliestStart,
+                            latestEnd
+                    );
+
+            // Mapping doanh thu theo ngày
+            List<CompanyDashboardResponse.EventActivityRevenueReportResponse> activityRevenueList =
+                    dailyRevenue.stream()
+                            .map(r -> new CompanyDashboardResponse.EventActivityRevenueReportResponse(
+                                    r.getOrderDay().toString(), r.getTotalRevenue()))
+                            .collect(Collectors.toList());
+
+            activityRevenueDateList.add(new CompanyDashboardResponse.EventActivityDateDashbroadResponse(
+                    activity.getActivityName(), activityRevenueList
+            ));
+
+            // Lấy danh sách vé của activity
             List<Ticket> tickets;
             List<TicketMapping> mappings = ticketMappingRepository
                     .findTicketMappingsByEventActivity_EventActivityId(activity.getEventActivityId());
@@ -1002,62 +1009,37 @@ public class EventServiceImpl implements EventService {
 
             List<EventActivityDashbroadResponse.TicketDashBoardResponse> ticketDashboard = new ArrayList<>();
 
-            // Tính doanh thu cho từng ticket
             for (Ticket ticket : tickets) {
                 double ticketPrice = ticket.getPrice();
-
                 int soldCount = ticketPurchaseRepository
                         .countTicketPurchasedByEventActivityIdAndTicketId(
                                 activity.getEventActivityId(), ticket.getTicketId());
 
                 double totalRevenue = ticketPrice * soldCount;
-
-                // Tính tổng doanh thu cho từng loại vé
                 ticketRevenueMap.merge(ticket.getTicketName(), totalRevenue, Double::sum);
 
                 ticketDashboard.add(new EventActivityDashbroadResponse.TicketDashBoardResponse(
-                        ticket.getTicketName(), soldCount
-                ));
+                        ticket.getTicketName(), soldCount));
             }
 
-            activityResponse.setTicketDashBoardResponseList(ticketDashboard);
-            activityDashboardList.add(activityResponse);
+            activityDashboardList.add(new EventActivityDashbroadResponse(
+                    activity.getActivityName(), ticketDashboard
+            ));
         }
 
-        // Gọi repository lấy doanh thu theo ngày dựa trên toàn bộ range
-        List<RevenueByDateProjection> dailyRevenue = orderRepository.getRevenueByEventIdAndDateRange(
-                event.getEventId(),
-                earliestStart,
-                latestEnd
-        );
-
-        // Mapping doanh thu theo ngày vào list
-        revenueReportList.addAll(
-                dailyRevenue.stream()
-                        .map(r -> new CompanyDashboardResponse.EventActivityRevenueReportResponse(
-                                r.getOrderDay().toString(),
-                                r.getTotalRevenue()
-                        ))
-                        .collect(Collectors.toList())
-        );
-
-        // Chuyển map doanh thu theo loại vé sang list
-        ticketRevenueList = ticketRevenueMap.entrySet().stream()
+        List<CompanyDashboardResponse.TicketReVenueDashBoardResponse> ticketRevenueList = ticketRevenueMap.entrySet()
+                .stream()
                 .map(entry -> new CompanyDashboardResponse.TicketReVenueDashBoardResponse(
-                        entry.getKey(), entry.getValue()
-                ))
+                        entry.getKey(), entry.getValue()))
                 .collect(Collectors.toList());
 
-        // Gộp tất cả thông tin vào response cuối cùng
         CompanyDashboardResponse finalResponse = new CompanyDashboardResponse();
         finalResponse.setEventActivityDashbroadResponseList(activityDashboardList);
         finalResponse.setTicketReVenueDashBoardResponseList(ticketRevenueList);
-        finalResponse.setEventActivityRevenueReportResponseList(revenueReportList);
+        finalResponse.setEventActivityRevenueReportResponseList(activityRevenueDateList);
 
         return List.of(finalResponse);
     }
-
-
 
 
 }

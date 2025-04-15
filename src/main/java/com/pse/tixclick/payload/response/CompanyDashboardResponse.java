@@ -12,7 +12,7 @@ import java.util.List;
 public class CompanyDashboardResponse {
     List<EventActivityDashbroadResponse> eventActivityDashbroadResponseList;
     List<TicketReVenueDashBoardResponse> ticketReVenueDashBoardResponseList;
-    List<EventActivityRevenueReportResponse> eventActivityRevenueReportResponseList;
+    List<EventActivityDateDashbroadResponse> eventActivityRevenueReportResponseList;
     @Getter
     @Setter
     @AllArgsConstructor
@@ -31,6 +31,16 @@ public class CompanyDashboardResponse {
     public static class EventActivityRevenueReportResponse {
         String date;
         double revenue;
+    }
+
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @FieldDefaults(level = AccessLevel.PRIVATE)
+    public static class EventActivityDateDashbroadResponse {
+        String eventActivityName;
+        List<EventActivityRevenueReportResponse> eventActivityRevenueReportResponseList;
     }
 
 }
