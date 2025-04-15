@@ -10,11 +10,11 @@ import java.util.List;
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction, Integer> {
     @Query(value = "SELECT SUM(amount) FROM transactions\n" +
-            "where status = 'PURCHASED'",nativeQuery = true)
+            "where status = 'SUCCESS'",nativeQuery = true)
     Double sumTotalTransaction();
 
     @Query(value = "SELECT SUM(amount) FROM transactions\n" +
-            "where status = 'PURCHASED' AND contract_payment_id IS NULL",nativeQuery = true)
+            "where status = 'SUCCESS' AND contract_payment_id IS NULL",nativeQuery = true)
     Double sumTotalCommsion();
 
     @Query(value = """

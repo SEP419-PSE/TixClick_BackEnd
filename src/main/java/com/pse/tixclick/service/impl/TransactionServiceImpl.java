@@ -65,8 +65,12 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
-    public double totalTransaction() {
-        return transactionRepository.sumTotalTransaction();
+    public Double totalTransaction() {
+        Double sum = transactionRepository.sumTotalTransaction();
+        if(sum == null) {
+            return 0.0;
+        }
+        return sum;
     }
 
     @Override

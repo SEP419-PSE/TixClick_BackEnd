@@ -205,7 +205,7 @@ public class TicketPurchaseController {
     @GetMapping("/overview")
     public ResponseEntity<ApiResponse<Object>> total() {
         int ticket = ticketPurchaseService.countTicketPurchaseStatusByPurchased();
-        double totalTransaction = transactionService.totalTransaction();
+        Double totalTransaction = transactionService.totalTransaction();
 
         Map<String, Object> response = new HashMap<>();
         response.put("totalTickets", ticket);
