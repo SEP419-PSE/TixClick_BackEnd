@@ -797,6 +797,7 @@ public class EventServiceImpl implements EventService {
             response.setEventId(event.getEventId());
             response.setEventName(event.getEventName());
             response.setDescription(event.getDescription());
+            response.setAddress(event.getAddress());
             response.setEventCode(event.getEventCode());
             response.setCity(event.getCity());
             response.setDistrict(event.getDistrict());

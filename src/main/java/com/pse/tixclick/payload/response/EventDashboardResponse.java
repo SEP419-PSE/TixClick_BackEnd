@@ -15,6 +15,7 @@ public class EventDashboardResponse {
     String eventName;
     String eventCode;
     String locationName;
+    String address;
     String city;
     String district;
     String ward;
