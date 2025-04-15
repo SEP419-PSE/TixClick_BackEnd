@@ -1,6 +1,7 @@
 package com.pse.tixclick.controller;
 
 import com.pse.tixclick.exception.AppException;
+import com.pse.tixclick.payload.dto.ContractAndContractPaymentDTO;
 import com.pse.tixclick.payload.dto.ContractPaymentDTO;
 import com.pse.tixclick.payload.request.ContractPaymentRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
@@ -57,21 +58,21 @@ public class ContractPaymentController {
     }
 
 
-    @GetMapping("/get/{contractId}")
-    public ResponseEntity<ApiResponse<List<ContractPaymentDTO>>> getContractPayment(@PathVariable int contractId) {
+    @GetMapping("/get")
+    public ResponseEntity<ApiResponse<List<ContractAndContractPaymentDTO>>> getContractPayment() {
         try {
-            List<ContractPaymentDTO> contractPaymentDTOs = contractPaymentService.getAllContractPaymentByContract(contractId);
+            List<ContractAndContractPaymentDTO> contractPaymentDTOs = contractPaymentService.getAllContractPaymentByContract();
 
             if (contractPaymentDTOs == null || contractPaymentDTOs.isEmpty()) {
                 return ResponseEntity.status(404)
-                        .body(ApiResponse.<List<ContractPaymentDTO>>builder()
+                        .body(ApiResponse.<List<ContractAndContractPaymentDTO>>builder()
                                 .code(404)
                                 .message("No Contract Payments found")
                                 .result(Collections.emptyList()) // Trả về danh sách rỗng thay vì null
                                 .build());
             }
             return ResponseEntity.ok(
-                    ApiResponse.<List<ContractPaymentDTO>>builder()
+                    ApiResponse.<List<ContractAndContractPaymentDTO>>builder()
                             .code(200)
                             .message("Contract Payment retrieved successfully")
                             .result(contractPaymentDTOs)
@@ -79,7 +80,7 @@ public class ContractPaymentController {
             );
         } catch (Exception e) {
             return ResponseEntity.status(400)
-                    .body(ApiResponse.<List<ContractPaymentDTO>>builder()
+                    .body(ApiResponse.<List<ContractAndContractPaymentDTO>>builder()
                             .code(400)
                             .message(e.getMessage())
                             .result(null)
