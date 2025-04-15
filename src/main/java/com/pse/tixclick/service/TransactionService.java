@@ -12,7 +12,7 @@ public interface TransactionService {
 
     List<TransactionDTO> getTransactions();
 
-    double totalTransaction();
+    Double totalTransaction();
 
     double totalCommission();
 }
