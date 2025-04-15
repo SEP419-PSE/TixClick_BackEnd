@@ -679,5 +679,36 @@ public class EventController {
                         .build()
         );
     }
+
+    @GetMapping("/dashboard/event-activity/{eventId}")
+    public ResponseEntity<ApiResponse<List<CompanyDashboardResponse>>> eventDashboard(@PathVariable int eventId) {
+        try {
+            List<CompanyDashboardResponse> events = eventService.eventDashboard(eventId);
+
+            if (events.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(ApiResponse.<List<CompanyDashboardResponse>>builder()
+                                .code(HttpStatus.NOT_FOUND.value())
+                                .message("No events found for event id: " + eventId)
+                                .result(null)
+                                .build());
+            }
+
+            return ResponseEntity.ok(
+                    ApiResponse.<List<CompanyDashboardResponse>>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Get all events for event id: " + eventId + " successfully")
+                            .result(events)
+                            .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<List<CompanyDashboardResponse>>builder()
+                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .message("An error occurred while retrieving the events for event id: " + eventId)
+                            .result(null)
+                            .build());
+        }
+    }
 }
 

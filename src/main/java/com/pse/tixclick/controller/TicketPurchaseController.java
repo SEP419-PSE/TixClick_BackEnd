@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -62,7 +63,7 @@ public class TicketPurchaseController {
             int count = ticketPurchaseService.countTotalTicketSold();
             return ResponseEntity.ok(
                     ApiResponse.<Integer>builder()
-                            .code(200)
+                            .code(HttpStatus.OK.value())
                             .message("Total ticket sold")
                             .result(count)
                             .build()
@@ -70,7 +71,7 @@ public class TicketPurchaseController {
         } catch (Exception e) {
             return ResponseEntity.status(400)
                     .body(ApiResponse.<Integer>builder()
-                            .code(400)
+                            .code(HttpStatus.BAD_REQUEST.value())
                             .message(e.getMessage())
                             .result(null)
                             .build());

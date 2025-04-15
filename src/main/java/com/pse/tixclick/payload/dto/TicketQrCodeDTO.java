@@ -27,4 +27,5 @@ public class TicketQrCodeDTO {
     private String email;
     private String phone;
     private int checkin_Log_id;
+    private String status;
 }

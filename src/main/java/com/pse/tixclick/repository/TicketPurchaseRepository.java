@@ -133,4 +133,7 @@ ORDER BY m.month;
             "    e.event_id, e.event_name;", nativeQuery = true)
     Integer getTotalTicketsSoldByEventId(@Param("eventId") int eventId);
 
+    @Query(value = "select COUNT(ticket_purchase_id) from ticket_purchase\n" +
+            "  where event_activity_id = :eventActivityId and ticket_id = :ticketId and status = 'PURCHASED'",nativeQuery = true)
+    int countTicketPurchasedByEventActivityIdAndTicketId(int eventActivityId, int ticketId);
 }

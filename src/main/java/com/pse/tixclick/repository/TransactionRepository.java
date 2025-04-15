@@ -50,4 +50,6 @@ ORDER BY m.month;
             "JOIN od.ticketPurchase tp " +
             "WHERE tp.event.eventId = :eventId")
     Double getTotalAmountByEventId(@Param("eventId") int eventId);
+
+
 }
