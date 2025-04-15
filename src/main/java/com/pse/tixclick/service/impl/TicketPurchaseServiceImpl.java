@@ -623,6 +623,36 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
         if (ticketQrCodeDTO == null) {
             throw new AppException(ErrorCode.QR_CODE_NOT_FOUND);
         }
+
+        CheckinLog checkinLog = checkinLogRepository
+                .findById(ticketQrCodeDTO.getCheckin_Log_id())
+                .orElseThrow(() -> new AppException(ErrorCode.CHECKIN_LOG_NOT_FOUND));
+
+        TicketPurchase ticketPurchase = ticketPurchaseRepository
+                .findById(checkinLog.getTicketPurchase().getTicketPurchaseId())
+                .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
+
+        EventActivity eventActivity = eventActivityRepository
+                .findById(ticketPurchase.getEventActivity().getEventActivityId())
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_ACTIVITY_NOT_FOUND));
+
+        if (checkinLog.getCheckinStatus().equals(ECheckinLogStatus.PENDING)) {
+            checkinLog.setCheckinTime(LocalDateTime.now());
+            checkinLog.setCheckinStatus(ECheckinLogStatus.CHECKED_IN);
+        }
+        else if (checkinLog.getCheckinStatus().equals(ECheckinLogStatus.CHECKED_IN)) {
+            throw new AppException(ErrorCode.CHECKIN_LOG_CHECKED_IN);
+        }
+        else if(eventActivity.getEndTimeEvent().isBefore(LocalTime.now())) {
+            checkinLog.setCheckinTime(LocalDateTime.now());
+            checkinLog.setCheckinStatus(ECheckinLogStatus.EXPIRED);
+            throw new AppException(ErrorCode.CHECKIN_LOG_EXPIRED);
+        }
+
+        ticketPurchase.setStatus(ETicketPurchaseStatus.CHECKED_IN);
+        ticketPurchaseRepository.save(ticketPurchase);
+        checkinLogRepository.save(checkinLog);
+        ticketQrCodeDTO.setStatus(ticketPurchase.getStatus().name());
         return ticketQrCodeDTO;
     }
 

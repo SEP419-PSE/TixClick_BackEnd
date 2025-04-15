@@ -175,7 +175,7 @@ public class ContractServiceImpl implements ContractService {
 
             ContractPayment contractPayment = new ContractPayment();
             contractPayment.setPaymentAmount(dto.getContractDetailAmount());
-            contractPayment.setPaymentDate(dto.getContractDetailPayDate().atStartOfDay());
+            contractPayment.setPaymentDate(null);
             contractPayment.setContractDetail(contractDetail);
             contractPayment.setNote(dto.getContractDetailName());
             contractPayment.setPaymentMethod("Thanh Toan Ngan Hang");
