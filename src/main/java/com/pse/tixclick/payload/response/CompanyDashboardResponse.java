@@ -40,7 +40,7 @@ public class CompanyDashboardResponse {
     @FieldDefaults(level = AccessLevel.PRIVATE)
     public static class EventActivityDateDashbroadResponse {
         String eventActivityName;
-        List<EventActivityRevenueReportResponse> eventActivityRevenueReportResponseList;
+        List<EventActivityRevenueReportResponse> eventActivityDateReportResponseList;
     }
 
 }
