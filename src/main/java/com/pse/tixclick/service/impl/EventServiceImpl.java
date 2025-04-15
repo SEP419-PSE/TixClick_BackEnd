@@ -280,7 +280,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public List<EventResponse> getAllEventScheduledAndPendingApproved() {
-        List<Event> events = eventRepository.findAll();
+        List<Event> events = contractRepository.findEventsByAccountId(appUtils.getAccountFromAuthentication().getAccountId());
         return events.stream()
                 .filter(event -> event.getStatus() == EEventStatus.APPROVED || event.getStatus() == EEventStatus.PENDING || event.getStatus() == EEventStatus.REJECTED)
                 .map(event -> {
@@ -1040,6 +1040,7 @@ public class EventServiceImpl implements EventService {
 
         return List.of(finalResponse);
     }
+
 
 
 }
