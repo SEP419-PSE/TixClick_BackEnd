@@ -13,6 +13,7 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ContractDTO {
     int contractId;
+    String contractCode;
     String contractName;
     double totalAmount;
     String commission;
