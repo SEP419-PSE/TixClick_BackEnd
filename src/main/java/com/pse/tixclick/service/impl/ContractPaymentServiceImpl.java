@@ -151,6 +151,7 @@ public class ContractPaymentServiceImpl implements ContractPaymentService {
             contractDTO.setAccountId(contract.getAccount().getAccountId());
             contractDTO.setEventId(contract.getEvent().getEventId());
             contractDTO.setCompanyId(contract.getCompany().getCompanyId());
+            contractDTO.setContractCode(contract.getContractCode());
 
 
             List<ContractPayment> contractPayments = new ArrayList<>();
