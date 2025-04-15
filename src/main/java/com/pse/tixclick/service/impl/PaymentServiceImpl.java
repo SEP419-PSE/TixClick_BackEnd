@@ -327,13 +327,17 @@ public class PaymentServiceImpl implements PaymentService {
                 checkinLog.setCheckinStatus(ECheckinLogStatus.PENDING);
                 checkinLogRepository.save(checkinLog);
 
+                String input = ticketPurchase.getSeatActivity().getSeat().getRowNumber() + ticketPurchase.getSeatActivity().getSeat().getSeatName();
+                String result = convert(input);
+                String seatCode = ticketPurchase.getZoneActivity().getZone().getZoneName()+ "-" + result;
+
                 TicketQrCodeDTO ticketQrCodeDTO = new TicketQrCodeDTO();
                 ticketQrCodeDTO.setTicket_name(ticket.getTicketName());
                 ticketQrCodeDTO.setPurchase_date(new Date());
                 ticketQrCodeDTO.setEvent_name(event.getEventName());
                 ticketQrCodeDTO.setActivity_name(eventActivity.getActivityName());
                 ticketQrCodeDTO.setZone_name(ticketPurchase.getZoneActivity().getZone().getZoneName());
-                ticketQrCodeDTO.setSeat_code(ticketPurchase.getSeatActivity().getSeat().getSeatName());
+                ticketQrCodeDTO.setSeat_code(seatCode);
                 ticketQrCodeDTO.setSeat_row_number(ticketPurchase.getSeatActivity().getSeat().getRowNumber());
                 ticketQrCodeDTO.setSeat_column_number(ticketPurchase.getSeatActivity().getSeat().getColumnNumber());
                 ticketQrCodeDTO.setAccount_name(account.getUserName());
@@ -496,6 +500,22 @@ public class PaymentServiceImpl implements PaymentService {
             return new PaymentResponse(status, "CANCELLED", mapper.map(payment, PaymentResponse.class));
         }
     }
+        private String convert(String input) {
+            // Giả sử input là định dạng như: "1743505747899-r0-c0"
+            String[] parts = input.split("-");
+            if (parts.length < 3) return input;
+
+            String row = parts[1]; // r0
+            String col = parts[2]; // c0
+
+            int rowIndex = Integer.parseInt(row.substring(1)); // 0
+            char rowChar = (char) ('A' + rowIndex); // 'A'
+
+            int colIndex = Integer.parseInt(col.substring(1)) + 1; // 1
+
+            return "r" + rowChar + "-c" + colIndex; // rA-c1
+        }
+
 
     @Override
     public List<PaymentDTO> getAllPayments() {
