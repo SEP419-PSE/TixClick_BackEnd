@@ -63,28 +63,32 @@ public class ContractPaymentController {
         try {
             List<ContractAndContractPaymentDTO> contractPaymentDTOs = contractPaymentService.getAllContractPaymentByContract();
 
-            if (contractPaymentDTOs == null || contractPaymentDTOs.isEmpty()) {
-                return ResponseEntity.status(404)
-                        .body(ApiResponse.<List<ContractAndContractPaymentDTO>>builder()
-                                .code(404)
-                                .message("No Contract Payments found")
-                                .result(Collections.emptyList()) // Trả về danh sách rỗng thay vì null
-                                .build());
-            }
+            // Luôn trả về 200 OK, kể cả khi danh sách rỗng
             return ResponseEntity.ok(
                     ApiResponse.<List<ContractAndContractPaymentDTO>>builder()
                             .code(200)
-                            .message("Contract Payment retrieved successfully")
+                            .message(contractPaymentDTOs.isEmpty()
+                                    ? "No Contract Payments found"
+                                    : "Contract Payment retrieved successfully")
                             .result(contractPaymentDTOs)
                             .build()
             );
-        } catch (Exception e) {
-            return ResponseEntity.status(400)
+        } catch (AppException e) {
+            // Nếu là lỗi quyền hoặc business logic => vẫn có thể trả về 403 hoặc 400 tùy theo context
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponse.<List<ContractAndContractPaymentDTO>>builder()
-                            .code(400)
-                            .message(e.getMessage())
-                            .result(null)
+                            .code(200)
+                            .message(e.getErrorCode().getMessage())
+                            .result(Collections.emptyList())
+                            .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(500)
+                    .body(ApiResponse.<List<ContractAndContractPaymentDTO>>builder()
+                            .code(500)
+                            .message("Internal Server Error: " + e.getMessage())
+                            .result(Collections.emptyList())
                             .build());
         }
     }
+
 }
