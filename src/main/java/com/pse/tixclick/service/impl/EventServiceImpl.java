@@ -2,9 +2,7 @@ package com.pse.tixclick.service.impl;
 
 import com.pse.tixclick.cloudinary.CloudinaryService;
 import com.pse.tixclick.email.EmailService;
-import com.pse.tixclick.payload.dto.EventActivityDTO;
-import com.pse.tixclick.payload.dto.TicketDTO;
-import com.pse.tixclick.payload.dto.UpcomingEventDTO;
+import com.pse.tixclick.payload.dto.*;
 import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.Notification;
 import com.pse.tixclick.payload.entity.company.Company;
@@ -19,7 +17,6 @@ import com.pse.tixclick.service.TicketMappingService;
 import com.pse.tixclick.utils.AppUtils;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
-import com.pse.tixclick.payload.dto.EventDTO;
 import com.pse.tixclick.payload.entity.entity_enum.ECompanyStatus;
 import com.pse.tixclick.payload.entity.entity_enum.EEventStatus;
 import com.pse.tixclick.payload.entity.event.Event;
@@ -66,7 +63,7 @@ public class EventServiceImpl implements EventService {
     OrderRepository orderRepository;
     TicketMappingService ticketMappingService;
     NotificationRepository notificationRepository;
-
+    OrderDetailRepository orderDetailRepository;
 
 
     @Override
@@ -950,6 +947,98 @@ public class EventServiceImpl implements EventService {
                                 .orElse(null) // Nếu không tìm thấy ngày nào thì trả về null
                 ))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<CompanyDashboardResponse> eventDashboard(int eventId) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        Event event = eventRepository
+                .findEventByEventIdAndCompany_RepresentativeId_UserName(eventId, username)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+
+        if (!(event.getStatus().equals(EEventStatus.SCHEDULED)
+                || event.getStatus().equals(EEventStatus.COMPLETED)
+                || event.getStatus().equals(EEventStatus.APPROVED))) {
+            throw new AppException(ErrorCode.EVENT_NOT_APPROVED);
+        }
+
+        // Chuẩn bị các danh sách response
+        List<EventActivityDashbroadResponse> activityDashboardList = new ArrayList<>();
+        List<CompanyDashboardResponse.TicketReVenueDashBoardResponse> ticketRevenueList = new ArrayList<>();
+        List<CompanyDashboardResponse.EventActivityRevenueReportResponse> revenueReportList = new ArrayList<>();
+
+        for (EventActivity activity : event.getEventActivities()) {
+            EventActivityDashbroadResponse activityResponse = new EventActivityDashbroadResponse();
+            activityResponse.setEventActivity(activity.getActivityName());
+
+            // Lấy ticket theo mapping hoặc full event
+            List<Ticket> tickets;
+            List<TicketMapping> mappings = ticketMappingRepository
+                    .findTicketMappingsByEventActivity_EventActivityId(activity.getEventActivityId());
+
+            if (!mappings.isEmpty()) {
+                tickets = mappings.stream()
+                        .map(TicketMapping::getTicket)
+                        .collect(Collectors.toList());
+            } else {
+                tickets = ticketRepository.findTicketsByEvent_EventId(event.getEventId());
+            }
+
+            List<EventActivityDashbroadResponse.TicketDashBoardResponse> ticketDashboard = new ArrayList<>();
+
+            for (Ticket ticket : tickets) {
+                LocalDateTime startDate = activity.getStartTicketSale();
+                LocalDateTime endDate = activity.getEndTicketSale();
+                double ticketPrice = ticket.getPrice();
+
+                // Đếm số lượng vé đã bán
+                int soldCount = ticketPurchaseRepository
+                        .countTicketPurchasedByEventActivityIdAndTicketId(
+                                activity.getEventActivityId(), ticket.getTicketId());
+
+                double totalRevenue = ticketPrice * soldCount;
+
+                // Tổng doanh thu theo vé
+                ticketRevenueList.add(new CompanyDashboardResponse.TicketReVenueDashBoardResponse(
+                        ticket.getTicketName(), totalRevenue
+                ));
+
+                // Tổng số vé đã bán theo vé
+                ticketDashboard.add(new EventActivityDashbroadResponse.TicketDashBoardResponse(
+                        ticket.getTicketName(), soldCount
+                ));
+
+                // Doanh thu từng ngày từ OrderDetail
+                List<RevenueByDateProjection> dailyRevenue = orderDetailRepository.getRevenueByDayForTicket(
+                        activity.getEventActivityId(),
+                        ticket.getTicketId(),
+                        startDate,
+                        endDate
+                );
+
+                // Map vào 1 list chung
+                revenueReportList.addAll(
+                        dailyRevenue.stream()
+                                .map(r -> new CompanyDashboardResponse.EventActivityRevenueReportResponse(
+                                        r.getOrderDay().toString(),
+                                        r.getTotalRevenue()
+                                ))
+                                .collect(Collectors.toList())
+                );
+            }
+
+            activityResponse.setTicketDashBoardResponseList(ticketDashboard);
+            activityDashboardList.add(activityResponse);
+        }
+
+        // Gộp response lại
+        CompanyDashboardResponse finalResponse = new CompanyDashboardResponse();
+        finalResponse.setEventActivityDashbroadResponseList(activityDashboardList);
+        finalResponse.setTicketReVenueDashBoardResponseList(ticketRevenueList);
+        finalResponse.setEventActivityRevenueReportResponseList(revenueReportList);
+
+        return List.of(finalResponse);
     }
 
 
