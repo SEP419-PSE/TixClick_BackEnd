@@ -14,6 +14,7 @@ import java.util.List;
 public class EventDetailForConsumer {
     int eventId;
     String eventName;
+    String address;
     String city;
     String district;
     String ward;

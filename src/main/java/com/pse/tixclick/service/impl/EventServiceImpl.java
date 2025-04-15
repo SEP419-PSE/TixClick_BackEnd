@@ -598,6 +598,7 @@ public class EventServiceImpl implements EventService {
         return new EventDetailForConsumer(
                 event.getEventId(),
                 event.getEventName(),
+                event.getAddress(),
                 event.getWard(),
                 event.getDistrict(),
                 event.getCity(),
@@ -742,6 +743,7 @@ public class EventServiceImpl implements EventService {
                     return new EventDetailForConsumer(
                             event.getEventId(),
                             event.getEventName(),
+                            event.getAddress(),
                             event.getWard(),
                             event.getDistrict(),
                             event.getCity(),
