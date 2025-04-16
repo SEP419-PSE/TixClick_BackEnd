@@ -1,11 +1,16 @@
 package com.pse.tixclick.controller;
 
+import com.pse.tixclick.payload.entity.Account;
+import com.pse.tixclick.repository.AccountRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/test-oauth2")
@@ -20,6 +25,9 @@ public class OAuth2TestController {
     @Value("${spring.security.oauth2.client.registration.google.redirect-uri}")
     private String redirectUri;
 
+
+    @Autowired
+    AccountRepository accountRepository;
     @GetMapping("/check-login")
     public ResponseEntity<String> checkGoogleLogin() {
         // Giả lập gửi yêu cầu đến Google OAuth2 (chỉ kiểm tra phản hồi)
@@ -33,5 +41,14 @@ public class OAuth2TestController {
         String response = restTemplate.getForObject(googleOAuthUrl, String.class);
 
         return ResponseEntity.ok("Google OAuth2 login check completed. Redirect URL: " + googleOAuthUrl);
+    }
+
+    @GetMapping("/test1")
+    public Account Object() {
+        Optional<Account> account = accountRepository.findManagerWithLeastVerifications();
+        if(account.isEmpty()) {
+            return null;
+        }
+        return account.get();
     }
 }
