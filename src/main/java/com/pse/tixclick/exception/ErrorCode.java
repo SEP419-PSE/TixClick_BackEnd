@@ -138,6 +138,7 @@ public enum ErrorCode {
     TRANSACTION_NOT_FOUND(1120, "Không tìm thấy giao dịch", HttpStatus.NOT_FOUND),
     CONTRACT_SCANNING_FAILED(1121, "Quét hợp đồng thất bại", HttpStatus.BAD_REQUEST),
     MEMBER_NOT_EXISTED(1122, "Thành viên không tồn tại", HttpStatus.NOT_FOUND),
+    EVENT_NOT_COMPANY(1123, "Sự kiện không thuộc công ty", HttpStatus.BAD_REQUEST),
     ;
 
 

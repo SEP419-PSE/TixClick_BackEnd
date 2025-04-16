@@ -1,13 +1,24 @@
 package com.pse.tixclick.service.impl;
 
+import com.pse.tixclick.exception.AppException;
+import com.pse.tixclick.exception.ErrorCode;
+import com.pse.tixclick.payload.dto.ContractDetailDTO;
 import com.pse.tixclick.payload.dto.MonthlySalesReportDTO;
+import com.pse.tixclick.payload.dto.TransactionCompanyByEventDTO;
 import com.pse.tixclick.payload.dto.TransactionDTO;
 import com.pse.tixclick.payload.entity.Account;
+import com.pse.tixclick.payload.entity.company.Company;
+import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.entity.payment.ContractPayment;
+import com.pse.tixclick.payload.entity.payment.OrderDetail;
 import com.pse.tixclick.payload.entity.payment.Payment;
 import com.pse.tixclick.payload.entity.payment.Transaction;
+import com.pse.tixclick.repository.CompanyRepository;
+import com.pse.tixclick.repository.EventRepository;
+import com.pse.tixclick.repository.OrderDetailRepository;
 import com.pse.tixclick.repository.TransactionRepository;
 import com.pse.tixclick.service.TransactionService;
+import com.pse.tixclick.utils.AppUtils;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +38,17 @@ public class TransactionServiceImpl implements TransactionService {
     @Autowired
     TransactionRepository transactionRepository;
 
+    @Autowired
+    OrderDetailRepository orderDetailRepository;
+
+    @Autowired
+    EventRepository eventRepository;
+
+    @Autowired
+    CompanyRepository companyRepository;
+
+    @Autowired
+    AppUtils appUtils;
 
     @Override
     public double sumTotalTransaction() {
@@ -89,5 +111,35 @@ public class TransactionServiceImpl implements TransactionService {
 //        }
 //        return totalCommission;
         return  0;
+    }
+
+
+    @Override
+    public List<TransactionCompanyByEventDTO> getTransactionCompanyByEvent(int eventId) {
+        Event event = eventRepository
+                .findById(eventId)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+        Company company = event.getCompany();
+        if (appUtils.getAccountFromAuthentication().getAccountId() != company.getRepresentativeId().getAccountId()) {
+            throw new AppException(ErrorCode.EVENT_NOT_COMPANY);
+        }
+
+        List<Transaction> transactions = transactionRepository.findAllByEventId(eventId);
+        if (transactions.isEmpty()) {
+            throw new AppException(ErrorCode.TRANSACTION_NOT_FOUND);
+        }
+        return transactions.stream()
+                .map(transaction -> {
+                    TransactionCompanyByEventDTO dto = new TransactionCompanyByEventDTO();
+                    dto.setTransactionCode(transaction.getTransactionCode());
+                    dto.setTransactionDate(transaction.getTransactionDate());
+                    dto.setAmount(transaction.getAmount());
+                    dto.setStatus(transaction.getStatus().name());
+                    dto.setAccountName(transaction.getAccount().getUserName());
+                    dto.setAccountMail(transaction.getAccount().getEmail());
+                    dto.setTransactionType(transaction.getType().name());
+                    return dto;
+                })
+                .toList();
     }
 }

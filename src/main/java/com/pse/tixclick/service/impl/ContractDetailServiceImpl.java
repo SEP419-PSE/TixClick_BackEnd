@@ -110,19 +110,32 @@ public class ContractDetailServiceImpl implements ContractDetailService {
 
     @Override
     public List<ContractDetailDTO> getAllContractDetailByContract(int contractId) {
-        if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.MANAGER) && !appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.ORGANIZER)) {
+        if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.MANAGER)
+                && !appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.ORGANIZER)) {
             throw new AppException(ErrorCode.NOT_PERMISSION);
         }
 
         List<ContractDetail> contractDetails = contractDetailRepository.findByContractId(contractId);
-        if(contractDetails.isEmpty()) {
+        if (contractDetails.isEmpty()) {
             throw new AppException(ErrorCode.CONTRACT_DETAIL_NOT_FOUND);
         }
 
         return contractDetails.stream()
-                .map(contractDetail -> modelMapper.map(contractDetail, ContractDetailDTO.class))
+                .map(contractDetail -> {
+                    ContractDetailDTO dto = new ContractDetailDTO();
+                    dto.setContractId(contractDetail.getContract().getContractId());
+                    dto.setContractDetailId(contractDetail.getContractDetailId());
+                    dto.setContractDetailName(contractDetail.getContractDetailName());
+                    dto.setContractDetailCode(contractDetail.getContractDetailCode());
+                    dto.setDescription(contractDetail.getDescription());
+                    dto.setContractAmount(contractDetail.getAmount());
+                    dto.setContractPayDate(contractDetail.getPayDate());
+                    dto.setStatus(String.valueOf(contractDetail.getStatus()));
+                    return dto;
+                })
                 .toList();
     }
+
 
     @Override
     public QRCompanyResponse getQRCompany(int contractDetailId) {

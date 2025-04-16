@@ -1,5 +1,8 @@
 package com.pse.tixclick.controller;
 
+import com.pse.tixclick.exception.AppException;
+import com.pse.tixclick.payload.dto.TicketQrCodeDTO;
+import com.pse.tixclick.payload.dto.TransactionCompanyByEventDTO;
 import com.pse.tixclick.payload.dto.TransactionDTO;
 import com.pse.tixclick.payload.response.ApiResponse;
 import com.pse.tixclick.service.TransactionService;
@@ -8,11 +11,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -85,6 +86,26 @@ public class TransactionController {
                             .message(e.getMessage())
                             .result(null)
                             .build());
+        }
+    }
+
+    @GetMapping("/total_transaction_company/{eventId}")
+    public ResponseEntity<ApiResponse<List<TransactionCompanyByEventDTO>>> decryptQrCode(@PathVariable int eventId) {
+        try {
+            List<TransactionCompanyByEventDTO> transactionCompanyByEventDTOS = transactionService.getTransactionCompanyByEvent(eventId);
+            ApiResponse<List<TransactionCompanyByEventDTO>> response = ApiResponse.<List<TransactionCompanyByEventDTO>>builder()
+                    .code(HttpStatus.OK.value())
+                    .message("Successfully fetch transactions by event")
+                    .result(transactionCompanyByEventDTOS)
+                    .build();
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (AppException e) {
+            ApiResponse<List<TransactionCompanyByEventDTO>> errorResponse = ApiResponse.<List<TransactionCompanyByEventDTO>>builder()
+                    .code(HttpStatus.BAD_REQUEST.value())
+                    .message(e.getMessage())
+                    .result(null)
+                    .build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
         }
     }
 }
