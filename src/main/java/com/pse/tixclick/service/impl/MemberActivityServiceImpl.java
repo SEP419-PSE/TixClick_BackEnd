@@ -207,6 +207,7 @@ public class MemberActivityServiceImpl implements MemberActivityService {
                 eventActivitiesMap.putIfAbsent(event, new ArrayList<>());
 
                 MyEventResponse.MyEventActivityResponse activityResponse = new MyEventResponse.MyEventActivityResponse(
+                        memberActivity.getEventActivity().getEventActivityId(),
                         memberActivity.getEventActivity().getActivityName(),
                         memberActivity.getEventActivity().getDateEvent(),
                         memberActivity.getEventActivity().getStartTimeEvent(),

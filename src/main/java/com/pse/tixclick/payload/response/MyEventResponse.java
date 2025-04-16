@@ -23,6 +23,7 @@ public class MyEventResponse {
     @NoArgsConstructor
     @FieldDefaults(level = AccessLevel.PRIVATE)
     public static class MyEventActivityResponse {
+        int eventActivityId;
         private String eventActivityName;
         private LocalDate date;
         LocalTime startTime;
