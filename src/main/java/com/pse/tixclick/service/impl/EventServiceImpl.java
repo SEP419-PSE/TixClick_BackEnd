@@ -1064,7 +1064,7 @@ public class EventServiceImpl implements EventService {
         var eventActivity = eventActivityRepository.findById(eventActivityId)
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_ACTIVITY_NOT_FOUND));
 
-        List<TicketCheckinStatsProjection> stats = checkinLogRepositoryg.getTicketCheckinStatsByEventActivityId(eventActivityId);
+        List<TicketCheckinStatsProjection> stats = checkinLogRepository.getTicketCheckinStatsByEventActivityId(eventActivityId);
 
         if (stats.isEmpty()) {
             throw new AppException(ErrorCode.TICKET_MAPPING_NOT_FOUND);
