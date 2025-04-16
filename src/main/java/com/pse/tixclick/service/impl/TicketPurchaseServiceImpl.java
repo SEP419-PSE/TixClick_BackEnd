@@ -356,7 +356,7 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
     public void sendExpiredTime(long expiredTime, String websocketChannel) {
         try {
             // Gửi thông điệp đến cổng WebSocket riêng biệt cho từng luồng
-            messagingTemplate.convertAndSend("/" + websocketChannel + "/ticket-purchase-expired",
+            messagingTemplate.convertAndSend("/all/" + websocketChannel + "/ticket-purchase-expired",
                     Map.of("expiredTime", expiredTime));
             System.out.println("✅ Time left: " + expiredTime + " for channel: " + websocketChannel);
         } catch (Exception e) {
