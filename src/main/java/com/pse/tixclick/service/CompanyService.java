@@ -35,4 +35,5 @@ public interface CompanyService {
 
     GetTransactionPaymenByCompanyIdResponse getTransactionPaymentContractByCompanyId(int companyId);
 
+    List<CompanyDTO> getCompanysByUserName(String userName);
 }

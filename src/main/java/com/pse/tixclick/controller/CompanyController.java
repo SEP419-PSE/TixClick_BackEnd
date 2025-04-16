@@ -356,4 +356,32 @@ public class CompanyController {
                             .build());
         }
     }
+
+    @GetMapping("/get-companys-by-user-name/{userName}")
+    public ResponseEntity<ApiResponse<List<CompanyDTO>>> getCompanysByUserName(@PathVariable String userName) {
+        try {
+            List<CompanyDTO> companyDTOList = companyService.getCompanysByUserName(userName);
+            return ResponseEntity.ok(
+                    ApiResponse.<List<CompanyDTO>>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Get company by account id successfully")
+                            .result(companyDTOList)
+                            .build()
+            );
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.<List<CompanyDTO>>builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<List<CompanyDTO>>builder()
+                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .message("Internal server error")
+                            .result(null)
+                            .build());
+        }
+    }
 }
