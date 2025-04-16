@@ -56,20 +56,19 @@ public class ContractController {
     public ResponseEntity<ApiResponse<CreateContractAndDetailRequest>> createContractAndContractDetail(@RequestParam("file") MultipartFile file){
         try {
             CreateContractAndDetailRequest result = contractService.createContractAndContractDetail(file);
-            return ResponseEntity.ok(
-                    ApiResponse.<CreateContractAndDetailRequest>builder()
-                            .code(HttpStatus.OK.value())
-                            .message("Contract and Contract Detail created successfully")
-                            .result(result)
-                            .build()
-            );
+            ApiResponse<CreateContractAndDetailRequest> response = ApiResponse.<CreateContractAndDetailRequest>builder()
+                    .code(HttpStatus.OK.value())
+                    .message("Contract and Contract Detail created successfully")
+                    .result(result)
+                    .build();
+            return ResponseEntity.status(HttpStatus.OK).body(response);
         } catch (AppException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.<CreateContractAndDetailRequest>builder()
-                            .code(HttpStatus.BAD_REQUEST.value())
-                            .message(e.getMessage())
-                            .result(null)
-                            .build());
+            ApiResponse<CreateContractAndDetailRequest> errorResponse = ApiResponse.<CreateContractAndDetailRequest>builder()
+                     .code(HttpStatus.BAD_REQUEST.value())
+                    .message(e.getMessage())
+                    .result(null)
+                    .build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.<CreateContractAndDetailRequest>builder()
