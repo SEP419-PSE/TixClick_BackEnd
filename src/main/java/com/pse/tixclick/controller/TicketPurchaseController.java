@@ -1,5 +1,6 @@
 package com.pse.tixclick.controller;
 
+import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.payload.dto.*;
 import com.pse.tixclick.payload.request.create.CreateSeatMapRequest;
 import com.pse.tixclick.payload.request.create.CreateTicketPurchaseRequest;
@@ -40,20 +41,18 @@ public class TicketPurchaseController {
     public ResponseEntity<ApiResponse<List<TicketPurchaseDTO>>> createTicketPurchase(@RequestBody ListTicketPurchaseRequest createTicketPurchaseRequest) {
         try {
             List<TicketPurchaseDTO> ticketPurchaseDTO1 = ticketPurchaseService.createTicketPurchase(createTicketPurchaseRequest);
-            return ResponseEntity.ok(
-                    ApiResponse.<List<TicketPurchaseDTO>>builder()
-                            .code(200)
+            ApiResponse<List<TicketPurchaseDTO>> response = ApiResponse.<List<TicketPurchaseDTO>>builder()
+                            .code(HttpStatus.OK.value())
                             .message("Ticket Purchase created successfully")
                             .result(ticketPurchaseDTO1)
-                            .build()
-            );
-        } catch (Exception e) {
-            return ResponseEntity.status(400)
-                    .body(ApiResponse.<List<TicketPurchaseDTO>>builder()
-                            .code(400)
-                            .message(e.getMessage())
-                            .result(null)
-                            .build());
+                            .build();
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (AppException e) {
+            ApiResponse<List<TicketPurchaseDTO>> errorResponse = ApiResponse.<List<TicketPurchaseDTO>>builder()                    .code(HttpStatus.BAD_REQUEST.value())
+                    .message(e.getMessage())
+                    .result(null)
+                    .build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
         }
     }
 
