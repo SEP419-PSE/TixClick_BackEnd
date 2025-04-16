@@ -9,10 +9,7 @@ import com.pse.tixclick.payload.dto.CompanyDocumentDTO;
 import com.pse.tixclick.payload.dto.ContractDetailDTO;
 import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.Notification;
-import com.pse.tixclick.payload.entity.company.Company;
-import com.pse.tixclick.payload.entity.company.CompanyVerification;
-import com.pse.tixclick.payload.entity.company.Contract;
-import com.pse.tixclick.payload.entity.company.ContractDetail;
+import com.pse.tixclick.payload.entity.company.*;
 import com.pse.tixclick.payload.entity.entity_enum.*;
 import com.pse.tixclick.payload.request.create.CreateCompanyDocumentRequest;
 import com.pse.tixclick.payload.request.create.CreateCompanyRequest;
@@ -63,6 +60,7 @@ public class CompanyServiceImpl implements CompanyService {
     CompanyDocumentRepository companyDocumentRepository;
     ContractRepository contractRepository;
     ContractDetailRepository contractDetailRepository;
+    MemberRepository memberRepository;
     @Override
     public CreateCompanyResponse createCompany(CreateCompanyRequest createCompanyRequest, MultipartFile file) throws IOException, MessagingException {
         var context = SecurityContextHolder.getContext();
@@ -503,7 +501,36 @@ public class CompanyServiceImpl implements CompanyService {
         return new GetTransactionPaymenByCompanyIdResponse(contractResponses);
     }
 
+    @Override
+    public List<MyCompanyResponse> getCompanysByUserName(String userName) {
+        List<Member> members = memberRepository.findMembersByAccount_UserName(userName);
 
+        if (members.isEmpty()) {
+            throw new AppException(ErrorCode.MEMBER_NOT_EXISTED);
+        }
+
+        List<MyCompanyResponse> companies = new ArrayList<>();
+        for (Member member : members) {
+            Company company = member.getCompany();
+            if (company != null) {
+                MyCompanyResponse myCompanyResponse = new MyCompanyResponse();
+                myCompanyResponse.setCompanyId(company.getCompanyId());
+                myCompanyResponse.setCompanyName(company.getCompanyName());
+                myCompanyResponse.setLogoURL(company.getLogoURL());
+                myCompanyResponse.setRepresentativeId(company.getRepresentativeId().getFirstName()+" "+company.getRepresentativeId().getLastName());
+                myCompanyResponse.setAddress(company.getAddress());
+                myCompanyResponse.setSubRole(member.getSubRole().name());
+
+                companies.add(myCompanyResponse);
+            }
+        }
+
+        if (companies.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return companies;
+    }
 
 
 }

@@ -25,4 +25,6 @@ public interface MemberService {
 
     boolean updateMemberStatus(int id, EStatus status);
 
+
+
 }

@@ -65,7 +65,7 @@ public interface EventService {
 
     List<EventDashboardResponse> getEventDashboardByCompanyId(int companyId);
 
-    boolean appoveEvent(int eventId, EEventStatus status) throws MessagingException;
+    boolean approvedEvent(int eventId, EEventStatus status) throws MessagingException;
 
     List<EventForConsumerResponse> getEventsForConsumerByCountViewTop10();
 

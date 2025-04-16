@@ -356,4 +356,40 @@ public class CompanyController {
                             .build());
         }
     }
+
+    @GetMapping("/get-companys-by-user-name/{userName}")
+    public ResponseEntity<ApiResponse<List<MyCompanyResponse>>> getCompanysByUserName(@PathVariable String userName) {
+        try {
+            List<MyCompanyResponse> companyDTOList = companyService.getCompanysByUserName(userName);
+            if(companyDTOList.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.OK)
+                        .body(ApiResponse.<List<MyCompanyResponse>>builder()
+                                .code(HttpStatus.OK.value())
+                                .message("No company found")
+                                .result(Collections.emptyList())
+                                .build());
+            }
+            return ResponseEntity.ok(
+                    ApiResponse.<List<MyCompanyResponse>>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Get company by account id successfully")
+                            .result(companyDTOList)
+                            .build()
+            );
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.<List<MyCompanyResponse>>builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<List<MyCompanyResponse>>builder()
+                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .message("Internal server error")
+                            .result(null)
+                            .build());
+        }
+    }
 }

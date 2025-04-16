@@ -18,4 +18,6 @@ public interface MemberRepository extends JpaRepository<Member,Integer> {
 
     List<Member> findMembersByAccount_Email(String email);
 
+    List<Member> findMembersByAccount_UserName(String userName);
+
 }
