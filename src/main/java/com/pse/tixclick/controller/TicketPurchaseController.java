@@ -191,16 +191,25 @@ public class TicketPurchaseController {
     }
 
     @PostMapping("/decrypt_qr_code")
-    public ResponseEntity<ApiResponse<TicketQrCodeDTO>> decryptQrCode(@RequestBody String qrCode){
-        TicketQrCodeDTO qr = ticketPurchaseService.decryptQrCode(qrCode);
-        return ResponseEntity.ok(
-                ApiResponse.<TicketQrCodeDTO>builder()
-                        .code(200)
-                        .message("Successfully decrypted qr code")
-                        .result(qr)
-                        .build()
-        );
+    public ResponseEntity<ApiResponse<TicketQrCodeDTO>> decryptQrCode(@RequestBody String qrCode) {
+        try {
+            TicketQrCodeDTO qr = ticketPurchaseService.decryptQrCode(qrCode);
+            ApiResponse<TicketQrCodeDTO> response = ApiResponse.<TicketQrCodeDTO>builder()
+                    .code(HttpStatus.OK.value())
+                    .message("Successfully decrypted QR code")
+                    .result(qr)
+                    .build();
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (AppException e) {
+            ApiResponse<TicketQrCodeDTO> errorResponse = ApiResponse.<TicketQrCodeDTO>builder()
+                    .code(HttpStatus.BAD_REQUEST.value())
+                    .message(e.getMessage())
+                    .result(null)
+                    .build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        }
     }
+
 
     @GetMapping("/overview")
     public ResponseEntity<ApiResponse<Object>> total() {
