@@ -119,15 +119,6 @@ public class ContractServiceImpl implements ContractService {
             throw new AppException(ErrorCode.CONTRACT_SCANNING_FAILED);
         }
 
-        Event event = eventRepository.findEventByEventCode(request.getEventCode())
-                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
-        if(event.getStatus().equals(EEventStatus.SCHEDULED)) {
-            throw new AppException(ErrorCode.EVENT_SCHEDULED);
-        }
-        if(!event.getStatus().equals(EEventStatus.APPROVED)) {
-            throw new AppException(ErrorCode.EVENT_NOT_APPROVED);
-        }
-
         Contract existingContract = contractRepository.findByContractCode(request.getContractCode());
         if (existingContract != null) {
             throw new AppException(ErrorCode.CONTRACT_EXISTED);
@@ -140,8 +131,21 @@ public class ContractServiceImpl implements ContractService {
             throw new AppException(ErrorCode.USER_NOT_MANAGER);
         }
 
+        Event event = eventRepository.findEventByEventCode(request.getEventCode())
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+        if(event.getStatus().equals(EEventStatus.SCHEDULED)) {
+            throw new AppException(ErrorCode.EVENT_SCHEDULED);
+        }
+        if(!event.getStatus().equals(EEventStatus.APPROVED)) {
+            throw new AppException(ErrorCode.EVENT_NOT_APPROVED);
+        }
+
         Company company = companyRepository.findCompanyByEmail(request.getEmailB())
                 .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_FOUND));
+
+        if(event.getCompany().getCompanyId() != company.getCompanyId()) {
+            throw new AppException(ErrorCode.EVENT_NOT_COMPANY);
+        }
 
         Contract contract = new Contract();
 
