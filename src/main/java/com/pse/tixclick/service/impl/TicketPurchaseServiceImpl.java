@@ -625,6 +625,7 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
             throw new AppException(ErrorCode.QR_CODE_NOT_FOUND);
         }
 
+
         CheckinLog checkinLog = checkinLogRepository
                 .findById(ticketQrCodeDTO.getCheckin_Log_id())
                 .orElseThrow(() -> new AppException(ErrorCode.CHECKIN_LOG_NOT_FOUND));

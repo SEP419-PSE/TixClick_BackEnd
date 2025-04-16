@@ -52,4 +52,15 @@ ORDER BY m.month;
     Double getTotalAmountByEventId(@Param("eventId") int eventId);
 
 
+    @Query(value = """
+    SELECT t.* 
+    FROM transactions t
+    JOIN payment p ON t.payment_id = p.payment_id
+    JOIN orders o ON p.order_id = o.order_id
+    JOIN order_detail od ON o.order_id = od.order_id
+    JOIN ticket_purchase tp ON od.ticket_purchase_id = tp.ticket_purchase_id
+    WHERE tp.event_id = :eventId
+    """, nativeQuery = true)
+    List<Transaction> findAllByEventId(@Param("eventId") int eventId);
+
 }
