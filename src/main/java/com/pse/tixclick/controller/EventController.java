@@ -636,27 +636,32 @@ public class EventController {
     }
 
     @PostMapping("/approve/{eventId}/{status}")
-    public ResponseEntity<ApiResponse<Boolean>> appoveEvent(@PathVariable int eventId, @PathVariable EEventStatus status) {
+    public ResponseEntity<ApiResponse<Boolean>> approvedEvent(@PathVariable int eventId, @PathVariable EEventStatus status) {
         try {
-            boolean isUpdated = eventService.appoveEvent(eventId, status);
-            return ResponseEntity.ok(
-                    ApiResponse.<Boolean>builder()
-                            .code(HttpStatus.OK.value())
-                            .message("Event approved successfully")
-                            .result(isUpdated)
-                            .build()
-            );
+            boolean isUpdated = eventService.approvedEvent(eventId, status);
+            ApiResponse<Boolean> response = ApiResponse.<Boolean>builder()
+                    .code(HttpStatus.OK.value())
+                    .message("Event approved successfully")
+                    .result(isUpdated)
+                    .build();
+            return ResponseEntity.status(HttpStatus.OK).body(response);
         } catch (AppException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.<Boolean>builder()
-                            .code(HttpStatus.BAD_REQUEST.value())
-                            .message(e.getMessage())
-                            .result(null)
-                            .build());
+            ApiResponse<Boolean> errorResponse = ApiResponse.<Boolean>builder()
+                    .code(HttpStatus.BAD_REQUEST.value())
+                    .message(e.getMessage())
+                    .result(null)
+                    .build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
         } catch (MessagingException e) {
-            throw new RuntimeException(e);
+            ApiResponse<Boolean> errorResponse = ApiResponse.<Boolean>builder()
+                    .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .message("Failed to send approval email: " + e.getMessage())
+                    .result(null)
+                    .build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
+
 
     @GetMapping("/consumer/top-10")
     public ResponseEntity<ApiResponse<List<EventForConsumerResponse>>> getEventsForConsumerByCountViewTop10() {
