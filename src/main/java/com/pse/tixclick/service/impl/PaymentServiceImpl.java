@@ -108,10 +108,6 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public PayOSResponse createPaymentLink(int orderId, long expiredTime, HttpServletRequest request) throws Exception {
-        if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.BUYER)) {
-            throw new AppException(ErrorCode.NOT_PERMISSION);
-        }
-
         ObjectMapper objectMapper = new ObjectMapper();
 
         Order order = orderRepository
