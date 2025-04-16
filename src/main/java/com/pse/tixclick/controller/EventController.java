@@ -43,12 +43,12 @@ public class EventController {
             EventDTO createdEvent = eventService.createEvent(eventDTO, logoURL, bannerURL);
 
             ApiResponse<EventDTO> response = ApiResponse.<EventDTO>builder()
-                    .code(HttpStatus.CREATED.value())
+                    .code(HttpStatus.OK.value())
                     .message("Event created successfully")
                     .result(createdEvent)
                     .build();
 
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
 
         } catch (AppException e) {
             ApiResponse<EventDTO> errorResponse = ApiResponse.<EventDTO>builder()
