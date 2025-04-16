@@ -861,7 +861,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public boolean appoveEvent(int eventId, EEventStatus status) throws MessagingException {
+    public boolean approvedEvent(int eventId, EEventStatus status) throws MessagingException {
         var context = SecurityContextHolder.getContext();
         String name = context.getAuthentication().getName();
 

@@ -331,13 +331,13 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
     public void scheduleStatusUpdate(LocalDateTime startTime, List<Integer> listTicketPurchase_id) {
         LocalDateTime currentTime = LocalDateTime.now();
         long delay = java.time.Duration.between(currentTime, startTime.plusMinutes(15)).toSeconds();
-
+        String code = String.valueOf(listTicketPurchase_id.get(0));
         if (delay >= 0) {
             // Gửi countdown đến WebSocket mỗi giây
             ScheduledFuture<?> countdownTask = scheduler.scheduleAtFixedRate(() -> {
                 long remainingTime = java.time.Duration.between(LocalDateTime.now(), startTime.plusMinutes(15)).toSeconds();
                 if (remainingTime >= 0) {
-                    sendExpiredTime(remainingTime);
+                    sendExpiredTime(remainingTime, code);
                 }
             }, 0, 1, TimeUnit.SECONDS); // Chạy ngay lập tức, lặp lại mỗi giây
 
@@ -353,14 +353,15 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
         }
     }
 
-    public void sendExpiredTime(long expiredTime) {
-        try{
-            messagingTemplate.convertAndSend("/all/ticket-purchase-expired",
+    public void sendExpiredTime(long expiredTime, String websocketChannel) {
+        try {
+            // Gửi thông điệp đến cổng WebSocket riêng biệt cho từng luồng
+            messagingTemplate.convertAndSend("/" + websocketChannel + "/ticket-purchase-expired",
                     Map.of("expiredTime", expiredTime));
-        System.out.println("✅ Time left: " + expiredTime);
+            System.out.println("✅ Time left: " + expiredTime + " for channel: " + websocketChannel);
         } catch (Exception e) {
-        System.err.println("❌ Error sending WebSocket message: " + e.getMessage());
-    }
+            System.err.println("❌ Error sending WebSocket message: " + e.getMessage());
+        }
     }
 
     private void updateTicketPurchaseStatus(List<Integer> listTicketPurchaseId){
