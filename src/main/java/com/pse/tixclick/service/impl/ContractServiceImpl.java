@@ -190,6 +190,60 @@ public class ContractServiceImpl implements ContractService {
         eventRepository.save(event);
         contractDocumentService.uploadContractDocument(file, contract.getContractId());
 
+
+        var seatMap = event.getSeatMap();
+
+        if (seatMap != null) {
+            // Lấy tất cả hoạt động (eventActivity) của event này
+            List<EventActivity> eventActivities = eventActivityRepository.findEventActivitiesByEvent_EventId(event.getEventId());
+
+            for (EventActivity eventActivity : eventActivities) {
+                // Gán seatMap cho eventActivity
+                eventActivity.setSeatMap(seatMap);
+                eventActivityRepository.save(eventActivity);
+
+                // Lấy danh sách zone từ seatMap
+                List<Zone> zones = zoneRepository.findBySeatMapId(seatMap.getSeatMapId());
+                for (Zone zone : zones) {
+                    // Tạo ZoneActivity
+                    ZoneActivity zoneActivity = new ZoneActivity();
+                    zoneActivity.setZone(zone);
+                    zoneActivity.setEventActivity(eventActivity);
+                    zoneActivity.setAvailableQuantity(zone.getQuantity()); // Ban đầu, tất cả chỗ đều trống
+                    zoneActivity = zoneActivityRepository.save(zoneActivity); // Lưu vào DB
+
+                    // Nếu là Standing, bỏ qua SeatActivity
+                    if (zone.getZoneType().getTypeName() == ZoneTypeEnum.STANDING) {
+                        continue;
+                    }
+
+                    // Lấy danh sách ghế trong Zone
+                    List<Seat> seats = seatRepository.findSeatsByZone_ZoneId(zone.getZoneId());
+                    List<SeatActivity> seatActivities = new ArrayList<>();
+
+                    for (Seat seat : seats) {
+                        // Tạo SeatActivity
+                        SeatActivity seatActivity = new SeatActivity();
+                        seatActivity.setSeat(seat);
+                        seatActivity.setZoneActivity(zoneActivity);
+                        seatActivity.setEventActivity(eventActivity);
+                        seatActivity.setStatus(ESeatActivityStatus.AVAILABLE); // Trạng thái mặc định
+                        seatActivities.add(seatActivity);
+                    }
+
+                    // Lưu tất cả seatActivities một lần để giảm số lần truy cập DB
+                    seatActivityRepository.saveAll(seatActivities);
+                }
+            }
+        }else {
+            List<TicketMapping> ticketMappings = ticketMappingRepository.findTicketMappingsByEventActivity_Event(event);
+            if (ticketMappings.isEmpty()) {
+                throw new AppException(ErrorCode.EVENT_NOT_HAVE_SEATMAP);
+            }
+
+        }
+        event.setStatus(EEventStatus.SCHEDULED);
+        eventRepository.save(event);
         return request;
 
     }
