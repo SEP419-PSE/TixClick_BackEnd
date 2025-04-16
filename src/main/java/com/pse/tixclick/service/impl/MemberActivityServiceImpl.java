@@ -223,6 +223,7 @@ public class MemberActivityServiceImpl implements MemberActivityService {
                 .map(entry -> {
                     MyEventResponse response = new MyEventResponse();
                     response.setEventName(entry.getKey().getEventName()); // Event name
+                    response.setUrl(entry.getKey().getLogoURL()); // Set URL from event
                     response.setEventActivities(entry.getValue()); // List of event activities
                     return response;
                 })

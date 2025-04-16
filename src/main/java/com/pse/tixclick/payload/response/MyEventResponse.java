@@ -15,6 +15,7 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class MyEventResponse {
     private String eventName;
+    String url;
     List<MyEventActivityResponse> eventActivities;
     @Getter
     @Setter
