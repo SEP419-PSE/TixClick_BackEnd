@@ -39,10 +39,29 @@ public class PaymentController {
 
 
     @PostMapping("/pay-os-create")
-    public ResponseObject<PayOSResponse>payOS(@RequestBody CreateOrderRequest request, HttpServletRequest httpServletRequest) throws Exception {
-        OrderDTO orderDTO = orderService.createOrder(request);
-        return new ResponseObject<>(HttpStatus.OK, "Success", paymentService.createPaymentLink(orderDTO.getOrderId(), request.getExpiredTime(), httpServletRequest));
+    public ResponseEntity<ApiResponse<PayOSResponse>> payOS(@RequestBody CreateOrderRequest request, HttpServletRequest httpServletRequest) {
+        try {
+            OrderDTO orderDTO = orderService.createOrder(request);
+            PayOSResponse payOSResponse = paymentService.createPaymentLink(orderDTO.getOrderId(), request.getExpiredTime(), httpServletRequest);
+
+            ApiResponse<PayOSResponse> response = ApiResponse.<PayOSResponse>builder()
+                    .code(HttpStatus.OK.value())
+                    .message("Success")
+                    .result(payOSResponse)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (Exception e) {
+            ApiResponse<PayOSResponse> errorResponse = ApiResponse.<PayOSResponse>builder()
+                    .code(HttpStatus.BAD_REQUEST.value())
+                    .message(e.getMessage())
+                    .result(null)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        }
     }
+
 
     @GetMapping("/payos_call_back")
     public void payOSCallbackHandler(HttpServletRequest request, HttpServletResponse response) throws Exception {
