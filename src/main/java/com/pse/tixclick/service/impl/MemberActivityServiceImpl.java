@@ -7,10 +7,13 @@ import com.pse.tixclick.payload.entity.company.Member;
 import com.pse.tixclick.payload.entity.company.MemberActivity;
 import com.pse.tixclick.payload.entity.entity_enum.EStatus;
 import com.pse.tixclick.payload.entity.entity_enum.ESubRole;
+import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.request.create.CreateMemberActivityRequest;
 import com.pse.tixclick.payload.response.BulkMemberActivityResult;
 import com.pse.tixclick.payload.response.GetMemberActivityResponse;
 import com.pse.tixclick.payload.response.GetMemberResponse;
+import com.pse.tixclick.payload.response.MyEventResponse;
+import com.pse.tixclick.repository.AccountRepository;
 import com.pse.tixclick.repository.EventActivityRepository;
 import com.pse.tixclick.repository.MemberActivityRepository;
 import com.pse.tixclick.repository.MemberRepository;
@@ -24,9 +27,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -39,6 +40,7 @@ public class MemberActivityServiceImpl implements MemberActivityService {
     MemberRepository memberRepository;
     EventActivityRepository eventActivityRepository;
     ModelMapper modelMapper;
+    AccountRepository accountRepository;
 
     @Override
     public BulkMemberActivityResult addMemberActivities(CreateMemberActivityRequest request) {
@@ -175,5 +177,60 @@ public class MemberActivityServiceImpl implements MemberActivityService {
 
         return true;
     }
+
+    @Override
+    public List<MyEventResponse> getMyEventActivities() {
+        var context = SecurityContextHolder.getContext();
+        String userName = context.getAuthentication().getName();
+
+        List<Member> members = memberRepository.findMembersByAccount_UserName(userName);
+
+        if (members.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // Map to hold events and their associated activities
+        Map<Event, List<MyEventResponse.MyEventActivityResponse>> eventActivitiesMap = new HashMap<>();
+
+        for (Member member : members) {
+            List<MemberActivity> memberActivities = memberActivityRepository
+                    .findMemberActivitiesByMember_MemberIdAndStatus(member.getMemberId(), EStatus.ACTIVE);
+
+            if (memberActivities.isEmpty()) {
+                continue;
+            }
+
+            for (MemberActivity memberActivity : memberActivities) {
+                Event event = memberActivity.getEventActivity().getEvent();
+
+                // Initialize the list of event activities if not already done
+                eventActivitiesMap.putIfAbsent(event, new ArrayList<>());
+
+                MyEventResponse.MyEventActivityResponse activityResponse = new MyEventResponse.MyEventActivityResponse(
+                        memberActivity.getEventActivity().getActivityName(),
+                        memberActivity.getEventActivity().getDateEvent(),
+                        memberActivity.getEventActivity().getStartTimeEvent(),
+                        memberActivity.getEventActivity().getEndTimeEvent()
+                );
+
+                // Add the activity to the map of event activities
+                eventActivitiesMap.get(event).add(activityResponse);
+            }
+        }
+
+        // Convert the map to the final response structure
+        List<MyEventResponse> myEventActivities = eventActivitiesMap.entrySet().stream()
+                .map(entry -> {
+                    MyEventResponse response = new MyEventResponse();
+                    response.setEventName(entry.getKey().getEventName()); // Event name
+                    response.setUrl(entry.getKey().getLogoURL()); // Set URL from event
+                    response.setEventActivities(entry.getValue()); // List of event activities
+                    return response;
+                })
+                .collect(Collectors.toList());
+
+        return myEventActivities;
+    }
+
 
 }

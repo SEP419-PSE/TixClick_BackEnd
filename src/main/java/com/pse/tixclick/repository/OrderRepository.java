@@ -62,5 +62,4 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate
     );
-
 }
