@@ -502,28 +502,34 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     @Override
-    public List<CompanyDTO> getCompanysByUserName(String userName) {
+    public List<MyCompanyResponse> getCompanysByUserName(String userName) {
         List<Member> members = memberRepository.findMembersByAccount_UserName(userName);
 
         if (members.isEmpty()) {
             throw new AppException(ErrorCode.MEMBER_NOT_EXISTED);
         }
 
-        List<Company> companies = new ArrayList<>();
+        List<MyCompanyResponse> companies = new ArrayList<>();
         for (Member member : members) {
             Company company = member.getCompany();
             if (company != null) {
-                companies.add(company);
+                MyCompanyResponse myCompanyResponse = new MyCompanyResponse();
+                myCompanyResponse.setCompanyId(company.getCompanyId());
+                myCompanyResponse.setCompanyName(company.getCompanyName());
+                myCompanyResponse.setLogoURL(company.getLogoURL());
+                myCompanyResponse.setRepresentativeId(company.getRepresentativeId().getFirstName()+" "+company.getRepresentativeId().getLastName());
+                myCompanyResponse.setAddress(company.getAddress());
+                myCompanyResponse.setSubRole(member.getSubRole().name());
+
+                companies.add(myCompanyResponse);
             }
         }
 
         if (companies.isEmpty()) {
-            throw new AppException(ErrorCode.COMPANY_NOT_EXISTED);
+            return Collections.emptyList();
         }
 
-        return companies.stream()
-                .map(company -> modelMapper.map(company, CompanyDTO.class))
-                .collect(Collectors.toList());
+        return companies;
     }
 
 
