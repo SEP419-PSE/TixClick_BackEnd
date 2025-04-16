@@ -715,5 +715,64 @@ public class EventController {
                             .build());
         }
     }
+
+    @GetMapping("checkin/event-activity/{eventActivityId}")
+    public ResponseEntity<ApiResponse<CheckinStatsResponse>> getCheckinByEventActivityId(@PathVariable int eventActivityId) {
+        try {
+            CheckinStatsResponse checkinStats = eventService.getCheckinByEventActivityId(eventActivityId);
+            return ResponseEntity.ok(
+                    ApiResponse.<CheckinStatsResponse>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Get check-in stats successfully")
+                            .result(checkinStats)
+                            .build()
+            );
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.<CheckinStatsResponse>builder()
+                            .code(HttpStatus.NOT_FOUND.value())
+                            .message("Event activity not found with id: " + eventActivityId)
+                            .result(null)
+                            .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<CheckinStatsResponse>builder()
+                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .message("An error occurred while retrieving the check-in stats")
+                            .result(null)
+                            .build());
+        }
+    }
+
+
+    @GetMapping("/checkin/ticket-type/{eventActivityId}")
+    public ResponseEntity<ApiResponse<CheckinByTicketTypeResponse>> getCheckinByTicketType(@PathVariable int eventActivityId) {
+        try {
+            CheckinByTicketTypeResponse checkinStats = eventService.getCheckinByTicketType(eventActivityId);
+            return ResponseEntity.ok(
+                    ApiResponse.<CheckinByTicketTypeResponse>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Get check-in stats by ticket type successfully")
+                            .result(checkinStats)
+                            .build()
+            );
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.<CheckinByTicketTypeResponse>builder()
+                            .code(HttpStatus.NOT_FOUND.value())
+                            .message("Event activity not found with id: " + eventActivityId)
+                            .result(null)
+                            .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<CheckinByTicketTypeResponse>builder()
+                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .message("An error occurred while retrieving the check-in stats by ticket type")
+                            .result(null)
+                            .build());
+        }
+    }
+
+
 }
 

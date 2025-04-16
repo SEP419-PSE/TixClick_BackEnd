@@ -70,4 +70,8 @@ public interface EventService {
     List<EventForConsumerResponse> getEventsForConsumerByCountViewTop10();
 
     List<CompanyDashboardResponse> eventDashboard(int eventId);
+
+    CheckinStatsResponse getCheckinByEventActivityId(int eventActivityId);
+
+    CheckinByTicketTypeResponse getCheckinByTicketType(int eventActivityId);
 }

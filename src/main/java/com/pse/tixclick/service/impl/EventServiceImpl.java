@@ -7,6 +7,7 @@ import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.Notification;
 import com.pse.tixclick.payload.entity.company.Company;
 import com.pse.tixclick.payload.entity.company.Contract;
+import com.pse.tixclick.payload.entity.entity_enum.ECheckinLogStatus;
 import com.pse.tixclick.payload.entity.entity_enum.EContractStatus;
 import com.pse.tixclick.payload.entity.event.EventActivity;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
@@ -65,7 +66,8 @@ public class EventServiceImpl implements EventService {
     TicketMappingService ticketMappingService;
     NotificationRepository notificationRepository;
     OrderDetailRepository orderDetailRepository;
-
+    EventActivityRepository eventActivityRepository;
+    CheckinLogRepository checkinLogRepository;
 
     @Override
     public EventDTO createEvent(CreateEventRequest request, MultipartFile logoURL, MultipartFile bannerURL) throws IOException {
@@ -1039,6 +1041,51 @@ public class EventServiceImpl implements EventService {
         finalResponse.setEventActivityRevenueReportResponseList(activityRevenueDateList);
 
         return List.of(finalResponse);
+    }
+
+    @Override
+    public CheckinStatsResponse getCheckinByEventActivityId(int eventActivityId) {
+        var eventActivity = eventActivityRepository.findById(eventActivityId)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_ACTIVITY_NOT_FOUND));
+
+        int countCheckinAll = checkinLogRepository.countByTicketPurchase_EventActivity_EventActivityId(eventActivityId);
+        int countCheckin = checkinLogRepository.countByTicketPurchase_EventActivity_EventActivityIdAndCheckinStatus(eventActivityId,ECheckinLogStatus.CHECKED_IN);
+        int countCheckinNot = checkinLogRepository.countByTicketPurchase_EventActivity_EventActivityIdAndCheckinStatus(eventActivityId,ECheckinLogStatus.PENDING);
+
+        return new CheckinStatsResponse(
+                countCheckinAll,
+                countCheckin,
+                countCheckinNot
+        );
+    }
+
+    @Override
+    public CheckinByTicketTypeResponse getCheckinByTicketType(int eventActivityId) {
+        var eventActivity = eventActivityRepository.findById(eventActivityId)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_ACTIVITY_NOT_FOUND));
+
+        List<TicketCheckinStatsProjection> stats = checkinLogRepositoryg.getTicketCheckinStatsByEventActivityId(eventActivityId);
+
+        if (stats.isEmpty()) {
+            throw new AppException(ErrorCode.TICKET_MAPPING_NOT_FOUND);
+        }
+
+        List<CheckinByTicketTypeResponse.TicketTypeCheckinStat> checkinStats = stats.stream()
+                .map(s -> {
+                    int total = s.getTotalPurchased() != null ? s.getTotalPurchased() : 0;
+                    int checkedIn = s.getCheckedIn() != null ? s.getCheckedIn() : 0;
+                    double percentage = total > 0 ? (checkedIn * 100.0) / total : 0.0;
+
+                    return new CheckinByTicketTypeResponse.TicketTypeCheckinStat(
+                            s.getTicketName(),
+                            checkedIn,
+                            total,
+                            Math.round(percentage * 100.0) / 100.0 // làm tròn 2 chữ số
+                    );
+                })
+                .toList();
+
+        return new CheckinByTicketTypeResponse(eventActivityId, checkinStats);
     }
 
 
