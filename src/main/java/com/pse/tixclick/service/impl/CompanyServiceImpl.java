@@ -80,6 +80,7 @@ public class CompanyServiceImpl implements CompanyService {
         company.setBankingName(createCompanyRequest.getBankingName());
         company.setNationalId(createCompanyRequest.getNationalId());
         company.setLogoURL(logoURL);
+        company.setEmail(createCompanyRequest.getEmail());
         company.setAddress(createCompanyRequest.getAddress());
         company.setStatus(ECompanyStatus.PENDING);
         companyRepository.save(company);
@@ -118,6 +119,7 @@ public class CompanyServiceImpl implements CompanyService {
                 company.getBankingName(),
                 company.getBankingCode(),
                 company.getOwnerCard(),
+                company.getEmail(),
                 company.getNationalId(),
                 company.getLogoURL(),
                 company.getAddress(),
@@ -142,6 +144,7 @@ public class CompanyServiceImpl implements CompanyService {
         company.setCodeTax(updateCompanyRequest.getCodeTax());
         company.setBankingCode(updateCompanyRequest.getBankingCode());
         company.setBankingName(updateCompanyRequest.getBankingName());
+        company.setEmail(updateCompanyRequest.getEmail());
         company.setNationalId(updateCompanyRequest.getNationalId());
         company.setLogoURL(updateCompanyRequest.getLogoURL());
         company.setAddress(updateCompanyRequest.getAddress());
@@ -348,6 +351,7 @@ public class CompanyServiceImpl implements CompanyService {
         company.setRepresentativeId(account);
         company.setCodeTax(createCompanyRequest.getCodeTax());
         company.setOwnerCard(createCompanyRequest.getOwnerCard());
+        company.setEmail(createCompanyRequest.getEmail());
         company.setBankingCode(createCompanyRequest.getBankingCode());
         company.setBankingName(createCompanyRequest.getBankingName());
         company.setNationalId(createCompanyRequest.getNationalId());
@@ -421,6 +425,7 @@ public class CompanyServiceImpl implements CompanyService {
                 company.getBankingName(),
                 company.getBankingCode(),
                 company.getOwnerCard(),
+                company.getEmail(),
                 company.getNationalId(),
                 company.getLogoURL(),
                 company.getAddress(),
