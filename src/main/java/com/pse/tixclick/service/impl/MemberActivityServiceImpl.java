@@ -223,6 +223,7 @@ public class MemberActivityServiceImpl implements MemberActivityService {
         List<MyEventResponse> myEventActivities = eventActivitiesMap.entrySet().stream()
                 .map(entry -> {
                     MyEventResponse response = new MyEventResponse();
+                    response.setEventId(entry.getKey().getEventId()); // Set eventId
                     response.setEventName(entry.getKey().getEventName()); // Event name
                     response.setUrl(entry.getKey().getLogoURL()); // Set URL from event
                     response.setEventActivities(entry.getValue()); // List of event activities
@@ -232,6 +233,7 @@ public class MemberActivityServiceImpl implements MemberActivityService {
 
         return myEventActivities;
     }
+
 
 
 }
