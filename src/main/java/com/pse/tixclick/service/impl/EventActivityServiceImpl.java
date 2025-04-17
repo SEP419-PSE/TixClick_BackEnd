@@ -3,7 +3,9 @@ package com.pse.tixclick.service.impl;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.EventActivityDTO;
+import com.pse.tixclick.payload.entity.entity_enum.EEventStatus;
 import com.pse.tixclick.payload.entity.entity_enum.ESubRole;
+import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.entity.event.EventActivity;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
 import com.pse.tixclick.payload.entity.ticket.TicketMapping;
@@ -152,6 +154,9 @@ public class EventActivityServiceImpl implements EventActivityService {
         var account = accountRepository.findAccountByUserName(userName)
                 .orElseThrow(() -> new AppException(ErrorCode.ACCOUNT_NOT_FOUND));
 
+
+
+
         List<CreateEventActivityAndTicketRequest> savedRequests = new ArrayList<>();
 
         for (CreateEventActivityAndTicketRequest request : requestList) {
@@ -160,10 +165,15 @@ public class EventActivityServiceImpl implements EventActivityService {
                 throw new AppException(ErrorCode.ACTIVITY_EXISTED);
             }
 
-            // Kiểm tra sự tồn tại của event
-            var event = eventRepository.findById(request.getEventId())
+            Event event = eventRepository.findById(requestList.get(0).getEventId())
                     .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
 
+            if (EEventStatus.SCHEDULED.equals(event.getStatus())) {
+                String roleName = String.valueOf(account.getRole().getRoleName());
+                if (!"MANAGER".equalsIgnoreCase(roleName)) {
+                    throw new AppException(ErrorCode.UNAUTHORIZED);
+                }
+            }
 
             LocalDate dateEvent = request.getDateEvent(); // Lấy ngày từ request
 

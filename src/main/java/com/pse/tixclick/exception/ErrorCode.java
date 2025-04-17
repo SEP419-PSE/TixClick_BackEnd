@@ -13,7 +13,7 @@ public enum ErrorCode {
     INVALID_PASSWORD(1004, "Password must be at least {min} characters", HttpStatus.BAD_REQUEST),
     USER_NOT_EXISTED(1005, "Tài khoản không tồn tại", HttpStatus.NOT_FOUND),
     UNAUTHENTICATED(1006, "Mật khẩu không hợp lệ", HttpStatus.UNAUTHORIZED),
-    UNAUTHORIZED(1007, "You do not have permission", HttpStatus.FORBIDDEN),
+    UNAUTHORIZED(1007, "bạn không có quyền", HttpStatus.FORBIDDEN),
     INVALID_DOB(1008, "Your age must be at least {min}", HttpStatus.BAD_REQUEST),
     PASSWORD_NOT_CORRECT(1009, "Sai mật khẩu", HttpStatus.UNAUTHORIZED),
     EMAIL_TAKEN(1010, "Email đã tồn tại", HttpStatus.BAD_REQUEST),
