@@ -576,7 +576,7 @@ public class EventController {
             @RequestParam(required = false) Double minPrice, // Đổi từ double → Double
             @RequestParam(required = false) Double maxPrice) {
         try {
-            List<EventDetailForConsumer> events = eventService.getEventByStartDateAndEndDateAndEventTypeAndEventName(startDate, endDate, eventType, eventName,eventCategory, minPrice, maxPrice);
+            List<EventDetailForConsumer> events = eventService.getEventByStartDateAndEndDateAndEventTypeAndEventName(startDate, endDate, eventType, eventName, eventCategory, minPrice, maxPrice);
 
             if (events.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.OK)
@@ -775,8 +775,8 @@ public class EventController {
 
     @GetMapping("/consumer/event-category/{eventCategoryId}")
     public ResponseEntity<ApiResponse<List<EventForConsumerResponse>>> getEventsForConsumerByEventCategory(@PathVariable int eventCategoryId,
-                                                                                                               @RequestParam(required = false) EEventStatus status) {
-        List<EventForConsumerResponse> events = eventService.getEventsForConsumerByEventCategory(eventCategoryId,status);
+                                                                                                           @RequestParam(required = false) EEventStatus status) {
+        List<EventForConsumerResponse> events = eventService.getEventsForConsumerByEventCategory(eventCategoryId, status);
 
         if (events.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -796,5 +796,31 @@ public class EventController {
         );
     }
 
+    @GetMapping("/summary/{eventId}")
+    public ResponseEntity<ApiResponse<DashboardEventResponse>> getEventSummary(@PathVariable int eventId) {
+        try {
+            DashboardEventResponse eventSummary = eventService.getDashboardEvent(eventId);
+            return ResponseEntity.ok(
+                    ApiResponse.<DashboardEventResponse>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Tổng quan sự kiện thành công")
+                            .result(eventSummary)
+                            .build()
+            );
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.<DashboardEventResponse>builder()
+                            .code(HttpStatus.NOT_FOUND.value())
+                            .message("Không tìm thấy sự kiện với id: " + eventId)
+                            .result(null)
+                            .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<DashboardEventResponse>builder()
+                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .message("Đã xảy ra lỗi khi lấy tổng quan sự kiện")
+                            .result(null)
+                            .build());
+        }
+    }
 }
-

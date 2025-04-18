@@ -7,8 +7,7 @@ import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.Notification;
 import com.pse.tixclick.payload.entity.company.Company;
 import com.pse.tixclick.payload.entity.company.Contract;
-import com.pse.tixclick.payload.entity.entity_enum.ECheckinLogStatus;
-import com.pse.tixclick.payload.entity.entity_enum.EContractStatus;
+import com.pse.tixclick.payload.entity.entity_enum.*;
 import com.pse.tixclick.payload.entity.event.EventActivity;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
 import com.pse.tixclick.payload.entity.ticket.TicketMapping;
@@ -18,8 +17,6 @@ import com.pse.tixclick.service.TicketMappingService;
 import com.pse.tixclick.utils.AppUtils;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
-import com.pse.tixclick.payload.entity.entity_enum.ECompanyStatus;
-import com.pse.tixclick.payload.entity.entity_enum.EEventStatus;
 import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.request.create.CreateEventRequest;
 import com.pse.tixclick.payload.request.update.UpdateEventRequest;
@@ -1131,6 +1128,20 @@ public class EventServiceImpl implements EventService {
                                 .orElse(null)
                 ))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public DashboardEventResponse getDashboardEvent(int eventId) {
+        var event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+
+        DashboardEventResponse response = new DashboardEventResponse();
+        response.setCountViewer(event.getCountView());
+        response.setCountTicket(ticketPurchaseRepository.getTotalTicketsSoldByEventId(eventId));
+        response.setTotalRevenue(ticketPurchaseRepository.getTotalPriceByEventId(eventId));
+        response.setCountOrder(ticketPurchaseRepository.countByStatusAndEvent_EventId(ETicketPurchaseStatus.PURCHASED, eventId));
+
+        return response;
     }
 
 

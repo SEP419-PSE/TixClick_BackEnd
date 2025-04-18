@@ -76,4 +76,6 @@ public interface EventService {
     CheckinByTicketTypeResponse getCheckinByTicketType(int eventActivityId);
 
     List<EventForConsumerResponse> getEventsForConsumerByEventCategory(int eventCategoryId,EEventStatus status);
+
+    DashboardEventResponse getDashboardEvent(int eventId);
 }
