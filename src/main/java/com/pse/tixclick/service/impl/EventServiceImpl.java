@@ -527,6 +527,10 @@ public class EventServiceImpl implements EventService {
                 .map(event -> new EventForConsumerResponse(
                         event.getBannerURL(),
                         event.getEventId(),
+                        event.getEventName(),
+                        ticketRepository.findMinTicketByEvent_EventId(event.getEventId())
+                                .map(Ticket::getPrice)
+                                .orElse(0.0),
                         event.getLogoURL(),
                         earliestEventDate
 
@@ -643,6 +647,10 @@ public class EventServiceImpl implements EventService {
                 .map(event -> new EventForConsumerResponse(
                         event.getBannerURL(),
                         event.getEventId(),
+                        event.getEventName(),
+                        ticketRepository.findMinTicketByEvent_EventId(event.getEventId())
+                                .map(Ticket::getPrice)
+                                .orElse(0.0),
                         event.getLogoURL(),
                         event.getEventActivities().stream()
                                 .filter(eventActivity -> appUtils.isWeekend(eventActivity.getDateEvent()))
@@ -673,6 +681,10 @@ public class EventServiceImpl implements EventService {
                 .map(event -> new EventForConsumerResponse(
                         event.getBannerURL(),
                         event.getEventId(),
+                        event.getEventName(),
+                        ticketRepository.findMinTicketByEvent_EventId(event.getEventId())
+                                .map(Ticket::getPrice)
+                                .orElse(0.0),
                         event.getLogoURL(),
                         event.getEventActivities().stream()
                                 .filter(eventActivity -> eventActivity.getDateEvent().getMonthValue() == month)
@@ -943,6 +955,10 @@ public class EventServiceImpl implements EventService {
                 .map(event -> new EventForConsumerResponse(
                         event.getBannerURL(),
                         event.getEventId(),
+                        event.getEventName(),
+                        ticketRepository.findMinTicketByEvent_EventId(event.getEventId())
+                                .map(Ticket::getPrice)
+                                .orElse(0.0),
                         event.getLogoURL(),
                         event.getEventActivities().stream()
                                 .filter(eventActivity -> appUtils.isWeekend(eventActivity.getDateEvent()))
@@ -1090,22 +1106,27 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public List<EventForConsumerResponse> getEventsForConsumerByEventCategory(int eventCategoryId) {
-        List<Event> events = eventRepository.findEventsByCategory_EventCategoryId(eventCategoryId);
+        List<Event> events = eventRepository.findEventsByCategory_EventCategoryIdAndStatus(eventCategoryId,EEventStatus.SCHEDULED);
         if (events.isEmpty()) {
             throw new AppException(ErrorCode.EVENT_NOT_FOUND);
         }
+
 
         // Chuyển sang DTO và trả về
         return events.stream()
                 .map(event -> new EventForConsumerResponse(
                         event.getBannerURL(),
                         event.getEventId(),
+                        event.getEventName(),
+                        ticketRepository.findMinTicketByEvent_EventId(event.getEventId())
+                                .map(Ticket::getPrice)
+                                .orElse(0.0),
                         event.getLogoURL(),
                         event.getEventActivities().stream()
-                                .filter(eventActivity -> appUtils.isWeekend(eventActivity.getDateEvent()))
                                 .map(EventActivity::getDateEvent)
-                                .findFirst()
-                                .orElse(null) // Nếu không tìm thấy ngày nào thì trả về null
+                                .filter(date -> !date.isBefore(LocalDate.now())) // chỉ lấy từ hôm nay trở đi
+                                .min(Comparator.naturalOrder()) // lấy ngày gần nhất
+                                .orElse(null)
                 ))
                 .collect(Collectors.toList());
     }

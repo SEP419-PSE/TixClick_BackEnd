@@ -13,6 +13,8 @@ import java.time.LocalDate;
 public class EventForConsumerResponse {
     String bannerURL;
     int eventId;
+    String eventName;
+    double minPrice;
     String logoURL;
     LocalDate date;
 }
