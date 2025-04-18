@@ -1105,8 +1105,8 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public List<EventForConsumerResponse> getEventsForConsumerByEventCategory(int eventCategoryId) {
-        List<Event> events = eventRepository.findEventsByCategory_EventCategoryIdAndStatus(eventCategoryId,EEventStatus.SCHEDULED);
+    public List<EventForConsumerResponse> getEventsForConsumerByEventCategory(int eventCategoryId, EEventStatus status) {
+        List<Event> events = eventRepository.findEventsByCategory_EventCategoryIdAndStatus(eventCategoryId, status);
         if (events.isEmpty()) {
             throw new AppException(ErrorCode.EVENT_NOT_FOUND);
         }

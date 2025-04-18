@@ -774,8 +774,9 @@ public class EventController {
     }
 
     @GetMapping("/consumer/event-category/{eventCategoryId}")
-    public ResponseEntity<ApiResponse<List<EventForConsumerResponse>>> getEventsForConsumerByEventCategory(@PathVariable int eventCategoryId) {
-        List<EventForConsumerResponse> events = eventService.getEventsForConsumerByEventCategory(eventCategoryId);
+    public ResponseEntity<ApiResponse<List<EventForConsumerResponse>>> getEventsForConsumerByEventCategory(@PathVariable int eventCategoryId,
+                                                                                                               @RequestParam(required = false) EEventStatus status) {
+        List<EventForConsumerResponse> events = eventService.getEventsForConsumerByEventCategory(eventCategoryId,status);
 
         if (events.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
