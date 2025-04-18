@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
+
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction, Integer> {
     @Query(value = "SELECT SUM(amount) FROM transactions\n" +
@@ -63,4 +65,7 @@ ORDER BY m.month;
     """, nativeQuery = true)
     List<Transaction> findAllByEventId(@Param("eventId") int eventId);
 
+
+    @Query("SELECT t FROM Transaction t WHERE t.transactionCode = :transactionCode")
+    Transaction findByTransactionCode(@Param("transactionCode") String transactionCode);
 }
