@@ -1088,6 +1088,28 @@ public class EventServiceImpl implements EventService {
         return new CheckinByTicketTypeResponse(eventActivityId, checkinStats);
     }
 
+    @Override
+    public List<EventForConsumerResponse> getEventsForConsumerByEventCategory(int eventCategoryId) {
+        List<Event> events = eventRepository.findEventsByCategory_EventCategoryId(eventCategoryId);
+        if (events.isEmpty()) {
+            throw new AppException(ErrorCode.EVENT_NOT_FOUND);
+        }
+
+        // Chuyển sang DTO và trả về
+        return events.stream()
+                .map(event -> new EventForConsumerResponse(
+                        event.getBannerURL(),
+                        event.getEventId(),
+                        event.getLogoURL(),
+                        event.getEventActivities().stream()
+                                .filter(eventActivity -> appUtils.isWeekend(eventActivity.getDateEvent()))
+                                .map(EventActivity::getDateEvent)
+                                .findFirst()
+                                .orElse(null) // Nếu không tìm thấy ngày nào thì trả về null
+                ))
+                .collect(Collectors.toList());
+    }
+
 
 }
 

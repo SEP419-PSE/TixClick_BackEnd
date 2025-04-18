@@ -72,5 +72,7 @@ public interface EventRepository extends JpaRepository<Event, Integer> {
     @Query("SELECT e FROM Event e WHERE e.eventCode = :eventCode")
     Optional<Event> findEventByEventCode(@Param("eventCode") String eventCode);
 
+    List<Event> findEventsByCategory_EventCategoryId(int eventCategoryId);
+
 }
 

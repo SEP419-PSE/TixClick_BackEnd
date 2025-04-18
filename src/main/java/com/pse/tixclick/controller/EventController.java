@@ -773,6 +773,27 @@ public class EventController {
         }
     }
 
+    @GetMapping("/consumer/event-category/{eventCategoryId}")
+    public ResponseEntity<ApiResponse<List<EventForConsumerResponse>>> getEventsForConsumerByEventCategory(@PathVariable int eventCategoryId) {
+        List<EventForConsumerResponse> events = eventService.getEventsForConsumerByEventCategory(eventCategoryId);
+
+        if (events.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.<List<EventForConsumerResponse>>builder()
+                            .code(HttpStatus.NOT_FOUND.value())
+                            .message("No events found for event category id: " + eventCategoryId)
+                            .result(null)
+                            .build());
+        }
+
+        return ResponseEntity.ok(
+                ApiResponse.<List<EventForConsumerResponse>>builder()
+                        .code(HttpStatus.OK.value())
+                        .message("Get all events for event category id: " + eventCategoryId + " successfully")
+                        .result(events)
+                        .build()
+        );
+    }
 
 }
 
