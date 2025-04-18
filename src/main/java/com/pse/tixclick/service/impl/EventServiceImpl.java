@@ -7,8 +7,7 @@ import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.Notification;
 import com.pse.tixclick.payload.entity.company.Company;
 import com.pse.tixclick.payload.entity.company.Contract;
-import com.pse.tixclick.payload.entity.entity_enum.ECheckinLogStatus;
-import com.pse.tixclick.payload.entity.entity_enum.EContractStatus;
+import com.pse.tixclick.payload.entity.entity_enum.*;
 import com.pse.tixclick.payload.entity.event.EventActivity;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
 import com.pse.tixclick.payload.entity.ticket.TicketMapping;
@@ -18,8 +17,6 @@ import com.pse.tixclick.service.TicketMappingService;
 import com.pse.tixclick.utils.AppUtils;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
-import com.pse.tixclick.payload.entity.entity_enum.ECompanyStatus;
-import com.pse.tixclick.payload.entity.entity_enum.EEventStatus;
 import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.request.create.CreateEventRequest;
 import com.pse.tixclick.payload.request.update.UpdateEventRequest;
@@ -527,6 +524,10 @@ public class EventServiceImpl implements EventService {
                 .map(event -> new EventForConsumerResponse(
                         event.getBannerURL(),
                         event.getEventId(),
+                        event.getEventName(),
+                        ticketRepository.findMinTicketByEvent_EventId(event.getEventId())
+                                .map(Ticket::getPrice)
+                                .orElse(0.0),
                         event.getLogoURL(),
                         earliestEventDate
 
@@ -643,6 +644,10 @@ public class EventServiceImpl implements EventService {
                 .map(event -> new EventForConsumerResponse(
                         event.getBannerURL(),
                         event.getEventId(),
+                        event.getEventName(),
+                        ticketRepository.findMinTicketByEvent_EventId(event.getEventId())
+                                .map(Ticket::getPrice)
+                                .orElse(0.0),
                         event.getLogoURL(),
                         event.getEventActivities().stream()
                                 .filter(eventActivity -> appUtils.isWeekend(eventActivity.getDateEvent()))
@@ -673,6 +678,10 @@ public class EventServiceImpl implements EventService {
                 .map(event -> new EventForConsumerResponse(
                         event.getBannerURL(),
                         event.getEventId(),
+                        event.getEventName(),
+                        ticketRepository.findMinTicketByEvent_EventId(event.getEventId())
+                                .map(Ticket::getPrice)
+                                .orElse(0.0),
                         event.getLogoURL(),
                         event.getEventActivities().stream()
                                 .filter(eventActivity -> eventActivity.getDateEvent().getMonthValue() == month)
@@ -943,6 +952,10 @@ public class EventServiceImpl implements EventService {
                 .map(event -> new EventForConsumerResponse(
                         event.getBannerURL(),
                         event.getEventId(),
+                        event.getEventName(),
+                        ticketRepository.findMinTicketByEvent_EventId(event.getEventId())
+                                .map(Ticket::getPrice)
+                                .orElse(0.0),
                         event.getLogoURL(),
                         event.getEventActivities().stream()
                                 .filter(eventActivity -> appUtils.isWeekend(eventActivity.getDateEvent()))
@@ -1075,9 +1088,11 @@ public class EventServiceImpl implements EventService {
                     int total = s.getTotalPurchased() != null ? s.getTotalPurchased() : 0;
                     int checkedIn = s.getCheckedIn() != null ? s.getCheckedIn() : 0;
                     double percentage = total > 0 ? (checkedIn * 100.0) / total : 0.0;
-
+                    Ticket ticket = ticketRepository.findById(s.getTicketId())
+                            .orElseThrow(() -> new AppException(ErrorCode.TICKET_NOT_FOUND));
                     return new CheckinByTicketTypeResponse.TicketTypeCheckinStat(
                             s.getTicketName(),
+                            ticket.getPrice(),
                             checkedIn,
                             total,
                             Math.round(percentage * 100.0) / 100.0 // làm tròn 2 chữ số
@@ -1086,6 +1101,47 @@ public class EventServiceImpl implements EventService {
                 .toList();
 
         return new CheckinByTicketTypeResponse(eventActivityId, checkinStats);
+    }
+
+    @Override
+    public List<EventForConsumerResponse> getEventsForConsumerByEventCategory(int eventCategoryId, EEventStatus status) {
+        List<Event> events = eventRepository.findEventsByCategory_EventCategoryIdAndStatus(eventCategoryId, status);
+        if (events.isEmpty()) {
+            throw new AppException(ErrorCode.EVENT_NOT_FOUND);
+        }
+
+
+        // Chuyển sang DTO và trả về
+        return events.stream()
+                .map(event -> new EventForConsumerResponse(
+                        event.getBannerURL(),
+                        event.getEventId(),
+                        event.getEventName(),
+                        ticketRepository.findMinTicketByEvent_EventId(event.getEventId())
+                                .map(Ticket::getPrice)
+                                .orElse(0.0),
+                        event.getLogoURL(),
+                        event.getEventActivities().stream()
+                                .map(EventActivity::getDateEvent)
+                                .filter(date -> !date.isBefore(LocalDate.now())) // chỉ lấy từ hôm nay trở đi
+                                .min(Comparator.naturalOrder()) // lấy ngày gần nhất
+                                .orElse(null)
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public DashboardEventResponse getDashboardEvent(int eventId) {
+        var event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+
+        DashboardEventResponse response = new DashboardEventResponse();
+        response.setCountViewer(event.getCountView());
+        response.setCountTicket(ticketPurchaseRepository.getTotalTicketsSoldByEventId(eventId));
+        response.setTotalRevenue(ticketPurchaseRepository.getTotalPriceByEventId(eventId));
+        response.setCountOrder(ticketPurchaseRepository.countByStatusAndEvent_EventId(ETicketPurchaseStatus.PURCHASED, eventId));
+
+        return response;
     }
 
 

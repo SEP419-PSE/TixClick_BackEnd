@@ -348,6 +348,14 @@ public class PaymentServiceImpl implements PaymentService {
                 ticketPurchaseRepository.save(ticketPurchase);
             }
 
+            Transaction transactionExisted = transactionRepository
+                    .findByTransactionCode(transactionNo);
+
+            if(transactionExisted != null){
+                throw new AppException(ErrorCode.TRANSACTION_EXISTED);
+            }
+
+
             Transaction transaction = new Transaction();
             transaction.setAmount(Double.valueOf(amount));
             transaction.setTransactionCode(transactionNo);

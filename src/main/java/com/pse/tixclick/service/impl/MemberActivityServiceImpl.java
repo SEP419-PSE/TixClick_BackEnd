@@ -27,6 +27,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -47,9 +48,11 @@ public class MemberActivityServiceImpl implements MemberActivityService {
         var context = SecurityContextHolder.getContext();
         String userName = context.getAuthentication().getName();
 
+        // Lấy thông tin EventActivity từ ID
         var eventActivity = eventActivityRepository.findById(request.getEventActivityId())
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_ACTIVITY_NOT_FOUND));
 
+        // Kiểm tra quyền của người dùng
         var role = memberRepository.findMemberByAccount_UserNameAndCompany_CompanyId(
                 userName,
                 eventActivity.getEvent().getCompany().getCompanyId()
@@ -62,11 +65,31 @@ public class MemberActivityServiceImpl implements MemberActivityService {
         List<MemberActivityDTO> success = new ArrayList<>();
         List<BulkMemberActivityResult.FailedMember> failed = new ArrayList<>();
 
+        // Lấy thông tin thời gian của eventActivity hiện tại
+        LocalDateTime eventStartTime = eventActivity.getDateEvent().atTime(eventActivity.getStartTimeEvent());
+        LocalDateTime eventEndTime = eventActivity.getDateEvent().atTime(eventActivity.getEndTimeEvent());
+
         for (Integer memberId : request.getMemberIds()) {
             try {
+                // Lấy thông tin member từ memberId
                 var member = memberRepository.findById(memberId)
                         .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
 
+                // Kiểm tra xem có sự trùng lặp về thời gian của MemberActivity không
+                boolean hasConflict = memberActivityRepository.checkEventTimeConflict(
+                        member.getAccount().getAccountId(),
+                        eventActivity.getDateEvent(),
+                        eventActivity.getStartTimeEvent(),
+                        eventActivity.getEndTimeEvent()
+                );
+
+                // Nếu có sự trùng lặp
+                if (hasConflict) {
+                    failed.add(new BulkMemberActivityResult.FailedMember(memberId, "Thành viên đã được phân công ở sự kiện cùng giờ khác"));
+                    continue;
+                }
+
+                // Kiểm tra nếu MemberActivity đã tồn tại
                 var optionalActivity = memberActivityRepository
                         .findMemberActivitiesByMemberAndEventActivity_EventActivityId(member, eventActivity.getEventActivityId());
 
@@ -75,15 +98,16 @@ public class MemberActivityServiceImpl implements MemberActivityService {
                 if (optionalActivity.isPresent()) {
                     memberActivity = optionalActivity.get();
 
+                    // Nếu trạng thái là INACTIVE, thay đổi thành ACTIVE
                     if (memberActivity.getStatus() == EStatus.INACTIVE) {
                         memberActivity.setStatus(EStatus.ACTIVE);
                         memberActivityRepository.save(memberActivity);
                     } else {
-                        failed.add(new BulkMemberActivityResult.FailedMember(memberId, "Already active"));
+                        failed.add(new BulkMemberActivityResult.FailedMember(memberId, "Thành viên đã được phân công hoạt động"));
                         continue;
                     }
-
                 } else {
+                    // Nếu chưa có MemberActivity, tạo mới
                     memberActivity = new MemberActivity();
                     memberActivity.setMember(member);
                     memberActivity.setEventActivity(eventActivity);
@@ -91,18 +115,22 @@ public class MemberActivityServiceImpl implements MemberActivityService {
                     memberActivityRepository.save(memberActivity);
                 }
 
+                // Chuyển MemberActivity thành DTO và thêm vào danh sách thành công
                 MemberActivityDTO dto = modelMapper.map(memberActivity, MemberActivityDTO.class);
                 success.add(dto);
 
             } catch (AppException ex) {
                 failed.add(new BulkMemberActivityResult.FailedMember(memberId, ex.getMessage()));
             } catch (Exception e) {
-                failed.add(new BulkMemberActivityResult.FailedMember(memberId, "Unexpected error"));
+                failed.add(new BulkMemberActivityResult.FailedMember(memberId, "Lỗi không mong muốn"));
             }
         }
 
+        // Trả về kết quả thành công và thất bại
         return new BulkMemberActivityResult(success, failed);
     }
+
+
 
 
 
@@ -223,6 +251,7 @@ public class MemberActivityServiceImpl implements MemberActivityService {
         List<MyEventResponse> myEventActivities = eventActivitiesMap.entrySet().stream()
                 .map(entry -> {
                     MyEventResponse response = new MyEventResponse();
+                    response.setEventId(entry.getKey().getEventId()); // Set eventId
                     response.setEventName(entry.getKey().getEventName()); // Event name
                     response.setUrl(entry.getKey().getLogoURL()); // Set URL from event
                     response.setEventActivities(entry.getValue()); // List of event activities
@@ -232,6 +261,7 @@ public class MemberActivityServiceImpl implements MemberActivityService {
 
         return myEventActivities;
     }
+
 
 
 }

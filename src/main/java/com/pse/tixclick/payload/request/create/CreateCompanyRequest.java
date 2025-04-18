@@ -11,6 +11,7 @@ import lombok.experimental.FieldDefaults;
 public class CreateCompanyRequest {
     private String companyName;
     private String codeTax;
+    private String email;
     private String ownerCard;
     private String bankingName;
     private String bankingCode;

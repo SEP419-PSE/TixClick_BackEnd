@@ -14,6 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class MyEventResponse {
+    int eventId;
     private String eventName;
     String url;
     List<MyEventActivityResponse> eventActivities;

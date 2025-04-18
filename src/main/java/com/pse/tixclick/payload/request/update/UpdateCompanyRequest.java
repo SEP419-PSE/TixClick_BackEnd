@@ -13,6 +13,7 @@ public class UpdateCompanyRequest {
     private String codeTax;
     private String bankingName;
     private String bankingCode;
+    private String email;
     private String nationalId;
     private String logoURL;
     private String address;

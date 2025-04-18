@@ -15,6 +15,7 @@ public class CompanyDTO {
     private String bankingName;
     private String bankingCode;
     private String ownerCard;
+    private String email;
     private String nationalId;
     private String logoURL;
     private String address;
