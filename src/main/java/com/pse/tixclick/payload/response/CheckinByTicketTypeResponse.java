@@ -21,6 +21,7 @@ public class CheckinByTicketTypeResponse {
     @FieldDefaults(level = AccessLevel.PRIVATE)
     public static class TicketTypeCheckinStat {
         String ticketType;
+        double price;
         int checkedIn;
         int total;
         double percentage;

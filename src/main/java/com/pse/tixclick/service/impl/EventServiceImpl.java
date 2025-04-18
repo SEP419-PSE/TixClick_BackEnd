@@ -1091,9 +1091,11 @@ public class EventServiceImpl implements EventService {
                     int total = s.getTotalPurchased() != null ? s.getTotalPurchased() : 0;
                     int checkedIn = s.getCheckedIn() != null ? s.getCheckedIn() : 0;
                     double percentage = total > 0 ? (checkedIn * 100.0) / total : 0.0;
-
+                    Ticket ticket = ticketRepository.findById(s.getTicketId())
+                            .orElseThrow(() -> new AppException(ErrorCode.TICKET_NOT_FOUND));
                     return new CheckinByTicketTypeResponse.TicketTypeCheckinStat(
                             s.getTicketName(),
+                            ticket.getPrice(),
                             checkedIn,
                             total,
                             Math.round(percentage * 100.0) / 100.0 // làm tròn 2 chữ số
