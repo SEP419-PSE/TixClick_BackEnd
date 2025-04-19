@@ -477,16 +477,7 @@ public class EventServiceImpl implements EventService {
                 throw new AppException(ErrorCode.EVENT_ALREADY_APPROVED);
             }
         }
-        Contract contract = new Contract();
-        contract.setEvent(event);
-        contract.setCompany(event.getCompany());
-        contract.setAccount(manager);
-        contract.setTotalAmount(0);
-        contract.setCommission("0");
-        contract.setContractType("STANDARD");
-        contract.setContractName("Hợp đồng cho sự kiện " + event.getEventName());
-        contract.setStatus(EContractStatus.PENDING);
-        contractRepository.save(contract);
+
         String fullName = event.getOrganizer().getFirstName() + " " + event.getOrganizer().getLastName();
         emailService.sendEventApprovalRequest(manager.getEmail(), event.getEventName(), fullName);
 
