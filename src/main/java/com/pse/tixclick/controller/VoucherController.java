@@ -87,4 +87,25 @@ public class VoucherController {
                             .build());
         }
     }
+
+    @GetMapping("/check/{voucherCode}/{eventId}")
+    public ResponseEntity<ApiResponse<String>> checkVoucherCode(@PathVariable String voucherCode, @PathVariable int eventId) {
+        try {
+            String message = voucherService.checkVoucherCode(voucherCode, eventId);
+            return ResponseEntity.ok(
+                    ApiResponse.<String>builder()
+                            .code(200)
+                            .message(message)
+                            .result(null)
+                            .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(400)
+                    .body(ApiResponse.<String>builder()
+                            .code(400)
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        }
+    }
 }
