@@ -15,4 +15,12 @@ public class CreateVoucherRequest {
     String voucherCode;
 
     double discount;
+
+    int eventId;
+
+    double quantity;
+
+    LocalDateTime startDate;
+
+    LocalDateTime endDate;
 }

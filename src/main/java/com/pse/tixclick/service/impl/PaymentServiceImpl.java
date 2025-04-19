@@ -10,10 +10,7 @@ import com.pse.tixclick.payload.entity.CheckinLog;
 import com.pse.tixclick.payload.entity.entity_enum.*;
 import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.entity.event.EventActivity;
-import com.pse.tixclick.payload.entity.payment.Order;
-import com.pse.tixclick.payload.entity.payment.OrderDetail;
-import com.pse.tixclick.payload.entity.payment.Payment;
-import com.pse.tixclick.payload.entity.payment.Transaction;
+import com.pse.tixclick.payload.entity.payment.*;
 import com.pse.tixclick.payload.entity.seatmap.*;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
 import com.pse.tixclick.payload.entity.ticket.TicketMapping;
@@ -100,6 +97,9 @@ public class PaymentServiceImpl implements PaymentService {
     @Autowired
     AppUtils appUtils;
 
+    @Autowired
+    VoucherRepository voucherRepository;
+
 
     @Override
     public PayOSResponse changeOrderStatusPayOs(int orderId) {
@@ -107,7 +107,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public PayOSResponse createPaymentLink(int orderId, long expiredTime, HttpServletRequest request) throws Exception {
+    public PayOSResponse createPaymentLink(int orderId, String voucherCode, long expiredTime, HttpServletRequest request) throws Exception {
         ObjectMapper objectMapper = new ObjectMapper();
 
         Order order = orderRepository
@@ -123,7 +123,7 @@ public class PaymentServiceImpl implements PaymentService {
             throw new RuntimeException("Payment is already completed");
         }
 
-        int totalAmount = (int) Math.round(order.getTotalAmount());
+        int totalAmount = (int) Math.round(order.getTotalAmountDiscount());
         long orderCode = Long.parseLong(order.getOrderCode());
         String baseUrl = getBaseUrl(request);
 
@@ -136,6 +136,7 @@ public class PaymentServiceImpl implements PaymentService {
         // Xây dựng returnUrl và cancelUrl
         String returnUrl = baseUrl + "/payment/queue" +
                 "?orderId=" + order.getOrderId() +
+                "&voucherCode=" + voucherCode +
                 "&userName=" + account.getUserName() +
                 "&amount=" + itemData.getPrice() +
                 "&name=" + itemData.getName();
@@ -159,7 +160,7 @@ public class PaymentServiceImpl implements PaymentService {
         CheckoutResponseData result = payOSUtils.payOS().createPaymentLink(paymentData);
 
         Payment payment = new Payment();
-        payment.setAmount(order.getTotalAmount());
+        payment.setAmount(totalAmount);
         payment.setStatus(EPaymentStatus.PENDING);
         payment.setPaymentDate(LocalDateTime.now());
         payment.setOrderCode(order.getOrderCode());
@@ -185,6 +186,7 @@ public class PaymentServiceImpl implements PaymentService {
         String userName = request.getParameter("userName");
         String orderCode = request.getParameter("orderCode");
         String amount = request.getParameter("amount");
+        String voucherCode = request.getParameter("voucherCode");
 
         Payment payment = paymentRepository.findPaymentByOrderCode(orderCode);
 
@@ -380,6 +382,23 @@ public class PaymentServiceImpl implements PaymentService {
 
             order.setStatus(EOrderStatus.FAILURE);
             orderRepository.save(order);
+
+            Voucher voucher = voucherRepository
+                    .existsByVoucherCode(voucherCode);
+            if(voucher != null) {
+                if(voucher.getStatus().equals(EVoucherStatus.INACTIVE) && voucher.getQuantity() == 0){
+                    voucher.setQuantity(voucher.getQuantity() + 1);
+                    voucher.setStatus(EVoucherStatus.ACTIVE);
+                    voucherRepository.save(voucher);
+                }
+                else if(voucher.getStatus().equals(EVoucherStatus.ACTIVE) && voucher.getQuantity() > 0){
+                    voucher.setQuantity(voucher.getQuantity() + 1);
+                    voucherRepository.save(voucher);
+                }
+            }
+            else {
+                throw new AppException(ErrorCode.VOUCHER_NOT_FOUND);
+            }
 
             Account account = accountRepository
                     .findAccountByUserName(userName)

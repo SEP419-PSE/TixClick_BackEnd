@@ -32,6 +32,9 @@ public class  Order {
     @Column(nullable = false)
     private double totalAmount;
 
+    @Column()
+    private double totalAmountDiscount;
+
     @Column
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime orderDate;

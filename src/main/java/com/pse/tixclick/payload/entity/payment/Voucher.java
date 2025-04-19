@@ -3,6 +3,7 @@ package com.pse.tixclick.payload.entity.payment;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.entity_enum.EVoucherStatus;
+import com.pse.tixclick.payload.entity.event.Event;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -31,6 +32,17 @@ public class Voucher {
     @Column(nullable = false)
     private double discount;
 
+    @Column
+    private double quantity;
+
+    @Column
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime startDate;
+
+    @Column
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime endDate;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private EVoucherStatus status;
@@ -45,4 +57,8 @@ public class Voucher {
 
     @OneToMany(mappedBy = "voucher", fetch = FetchType.LAZY)
     private Collection<OrderDetail> orderDetails;
+
+    @ManyToOne
+    @JoinColumn(name = "event_id")
+    private Event event;
 }
