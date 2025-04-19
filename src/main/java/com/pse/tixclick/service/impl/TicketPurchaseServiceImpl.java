@@ -364,6 +364,84 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
         }
     }
 
+    @Override
+    public String cancelTicketPurchase(List<Integer> ticketPurchaseIds) {
+        for(Integer ticketPurchase_id : ticketPurchaseIds){
+            TicketPurchase ticketPurchase = ticketPurchaseRepository
+                    .findById(ticketPurchase_id)
+                    .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
+            //Kiểm tra trạng thái của ticketPurchase xem thanh toán hay huỷ nếu không thì đi xuống dưới
+            if (ticketPurchase.getStatus().equals(ETicketPurchaseStatus.PENDING)) {
+                //Nếu không ghế và có zone
+                if(ticketPurchase.getSeatActivity() == null && ticketPurchase.getZoneActivity() != null){
+                    ZoneActivity zoneActivity = zoneActivityRepository
+                            .findByEventActivityIdAndZoneId(ticketPurchase.getZoneActivity().getEventActivity().getEventActivityId(), ticketPurchase.getZoneActivity().getZone().getZoneId())
+                            .orElseThrow(() -> new AppException(ErrorCode.ZONE_ACTIVITY_NOT_FOUND));
+
+                    Zone zone = zoneRepository
+                            .findById(ticketPurchase.getZoneActivity().getZone().getZoneId())
+                            .orElseThrow(() -> new AppException(ErrorCode.ZONE_NOT_FOUND));
+
+                    zoneActivity.setAvailableQuantity(zoneActivity.getAvailableQuantity() + ticketPurchase.getQuantity());
+
+                    ticketPurchase.setStatus(ETicketPurchaseStatus.CANCELLED);
+
+                    ticketPurchaseRepository.save(ticketPurchase);
+                    zoneRepository.save(zone);
+                    zoneActivityRepository.save(zoneActivity);
+                }
+
+                //Nếu có ghế và có zone
+                if(ticketPurchase.getZoneActivity() != null && ticketPurchase.getSeatActivity() != null){
+                    SeatActivity seatActivity = seatActivityRepository
+                            .findByEventActivityIdAndSeatId(ticketPurchase.getSeatActivity().getEventActivity().getEventActivityId(), ticketPurchase.getSeatActivity().getSeat().getSeatId())
+                            .orElseThrow(() -> new AppException(ErrorCode.SEAT_ACTIVITY_NOT_FOUND));
+
+                    seatActivity.setStatus(ESeatActivityStatus.AVAILABLE);
+
+                    ZoneActivity zoneActivity = zoneActivityRepository
+                            .findByEventActivityIdAndZoneId(ticketPurchase.getZoneActivity().getEventActivity().getEventActivityId(), ticketPurchase.getZoneActivity().getZone().getZoneId())
+                            .orElseThrow(() -> new AppException(ErrorCode.ZONE_ACTIVITY_NOT_FOUND));
+
+                    Zone zone = zoneRepository
+                            .findById(ticketPurchase.getZoneActivity().getZone().getZoneId())
+                            .orElseThrow(() -> new AppException(ErrorCode.ZONE_NOT_FOUND));
+
+                    zoneActivity.setAvailableQuantity(zoneActivity.getAvailableQuantity() + ticketPurchase.getQuantity());
+
+                    ticketPurchase.setStatus(ETicketPurchaseStatus.CANCELLED);
+
+                    zoneActivityRepository.save(zoneActivity);
+                    ticketPurchaseRepository.save(ticketPurchase);
+                    zoneRepository.save(zone);
+                    seatActivityRepository.save(seatActivity);
+                }
+
+                //Nếu không ghế và không zone
+                if(ticketPurchase.getZoneActivity() == null && ticketPurchase.getSeatActivity() == null){
+                    TicketMapping ticketMapping = ticketMappingRepository
+                            .findTicketMappingByTicketIdAndEventActivityId(ticketPurchase.getTicket().getTicketId(), ticketPurchase.getEventActivity().getEventActivityId())
+                            .orElseThrow(() -> new AppException(ErrorCode.TICKET_MAPPING_NOT_FOUND));
+
+                    if (ticketMapping.getQuantity() == 0) {
+                        ticketMapping.setQuantity(ticketPurchase.getQuantity());
+                        ticketMapping.setStatus(true);
+                    }
+                    else {
+                        ticketMapping.setQuantity(ticketMapping.getQuantity() + ticketPurchase.getQuantity());
+                    }
+
+                    ticketMappingRepository.save(ticketMapping);
+
+                    ticketPurchase.setStatus(ETicketPurchaseStatus.CANCELLED);
+
+                    ticketPurchaseRepository.save(ticketPurchase);
+                }
+            }
+        }
+        return "Cancel ticket purchase successfully";
+    }
+
     private void updateTicketPurchaseStatus(List<Integer> listTicketPurchaseId){
         for(Integer ticketPurchase_id : listTicketPurchaseId){
             TicketPurchase ticketPurchase = ticketPurchaseRepository
