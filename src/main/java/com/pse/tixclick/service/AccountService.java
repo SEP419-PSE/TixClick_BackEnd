@@ -5,6 +5,7 @@ import com.pse.tixclick.payload.request.create.CreateAccountRequest;
 import com.pse.tixclick.payload.request.update.UpdateAccountRequest;
 import com.pse.tixclick.payload.response.SearchAccountResponse;
 
+import java.io.IOException;
 import java.util.List;
 
 public interface
@@ -14,7 +15,7 @@ AccountService {
 
     AccountDTO createAccount(CreateAccountRequest accountDTO);
 
-    AccountDTO updateProfile(UpdateAccountRequest accountDTO);
+    AccountDTO updateProfile(UpdateAccountRequest accountDTO) throws IOException;
 
     List<AccountDTO> getAllAccount();
 

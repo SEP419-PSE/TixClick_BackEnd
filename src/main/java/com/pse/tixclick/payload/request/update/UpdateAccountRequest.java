@@ -2,6 +2,7 @@ package com.pse.tixclick.payload.request.update;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 
@@ -16,5 +17,5 @@ public class UpdateAccountRequest {
     String email;
     String phone;
     LocalDate dob;
-    String avatarURL;
+    MultipartFile avatarURL;
 }
