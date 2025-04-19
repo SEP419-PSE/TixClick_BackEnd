@@ -1,6 +1,8 @@
 package com.pse.tixclick.repository;
 
 import com.pse.tixclick.payload.entity.event.Event;
+import com.pse.tixclick.payload.entity.event.EventActivity;
+import com.pse.tixclick.payload.entity.ticket.Ticket;
 import com.pse.tixclick.payload.entity.ticket.TicketMapping;
 import com.pse.tixclick.payload.entity.ticket.TicketPurchase;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -20,4 +22,7 @@ public interface TicketMappingRepository extends JpaRepository<TicketMapping, In
     List<TicketMapping> findTicketMappingsByEventActivity_Event(Event event);
 
     List<TicketMapping> findTicketMappingsByEventActivity_EventActivityIdAndTicket_TicketIdAndQuantity(int eventActivityId, int ticketId, int quantity);
+    List<TicketMapping> findTicketMappingsByEventActivity(EventActivity eventActivity);
+
+    Optional<TicketMapping> findTicketMappingsByTicket(Ticket ticket);
 }

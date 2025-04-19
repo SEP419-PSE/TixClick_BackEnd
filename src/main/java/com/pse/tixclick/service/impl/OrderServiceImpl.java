@@ -6,6 +6,7 @@ import com.pse.tixclick.payload.dto.*;
 import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.entity_enum.EOrderStatus;
 import com.pse.tixclick.payload.entity.entity_enum.ETicketPurchaseStatus;
+import com.pse.tixclick.payload.entity.entity_enum.EVoucherStatus;
 import com.pse.tixclick.payload.entity.payment.Order;
 import com.pse.tixclick.payload.entity.payment.OrderDetail;
 import com.pse.tixclick.payload.entity.payment.Voucher;
@@ -67,6 +68,7 @@ public class OrderServiceImpl implements OrderService {
         order = orderRepository.save(order);
 
         double totalAmount = 0;
+        double newTotalAmount1 = 0;
         Set<Integer> ticketPurchaseIds = new HashSet<>();
         int quantity;
 
@@ -101,13 +103,6 @@ public class OrderServiceImpl implements OrderService {
 
             double amount = ticket.getPrice() * quantity;
 
-            if (createOrderRequest.getVoucherCode() != null && !createOrderRequest.getVoucherCode().isEmpty()) {
-                Voucher voucher = voucherRepository.findByVoucherCode(createOrderRequest.getVoucherCode())
-                        .orElseThrow(() -> new AppException(ErrorCode.VOUCHER_NOT_FOUND));
-                orderDetail.setVoucher(voucher);
-                amount *= voucher.getDiscount();
-            }
-
             orderDetail.setAmount(amount);
             totalAmount += amount;
 
@@ -115,9 +110,36 @@ public class OrderServiceImpl implements OrderService {
         }
 
         order.setTotalAmount(totalAmount);
+
+        TicketPurchase ticketPurchase = ticketPurchaseRepository
+                .findById(ticketPurchaseIds.iterator().next())
+                .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
+
+        if (createOrderRequest.getVoucherCode() != null && !createOrderRequest.getVoucherCode().isEmpty()) {
+            Voucher voucher = voucherRepository.findByVoucherCodeAndEvent(createOrderRequest.getVoucherCode(), ticketPurchase.getEvent().getEventId())
+                    .orElseThrow(() -> new AppException(ErrorCode.VOUCHER_NOT_FOUND));
+            double newTotalAmount = totalAmount - (totalAmount * voucher.getDiscount() / 100);
+            newTotalAmount1 = newTotalAmount;
+            order.setTotalAmountDiscount(newTotalAmount);
+            voucher.setQuantity(voucher.getQuantity() - 1);
+            if(voucher.getQuantity() == 0) {
+                voucher.setStatus(EVoucherStatus.INACTIVE);
+            }
+            voucherRepository.save(voucher);
+        }else {
+            newTotalAmount1 = totalAmount;
+            order.setTotalAmountDiscount(totalAmount);
+        }
         orderRepository.save(order);
 
-        return mapper.map(order, OrderDTO.class);
+        OrderDTO orderDTO = mapper.map(order, OrderDTO.class);
+        orderDTO.setOrderId(order.getOrderId());
+        orderDTO.setTotalAmount(newTotalAmount1);
+        orderDTO.setVoucherCode(createOrderRequest.getVoucherCode());
+        orderDTO.setStatus(order.getStatus().toString());
+        orderDTO.setAccountId(order.getAccount().getAccountId());
+        orderDTO.setOrderCode(order.getOrderCode());
+        return orderDTO;
     }
 
     @Override

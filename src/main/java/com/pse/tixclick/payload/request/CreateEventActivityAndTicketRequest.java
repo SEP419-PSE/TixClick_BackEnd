@@ -18,6 +18,7 @@ import java.util.List;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class   CreateEventActivityAndTicketRequest {
+    int eventActivityId;
 
     String activityName;
 
@@ -51,12 +52,9 @@ public class   CreateEventActivityAndTicketRequest {
         String ticketName;
         String ticketCode;
         int quantity;
-        @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-        LocalDateTime createdDate;
         double price;
         int minQuantity;
         int maxQuantity;
-        boolean status;
         int eventId;
     }
 

@@ -140,6 +140,7 @@ public enum ErrorCode {
     MEMBER_NOT_EXISTED(1122, "Thành viên không tồn tại", HttpStatus.NOT_FOUND),
     EVENT_NOT_COMPANY(1123, "Sự kiện không thuộc công ty", HttpStatus.BAD_REQUEST),
     TRANSACTION_EXISTED(1124, "Giao dịch đã tồn tại", HttpStatus.BAD_REQUEST),
+    VOUCHER_CODE_ALREADY_EXISTS(1125, "Voucher code đã tồn tại", HttpStatus.BAD_REQUEST),
     ;
 
 

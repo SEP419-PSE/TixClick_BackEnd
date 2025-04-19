@@ -8,7 +8,9 @@ import java.util.List;
 public interface VoucherService {
     VoucherDTO createVoucher(CreateVoucherRequest createVoucherRequest);
 
-    List<VoucherDTO> getAllVouchers();
+    List<VoucherDTO> getAllVouchers(int eventId, String status);
 
     String changeVoucherStatus(int voucherId);
+
+    String checkVoucherCode(String voucherCode, int eventId);
 }

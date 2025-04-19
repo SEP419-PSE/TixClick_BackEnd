@@ -5,6 +5,7 @@ import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.company.Company;
 import com.pse.tixclick.payload.entity.company.Contract;
 import com.pse.tixclick.payload.entity.entity_enum.EEventStatus;
+import com.pse.tixclick.payload.entity.payment.Voucher;
 import com.pse.tixclick.payload.entity.seatmap.SeatMap;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
 import jakarta.persistence.*;
@@ -93,4 +94,7 @@ Event {
 
     @OneToMany(mappedBy = "event", fetch = FetchType.LAZY)
     private Collection<Ticket> tickets;
+
+    @OneToMany(mappedBy = "event", fetch = FetchType.LAZY)
+    private Collection<Voucher> vouchers;
 }

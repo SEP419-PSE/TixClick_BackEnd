@@ -15,7 +15,8 @@ public class OrderDTO {
 
     private String status;
 
-    private int totalAmount;
+    private double totalAmount;
 
     private int accountId;
+    private String voucherCode;
 }
