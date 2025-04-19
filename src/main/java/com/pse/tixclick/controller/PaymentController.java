@@ -42,7 +42,7 @@ public class PaymentController {
     public ResponseEntity<ApiResponse<PayOSResponse>> payOS(@RequestBody CreateOrderRequest request, HttpServletRequest httpServletRequest) {
         try {
             OrderDTO orderDTO = orderService.createOrder(request);
-            PayOSResponse payOSResponse = paymentService.createPaymentLink(orderDTO.getOrderId(), request.getExpiredTime(), httpServletRequest);
+            PayOSResponse payOSResponse = paymentService.createPaymentLink(orderDTO.getOrderId(), orderDTO.getVoucherCode(), request.getExpiredTime(), httpServletRequest);
 
             ApiResponse<PayOSResponse> response = ApiResponse.<PayOSResponse>builder()
                     .code(HttpStatus.OK.value())

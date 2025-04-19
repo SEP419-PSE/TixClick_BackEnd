@@ -46,10 +46,10 @@ public class VoucherController {
         }
     }
 
-    @GetMapping("/all")
-    public ResponseEntity<ApiResponse<List<VoucherDTO>>> getAllVouchers() {
+    @GetMapping("/all/{eventId}/{status}")
+    public ResponseEntity<ApiResponse<List<VoucherDTO>>> getAllVouchers(@PathVariable int eventId, @PathVariable String status) {
         try {
-            List<VoucherDTO> voucherDTOList = voucherService.getAllVouchers();
+            List<VoucherDTO> voucherDTOList = voucherService.getAllVouchers(eventId, status);
             return ResponseEntity.ok(
                     ApiResponse.<List<VoucherDTO>>builder()
                             .code(200)

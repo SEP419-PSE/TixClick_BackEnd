@@ -12,7 +12,7 @@ public interface PaymentService
 {
     PayOSResponse changeOrderStatusPayOs(int orderId);
 
-    PayOSResponse createPaymentLink(int orderId, long expiredTime, HttpServletRequest request) throws Exception;
+    PayOSResponse createPaymentLink(int orderId, String voucherCode, long expiredTime, HttpServletRequest request) throws Exception;
 
     PaymentResponse handleCallbackPayOS(HttpServletRequest request) throws Exception;
 

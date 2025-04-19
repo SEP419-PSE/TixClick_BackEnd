@@ -6,12 +6,18 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 @Repository
 public interface VoucherRepository extends JpaRepository<Voucher, Integer> {
-    @Query("SELECT v FROM Voucher v WHERE v.voucherCode = :code")
-    Optional<Voucher> findByVoucherCode(@Param("code") String code);
+    @Query("SELECT v FROM Voucher v WHERE v.voucherCode = :code AND v.event.eventId = :eventId")
+    Optional<Voucher> findByVoucherCodeAndEvent(@Param("code") String code, @Param("eventId") int eventId);
 
-    @Query("SELECT CASE WHEN COUNT(v) > 0 THEN true ELSE false END FROM Voucher v WHERE v.voucherCode = :code")
-    boolean existsByVoucherCode(@Param("code") String code);
+    @Query("SELECT v FROM Voucher v WHERE v.voucherCode = :code")
+    Voucher existsByVoucherCode(@Param("code") String code);
+
+    @Query("SELECT v FROM Voucher v WHERE v.status = :status AND v.event.eventId = :eventId")
+    List<Voucher> findByStatusAndEvent(@Param("status") String status, @Param("eventId") int eventId);
+
+
 }
