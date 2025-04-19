@@ -114,7 +114,7 @@ public class AccountServiceImpl implements AccountService {
         if (accountDTO.getLastName() != null) {
             user.setLastName(accountDTO.getLastName());
         }
-        if (accountDTO.getEmail() != null) {
+        if (accountDTO.getEmail() != null && !accountDTO.getEmail().isEmpty() && !accountDTO.getEmail().equals(user.getEmail())) {
             user.setEmail(accountDTO.getEmail());
             user.setActive(false); // This is set if email is not null
         }
