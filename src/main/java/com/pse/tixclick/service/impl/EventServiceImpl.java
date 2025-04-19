@@ -477,16 +477,7 @@ public class EventServiceImpl implements EventService {
                 throw new AppException(ErrorCode.EVENT_ALREADY_APPROVED);
             }
         }
-        Contract contract = new Contract();
-        contract.setEvent(event);
-        contract.setCompany(event.getCompany());
-        contract.setAccount(manager);
-        contract.setTotalAmount(0);
-        contract.setCommission("0");
-        contract.setContractType("STANDARD");
-        contract.setContractName("Hợp đồng cho sự kiện " + event.getEventName());
-        contract.setStatus(EContractStatus.PENDING);
-        contractRepository.save(contract);
+
         String fullName = event.getOrganizer().getFirstName() + " " + event.getOrganizer().getLastName();
         emailService.sendEventApprovalRequest(manager.getEmail(), event.getEventName(), fullName);
 
@@ -630,9 +621,20 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public List<EventForConsumerResponse> getEventsForConsumerForWeekend() {
+        LocalDate today = LocalDate.now();
+
+        // Lấy thứ 7 và chủ nhật của tuần hiện tại (không cần kiểm tra nếu hôm nay là T7/CN nữa)
+        LocalDate startWeekend = appUtils.getStartOfWeekend(today);
+        LocalDate endWeekend = appUtils.getEndOfWeekend(today);
+
         List<Event> events = eventRepository.findScheduledEvents().stream()
                 .filter(event -> event.getEventActivities().stream()
-                        .anyMatch(eventActivity -> appUtils.isWeekend(eventActivity.getDateEvent())))
+                        .anyMatch(activity -> {
+                            LocalDate date = activity.getDateEvent();
+                            return date != null &&
+                                    !date.isBefore(startWeekend) &&
+                                    !date.isAfter(endWeekend);
+                        }))
                 .filter(event -> event.getStatus() == EEventStatus.SCHEDULED)
                 .toList();
 
@@ -650,15 +652,16 @@ public class EventServiceImpl implements EventService {
                                 .orElse(0.0),
                         event.getLogoURL(),
                         event.getEventActivities().stream()
-                                .filter(eventActivity -> appUtils.isWeekend(eventActivity.getDateEvent()))
                                 .map(EventActivity::getDateEvent)
+                                .filter(date -> date != null &&
+                                        !date.isBefore(startWeekend) &&
+                                        !date.isAfter(endWeekend))
                                 .findFirst()
-                                .orElse(null) // Nếu không tìm thấy ngày nào thì trả về null
+                                .orElse(null)
                 ))
                 .collect(Collectors.toList());
 
-        Collections.reverse(responses); // Đảo ngược danh sách
-
+        Collections.reverse(responses);
         return responses;
     }
 

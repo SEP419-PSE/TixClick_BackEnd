@@ -130,4 +130,13 @@ public class AppUtils {
         DayOfWeek dayOfWeek = date.getDayOfWeek();
         return dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY;
     }
+
+    public static LocalDate getStartOfWeekend(LocalDate referenceDate) {
+        return referenceDate.with(java.time.temporal.TemporalAdjusters.nextOrSame(DayOfWeek.SATURDAY));
+    }
+
+    public static LocalDate getEndOfWeekend(LocalDate referenceDate) {
+        return referenceDate.with(java.time.temporal.TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
+    }
+
 }

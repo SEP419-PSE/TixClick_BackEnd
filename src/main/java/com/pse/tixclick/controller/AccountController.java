@@ -10,13 +10,16 @@ import com.pse.tixclick.service.AccountService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 
@@ -102,29 +105,47 @@ public class AccountController {
         }
     }
 
-    @PutMapping("/update-profile")
-    public ResponseEntity<ApiResponse<AccountDTO>> updateProfile(@RequestBody UpdateAccountRequest accountDTO) {
+    @PutMapping(value = "/update-profile", consumes = "multipart/form-data")
+    public ResponseEntity<ApiResponse<AccountDTO>> updateProfile(
+            @RequestParam(required = false) String firstName,
+            @RequestParam(required = false) String lastName,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String phone,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dob,
+            @RequestPart(required = false) MultipartFile avatarURL
+    ) {
         try {
-            // Gọi service để cập nhật thông tin tài khoản
+            // Tạo DTO từ request
+            UpdateAccountRequest accountDTO = new UpdateAccountRequest(
+                    firstName,
+                    lastName,
+                    email,
+                    phone,
+                    dob,
+                    avatarURL
+            );
+
+            // Gọi service
             AccountDTO updatedAccount = accountService.updateProfile(accountDTO);
 
-            // Tạo phản hồi API
+            // Trả về response chuẩn
             ApiResponse<AccountDTO> apiResponse = ApiResponse.<AccountDTO>builder()
                     .code(HttpStatus.OK.value())
                     .message("Profile updated successfully")
                     .result(updatedAccount)
                     .build();
 
-            return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+            return ResponseEntity.ok(apiResponse);
 
         } catch (AppException e) {
             ApiResponse<AccountDTO> errorResponse = ApiResponse.<AccountDTO>builder()
                     .code(HttpStatus.BAD_REQUEST.value())
-                    .message(e.getMessage()) // Lỗi từ service
+                    .message(e.getMessage())
                     .result(null)
                     .build();
 
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+
         } catch (Exception e) {
             ApiResponse<AccountDTO> errorResponse = ApiResponse.<AccountDTO>builder()
                     .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
@@ -135,6 +156,7 @@ public class AccountController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
+
 
     @PostMapping("/create-account")
     public ResponseEntity<ApiResponse<AccountDTO>> createAccount(@RequestBody CreateAccountRequest accountDTO) {

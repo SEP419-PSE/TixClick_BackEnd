@@ -1,5 +1,6 @@
 package com.pse.tixclick.service.impl;
 
+import com.pse.tixclick.cloudinary.CloudinaryService;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.AccountDTO;
@@ -25,6 +26,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -39,6 +41,7 @@ public class AccountServiceImpl implements AccountService {
     final RoleRepository roleRepository;
     final ModelMapper accountMapper;
     final PasswordEncoder passwordEncoder;
+    final CloudinaryService cloudinaryService;
 
     @Override
     public boolean changePasswordWithOtp(String email, String newPassword, String oldPassword) {
@@ -99,40 +102,43 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public AccountDTO updateProfile(UpdateAccountRequest accountDTO) {
-        var context = SecurityContextHolder.getContext();
-        String name = context.getAuthentication().getName();
+    public AccountDTO updateProfile(UpdateAccountRequest accountDTO) throws IOException {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        // Lấy thông tin tài khoản từ database theo username
-        var user = accountRepository.findAccountByUserName(name)
+        Account user = accountRepository.findAccountByUserName(username)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-        // Cập nhật thông tin tài khoản
+        // Cập nhật thông tin cá nhân nếu có
         if (accountDTO.getFirstName() != null) {
             user.setFirstName(accountDTO.getFirstName());
         }
+
         if (accountDTO.getLastName() != null) {
             user.setLastName(accountDTO.getLastName());
         }
-        if (accountDTO.getEmail() != null) {
+
+        if (accountDTO.getEmail() != null && !accountDTO.getEmail().isBlank()
+                && !accountDTO.getEmail().equals(user.getEmail())) {
             user.setEmail(accountDTO.getEmail());
-            user.setActive(false); // This is set if email is not null
+            user.setActive(false); // Yêu cầu xác minh lại email nếu đổi
         }
+
         if (accountDTO.getPhone() != null) {
             user.setPhone(accountDTO.getPhone());
         }
+
         if (accountDTO.getDob() != null) {
             user.setDob(accountDTO.getDob());
         }
-        if (accountDTO.getAvatarURL() != null) {
-            user.setAvatarURL(accountDTO.getAvatarURL());
+
+        // Xử lý upload avatar nếu có
+        if (accountDTO.getAvatarURL() != null && !accountDTO.getAvatarURL().isEmpty()) {
+            String uploadedUrl = cloudinaryService.uploadImageToCloudinary(accountDTO.getAvatarURL());
+            user.setAvatarURL(uploadedUrl);
         }
 
-
-        // Lưu thông tin tài khoản
         accountRepository.save(user);
 
-        // Trả về thông tin tài khoản sau khi cập nhật
         return accountMapper.map(user, AccountDTO.class);
     }
 

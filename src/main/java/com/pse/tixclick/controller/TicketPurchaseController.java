@@ -240,4 +240,24 @@ public class TicketPurchaseController {
                         .build()
         );
     }
+
+    @PutMapping("/cancel")
+    public ResponseEntity<ApiResponse<String>> cancelTicketPurchase(@RequestBody List<Integer> ticketPurchaseIds) {
+        try {
+            String result = ticketPurchaseService.cancelTicketPurchase(ticketPurchaseIds);
+            ApiResponse<String> response = ApiResponse.<String>builder()
+                    .code(HttpStatus.OK.value())
+                    .message("Ticket Purchase cancel successfully")
+                    .result(result)
+                    .build();
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (Exception e) {
+            ApiResponse<String> errorResponse = ApiResponse.<String>builder()
+                            .code(400)
+                            .message(e.getMessage())
+                            .result(null)
+                            .build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        }
+    }
 }
