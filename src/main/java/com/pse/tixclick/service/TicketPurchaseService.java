@@ -27,4 +27,6 @@ public interface TicketPurchaseService {
     int countTicketPurchaseStatusByPurchased();
 
     int printActiveThreads();
+
+    String cancelTicketPurchase(List<Integer> ticketPurchaseIds);
 }
