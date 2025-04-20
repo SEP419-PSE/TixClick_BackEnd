@@ -4,6 +4,7 @@ import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.EventActivityDTO;
 import com.pse.tixclick.payload.entity.entity_enum.EEventStatus;
+import com.pse.tixclick.payload.entity.entity_enum.ERole;
 import com.pse.tixclick.payload.entity.entity_enum.ESubRole;
 import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.entity.event.EventActivity;
@@ -152,91 +153,95 @@ public class EventActivityServiceImpl implements EventActivityService {
 
         var account = accountRepository.findAccountByUserName(userName)
                 .orElseThrow(() -> new AppException(ErrorCode.ACCOUNT_NOT_FOUND));
+        var member = memberRepository.findMemberByAccount_UserNameAndCompany_CompanyId(userName, account.getCompany().getCompanyId())
+                .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
 
-        List<CreateEventActivityAndTicketRequest> savedRequests = new ArrayList<>();
+        if (member.getSubRole() != ESubRole.OWNER && member.getSubRole() != ESubRole.ADMIN) {
+            throw new AppException(ErrorCode.NOT_PERMISSION);
+        }
+            List<CreateEventActivityAndTicketRequest> savedRequests = new ArrayList<>();
 
-        for (CreateEventActivityAndTicketRequest request : requestList) {
-            Event event = eventRepository.findById(request.getEventId())
-                    .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+            for (CreateEventActivityAndTicketRequest request : requestList) {
+                Event event = eventRepository.findById(request.getEventId())
+                        .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
 
-            // Kiểm tra quyền hạn của người dùng
-            if (EEventStatus.SCHEDULED.equals(event.getStatus())) {
-                String roleName = String.valueOf(account.getRole().getRoleName());
-                if (!"MANAGER".equalsIgnoreCase(roleName)) {
-                    throw new AppException(ErrorCode.UNAUTHORIZED);
+                // Kiểm tra quyền hạn của người dùng
+                if (EEventStatus.SCHEDULED.equals(event.getStatus())) {
+                    String roleName = String.valueOf(account.getRole().getRoleName());
+                    if (!ERole.MANAGER.equals(roleName)) {
+                        throw new AppException(ErrorCode.UNAUTHORIZED);
+                    }
                 }
-            }
+                // Lấy tất cả EventActivity liên quan đến eventId
+                List<EventActivity> eventActivities = eventActivityRepository.findEventActivitiesByEvent_EventId(request.getEventId());
 
-            // Lấy tất cả EventActivity liên quan đến eventId
-            List<EventActivity> eventActivities = eventActivityRepository.findEventActivitiesByEvent_EventId(request.getEventId());
+                // Xóa tất cả các TicketMapping liên quan đến EventActivity hiện có
+                for (EventActivity activity : eventActivities) {
+                    List<TicketMapping> ticketMappings = ticketMappingRepository.findTicketMappingsByEventActivity(activity);
+                    for (TicketMapping ticketMapping : ticketMappings) {
+                        ticketMappingRepository.delete(ticketMapping);
+                    }
 
-            // Xóa tất cả các TicketMapping liên quan đến EventActivity hiện có
-            for (EventActivity activity : eventActivities) {
-                List<TicketMapping> ticketMappings = ticketMappingRepository.findTicketMappingsByEventActivity(activity);
-                for (TicketMapping ticketMapping : ticketMappings) {
-                    ticketMappingRepository.delete(ticketMapping);
+                    // Kiểm tra xem Ticket có tồn tại trong TicketMapping nào không
+                    List<Ticket> tickets = ticketRepository.findTicketsByEvent_EventId(event.getEventId());
+                    for (Ticket ticket : tickets) {
+                        // Nếu ticket không còn liên kết với bất kỳ TicketMapping nào, thì xóa nó
+                        if (ticketMappingRepository.findTicketMappingsByTicket(ticket).isEmpty()) {
+                            ticketRepository.delete(ticket);
+                        }
+                    }
+
+                    // Xóa EventActivity sau khi xóa TicketMapping
+                    eventActivityRepository.delete(activity);
                 }
 
-                // Kiểm tra xem Ticket có tồn tại trong TicketMapping nào không
-                List<Ticket> tickets = ticketRepository.findTicketsByEvent_EventId(event.getEventId());
-                for (Ticket ticket : tickets) {
-                    // Nếu ticket không còn liên kết với bất kỳ TicketMapping nào, thì xóa nó
-                    if (ticketMappingRepository.findTicketMappingsByTicket(ticket).isEmpty()) {
-                        ticketRepository.delete(ticket);
+                // Tạo mới EventActivity
+                EventActivity newEventActivity = new EventActivity();
+                newEventActivity.setActivityName(request.getActivityName());
+                newEventActivity.setDateEvent(request.getDateEvent());
+                newEventActivity.setStartTimeEvent(request.getStartTimeEvent());
+                newEventActivity.setEndTimeEvent(request.getEndTimeEvent());
+                newEventActivity.setStartTicketSale(request.getStartTicketSale());
+                newEventActivity.setEndTicketSale(request.getEndTicketSale());
+                newEventActivity.setEvent(event);
+                newEventActivity.setCreatedBy(account);
+                eventActivityRepository.saveAndFlush(newEventActivity);
+
+                // Use the new eventActivityId after save
+                request.setEventActivityId(newEventActivity.getEventActivityId());
+
+                // Kiểm tra nếu request có tickets thì mới xử lý Ticket và TicketMapping
+                if (request.getTickets() != null && !request.getTickets().isEmpty()) {
+                    for (CreateEventActivityAndTicketRequest.TicketRequest ticketRequest : request.getTickets()) {
+                        // Kiểm tra xem Ticket có tồn tại không, nếu không thì tạo mới
+                        Ticket ticket = ticketRepository.findTicketByTicketCode(ticketRequest.getTicketCode())
+                                .orElseGet(() -> {
+                                    Ticket newTicket = new Ticket();
+                                    newTicket.setTicketName(ticketRequest.getTicketName());
+                                    newTicket.setTicketCode(ticketRequest.getTicketCode());
+                                    newTicket.setPrice(ticketRequest.getPrice());
+                                    newTicket.setMinQuantity(ticketRequest.getMinQuantity());
+                                    newTicket.setMaxQuantity(ticketRequest.getMaxQuantity());
+                                    newTicket.setEvent(event);
+                                    newTicket.setAccount(account);
+                                    return ticketRepository.save(newTicket);
+                                });
+
+                        // Tạo TicketMapping
+                        TicketMapping ticketMapping = new TicketMapping();
+                        ticketMapping.setEventActivity(newEventActivity);
+                        ticketMapping.setTicket(ticket);
+                        ticketMapping.setQuantity(ticketRequest.getQuantity());
+                        ticketMapping.setStatus(true);
+                        ticketMappingRepository.save(ticketMapping);
                     }
                 }
 
-                // Xóa EventActivity sau khi xóa TicketMapping
-                eventActivityRepository.delete(activity);
+                savedRequests.add(request);
             }
 
-            // Tạo mới EventActivity
-            EventActivity newEventActivity = new EventActivity();
-            newEventActivity.setActivityName(request.getActivityName());
-            newEventActivity.setDateEvent(request.getDateEvent());
-            newEventActivity.setStartTimeEvent(request.getStartTimeEvent());
-            newEventActivity.setEndTimeEvent(request.getEndTimeEvent());
-            newEventActivity.setStartTicketSale(request.getStartTicketSale());
-            newEventActivity.setEndTicketSale(request.getEndTicketSale());
-            newEventActivity.setEvent(event);
-            newEventActivity.setCreatedBy(account);
-            eventActivityRepository.saveAndFlush(newEventActivity);
-
-            // Use the new eventActivityId after save
-            request.setEventActivityId(newEventActivity.getEventActivityId());
-
-            // Kiểm tra nếu request có tickets thì mới xử lý Ticket và TicketMapping
-            if (request.getTickets() != null && !request.getTickets().isEmpty()) {
-                for (CreateEventActivityAndTicketRequest.TicketRequest ticketRequest : request.getTickets()) {
-                    // Kiểm tra xem Ticket có tồn tại không, nếu không thì tạo mới
-                    Ticket ticket = ticketRepository.findTicketByTicketCode(ticketRequest.getTicketCode())
-                            .orElseGet(() -> {
-                                Ticket newTicket = new Ticket();
-                                newTicket.setTicketName(ticketRequest.getTicketName());
-                                newTicket.setTicketCode(ticketRequest.getTicketCode());
-                                newTicket.setPrice(ticketRequest.getPrice());
-                                newTicket.setMinQuantity(ticketRequest.getMinQuantity());
-                                newTicket.setMaxQuantity(ticketRequest.getMaxQuantity());
-                                newTicket.setEvent(event);
-                                newTicket.setAccount(account);
-                                return ticketRepository.save(newTicket);
-                            });
-
-                    // Tạo TicketMapping
-                    TicketMapping ticketMapping = new TicketMapping();
-                    ticketMapping.setEventActivity(newEventActivity);
-                    ticketMapping.setTicket(ticket);
-                    ticketMapping.setQuantity(ticketRequest.getQuantity());
-                    ticketMapping.setStatus(true);
-                    ticketMappingRepository.save(ticketMapping);
-                }
-            }
-
-            savedRequests.add(request);
+            return savedRequests; // Trả về toàn bộ danh sách đã xử lý
         }
-
-        return savedRequests; // Trả về toàn bộ danh sách đã xử lý
-    }
 
 
 

@@ -1,5 +1,6 @@
 package com.pse.tixclick.repository;
 
+import com.pse.tixclick.payload.entity.entity_enum.EVoucherStatus;
 import com.pse.tixclick.payload.entity.payment.Voucher;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -19,5 +20,5 @@ public interface VoucherRepository extends JpaRepository<Voucher, Integer> {
     @Query("SELECT v FROM Voucher v WHERE v.status = :status AND v.event.eventId = :eventId")
     List<Voucher> findByStatusAndEvent(@Param("status") String status, @Param("eventId") int eventId);
 
-
+    List<Voucher> findVouchersByStatusAndEvent_EventId(EVoucherStatus status, int eventId);
 }
