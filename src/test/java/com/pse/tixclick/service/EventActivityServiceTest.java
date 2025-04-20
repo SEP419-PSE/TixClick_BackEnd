@@ -27,10 +27,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -74,311 +76,208 @@ public class EventActivityServiceTest {
         SecurityContextHolder.setContext(context);
     }
 
-//    @Test
-//    void shouldThrowExceptionWhenRequestListIsEmpty() {
-//        List<CreateEventActivityAndTicketRequest> requestList = new ArrayList<>();
-//
-//        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
-//                eventActivityService.createEventActivityAndTicket(requestList));
-//
-//        assertEquals("Request list cannot be empty", ex.getMessage());
-//    }
-//
-//    @Test
-//    void shouldThrowExceptionWhenAccountNotFound() {
-//        when(accountRepository.findAccountByUserName("testUser")).thenReturn(Optional.empty());
-//
-//        List<CreateEventActivityAndTicketRequest> requestList = List.of(
-//                CreateEventActivityAndTicketRequest.builder().eventId(1).build()
-//        );
-//
-//        AppException ex = assertThrows(AppException.class, () ->
-//                eventActivityService.createEventActivityAndTicket(requestList));
-//
-//        assertEquals(ErrorCode.ACCOUNT_NOT_FOUND, ex.getErrorCode());
-//    }
-//
-//    @Test
-//    void shouldThrowExceptionWhenMemberNotFound() {
-//        Account account = new Account();
-//        Role role = new Role();
-//        role.setRoleName(ERole.MANAGER);
-//        account.setRole(role);
-//
-//        // GÁN COMPANY CHO ACCOUNT
-//        Company company = new Company();
-//        company.setCompanyId(1); // gán ID tùy ý
-//        account.setCompany(company);
-//
-//        when(accountRepository.findAccountByUserName("testUser")).thenReturn(Optional.of(account));
-//        when(memberRepository.findMemberByAccount_UserNameAndCompany_CompanyId("testUser", 1))
-//                .thenReturn(Optional.empty());
-//
-//        List<CreateEventActivityAndTicketRequest> requestList = List.of(
-//                CreateEventActivityAndTicketRequest.builder().eventId(1).build()
-//        );
-//
-//        AppException ex = assertThrows(AppException.class, () ->
-//                eventActivityService.createEventActivityAndTicket(requestList));
-//
-//        assertEquals(ErrorCode.MEMBER_NOT_FOUND, ex.getErrorCode());
-//    }
-//
-//
-//    @Test
-//    void shouldThrowExceptionWhenUserNotPermission() {
-//        Account account = new Account();
-//        Role role = new Role();
-//        role.setRoleName(ERole.MANAGER);
-//        account.setRole(role);
-//
-//        Company company = new Company();
-//        company.setCompanyId(1);
-//        account.setCompany(company);
-//
-//        when(accountRepository.findAccountByUserName("testUser")).thenReturn(Optional.of(account));
-//
-//        Member member = new Member();
-//        member.setSubRole(ESubRole.EMPLOYEE); // Không phải OWNER hay ADMIN
-//
-//        when(memberRepository.findMemberByAccount_UserNameAndCompany_CompanyId("testUser", 1))
-//                .thenReturn(Optional.of(member));
-//
-//        List<CreateEventActivityAndTicketRequest> requestList = List.of(
-//                CreateEventActivityAndTicketRequest.builder().eventId(1).build()
-//        );
-//
-//        AppException ex = assertThrows(AppException.class, () ->
-//                eventActivityService.createEventActivityAndTicket(requestList));
-//
-//        assertEquals(ErrorCode.NOT_PERMISSION, ex.getErrorCode());
-//    }
-//
-//
-//    @Test
-//    void shouldThrowExceptionWhenEventNotFound() {
-//        // Giả lập tài khoản với công ty
-//        Account account = new Account();
-//        Role role = new Role();
-//        role.setRoleName(ERole.MANAGER); // Giả lập role là MANAGER
-//        account.setRole(role);
-//
-//        // Tạo công ty và gán cho tài khoản
-//        Company company = new Company();
-//        company.setCompanyId(1); // Giả lập companyId với kiểu Long
-//        account.setCompany(company); // Gán công ty cho tài khoản
-//
-//        // Giả lập thành viên trong repository
-//        Member member = new Member();
-//        member.setSubRole(ESubRole.ADMIN); // Giả lập subRole
-//        when(memberRepository.findMemberByAccount_UserNameAndCompany_CompanyId("testUser", 1))
-//                .thenReturn(Optional.of(member)); // Chú ý kiểu companyId là Long
-//
-//        // Giả lập tài khoản trong repository
-//        when(accountRepository.findAccountByUserName("testUser")).thenReturn(Optional.of(account));
-//
-//        // Giả lập sự kiện không tồn tại trong repository
-//        when(eventRepository.findById(1)).thenReturn(Optional.empty());
-//
-//        List<CreateEventActivityAndTicketRequest> requestList = List.of(
-//                CreateEventActivityAndTicketRequest.builder().eventId(1).build()
-//        );
-//
-//        // Kiểm tra khi không tìm thấy sự kiện
-//        AppException ex = assertThrows(AppException.class, () ->
-//                eventActivityService.createEventActivityAndTicket(requestList));
-//
-//        // Kiểm tra mã lỗi trả về
-//        assertEquals(ErrorCode.EVENT_NOT_FOUND, ex.getErrorCode());
-//    }
-//
-//
-//    @Test
-//    void shouldThrowUnauthorizedWhenNotManager() {
-//        // Tạo tài khoản với role không phải là Manager
-//        Account account = new Account();
-//        Role role = new Role();
-//        role.setRoleName(ERole.BUYER); // Không phải Manager
-//        account.setRole(role);
-//
-//        // Gán công ty cho tài khoản
-//        Company company = new Company();
-//        company.setCompanyId(1); // Gán companyId cho công ty
-//        account.setCompany(company); // Gán công ty vào tài khoản
-//
-//        // Giả lập repository trả về tài khoản này
-//        when(accountRepository.findAccountByUserName("testUser")).thenReturn(Optional.of(account));
-//
-//        // Giả lập repository trả về thành viên không tồn tại
-//        when(memberRepository.findMemberByAccount_UserNameAndCompany_CompanyId("testUser", 1))
-//                .thenReturn(Optional.empty()); // Member không tồn tại
-//
-//        // Tạo sự kiện có trạng thái SCHEDULED
-//        Event event = new Event();
-//        event.setStatus(EEventStatus.SCHEDULED);
-//        when(eventRepository.findById(1)).thenReturn(Optional.of(event));
-//
-//        // Tạo request list hợp lệ
-//        List<CreateEventActivityAndTicketRequest> requestList = List.of(
-//                CreateEventActivityAndTicketRequest.builder().eventId(1).build()
-//        );
-//
-//        // Kiểm tra xem hàm có ném exception MEMBER_NOT_FOUND không
-//        AppException ex = assertThrows(AppException.class, () ->
-//                eventActivityService.createEventActivityAndTicket(requestList));
-//
-//        // Kiểm tra mã lỗi trả về là MEMBER_NOT_FOUND
-//        assertEquals(ErrorCode.MEMBER_NOT_FOUND, ex.getErrorCode());
-//    }
-//
-//
-//    @Test
-//    void shouldCreateEventActivityAndTicketWhenRequestListIsValid() {
-//        // Tạo role MANAGER
-//        Role role = new Role();
-//        role.setRoleName(ERole.MANAGER);
-//
-//        // Tạo công ty
-//        Company company = new Company();
-//        company.setCompanyId(1);
-//
-//        // Tạo account
-//        Account account = new Account();
-//        account.setUserName("testUser");
-//        account.setRole(role);
-//        account.setCompany(company);
-//
-//        // Tạo member có quyền
-//        Member member = new Member();
-//        member.setAccount(account);
-//        member.setCompany(company);
-//        member.setSubRole(ESubRole.OWNER); // ✅ Phải có quyền OWNER hoặc ADMIN
-//
-//        // Tạo event
-//        Event event = new Event();
-//        event.setStatus(EEventStatus.SCHEDULED);
-//
-//        // Request
-//        List<CreateEventActivityAndTicketRequest> requestList = List.of(
-//                CreateEventActivityAndTicketRequest.builder().eventId(1).build()
-//        );
-//
-//        // Stub dữ liệu
-//        when(accountRepository.findAccountByUserName("testUser")).thenReturn(Optional.of(account));
-//        when(eventRepository.findById(1)).thenReturn(Optional.of(event));
-//        when(memberRepository.findMemberByAccount_UserNameAndCompany_CompanyId("testUser", 1))
-//                .thenReturn(Optional.of(member));
-//        when(eventActivityRepository.save(any())).thenReturn(new EventActivity());
-//        when(ticketRepository.save(any())).thenReturn(new Ticket());
-//
-//        // Kiểm tra không ném exception
-//        assertDoesNotThrow(() -> eventActivityService.createEventActivityAndTicket(requestList));
-//    }
-//
-//    @Test
-//    void shouldCreateTicketsAndMappingsFromRequest() {
-//        // Setup mock data
-//        CreateEventActivityAndTicketRequest request = CreateEventActivityAndTicketRequest.builder()
-//                .eventId(1)
-//                .activityName("Event Activity 1")
-//                .dateEvent(LocalDate.of(2025, 5, 1))
-//                .startTimeEvent(LocalTime.of(9, 0))
-//                .endTimeEvent(LocalTime.of(12, 0))
-//                .startTicketSale(LocalDateTime.of(2025, 5, 1, 8, 0))
-//                .endTicketSale(LocalDateTime.of(2025, 5, 1, 18, 0))
-//                .tickets(List.of(
-//                        CreateEventActivityAndTicketRequest.TicketRequest.builder()
-//                                .ticketName("VIP")
-//                                .ticketCode("VIP001")
-//                                .quantity(10)
-//                                .price(100.0)
-//                                .minQuantity(1)
-//                                .maxQuantity(10)
-//                                .build(),
-//                        CreateEventActivityAndTicketRequest.TicketRequest.builder()
-//                                .ticketName("NORMAL")
-//                                .ticketCode("NORMAL001")
-//                                .quantity(20)
-//                                .price(50.0)
-//                                .minQuantity(1)
-//                                .maxQuantity(20)
-//                                .build()
-//                ))
-//                .build();
-//
-//        List<CreateEventActivityAndTicketRequest> requestList = List.of(request);
-//
-//        // Mocking the necessary repositories
-//        Event event = new Event();
-//        event.setEventId(1);
-//        event.setStatus(EEventStatus.SCHEDULED);
-//
-//        // Create a Company for the Account to avoid NullPointerException
-//        Company company = new Company();
-//        company.setCompanyId(1);  // Set the company ID
-//
-//        Account account = new Account();
-//        account.setRole(new Role());
-//        account.getRole().setRoleName(ERole.MANAGER);
-//        account.setCompany(company);  // Set company for the account
-//
-//        Member member = new Member();
-//        member.setSubRole(ESubRole.ADMIN);
-//
-//        // Mock the repository responses
-//        when(accountRepository.findAccountByUserName("testUser")).thenReturn(Optional.of(account));
-//        when(eventRepository.findById(1)).thenReturn(Optional.of(event));
-//        when(memberRepository.findMemberByAccount_UserNameAndCompany_CompanyId("testUser", 1)).thenReturn(Optional.of(member));
-//
-//        // Mock for saving event activity and ticket
-//        when(ticketRepository.save(any(Ticket.class))).thenReturn(new Ticket());
-//        when(ticketMappingRepository.save(any(TicketMapping.class))).thenReturn(new TicketMapping());
-//
-//        // Execute the method under test
-//        List<CreateEventActivityAndTicketRequest> result = eventActivityService.createEventActivityAndTicket(requestList);
-//
-//        // Verify that save() was called for Ticket and TicketMapping
-//        verify(ticketRepository, times(2)).save(any(Ticket.class)); // 2 tickets expected
-//        verify(ticketMappingRepository, times(2)).save(any(TicketMapping.class)); // 2 mappings expected
-//
-//        // Verify that result is not empty
-//        assertNotNull(result);
-//        assertEquals(1, result.size(), "Expected 1 event activity to be created");
-//
-//        // Verify that the event activity id is correctly set
-//        CreateEventActivityAndTicketRequest createdRequest = result.get(0);
-//        assertEquals(0, createdRequest.getEventActivityId(), "Expected event activity ID to be 0 initially");
-//    }
-//
-//    @Test
-//    void shouldThrowUnauthorizedWhenAccountIsNotManager() {
-//        // Tạo tài khoản với role không phải là Manager
-//        Account account = new Account();
-//        Role role = new Role();
-//        role.setRoleName(ERole.BUYER); // Role là BUYER thay vì MANAGER
-//        account.setRole(role);
-//
-//        // Giả lập repository trả về tài khoản này
-//        when(accountRepository.findAccountByUserName("testUser")).thenReturn(Optional.of(account));
-//
-//        // Tạo sự kiện có trạng thái SCHEDULED
-//        Event event = new Event();
-//        event.setStatus(EEventStatus.SCHEDULED);
-//        when(eventRepository.findById(1)).thenReturn(Optional.of(event));
-//
-//        // Tạo request list hợp lệ
-//        List<CreateEventActivityAndTicketRequest> requestList = List.of(
-//                CreateEventActivityAndTicketRequest.builder().eventId(1).build()
-//        );
-//
-//        // Kiểm tra xem hàm có ném ngoại lệ UNAUTHORIZED không
-//        AppException ex = assertThrows(AppException.class, () ->
-//                eventActivityService.createEventActivityAndTicket(requestList)
-//        );
-//
-//        // Kiểm tra mã lỗi trả về là UNAUTHORIZED
-//        assertEquals(ErrorCode.UNAUTHORIZED, ex.getErrorCode());
-//    }
-//
+    @Test
+    void shouldThrowExceptionWhenRequestListIsNull() {
+        assertThrows(IllegalArgumentException.class, () -> eventActivityService.createEventActivityAndTicket(null));
+    }
+    @Test
+    void shouldThrowExceptionWhenRequestListIsEmpty() {
+        assertThrows(IllegalArgumentException.class, () -> eventActivityService.createEventActivityAndTicket(new ArrayList<>()));
+    }
+
+    @Test
+    void shouldThrowWhenAccountNotFound() {
+        when(accountRepository.findAccountByUserName("testUser"))
+                .thenReturn(Optional.empty());
+
+        CreateEventActivityAndTicketRequest req = new CreateEventActivityAndTicketRequest();
+        req.setEventId(1);
+
+        List<CreateEventActivityAndTicketRequest> list = List.of(req);
+
+        assertThrows(AppException.class, () -> eventActivityService.createEventActivityAndTicket(list));
+    }
+
+    @Test
+    void shouldThrowWhenEventNotFound() {
+        Account account = new Account(); // khởi tạo tài khoản
+        when(accountRepository.findAccountByUserName("testUser")).thenReturn(Optional.of(account));
+        when(eventRepository.findById(1)).thenReturn(Optional.empty());
+
+        CreateEventActivityAndTicketRequest req = new CreateEventActivityAndTicketRequest();
+        req.setEventId(1);
+        List<CreateEventActivityAndTicketRequest> list = List.of(req);
+
+        assertThrows(AppException.class, () -> eventActivityService.createEventActivityAndTicket(list));
+    }
+
+    @Test
+    void shouldThrowWhenNotOwnerOrAdminInDraftEvent() {
+        Account account = new Account(); // account của người dùng đang đăng nhập
+        Event event = new Event();
+        event.setStatus(EEventStatus.DRAFT);
+        Company company = new Company();
+        company.setCompanyId(10);
+        event.setCompany(company);
+
+        Member member = new Member();
+        member.setSubRole(ESubRole.EMPLOYEE); // không phải OWNER/ADMIN
+
+        when(accountRepository.findAccountByUserName("testUser")).thenReturn(Optional.of(account));
+        when(eventRepository.findById(1)).thenReturn(Optional.of(event));
+        when(memberRepository.findMemberByAccount_UserNameAndCompany_CompanyId("testUser", 10))
+                .thenReturn(Optional.of(member));
+
+        CreateEventActivityAndTicketRequest req = new CreateEventActivityAndTicketRequest();
+        req.setEventId(1);
+
+        assertThrows(AppException.class, () -> eventActivityService.createEventActivityAndTicket(List.of(req)));
+    }
+
+    @Test
+    void shouldThrowWhenNotManagerInScheduledEvent() {
+        Account account = new Account();
+        Role role = new Role();
+        role.setRoleName(ERole.BUYER); // không phải MANAGER
+        account.setRole(role);
+
+        Event event = new Event();
+        event.setStatus(EEventStatus.SCHEDULED);
+
+        when(accountRepository.findAccountByUserName("testUser")).thenReturn(Optional.of(account));
+        when(eventRepository.findById(1)).thenReturn(Optional.of(event));
+
+        CreateEventActivityAndTicketRequest req = new CreateEventActivityAndTicketRequest();
+        req.setEventId(1);
+
+        assertThrows(AppException.class, () -> eventActivityService.createEventActivityAndTicket(List.of(req)));
+    }
+    @Test
+    void shouldThrowWhenEventStatusIsInvalid() {
+        Account account = new Account();
+        Event event = new Event();
+        event.setStatus(EEventStatus.APPROVED); // không phải DRAFT/SCHEDULED
+
+        when(accountRepository.findAccountByUserName("testUser")).thenReturn(Optional.of(account));
+        when(eventRepository.findById(1)).thenReturn(Optional.of(event));
+
+        CreateEventActivityAndTicketRequest req = new CreateEventActivityAndTicketRequest();
+        req.setEventId(1);
+
+        assertThrows(AppException.class, () -> eventActivityService.createEventActivityAndTicket(List.of(req)));
+    }
+
+    @Test
+    void shouldCreateEventActivityAndTicketsSuccessfully() {
+        // Setup account
+        Account account = new Account();
+        Role role = new Role();
+        role.setRoleName(ERole.MANAGER);
+        account.setRole(role);
+
+        // Setup event
+        Event event = new Event();
+        event.setEventId(1);
+        event.setStatus(EEventStatus.SCHEDULED);
+
+        // TicketRequest
+        CreateEventActivityAndTicketRequest.TicketRequest ticketReq = new CreateEventActivityAndTicketRequest.TicketRequest();
+        ticketReq.setTicketName("Vé A");
+        ticketReq.setTicketCode("CODE123");
+        ticketReq.setPrice(100000);
+        ticketReq.setQuantity(10);
+        ticketReq.setMinQuantity(1);
+        ticketReq.setMaxQuantity(5);
+
+        // Request
+        CreateEventActivityAndTicketRequest req = new CreateEventActivityAndTicketRequest();
+        req.setEventId(1);
+        req.setActivityName("Activity 1");
+        req.setTickets(List.of(ticketReq));
+
+        // Stub repo
+        when(accountRepository.findAccountByUserName("testUser")).thenReturn(Optional.of(account));
+        when(eventRepository.findById(1)).thenReturn(Optional.of(event));
+        when(eventActivityRepository.findEventActivitiesByEvent_EventId(1)).thenReturn(List.of());
+        when(ticketRepository.findTicketByTicketCode("CODE123")).thenReturn(Optional.empty());
+        when(ticketRepository.save(any(Ticket.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(ticketMappingRepository.save(any(TicketMapping.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(eventActivityRepository.saveAndFlush(any(EventActivity.class)))
+                .thenAnswer(inv -> {
+                    EventActivity e = inv.getArgument(0);
+                    e.setEventActivityId(99); // giả định ID
+                    return e;
+                });
+
+        var result = eventActivityService.createEventActivityAndTicket(List.of(req));
+        assertEquals(1, result.size());
+        assertEquals(99L, result.get(0).getEventActivityId());
+    }
+    @Test
+    void shouldDeleteExistingEventActivitiesTicketsAndMappings() {
+        // Setup
+        Account account = new Account();
+        Role role = new Role();
+        role.setRoleName(ERole.MANAGER);
+        account.setRole(role);
+
+        Event event = new Event();
+        event.setEventId(1);
+        event.setStatus(EEventStatus.SCHEDULED);
+
+        // EventActivity hiện tại
+        EventActivity existingActivity = new EventActivity();
+        existingActivity.setEventActivityId(100);
+
+        // TicketMapping của activity
+        Ticket ticket = new Ticket();
+        ticket.setTicketCode("TICKET123");
+
+        TicketMapping mapping = new TicketMapping();
+        mapping.setTicket(ticket);
+        mapping.setEventActivity(existingActivity);
+
+        // Request mới
+        CreateEventActivityAndTicketRequest.TicketRequest ticketReq = new CreateEventActivityAndTicketRequest.TicketRequest();
+        ticketReq.setTicketCode("NEW123");
+        ticketReq.setTicketName("VIP");
+        ticketReq.setPrice(500);
+        ticketReq.setQuantity(10);
+        ticketReq.setMinQuantity(1);
+        ticketReq.setMaxQuantity(5);
+
+        CreateEventActivityAndTicketRequest request = new CreateEventActivityAndTicketRequest();
+        request.setEventId(1);
+        request.setActivityName("New Activity");
+        request.setTickets(List.of(ticketReq));
+
+        // Stub dữ liệu
+        when(accountRepository.findAccountByUserName("testUser")).thenReturn(Optional.of(account));
+        when(eventRepository.findById(1)).thenReturn(Optional.of(event));
+        when(eventActivityRepository.findEventActivitiesByEvent_EventId(1)).thenReturn(List.of(existingActivity));
+        when(ticketMappingRepository.findTicketMappingsByEventActivity(existingActivity)).thenReturn(List.of(mapping));
+        when(ticketRepository.findTicketsByEvent_EventId(1)).thenReturn(List.of(ticket));
+        when(ticketMappingRepository.findTicketMappingsByTicket(ticket)).thenReturn(Optional.empty());
+
+        // Lưu event activity mới
+        when(eventActivityRepository.saveAndFlush(any(EventActivity.class))).thenAnswer(inv -> {
+            EventActivity e = inv.getArgument(0);
+            e.setEventActivityId(200);
+            return e;
+        });
+
+        // Ticket mới
+        when(ticketRepository.findTicketByTicketCode("NEW123")).thenReturn(Optional.empty());
+        when(ticketRepository.save(any(Ticket.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(ticketMappingRepository.save(any(TicketMapping.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        // Act
+        eventActivityService.createEventActivityAndTicket(List.of(request));
+
+        // Assert: kiểm tra các phương thức xóa được gọi
+        verify(ticketMappingRepository, times(1)).delete(mapping);
+        verify(ticketRepository, times(1)).delete(ticket);
+        verify(eventActivityRepository, times(1)).delete(existingActivity);
+    }
 
 }
