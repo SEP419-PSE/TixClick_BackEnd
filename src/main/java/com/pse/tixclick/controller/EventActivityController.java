@@ -120,9 +120,11 @@ public class EventActivityController {
 
     @PostMapping("/create")
     public ResponseEntity<ApiResponse<List<CreateEventActivityAndTicketRequest>>> createEventActivityAndTicket(
-            @RequestBody List<CreateEventActivityAndTicketRequest> requestList) {
+            @RequestBody List<CreateEventActivityAndTicketRequest> requestList,
+            @RequestParam(value = "contractCode", required = false) String contractCode
+    ) {
         try {
-            List<CreateEventActivityAndTicketRequest> savedRequests = eventActivityService.createEventActivityAndTicket(requestList);
+            List<CreateEventActivityAndTicketRequest> savedRequests = eventActivityService.createEventActivityAndTicket(requestList, contractCode);
             return ResponseEntity.ok(
                     ApiResponse.<List<CreateEventActivityAndTicketRequest>>builder()
                             .code(HttpStatus.OK.value())
@@ -135,16 +137,17 @@ public class EventActivityController {
                     .body(ApiResponse.<List<CreateEventActivityAndTicketRequest>>builder()
                             .code(HttpStatus.BAD_REQUEST.value())
                             .message(e.getMessage())
-                            .result(Collections.emptyList()) // Trả về danh sách rỗng thay vì null
+                            .result(Collections.emptyList())
                             .build());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.<List<CreateEventActivityAndTicketRequest>>builder()
-                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value()) // Sửa thành 500
+                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .message("Internal server error: " + e.getMessage())
-                            .result(Collections.emptyList()) // Trả về danh sách rỗng thay vì null
+                            .result(Collections.emptyList())
                             .build());
         }
     }
+
 
 }
