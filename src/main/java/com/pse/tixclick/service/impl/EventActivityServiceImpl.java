@@ -153,24 +153,33 @@ public class EventActivityServiceImpl implements EventActivityService {
 
         var account = accountRepository.findAccountByUserName(userName)
                 .orElseThrow(() -> new AppException(ErrorCode.ACCOUNT_NOT_FOUND));
-        var member = memberRepository.findMemberByAccount_UserNameAndCompany_CompanyId(userName, account.getCompany().getCompanyId())
-                .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
 
-        if (member.getSubRole() != ESubRole.OWNER && member.getSubRole() != ESubRole.ADMIN) {
-            throw new AppException(ErrorCode.NOT_PERMISSION);
-        }
             List<CreateEventActivityAndTicketRequest> savedRequests = new ArrayList<>();
 
             for (CreateEventActivityAndTicketRequest request : requestList) {
                 Event event = eventRepository.findById(request.getEventId())
                         .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
 
-                // Kiểm tra quyền hạn của người dùng
-                if (EEventStatus.SCHEDULED.equals(event.getStatus())) {
-                    if (!ERole.MANAGER.equals(account.getRole().getRoleName())) {
-                        throw new AppException(ErrorCode.UNAUTHORIZED);
+                if (event.getStatus().equals(EEventStatus.DRAFT)) {
+                    var member = memberRepository.findMemberByAccount_UserNameAndCompany_CompanyId(
+                            userName,
+                            event.getCompany().getCompanyId()
+                    ).orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
+
+                    if (member.getSubRole() != ESubRole.OWNER && member.getSubRole() != ESubRole.ADMIN) {
+                        throw new AppException(ErrorCode.NOT_PERMISSION);
                     }
+
+                } else if(event.getStatus() == EEventStatus.SCHEDULED) {
+                    // Nếu event đã được SCHEDULED
+                    if (!ERole.MANAGER.equals(account.getRole().getRoleName())) {
+                        throw new AppException(ErrorCode.NOT_PERMISSION);
+                    }
+                } else {
+                    throw new AppException(ErrorCode.CAN_NOT_UPDATE);
                 }
+
+
                 // Lấy tất cả EventActivity liên quan đến eventId
                 List<EventActivity> eventActivities = eventActivityRepository.findEventActivitiesByEvent_EventId(request.getEventId());
 
@@ -203,7 +212,9 @@ public class EventActivityServiceImpl implements EventActivityService {
                 newEventActivity.setStartTicketSale(request.getStartTicketSale());
                 newEventActivity.setEndTicketSale(request.getEndTicketSale());
                 newEventActivity.setEvent(event);
-                newEventActivity.setCreatedBy(account);
+                if(event.getStatus().equals(EEventStatus.SCHEDULED)){
+                        newEventActivity.setUpdatedByManager(account);
+                }
                 eventActivityRepository.saveAndFlush(newEventActivity);
 
                 // Use the new eventActivityId after save
@@ -239,7 +250,7 @@ public class EventActivityServiceImpl implements EventActivityService {
                 savedRequests.add(request);
             }
 
-            return savedRequests; // Trả về toàn bộ danh sách đã xử lý
+            return savedRequests;
         }
 
 

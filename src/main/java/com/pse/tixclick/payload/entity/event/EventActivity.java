@@ -65,6 +65,10 @@ public class EventActivity {
     @JoinColumn(name = "created_by", nullable = false)
     Account createdBy;
 
+    @ManyToOne
+    @JoinColumn(name = "updated_by")
+    Account updatedByManager;
+
     @OneToMany(mappedBy = "eventActivity", fetch = FetchType.LAZY)
     Collection<TicketPurchase> ticketPurchases;
 
