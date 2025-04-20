@@ -167,8 +167,7 @@ public class EventActivityServiceImpl implements EventActivityService {
 
                 // Kiểm tra quyền hạn của người dùng
                 if (EEventStatus.SCHEDULED.equals(event.getStatus())) {
-                    String roleName = String.valueOf(account.getRole().getRoleName());
-                    if (!ERole.MANAGER.equals(roleName)) {
+                    if (!ERole.MANAGER.equals(account.getRole().getRoleName())) {
                         throw new AppException(ErrorCode.UNAUTHORIZED);
                     }
                 }
