@@ -17,5 +17,6 @@ public interface   EventActivityService {
 
     List<CreateEventActivityAndTicketRequest> createEventActivityAndTicket(List<CreateEventActivityAndTicketRequest> request, String contractCode);
 
+    List<CreateEventActivityAndTicketRequest> getEventActivityAndTicketByEventId(int eventId);
 
 }

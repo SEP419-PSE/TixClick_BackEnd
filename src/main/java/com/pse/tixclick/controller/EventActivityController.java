@@ -149,5 +149,24 @@ public class EventActivityController {
         }
     }
 
-
+    @GetMapping("/get-event-activity-and-ticket-by-event-id/{eventId}")
+    public ResponseEntity<ApiResponse<List<CreateEventActivityAndTicketRequest>>> getEventActivityAndTicketByEventId(@PathVariable int eventId) {
+        try {
+            List<CreateEventActivityAndTicketRequest> eventActivityAndTicketList = eventActivityService.getEventActivityAndTicketByEventId(eventId);
+            return ResponseEntity.ok(
+                    ApiResponse.<List<CreateEventActivityAndTicketRequest>>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Event activity and ticket retrieved successfully")
+                            .result(eventActivityAndTicketList)
+                            .build()
+            );
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.<List<CreateEventActivityAndTicketRequest>>builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .result(Collections.emptyList())
+                            .build());
+        }
+    }
 }

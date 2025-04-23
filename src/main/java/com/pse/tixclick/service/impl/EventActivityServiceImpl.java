@@ -262,6 +262,59 @@ public class EventActivityServiceImpl implements EventActivityService {
         return savedRequests;
     }
 
+    @Override
+    public List<CreateEventActivityAndTicketRequest> getEventActivityAndTicketByEventId(int eventId) {
+        var event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
 
+        List<EventActivity> eventActivities = eventActivityRepository.findEventActivitiesByEvent_EventId(eventId);
+        if (eventActivities.isEmpty()) {
+            throw new AppException(ErrorCode.ACTIVITY_NOT_FOUND);
+        }
+
+        List<CreateEventActivityAndTicketRequest> eventActivityAndTicketRequests = new ArrayList<>();
+
+        for (EventActivity eventActivity : eventActivities) {
+            CreateEventActivityAndTicketRequest request = new CreateEventActivityAndTicketRequest();
+            request.setEventId(event.getEventId());
+            request.setEventActivityId(eventActivity.getEventActivityId());
+            request.setActivityName(eventActivity.getActivityName());
+            request.setDateEvent(eventActivity.getDateEvent());
+            request.setStartTimeEvent(eventActivity.getStartTimeEvent());
+            request.setEndTimeEvent(eventActivity.getEndTimeEvent());
+            request.setStartTicketSale(eventActivity.getStartTicketSale());
+            request.setEndTicketSale(eventActivity.getEndTicketSale());
+
+            // Kiểm tra seatmap
+            boolean hasSeatMap = seatMapRepository.findSeatMapByEvent_EventId(event.getEventId()).isPresent();
+
+            // Nếu không có seatmap thì lấy ticket
+            if (!hasSeatMap) {
+                // Lấy các ticket mapping theo event activity
+                List<TicketMapping> ticketMappings = ticketMappingRepository.findTicketMappingsByEventActivity(eventActivity);
+
+                // Duyệt từng ticket mapping để tạo ticket request
+                List<CreateEventActivityAndTicketRequest.TicketRequest> ticketRequests = ticketMappings.stream()
+                        .map(mapping -> {
+                            Ticket ticket = mapping.getTicket();
+                            return CreateEventActivityAndTicketRequest.TicketRequest.builder()
+                                    .ticketName(ticket.getTicketName())
+                                    .ticketCode(ticket.getTicketCode())
+                                    .quantity(mapping.getQuantity()) // dùng quantity từ TicketMapping
+                                    .price(ticket.getPrice())
+                                    .minQuantity(ticket.getMinQuantity())
+                                    .maxQuantity(ticket.getMaxQuantity())
+                                    .eventId(eventId)
+                                    .build();
+                        })
+                        .toList();
+
+                request.setTickets(ticketRequests);
+            }
+            eventActivityAndTicketRequests.add(request);
+
+        }
+        return eventActivityAndTicketRequests;
+    }
 
 }
