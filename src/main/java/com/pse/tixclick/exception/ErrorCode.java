@@ -143,6 +143,8 @@ public enum ErrorCode {
     VOUCHER_CODE_ALREADY_EXISTS(1125, "Voucher code đã tồn tại", HttpStatus.BAD_REQUEST),
     ACCOUNT_NOT_HAVE_COMPANY(1126, "Tài khoản không có công ty", HttpStatus.BAD_REQUEST),
     CAN_NOT_UPDATE(1127, "Không thể cập nhật", HttpStatus.BAD_REQUEST),
+    MEMBER_TIME_CONFLICT(1128, "Thành viên đã có hoạt động trùng thời gian", HttpStatus.BAD_REQUEST),
+    MEMBER_ALREADY_ASSIGNED(1129, "Thành viên đã được phân công", HttpStatus.BAD_REQUEST),
     ;
 
 

@@ -8,6 +8,7 @@ import com.pse.tixclick.payload.entity.company.MemberActivity;
 import com.pse.tixclick.payload.entity.entity_enum.EStatus;
 import com.pse.tixclick.payload.entity.entity_enum.ESubRole;
 import com.pse.tixclick.payload.entity.event.Event;
+import com.pse.tixclick.payload.entity.event.EventActivity;
 import com.pse.tixclick.payload.request.create.CreateMemberActivityRequest;
 import com.pse.tixclick.payload.response.BulkMemberActivityResult;
 import com.pse.tixclick.payload.response.GetMemberActivityResponse;
@@ -18,14 +19,18 @@ import com.pse.tixclick.repository.EventActivityRepository;
 import com.pse.tixclick.repository.MemberActivityRepository;
 import com.pse.tixclick.repository.MemberRepository;
 import com.pse.tixclick.service.MemberActivityService;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Propagation;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.catalina.core.ApplicationContext;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -33,8 +38,8 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
-@RequiredArgsConstructor
 @Transactional
+@RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class MemberActivityServiceImpl implements MemberActivityService {
     MemberActivityRepository memberActivityRepository;
@@ -44,6 +49,7 @@ public class MemberActivityServiceImpl implements MemberActivityService {
     AccountRepository accountRepository;
 
     @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public BulkMemberActivityResult addMemberActivities(CreateMemberActivityRequest request) {
         var context = SecurityContextHolder.getContext();
         String userName = context.getAuthentication().getName();
@@ -76,18 +82,18 @@ public class MemberActivityServiceImpl implements MemberActivityService {
                         .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
 
                 // Kiểm tra xem có sự trùng lặp về thời gian của MemberActivity không
-                boolean hasConflict = memberActivityRepository.checkEventTimeConflict(
+                int hasConflict = memberActivityRepository.checkEventTimeConflict(
                         member.getAccount().getAccountId(),
                         eventActivity.getDateEvent(),
                         eventActivity.getStartTimeEvent(),
                         eventActivity.getEndTimeEvent()
                 );
 
-                // Nếu có sự trùng lặp
-                if (hasConflict) {
-                    failed.add(new BulkMemberActivityResult.FailedMember(memberId, "Thành viên đã được phân công ở sự kiện cùng giờ khác"));
+                if (hasConflict == 1) {
+                    failed.add(new BulkMemberActivityResult.FailedMember(memberId, "Thành viên bị trùng thời gian"));
                     continue;
                 }
+
 
                 // Kiểm tra nếu MemberActivity đã tồn tại
                 var optionalActivity = memberActivityRepository
@@ -129,7 +135,6 @@ public class MemberActivityServiceImpl implements MemberActivityService {
         // Trả về kết quả thành công và thất bại
         return new BulkMemberActivityResult(success, failed);
     }
-
 
 
 
