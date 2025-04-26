@@ -13,6 +13,7 @@ import java.util.Collection;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
+@Builder
 public class Role {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

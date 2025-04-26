@@ -23,6 +23,7 @@ import java.util.List;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
+@Builder
 public class Account {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

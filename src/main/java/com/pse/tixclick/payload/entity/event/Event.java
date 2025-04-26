@@ -22,6 +22,7 @@ import java.util.Collection;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Table(name = "events")
 @Entity
+@Builder
 public class
 Event {
     @Id

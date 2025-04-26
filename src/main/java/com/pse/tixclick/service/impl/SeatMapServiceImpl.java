@@ -346,10 +346,28 @@ public class SeatMapServiceImpl implements SeatMapService {
 
     @Override
     public List<SectionResponse> deleteZone(List<SectionRequest> sectionResponse, String zoneId, int eventId) {
-        designZone(sectionResponse, eventId);
-        Zone zone = zoneRepository.findZoneByZoneCode(zoneId)
-                .orElseThrow(() -> new AppException(ErrorCode.ZONE_NOT_FOUND));
-        zoneRepository.delete(zone);
+       var zone = zoneRepository.findZoneByZoneId(Integer.parseInt(zoneId));
+       if(!zone.isPresent()){
+           throw new AppException(ErrorCode.ZONE_NOT_FOUND);
+       }
+
+       var seatmap = seatMapRepository.findSeatMapByEvent_EventId(eventId);
+         if(seatmap.isEmpty()){
+              throw new AppException(ErrorCode.SEATMAP_NOT_FOUND);
+         }
+
+         var seat = seatRepository.findSeatsByZone_ZoneId(Integer.parseInt(zoneId));
+            if(seat.isEmpty()){
+                throw new AppException(ErrorCode.SEAT_NOT_FOUND);
+            }
+
+        seatRepository.deleteAll(seat);
+        zoneRepository.delete(zone.get());
+        zoneRepository.flush();
+        seatRepository.flush();
+        seatmap.get().setUpdatedAt(LocalDateTime.now());
+        seatMapRepository.save(seatmap.get());
+        seatMapRepository.flush();
 
         return getSectionsByEventId(eventId);
 
