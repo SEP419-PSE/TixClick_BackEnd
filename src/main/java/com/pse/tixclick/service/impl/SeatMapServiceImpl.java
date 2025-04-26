@@ -346,30 +346,26 @@ public class SeatMapServiceImpl implements SeatMapService {
 
     @Override
     public List<SectionResponse> deleteZone(List<SectionRequest> sectionResponse, String zoneId, int eventId) {
-       var zone = zoneRepository.findZoneByZoneId(Integer.parseInt(zoneId));
-       if(!zone.isPresent()){
-           throw new AppException(ErrorCode.ZONE_NOT_FOUND);
-       }
+        designZone(sectionResponse, eventId);
+        var event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+        var seatMap = seatMapRepository.findSeatMapByEvent(event.getEventId())
+                .orElseThrow(() -> new AppException(ErrorCode.SEATMAP_NOT_FOUND));
 
-       var seatmap = seatMapRepository.findSeatMapByEvent_EventId(eventId);
-         if(seatmap.isEmpty()){
-              throw new AppException(ErrorCode.SEATMAP_NOT_FOUND);
-         }
+        var zone = zoneRepository.findZoneByZoneCode(zoneId)
+                .orElseThrow(() -> new AppException(ErrorCode.ZONE_NOT_FOUND));
 
-         var seat = seatRepository.findSeatsByZone_ZoneId(Integer.parseInt(zoneId));
-            if(seat.isEmpty()){
-                throw new AppException(ErrorCode.SEAT_NOT_FOUND);
-            }
+        var seats = seatRepository.findSeatsByZone_ZoneId(zone.getZoneId());
+        if (!seats.isEmpty()) {
+            seatRepository.deleteAll(seats);
+            seatRepository.flush();
+        }
+        zoneRepository.delete(zone);
 
-        seatRepository.deleteAll(seat);
-        zoneRepository.delete(zone.get());
         zoneRepository.flush();
-        seatRepository.flush();
-        seatmap.get().setUpdatedAt(LocalDateTime.now());
-        seatMapRepository.save(seatmap.get());
-        seatMapRepository.flush();
 
         return getSectionsByEventId(eventId);
+
 
     }
 
