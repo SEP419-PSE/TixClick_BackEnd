@@ -36,10 +36,8 @@ import java.io.*;
 import java.math.BigInteger;
 import java.security.*;
 import java.security.cert.X509Certificate;
-import java.util.Base64;
-import java.util.Date;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 
 
 @Service
@@ -122,10 +120,25 @@ public class ContractDocumentServiceImpl implements ContractDocumentService {
     @Override
     public List<ContractDocumentDTO> getContractDocumentsByEvent(int eventId) {
         List<ContractDocument> contractDocuments = contractDocumentRepository.findByAllByEventId(eventId);
-        return contractDocuments.stream()
-                .map(contractDocument -> modelMapper.map(contractDocument, ContractDocumentDTO.class))
-                .toList();
+        List<ContractDocumentDTO> contractDocumentDTOs = new ArrayList<>();
+
+        for (ContractDocument contractDocument : contractDocuments) {
+            ContractDocumentDTO dto = new ContractDocumentDTO();
+            dto.setContractDocumentId(contractDocument.getContractDocumentId());
+            dto.setContractId(contractDocument.getContract().getContractId()); // nếu có entity Contract
+            dto.setFileName(contractDocument.getFileName());
+            dto.setFileURL(contractDocument.getFileURL());
+            dto.setFileType(contractDocument.getFileType());
+            dto.setUploadedBy(contractDocument.getUploadedBy().getAccountId());
+            dto.setStatus(contractDocument.getStatus());
+            dto.setUploadDate(contractDocument.getUploadDate());
+            dto.setContractCode(contractDocument.getContract().getContractCode()); // nếu Contract có field contractCode
+
+            contractDocumentDTOs.add(dto);
+        }
+        return contractDocumentDTOs;
     }
+
 
     @Override
     public List<ContractDocumentDTO> getContractDocumentsByCompany(int companyId) {
