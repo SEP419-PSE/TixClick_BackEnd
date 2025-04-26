@@ -1,6 +1,7 @@
 package com.pse.tixclick.controller;
 
 import com.pse.tixclick.payload.dto.VoucherDTO;
+import com.pse.tixclick.payload.entity.entity_enum.EVoucherStatus;
 import com.pse.tixclick.payload.request.create.CreateVoucherRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
 import com.pse.tixclick.service.VoucherService;
@@ -47,7 +48,7 @@ public class VoucherController {
     }
 
     @GetMapping("/all/{eventId}/{status}")
-    public ResponseEntity<ApiResponse<List<VoucherDTO>>> getAllVouchers(@PathVariable int eventId, @PathVariable String status) {
+    public ResponseEntity<ApiResponse<List<VoucherDTO>>> getAllVouchers(@PathVariable int eventId, @PathVariable EVoucherStatus status) {
         try {
             List<VoucherDTO> voucherDTOList = voucherService.getAllVouchers(eventId, status);
             return ResponseEntity.ok(

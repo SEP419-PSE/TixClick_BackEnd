@@ -23,7 +23,7 @@ public class Voucher {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int voucherId;
 
-    @Column(nullable = false)
+    @Column(nullable = false,columnDefinition = "NVARCHAR(255)")
     private String voucherName;
 
     @Column(nullable = false)

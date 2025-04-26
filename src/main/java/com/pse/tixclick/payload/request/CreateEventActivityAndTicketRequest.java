@@ -18,7 +18,7 @@ import java.util.List;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class   CreateEventActivityAndTicketRequest {
-    int eventActivityId;
+    Integer eventActivityId;
 
     String activityName;
 

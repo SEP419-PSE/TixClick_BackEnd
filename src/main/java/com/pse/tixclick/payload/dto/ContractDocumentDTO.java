@@ -19,4 +19,5 @@ public class ContractDocumentDTO {
     int uploadedBy;
     String status;
     LocalDateTime uploadDate;
+    String contractCode;
 }
