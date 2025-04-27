@@ -429,9 +429,6 @@ public class PaymentServiceImpl implements PaymentService {
                     voucherRepository.save(voucher);
                 }
             }
-            else {
-                throw new AppException(ErrorCode.VOUCHER_NOT_FOUND);
-            }
 
             Account account = accountRepository
                     .findAccountByUserName(userName)
