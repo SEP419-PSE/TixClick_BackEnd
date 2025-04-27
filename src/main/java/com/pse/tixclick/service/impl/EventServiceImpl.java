@@ -291,7 +291,7 @@ public class EventServiceImpl implements EventService {
         Account account = accountRepository.findAccountByUserName(name)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-        List<Event> events = eventRepository.findEventsByManagerIdAndStatus(account.getAccountId(),EEventStatus.SCHEDULED);
+        List<Event> events = eventRepository.findEventsByManagerId(account.getAccountId());
 
         if (events.isEmpty()) {
             return Collections.emptyList();
