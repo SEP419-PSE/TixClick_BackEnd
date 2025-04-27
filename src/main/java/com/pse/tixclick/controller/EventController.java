@@ -144,11 +144,11 @@ public class EventController {
         List<EventResponse> events = eventService.getAllEventScheduledAndPendingApproved();
 
         if (events.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            return ResponseEntity.status(HttpStatus.OK)
                     .body(ApiResponse.<List<EventResponse>>builder()
-                            .code(HttpStatus.NOT_FOUND.value())
+                            .code(HttpStatus.OK.value())
                             .message("No events found")
-                            .result(null)
+                            .result(Collections.emptyList())
                             .build());
         }
 

@@ -15,4 +15,5 @@ public interface CompanyVerificationRepository extends JpaRepository<CompanyVeri
 
     CompanyVerification findCompanyVerificationsByCompany_CompanyIdAndCompany_RepresentativeId_UserName(int companyId, String userName);
 
+    Optional<CompanyVerification> findCompanyVerificationsByCompany_CompanyId(int companyId);
 }

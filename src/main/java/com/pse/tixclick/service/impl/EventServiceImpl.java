@@ -6,6 +6,7 @@ import com.pse.tixclick.payload.dto.*;
 import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.Notification;
 import com.pse.tixclick.payload.entity.company.Company;
+import com.pse.tixclick.payload.entity.company.CompanyVerification;
 import com.pse.tixclick.payload.entity.company.Contract;
 import com.pse.tixclick.payload.entity.entity_enum.*;
 import com.pse.tixclick.payload.entity.event.EventActivity;
@@ -65,6 +66,7 @@ public class EventServiceImpl implements EventService {
     OrderDetailRepository orderDetailRepository;
     EventActivityRepository eventActivityRepository;
     CheckinLogRepository checkinLogRepository;
+    CompanyVerificationRepository companyVerificationRepository;
 
     @Override
     public EventDTO createEvent(CreateEventRequest request, MultipartFile logoURL, MultipartFile bannerURL) throws IOException {
@@ -95,6 +97,10 @@ public class EventServiceImpl implements EventService {
         // Tạo eventCode từ tên sự kiện và mã danh mục, có thể kết hợp thêm các phần tử khác như ngày tháng để đảm bảo tính duy nhất
         String eventCode = category.getCategoryName().toUpperCase() + System.currentTimeMillis();
         event.setEventCode(eventCode);  // Gán eventCode cho sự kiện
+
+        CompanyVerification companyVerification = companyVerificationRepository.findCompanyVerificationsByCompany_CompanyId(company.getCompanyId())
+                .orElseThrow(() -> new AppException(ErrorCode.COMPANY_VERIFICATION_NOT_FOUND));
+        event.setManagerId(companyVerification.getAccount().getAccountId());
         event.setEventName(request.getEventName());
         String typeEvent = request.getTypeEvent().toUpperCase();
 
@@ -280,7 +286,16 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public List<EventResponse> getAllEventScheduledAndPendingApproved() {
-        List<Event> events = contractRepository.findEventsByAccountId(appUtils.getAccountFromAuthentication().getAccountId());
+        var context = SecurityContextHolder.getContext();
+        String name = context.getAuthentication().getName();
+        Account account = accountRepository.findAccountByUserName(name)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        List<Event> events = eventRepository.findEventsByManagerIdAndStatus(account.getAccountId(),EEventStatus.SCHEDULED);
+
+        if (events.isEmpty()) {
+            return Collections.emptyList();
+        }
         return events.stream()
                 .filter(event -> event.getStatus() == EEventStatus.APPROVED || event.getStatus() == EEventStatus.PENDING || event.getStatus() == EEventStatus.REJECTED)
                 .map(event -> {

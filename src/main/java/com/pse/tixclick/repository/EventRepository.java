@@ -74,5 +74,7 @@ public interface EventRepository extends JpaRepository<Event, Integer> {
 
     List<Event> findEventsByCategory_EventCategoryIdAndStatus(int eventCategoryId,EEventStatus status);
 
+
+    List<Event> findEventsByManagerIdAndStatus(int managerId, EEventStatus status);
 }
 

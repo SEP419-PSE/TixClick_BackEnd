@@ -47,6 +47,9 @@ Event {
     @Column(columnDefinition = "NVARCHAR(255)")
     String ward;  // Phường/Xã
 
+    @Column(name = "manager_id")
+    int managerId;
+
     @Column
     String eventCode;
 
