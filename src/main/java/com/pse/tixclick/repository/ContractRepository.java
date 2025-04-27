@@ -17,6 +17,9 @@ public interface ContractRepository extends JpaRepository<Contract,Integer> {
 
     boolean existsByEvent(Event event);
 
+    @Query(value = """
+              select * from contract where manager_id = :accountId
+            """, nativeQuery = true)
     List<Contract> findContractsByAccount_AccountId(int accountId);
 
     List<Contract> findContractsByEvent_EventId(int eventId);

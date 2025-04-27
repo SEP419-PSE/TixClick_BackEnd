@@ -297,7 +297,6 @@ public class EventServiceImpl implements EventService {
             return Collections.emptyList();
         }
         return events.stream()
-                .filter(event -> event.getStatus() == EEventStatus.APPROVED || event.getStatus() == EEventStatus.PENDING || event.getStatus() == EEventStatus.REJECTED)
                 .map(event -> {
                     EventResponse response = new EventResponse();
                     response.setEventId(event.getEventId());
