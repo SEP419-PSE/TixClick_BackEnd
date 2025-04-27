@@ -49,8 +49,8 @@ public interface MemberActivityRepository extends JpaRepository<MemberActivity,I
     """, nativeQuery = true)
     int checkEventTimeConflict(
             @Param("accountId") Integer accountId,
-            @Param("dateEvent") LocalDate dateEvent,
-            @Param("startTimeEvent") LocalTime startTimeEvent,   // Dùng String "HH:mm:ss"
-            @Param("endTimeEvent") LocalTime endTimeEvent
+            @Param("dateEvent") String dateEvent,
+            @Param("startTimeEvent") String startTimeEvent,   // Dùng String "HH:mm:ss"
+            @Param("endTimeEvent") String endTimeEvent
     );
 }

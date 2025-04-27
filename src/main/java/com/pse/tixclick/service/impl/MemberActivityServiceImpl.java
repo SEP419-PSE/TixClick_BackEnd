@@ -33,6 +33,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -80,13 +81,15 @@ public class MemberActivityServiceImpl implements MemberActivityService {
                 // Lấy thông tin member từ memberId
                 var member = memberRepository.findById(memberId)
                         .orElseThrow(() -> new AppException(ErrorCode.MEMBER_NOT_FOUND));
-
+                String dateEvent = eventActivity.getDateEvent().format(DateTimeFormatter.ISO_LOCAL_DATE);
+                String startTimeEvent = eventActivity.getStartTimeEvent().format(DateTimeFormatter.ISO_LOCAL_TIME);
+                String endTimeEvent = eventActivity.getEndTimeEvent().format(DateTimeFormatter.ISO_LOCAL_TIME);
                 // Kiểm tra xem có sự trùng lặp về thời gian của MemberActivity không
                 int hasConflict = memberActivityRepository.checkEventTimeConflict(
                         member.getAccount().getAccountId(),
-                        eventActivity.getDateEvent(),
-                        eventActivity.getStartTimeEvent(),
-                        eventActivity.getEndTimeEvent()
+                        dateEvent,
+                        startTimeEvent,
+                        endTimeEvent
                 );
 
                 if (hasConflict == 1) {
