@@ -7,23 +7,29 @@ import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.entity_enum.EPaymentStatus;
 import com.pse.tixclick.payload.entity.payment.Order;
+import com.pse.tixclick.payload.entity.payment.OrderDetail;
 import com.pse.tixclick.payload.entity.payment.Payment;
+import com.pse.tixclick.payload.entity.payment.Transaction;
+import com.pse.tixclick.payload.entity.ticket.TicketPurchase;
 import com.pse.tixclick.payload.response.PayOSResponse;
+import com.pse.tixclick.payload.response.PaymentResponse;
 import com.pse.tixclick.payment.PayOSUtils;
-import com.pse.tixclick.repository.AccountRepository;
-import com.pse.tixclick.repository.OrderRepository;
-import com.pse.tixclick.repository.PaymentRepository;
+import com.pse.tixclick.repository.*;
+import jakarta.servlet.http.HttpServletRequest;
+import org.apache.catalina.mapper.Mapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockHttpServletRequest;
 import vn.payos.PayOS;
 import vn.payos.type.CheckoutResponseData;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -31,130 +37,146 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-
 @ExtendWith(MockitoExtension.class)
-public class PaymentServiceTest {
+class PaymentServiceTest {
 
-//    @InjectMocks
-//    private PaymentService paymentService;
-//
-//    @Mock
-//    private OrderRepository orderRepository;
-//
-//    @Mock
-//    private AccountRepository accountRepository;
-//
-//    @Mock
-//    private PaymentRepository paymentRepository;
-//
-//    @Mock
-//    private PayOSUtils payOSUtils;
-//
-//    @Mock
-//    private PayOS payOS;
-//
-//    private ObjectMapper objectMapper;
-//    private MockHttpServletRequest request;
-//    private Order order;
-//    private Account account;
-//
-//    @BeforeEach
-//    void setUp() {
-//        objectMapper = new ObjectMapper();
-//        request = new MockHttpServletRequest();
-//        request.setScheme("http");
-//        request.setServerName("localhost");
-//        request.setServerPort(8080);
-//        request.setContextPath("/api");
-//
-//        account = new Account();
-//        account.setAccountId(1); // Use Long for accountId
-//        account.setUserName("testUser");
-//
-//        order = new Order();
-//        order.setOrderId(1);
-//        order.setOrderCode("123456");
-//        order.setTotalAmountDiscount(1000.0);
-//        order.setAccount(account);
-//    }
-//
-//    @Test
-//    void createPaymentLink_Success() throws Exception {
-//        // Arrange
-//        when(orderRepository.findById(1)).thenReturn(Optional.of(order));
-//        when(accountRepository.findById(1)).thenReturn(Optional.of(account)); // Use Long
-//        when(paymentRepository.findByOrderId(1)).thenReturn(Collections.emptyList());
-//        when(payOSUtils.payOS()).thenReturn(payOS);
-//
-//        CheckoutResponseData mockResponse = new CheckoutResponseData(); // PayOS SDK class
-//        when(payOS.createPaymentLink(any())).thenReturn(mockResponse);
-//        when(paymentRepository.save(any(Payment.class))).thenAnswer(invocation -> invocation.getArgument(0));
-//
-//        // Act
-//        PayOSResponse response = paymentService.createPaymentLink(1, "VOUCHER123", 3600, request);
-//
-//        // Assert
-//        assertNotNull(response);
-//        assertEquals("ok", response.getError());
-//        assertEquals("success", response.getMessage());
-//        assertNotNull(response.getData());
-//        verify(orderRepository, times(1)).findById(1);
-//        verify(accountRepository, times(1)).findById(1);
-//        verify(paymentRepository, times(1)).findByOrderId(1);
-//        verify(paymentRepository, times(1)).save(any(Payment.class));
-//        verify(payOSUtils, times(1)).payOS();
-//        verify(payOS, times(1)).createPaymentLink(any());
-//    }
-//
-//    @Test
-//    void createPaymentLink_OrderNotFound_ThrowsAppException() {
-//        // Arrange
-//        when(orderRepository.findById(1)).thenReturn(Optional.empty());
-//
-//        // Act & Assert
-//        AppException exception = assertThrows(AppException.class, () ->
-//                paymentService.createPaymentLink(1, "VOUCHER123", 3600, request));
-//        assertEquals(ErrorCode.ORDER_NOT_FOUND, exception.getErrorCode());
-//        verify(orderRepository, times(1)).findById(1);
-//        verify(accountRepository, never()).findById(any());
-//        verify(paymentRepository, never()).findByOrderId(anyInt());
-//        verify(payOSUtils, never()).payOS();
-//    }
-//
-//    @Test
-//    void createPaymentLink_AccountNotFound_ThrowsAppException() {
-//        // Arrange
-//        when(orderRepository.findById(1)).thenReturn(Optional.of(order));
-//        when(accountRepository.findById(1)).thenReturn(Optional.empty()); // Use Long
-//
-//        // Act & Assert
-//        AppException exception = assertThrows(AppException.class, () ->
-//                paymentService.createPaymentLink(1, "VOUCHER123", 3600, request));
-//        assertEquals(ErrorCode.ACCOUNT_NOT_FOUND, exception.getErrorCode());
-//        verify(orderRepository, times(1)).findById(1);
-//        verify(accountRepository, times(1)).findById(1);
-//        verify(paymentRepository, never()).findByOrderId(anyInt());
-//        verify(payOSUtils, never()).payOS();
-//    }
-//
-//    @Test
-//    void createPaymentLink_PaymentAlreadyCompleted_ThrowsRuntimeException() {
-//        // Arrange
-//        Payment completedPayment = new Payment();
-//        completedPayment.setStatus(EPaymentStatus.SUCCESSFULLY);
-//        List<Payment> paymentHistory = List.of(completedPayment);
-//
-//        when(orderRepository.findById(1)).thenReturn(Optional.of(order));
-//        when(accountRepository.findById(1)).thenReturn(Optional.of(account)); // Use Long
-//        when(paymentRepository.findByOrderId(1)).thenReturn(paymentHistory);
-//
-//        // Act & Assert
-//        RuntimeException exception = assertThrows(RuntimeException.class, () ->
-//                paymentService.createPaymentLink(1, "VOUCHER123", 3600, request));
-//        assertEquals("Payment is already completed", exception.getMessage());
-//        verify(orderRepository, times(1)).findById(1);
-//        verify(accountRepository, times(1)).findById(1);
-//        verify(paymentRepository, times(1)).findByOrderId(1);
-//        verify(payOSUtils, never()).payOS();
-//    }
+    @InjectMocks
+    private PaymentService paymentService;
+
+    @Mock
+    private PaymentRepository paymentRepository;
+    @Mock
+    private OrderRepository orderRepository;
+    @Mock
+    private AccountRepository accountRepository;
+    @Mock
+    private OrderDetailRepository orderDetailRepository;
+    @Mock
+    private TicketPurchaseRepository ticketPurchaseRepository;
+    @Mock
+    private TransactionRepository transactionRepository;
+    @Mock
+    private VoucherRepository voucherRepository;
+    @Mock
+    private ZoneActivityRepository zoneActivityRepository;
+    @Mock
+    private SeatActivityRepository seatActivityRepository;
+    @Mock
+    private CheckinLogRepository checkinLogRepository;
+    @Mock
+    private Mapper mapper;
+
+    private HttpServletRequest request;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.initMocks(this);
+        request = mock(HttpServletRequest.class);
+    }
+
+    @Test
+    void testHandleCallbackPayOS_SuccessfulPayment() throws Exception {
+        // Mock request parameters
+        when(request.getParameter("status")).thenReturn("PAID");
+        when(request.getParameter("code")).thenReturn("00");
+        when(request.getParameter("orderId")).thenReturn("123");
+        when(request.getParameter("id")).thenReturn("456");
+        when(request.getParameter("userName")).thenReturn("testUser");
+        when(request.getParameter("orderCode")).thenReturn("ORD123");
+        when(request.getParameter("amount")).thenReturn("100.0");
+        when(request.getParameter("voucherCode")).thenReturn("VOUCHER123");
+
+        // Mock repositories
+        Payment payment = mock(Payment.class);
+        Order order = mock(Order.class);
+        Account account = mock(Account.class);
+        List<OrderDetail> orderDetails = Arrays.asList(mock(OrderDetail.class));
+
+        when(paymentRepository.findPaymentByOrderCode(anyString())).thenReturn(payment);
+        when(orderRepository.findById(anyInt())).thenReturn(Optional.of(order));
+        when(accountRepository.findAccountByUserName(anyString())).thenReturn(Optional.of(account));
+        when(orderDetailRepository.findByOrderId(anyInt())).thenReturn(orderDetails);
+        when(ticketPurchaseRepository.findById(anyInt())).thenReturn(Optional.of(mock(TicketPurchase.class)));
+
+        // Call method
+        PaymentResponse response = paymentService.handleCallbackPayOS(request);
+
+        // Verify interactions
+        verify(paymentRepository).save(payment);
+        verify(orderRepository).save(order);
+        verify(transactionRepository).save(any(Transaction.class));
+
+        // Assert the response status
+        assertEquals("PAID", response.getStatus());
+    }
+
+    @Test
+    void testHandleCallbackPayOS_FailedPayment() throws Exception {
+        // Mock request parameters
+        when(request.getParameter("status")).thenReturn("FAILED");
+        when(request.getParameter("code")).thenReturn("99");
+        when(request.getParameter("orderId")).thenReturn("123");
+        when(request.getParameter("id")).thenReturn("456");
+        when(request.getParameter("userName")).thenReturn("testUser");
+        when(request.getParameter("orderCode")).thenReturn("ORD123");
+        when(request.getParameter("amount")).thenReturn("100.0");
+        when(request.getParameter("voucherCode")).thenReturn("VOUCHER123");
+
+        // Mock repositories
+        Payment payment = mock(Payment.class);
+        Order order = mock(Order.class);
+        Account account = mock(Account.class);
+        List<OrderDetail> orderDetails = Arrays.asList(mock(OrderDetail.class));
+        Voucher voucher = mock(Voucher.class);
+
+        when(paymentRepository.findPaymentByOrderCode(anyString())).thenReturn(payment);
+        when(orderRepository.findById(anyInt())).thenReturn(Optional.of(order));
+        when(accountRepository.findAccountByUserName(anyString())).thenReturn(Optional.of(account));
+        when(orderDetailRepository.findByOrderId(anyInt())).thenReturn(orderDetails);
+        when(voucherRepository.existsByVoucherCode(anyString())).thenReturn(voucher);
+
+        // Call method
+        PaymentResponse response = paymentService.handleCallbackPayOS(request);
+
+        // Verify interactions
+        verify(paymentRepository).save(payment);
+        verify(orderRepository).save(order);
+        verify(voucherRepository).save(voucher);
+        verify(transactionRepository).save(any(Transaction.class));
+
+        // Assert the response status
+        assertEquals("FAILED", response.getStatus());
+    }
+
+    @Test
+    void testHandleCallbackPayOS_TransactionExists() throws Exception {
+        // Mock request parameters
+        when(request.getParameter("status")).thenReturn("PAID");
+        when(request.getParameter("code")).thenReturn("00");
+        when(request.getParameter("orderId")).thenReturn("123");
+        when(request.getParameter("id")).thenReturn("456");
+        when(request.getParameter("userName")).thenReturn("testUser");
+        when(request.getParameter("orderCode")).thenReturn("ORD123");
+        when(request.getParameter("amount")).thenReturn("100.0");
+        when(request.getParameter("voucherCode")).thenReturn("VOUCHER123");
+
+        // Mock repositories
+        Payment payment = mock(Payment.class);
+        Order order = mock(Order.class);
+        Account account = mock(Account.class);
+        Transaction existingTransaction = mock(Transaction.class);
+        List<OrderDetail> orderDetails = Arrays.asList(mock(OrderDetail.class));
+
+        when(paymentRepository.findPaymentByOrderCode(anyString())).thenReturn(payment);
+        when(orderRepository.findById(anyInt())).thenReturn(Optional.of(order));
+        when(accountRepository.findAccountByUserName(anyString())).thenReturn(Optional.of(account));
+        when(orderDetailRepository.findByOrderId(anyInt())).thenReturn(orderDetails);
+        when(transactionRepository.findByTransactionCode(anyString())).thenReturn(existingTransaction);
+
+        // Call method and verify exception
+        assertThrows(AppException.class, () -> paymentService.handleCallbackPayOS(request));
+
+        // Verify no transaction was saved
+        verify(transactionRepository, never()).save(any(Transaction.class));
+    }
 }
