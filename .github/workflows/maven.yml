@@ -45,14 +45,12 @@ jobs:
   
       - name: Run New Docker Container
         run: |
-          CNAME=${{ env.CONTAINER_NAME }}
-          echo ":: Running new container - $CNAME"
-           docker run -d -p 8443:8443 \
-            --name $CNAME \       
-           -e GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
-            -e GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }} \
-            -e GOOGLE_REDIRECT_URI=${{ secrets.GOOGLE_REDIRECT_URI }} \
+          echo ":: Running new container - myappCommandContainer"
+          docker run -d -p 8443:8443 \
+            --name myappCommandContainer \
+            -e GOOGLE_CLIENT_ID=32425352725-p6cgsf14hrdne7tklg6f62anjs0boc3r.apps.googleusercontent.com \
+            -e GOOGLE_CLIENT_SECRET=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 \
+            -e GOOGLE_REDIRECT_URI=https://localhost:8443/login/oauth2/code/google \
             myapp:latest
-
            
  
