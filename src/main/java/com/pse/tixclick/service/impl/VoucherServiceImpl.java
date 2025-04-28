@@ -95,17 +95,17 @@ public class VoucherServiceImpl implements VoucherService {
     }
 
     @Override
-    public String changeVoucherStatus(int voucherId) {
+    public String changeVoucherStatus(int voucherId,EVoucherStatus status) {
         Voucher voucher = voucherRepository.findById(voucherId)
                 .orElseThrow(() -> new AppException(ErrorCode.VOUCHER_NOT_FOUND));
 
-        if (voucher.getStatus().equals(EVoucherStatus.ACTIVE)) {
-            voucher.setStatus(EVoucherStatus.INACTIVE);
-        } else {
-            return "Voucher is already inactive";
+        if (voucher.getEvent() == null) {
+            throw new AppException(ErrorCode.VOUCHER_NOT_FOUND);
         }
+
+        voucher.setStatus(status);
         voucherRepository.save(voucher);
-        return "Voucher status changed to inactive";
+        return "Voucher status changed successfully";
     }
 
     @Override

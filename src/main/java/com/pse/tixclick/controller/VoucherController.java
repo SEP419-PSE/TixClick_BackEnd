@@ -69,9 +69,9 @@ public class VoucherController {
     }
 
     @PutMapping("/change-status/{voucherId}")
-    public ResponseEntity<ApiResponse<String>> changeVoucherStatus(@PathVariable int voucherId) {
+    public ResponseEntity<ApiResponse<String>> changeVoucherStatus(@PathVariable int voucherId, @RequestParam EVoucherStatus status) {
         try {
-            String message = voucherService.changeVoucherStatus(voucherId);
+            String message = voucherService.changeVoucherStatus(voucherId, status);
             return ResponseEntity.ok(
                     ApiResponse.<String>builder()
                             .code(200)

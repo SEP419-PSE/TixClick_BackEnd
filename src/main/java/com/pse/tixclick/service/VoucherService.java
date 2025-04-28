@@ -11,7 +11,7 @@ public interface VoucherService {
 
     List<VoucherDTO> getAllVouchers(int eventId, EVoucherStatus status);
 
-    String changeVoucherStatus(int voucherId);
+    String changeVoucherStatus(int voucherId,EVoucherStatus status);
 
     String checkVoucherCode(String voucherCode, int eventId);
 }
