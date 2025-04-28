@@ -50,7 +50,7 @@ jobs:
             --name myappCommandContainer \
             -e GOOGLE_CLIENT_ID=32425352725-p6cgsf14hrdne7tklg6f62anjs0boc3r.apps.googleusercontent.com \
             -e GOOGLE_CLIENT_SECRET=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 \
-            -e GOOGLE_REDIRECT_URI=https://localhost:8443/login/oauth2/code/google \
+            -e GOOGLE_REDIRECT_URI=https://tixclick.site/login/oauth2/code/google \
             myapp:latest
            
  
