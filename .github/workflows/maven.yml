@@ -12,11 +12,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set environment variables
-        run: |
-          echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" >> $GITHUB_ENV
-          echo "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}" >> $GITHUB_ENV
-
       - name: Build Docker Image
         run: |
           echo "Building Docker image..."
@@ -46,5 +41,10 @@ jobs:
         run: |
           CNAME=${{ env.CONTAINER_NAME }}
           echo ":: Running new container - $CNAME"
-          docker run -d -p 8443:8443 --name $CNAME myapp:latest
+          docker run -d -p 8443:8443 \
+            --name $CNAME \
+            -e GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
+            -e GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }} \
+            -e GOOGLE_REDIRECT_URI=${{ secrets.GOOGLE_REDIRECT_URI }} \
+            myapp:latest
       
