@@ -566,32 +566,23 @@ public class EventController {
         }
     }
 
-    @GetMapping("/filter")
-    public ResponseEntity<ApiResponse<List<EventDetailForConsumer>>> getEventByFilters(
-            @RequestParam(required = false) String startDate,
-            @RequestParam(required = false) String endDate,
-            @RequestParam(required = false) String eventType,
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<List<EventDetailForConsumer>>> searchEvents(
             @RequestParam(required = false) String eventName,
-            @RequestParam(required = false) List<String> eventCategory,
-            @RequestParam(required = false) Double minPrice, // Đổi từ double → Double
-            @RequestParam(required = false) Double maxPrice) {
+            @RequestParam(required = false) Integer eventCategoryId,
+            @RequestParam(required = false) Double minPrice,
+            @RequestParam(required = false) String city
+    ) {
         try {
-            List<EventDetailForConsumer> events = eventService.getEventByStartDateAndEndDateAndEventTypeAndEventName(startDate, endDate, eventType, eventName, eventCategory, minPrice, maxPrice);
-
-            if (events.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.OK)
-                        .body(ApiResponse.<List<EventDetailForConsumer>>builder()
-                                .code(HttpStatus.OK.value())
-                                .message("No events found with the provided filters")
-                                .result(Collections.emptyList())
-                                .build());
-            }
+            List<EventDetailForConsumer> events = eventService.searchEvent(eventName, eventCategoryId, minPrice, city);
+            int totalResults = events.size();  // Tính tổng số kết quả
 
             return ResponseEntity.ok(
                     ApiResponse.<List<EventDetailForConsumer>>builder()
                             .code(HttpStatus.OK.value())
-                            .message("Get all events with the provided filters successfully")
-                            .result(events)
+                            .message(totalResults == 0
+                                    ? "No events found with the provided filters"
+                                    : "Successfully retrieved " + totalResults + " events with the provided filters")                            .result(events)
                             .build()
             );
         } catch (Exception e) {

@@ -3,6 +3,7 @@ package com.pse.tixclick.repository;
 import com.pse.tixclick.payload.entity.entity_enum.EEventStatus;
 import com.pse.tixclick.payload.entity.event.Event;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -12,7 +13,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface EventRepository extends JpaRepository<Event, Integer> {
+public interface EventRepository extends JpaRepository<Event, Integer>, JpaSpecificationExecutor<Event> {
     Optional<Event> findEventByEventId(int eventId);
 
     Optional<Event> findEventByEventIdAndOrganizer_UserName(int eventId, String userName);
@@ -76,5 +77,17 @@ public interface EventRepository extends JpaRepository<Event, Integer> {
 
 
     List<Event> findEventsByManagerId(int managerId);
+
+    @Query("SELECT e FROM Event e WHERE " +
+            "( :eventName IS NULL OR LOWER(e.eventName) LIKE %:eventName% ) " +
+            "AND ( :eventCategoryId IS NULL OR e.category.eventCategoryId = :eventCategoryId ) " +
+            "AND ( :minPrice IS NULL OR e.eventId IN (SELECT t.event.eventId FROM Ticket t WHERE t.price >= :minPrice) ) " +
+            "AND ( :city IS NULL OR ( :city = 'other' AND e.city NOT IN ('Hồ Chí Minh', 'Hà Nội', 'Đà Nẵng') ) " +
+            "OR LOWER(e.city) = LOWER(:city) )")
+    List<Event> searchEvents(@Param("eventName") String eventName,
+                             @Param("eventCategoryId") Integer eventCategoryId,
+                             @Param("minPrice") Double minPrice,
+                             @Param("city") String city);
+
 }
 

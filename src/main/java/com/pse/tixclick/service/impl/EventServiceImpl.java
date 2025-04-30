@@ -22,6 +22,9 @@ import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.request.create.CreateEventRequest;
 import com.pse.tixclick.payload.request.update.UpdateEventRequest;
 import com.pse.tixclick.service.EventService;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import org.springframework.data.jpa.domain.Specification;
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -793,6 +796,88 @@ public class EventServiceImpl implements EventService {
 
         return eventDetails;
     }
+
+    @Override
+    public List<EventDetailForConsumer> searchEvent(String eventName, Integer eventCategoryId, Double minPrice, String city) {
+
+        // Chuẩn hóa input để lọc
+        String finalEventName = (eventName != null && !eventName.trim().isEmpty()) ? eventName.trim().toLowerCase() : null;
+        Integer finalCategoryId = (eventCategoryId != null && eventCategoryId != 0) ? eventCategoryId : null;
+        Double finalMinPrice = (minPrice != null && minPrice > 0) ? minPrice : null;
+        String finalCity = ("all".equalsIgnoreCase(city)) ? null : city;
+
+        // Lấy tất cả sự kiện có trạng thái SCHEDULED
+        List<Event> events = eventRepository.findEventsByStatus(EEventStatus.SCHEDULED);
+        if (events.isEmpty()) return Collections.emptyList();
+
+        // Lọc theo điều kiện
+        List<Event> filteredEvents = events.stream()
+                .filter(e -> finalEventName == null || e.getEventName().toLowerCase().contains(finalEventName))
+                .filter(e -> finalCategoryId == null ||
+                        (e.getCategory() != null && e.getCategory().getEventCategoryId()==finalCategoryId))
+                .filter(e -> finalMinPrice == null ||
+                        ticketRepository.findMinTicketByEvent_EventId(e.getEventId())
+                                .map(t -> t.getPrice() >= finalMinPrice)
+                                .orElse(false))
+                .filter(e -> {
+                    if (finalCity == null) return true;
+                    String eventCity = e.getCity() != null ? e.getCity().toLowerCase() : "";
+                    if ("other".equalsIgnoreCase(finalCity)) {
+                        return !List.of("Thành phố Hà Nội", "Thành phố Hồ Chí Minh", "Thành phố Đà Nẵng").contains(eventCity);
+                    } else {
+                        return eventCity.equals(finalCity.toLowerCase());
+                    }
+                })
+                .collect(Collectors.toList());
+
+        if (filteredEvents.isEmpty()) return Collections.emptyList();
+
+        // Chuyển đổi sang DTO
+        return filteredEvents.stream()
+                .map(event -> {
+                    Company company = event.getCompany();
+                    boolean isHaveSeatMap = event.getSeatMap() != null;
+                    List<EventActivityDTO> eventActivityDTOList = event.getEventActivities().stream()
+                            .map(activity -> modelMapper.map(activity, EventActivityDTO.class))
+                            .collect(Collectors.toList());
+
+                    List<EventActivityResponse> eventActivityResponseList = modelMapper.map(
+                            eventActivityDTOList, new TypeToken<List<EventActivityResponse>>() {}.getType()
+                    );
+
+                    double minEventPrice = ticketRepository.findMinTicketByEvent_EventId(event.getEventId())
+                            .map(Ticket::getPrice)
+                            .orElse(0.0);
+
+                    int eventCategoryId1 = event.getCategory() != null ? event.getCategory().getEventCategoryId() : 0;
+
+                    return new EventDetailForConsumer(
+                            event.getEventId(),
+                            event.getEventName(),
+                            event.getAddress(),
+                            event.getWard(),
+                            event.getDistrict(),
+                            event.getCity(),
+                            event.getLocationName(),
+                            event.getLogoURL(),
+                            event.getBannerURL(),
+                            company != null ? company.getLogoURL() : null,
+                            company != null ? company.getCompanyName() : null,
+                            company != null ? company.getDescription() : null,
+                            event.getStatus().name(),
+                            event.getTypeEvent(),
+                            event.getDescription(),
+                            event.getCategory() != null ? event.getCategory().getCategoryName() : null,
+                            eventCategoryId1,
+                            eventActivityResponseList,
+                            isHaveSeatMap,
+                            minEventPrice
+                    );
+                })
+                .collect(Collectors.toList());
+    }
+
+
 
     @Override
     public List<EventDashboardResponse> getEventDashboardByCompanyId(int companyId) {
