@@ -8,4 +8,5 @@ public enum EEventStatus {
     COMPLETED,
     REJECTED,
     CONFIRMED,
+    CANCELLED,
 }
