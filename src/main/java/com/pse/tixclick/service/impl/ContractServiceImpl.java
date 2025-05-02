@@ -136,7 +136,7 @@ public class ContractServiceImpl implements ContractService {
         if(event.getStatus().equals(EEventStatus.SCHEDULED)) {
             throw new AppException(ErrorCode.EVENT_SCHEDULED);
         }
-        if(!event.getStatus().equals(EEventStatus.APPROVED)) {
+        if(!event.getStatus().equals(EEventStatus.CONFIRMED)) {
             throw new AppException(ErrorCode.EVENT_NOT_APPROVED);
         }
 

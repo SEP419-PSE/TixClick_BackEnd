@@ -57,6 +57,9 @@ public class ContractPaymentServiceImpl implements ContractPaymentService {
     @Autowired
     ContractRepository contractRepository;
 
+    @Autowired
+    EventRepository eventRepository;
+
     @Override
     public ContractPaymentRequest getContractPayment(String transactionCode, int paymentId) {
         ObjectMapper objectMapper = new ObjectMapper();
@@ -106,6 +109,23 @@ public class ContractPaymentServiceImpl implements ContractPaymentService {
                         ContractDetail contractDetail = contractPayment.getContractDetail();
                         contractDetail.setStatus(EContractDetailStatus.PAID);
                         contractDetailRepository.save(contractDetail);
+
+                        var contract = contractDetail.getContract();
+
+                        List<ContractDetail> contractDetails = contractDetailRepository.findByContractId(contract.getContractId());
+                        boolean allPaid = true;
+                        for (ContractDetail detail : contractDetails) {
+                            if (detail.getStatus() != EContractDetailStatus.PAID) {
+                                allPaid = false;
+                                break;
+                            }
+                        }
+                        if(allPaid) {
+                            var event = eventRepository.findEventByEventId(contract.getEvent().getEventId())
+                                    .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+                             event.setStatus(EEventStatus.COMPLETED);
+                            eventRepository.save(event);
+                        }
 
                         return new ContractPaymentRequest(transactionCode, true);
                     }
