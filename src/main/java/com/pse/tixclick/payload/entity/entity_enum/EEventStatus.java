@@ -6,5 +6,6 @@ public enum EEventStatus {
     APPROVED,
     SCHEDULED,
     COMPLETED,
-    REJECTED
+    REJECTED,
+    CONFIRMED,
 }
