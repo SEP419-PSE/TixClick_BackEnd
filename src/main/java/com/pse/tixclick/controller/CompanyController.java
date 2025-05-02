@@ -434,8 +434,8 @@ public class CompanyController {
             @RequestParam(required = false) String nationalId,
             @RequestParam(required = false) String address,
             @RequestParam(required = false) String description,
-            @RequestPart(value = "file", required = false) MultipartFile file,
-            @RequestParam(value = "file", required = false) List<MultipartFile> fileDocument
+            @RequestPart(value = "logo", required = false) MultipartFile file,
+            @RequestParam(value = "documents", required = false) List<MultipartFile> fileDocument
     ) {
         CreateCompanyRequest updateRequest = new CreateCompanyRequest(
                 companyName, codeTax, email, ownerCard,
