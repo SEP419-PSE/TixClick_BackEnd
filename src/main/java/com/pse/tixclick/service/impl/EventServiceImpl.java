@@ -312,6 +312,7 @@ public class EventServiceImpl implements EventService {
                     response.setCity(event.getCity());
                     response.setDistrict(event.getDistrict());
                     response.setWard(event.getWard());
+                    response.setAddress(event.getAddress());
                     response.setStatus(String.valueOf(event.getStatus()));
                     response.setTypeEvent(event.getTypeEvent());
 
@@ -986,8 +987,8 @@ public class EventServiceImpl implements EventService {
         }
 
         switch (status) {
-            case APPROVED -> {
-                event.setStatus(EEventStatus.APPROVED);
+            case CONFIRMED -> {
+                event.setStatus(EEventStatus.CONFIRMED);
 
                 // Gửi email thông báo cho người tổ chức sự kiện
                 String fullName = event.getOrganizer().getFirstName() + " " + event.getOrganizer().getLastName();
@@ -1078,7 +1079,7 @@ public class EventServiceImpl implements EventService {
 
         if (!(event.getStatus().equals(EEventStatus.SCHEDULED)
                 || event.getStatus().equals(EEventStatus.COMPLETED)
-                || event.getStatus().equals(EEventStatus.APPROVED))) {
+                || event.getStatus().equals(EEventStatus.CONFIRMED))) {
             throw new AppException(ErrorCode.EVENT_NOT_APPROVED);
         }
 

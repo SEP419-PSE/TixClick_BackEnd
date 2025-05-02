@@ -19,6 +19,7 @@ public class EventResponse {
     String city;
     String district;
     String ward;
+    String address;
     String status;
     String typeEvent;
     int organizerId;
