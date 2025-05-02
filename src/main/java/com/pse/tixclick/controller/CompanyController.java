@@ -392,4 +392,32 @@ public class CompanyController {
                             .build());
         }
     }
+
+    @GetMapping("/get-company-by-event-id/{eventId}")
+    public ResponseEntity<ApiResponse<CompanyDTO>> getCompanyByEventId(@PathVariable int eventId) {
+        try {
+            CompanyDTO companyDTO = companyService.getCompanyByEventId(eventId);
+            return ResponseEntity.ok(
+                    ApiResponse.<CompanyDTO>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Get company by event id successfully")
+                            .result(companyDTO)
+                            .build()
+            );
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.<CompanyDTO>builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<CompanyDTO>builder()
+                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .message("Internal server error")
+                            .result(null)
+                            .build());
+        }
+    }
 }

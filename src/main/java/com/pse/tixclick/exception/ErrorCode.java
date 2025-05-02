@@ -145,6 +145,7 @@ public enum ErrorCode {
     CAN_NOT_UPDATE(1127, "Không thể cập nhật", HttpStatus.BAD_REQUEST),
     MEMBER_TIME_CONFLICT(1128, "Thành viên đã có hoạt động trùng thời gian", HttpStatus.BAD_REQUEST),
     MEMBER_ALREADY_ASSIGNED(1129, "Thành viên đã được phân công", HttpStatus.BAD_REQUEST),
+    EVENT_NOT_EXISTED(1130, "Sự kiện không tồn tại", HttpStatus.NOT_FOUND),
     ;
 
 

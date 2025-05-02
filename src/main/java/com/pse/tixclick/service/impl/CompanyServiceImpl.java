@@ -61,6 +61,7 @@ public class CompanyServiceImpl implements CompanyService {
     ContractRepository contractRepository;
     ContractDetailRepository contractDetailRepository;
     MemberRepository memberRepository;
+    EventRepository eventRepository;
     @Override
     public CreateCompanyResponse createCompany(CreateCompanyRequest createCompanyRequest, MultipartFile file) throws IOException, MessagingException {
         var context = SecurityContextHolder.getContext();
@@ -535,6 +536,19 @@ public class CompanyServiceImpl implements CompanyService {
         }
 
         return companies;
+    }
+
+    @Override
+    public CompanyDTO getCompanyByEventId(int eventId) {
+        var event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_EXISTED));
+
+        var company = event.getCompany();
+
+        if(company == null) {
+            throw new AppException(ErrorCode.COMPANY_NOT_EXISTED);
+        }
+        return modelMapper.map(company, CompanyDTO.class);
     }
 
 
