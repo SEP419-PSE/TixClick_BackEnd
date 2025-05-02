@@ -39,5 +39,5 @@ public interface CompanyService {
 
     CompanyDTO getCompanyByEventId(int eventId);
 
-    CreateCompanyResponse updateCompany(int companyId, CreateCompanyRequest updateRequest, MultipartFile file) throws IOException, MessagingException;
+    CreateCompanyResponse updateCompany(int companyId, CreateCompanyRequest updateRequest, MultipartFile file, List<MultipartFile> fileDocument) throws IOException, MessagingException;
 }

@@ -35,10 +35,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -552,70 +549,78 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     @Override
-    public CreateCompanyResponse updateCompany(int companyId, CreateCompanyRequest updateRequest, MultipartFile file) throws IOException, MessagingException {
-        var context = SecurityContextHolder.getContext();
-        String name = context.getAuthentication().getName();
-        var account = accountRepository.findAccountByUserName(name)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-        var company = companyRepository.findCompanyByCompanyIdAndRepresentativeId_UserName(companyId, name)
-                .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_EXISTED));
+    public CreateCompanyResponse updateCompany(int companyId, CreateCompanyRequest updateRequest, MultipartFile file, List<MultipartFile> fileDocument) throws IOException, MessagingException {
+        String name = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        if(company.getStatus() != ECompanyStatus.REJECTED) {
+        Account account = accountRepository.findAccountByUserName(name)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        Company company = companyRepository.findCompanyByCompanyIdAndRepresentativeId_UserName(companyId, name)
+                .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_EXISTED));
+        if (company.getStatus() != ECompanyStatus.REJECTED) {
             throw new AppException(ErrorCode.COMPANY_NOT_REJECTED);
         }
 
-        if (file != null) {
-            String logoURL = cloudinary.uploadImageToCloudinary(file);
-            company.setLogoURL(logoURL);
-        }
-
-        if (updateRequest.getCompanyName() != null) company.setCompanyName(updateRequest.getCompanyName());
-        if (updateRequest.getDescription() != null) company.setDescription(updateRequest.getDescription());
-        if (updateRequest.getCodeTax() != null) company.setCodeTax(updateRequest.getCodeTax());
-        if (updateRequest.getBankingCode() != null) company.setBankingCode(updateRequest.getBankingCode());
-        if (updateRequest.getBankingName() != null) company.setBankingName(updateRequest.getBankingName());
-        if (updateRequest.getNationalId() != null) company.setNationalId(updateRequest.getNationalId());
-        if (updateRequest.getEmail() != null) company.setEmail(updateRequest.getEmail());
-        if (updateRequest.getAddress() != null) company.setAddress(updateRequest.getAddress());
-        if (updateRequest.getOwnerCard() != null) company.setOwnerCard(updateRequest.getOwnerCard());
-        company.setStatus(ECompanyStatus.PENDING);
-        companyRepository.save(company);
-        var companyVerification = companyVerificationRepository.findCompanyVerificationsByCompany_CompanyId(companyId)
+        CompanyVerification companyVerification = companyVerificationRepository
+                .findCompanyVerificationsByCompany_CompanyId(companyId)
                 .orElseThrow(() -> new AppException(ErrorCode.COMPANY_VERIFICATION_NOT_EXISTED));
 
+        // Upload và tạo document
+        CreateCompanyDocumentRequest docRequest = new CreateCompanyDocumentRequest();
+        docRequest.setCompanyId(company.getCompanyId());
+        docRequest.setCompanyVerificationId(companyVerification.getCompanyVerificationId());
+        docRequest.setUploadDate(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        companyDocumentService.createCompanyDocument(docRequest, fileDocument);
+
+        // Upload logo mới nếu có
+        if (file != null) {
+            company.setLogoURL(cloudinary.uploadImageToCloudinary(file));
+        }
+
+        // Cập nhật các trường thông tin
+        Optional.ofNullable(updateRequest.getCompanyName()).ifPresent(company::setCompanyName);
+        Optional.ofNullable(updateRequest.getDescription()).ifPresent(company::setDescription);
+        Optional.ofNullable(updateRequest.getCodeTax()).ifPresent(company::setCodeTax);
+        Optional.ofNullable(updateRequest.getBankingCode()).ifPresent(company::setBankingCode);
+        Optional.ofNullable(updateRequest.getBankingName()).ifPresent(company::setBankingName);
+        Optional.ofNullable(updateRequest.getNationalId()).ifPresent(company::setNationalId);
+        Optional.ofNullable(updateRequest.getEmail()).ifPresent(company::setEmail);
+        Optional.ofNullable(updateRequest.getAddress()).ifPresent(company::setAddress);
+        Optional.ofNullable(updateRequest.getOwnerCard()).ifPresent(company::setOwnerCard);
+
+        // Cập nhật trạng thái công ty và xác minh
+        company.setStatus(ECompanyStatus.PENDING);
+        companyRepository.save(company);
         companyVerification.setStatus(EVerificationStatus.PENDING);
         companyVerificationRepository.save(companyVerification);
 
-        String notificationMessage = "Công ty đã được cập nhật: " + company.getCompanyName();
-        List<Account> managers = accountRepository.findAccountsByRole_RoleId(4);
-        messagingTemplate.convertAndSendToUser(companyVerification.getAccount().getUserName(), "/specific/messages", notificationMessage);
+        // Gửi notification realtime
+        String notifyMsg = "Công ty đã được cập nhật: " + company.getCompanyName();
+        messagingTemplate.convertAndSendToUser(companyVerification.getAccount().getUserName(), "/specific/messages", notifyMsg);
 
-
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        // Xử lý giới hạn 10 thông báo
         int count = notificationRepository.countNotificationByAccountId(companyVerification.getAccount().getUserName());
-        log.info("Count: {}", count);
-        if(count >= 10) {
-            Notification notification = notificationRepository.findTopByAccount_UserNameOrderByCreatedDateAsc(companyVerification.getAccount().getUserName())
+        if (count >= 10) {
+            Notification oldest = notificationRepository.findTopByAccount_UserNameOrderByCreatedDateAsc(companyVerification.getAccount().getUserName())
                     .orElseThrow(() -> new AppException(ErrorCode.NOTIFICATION_NOT_EXISTED));
-            notificationRepository.delete(notification);
+            notificationRepository.delete(oldest);
         }
 
+        // Lưu notification mới
         Notification notification = new Notification();
         notification.setAccount(companyVerification.getAccount());
-        notification.setMessage(notificationMessage);
+        notification.setMessage(notifyMsg);
         notification.setRead(false);
         notification.setCreatedDate(LocalDateTime.now());
         notificationRepository.save(notification);
 
+        // Gửi email thông báo
         String fullname = (companyVerification.getAccount().getFirstName() != null ? companyVerification.getAccount().getFirstName() : "") +
-                " " +
-                (companyVerification.getAccount().getLastName() != null ? companyVerification.getAccount().getLastName() : "");
+                " " + (companyVerification.getAccount().getLastName() != null ? companyVerification.getAccount().getLastName() : "");
+        emailService.sendCompanyCreationRequestNotification(
+                companyVerification.getAccount().getEmail(), company.getCompanyName(), fullname.trim()
+        );
 
-
-        fullname = fullname.trim(); // Loại bỏ khoảng trắng thừa nếu có
-        emailService.sendCompanyCreationRequestNotification(companyVerification.getAccount().getEmail(), company.getCompanyName(), fullname);
-
-        // Tạo đối tượng response
+        // Trả response
         return new CreateCompanyResponse(
                 company.getCompanyId(),
                 company.getCompanyName(),
@@ -633,6 +638,7 @@ public class CompanyServiceImpl implements CompanyService {
                 companyVerification.getCompanyVerificationId()
         );
     }
+
 
 
 }

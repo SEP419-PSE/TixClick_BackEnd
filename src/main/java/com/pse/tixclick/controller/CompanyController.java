@@ -434,7 +434,8 @@ public class CompanyController {
             @RequestParam(required = false) String nationalId,
             @RequestParam(required = false) String address,
             @RequestParam(required = false) String description,
-            @RequestPart(value = "file", required = false) MultipartFile file
+            @RequestPart(value = "file", required = false) MultipartFile file,
+            @RequestParam(value = "file", required = false) List<MultipartFile> fileDocument
     ) {
         CreateCompanyRequest updateRequest = new CreateCompanyRequest(
                 companyName, codeTax, email, ownerCard,
@@ -443,7 +444,7 @@ public class CompanyController {
         );
 
         try {
-            CreateCompanyResponse companyDTO = companyService.updateCompany(companyId, updateRequest, file);
+            CreateCompanyResponse companyDTO = companyService.updateCompany(companyId, updateRequest, file,fileDocument);
             return ResponseEntity.ok(
                     ApiResponse.<CreateCompanyResponse>builder()
                             .code(HttpStatus.OK.value())

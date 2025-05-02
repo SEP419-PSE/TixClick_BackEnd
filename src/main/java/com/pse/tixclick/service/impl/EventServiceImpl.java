@@ -1027,6 +1027,26 @@ public class EventServiceImpl implements EventService {
                 notificationRepository.saveAndFlush(notification);
                 messagingTemplate.convertAndSendToUser(event.getOrganizer().getUserName(), "/specific/messages", "Sự kiện của bạn đã bị từ chối");
             }
+            case CANCELLED -> {
+                event.setStatus(EEventStatus.CANCELLED);
+                String fullname = event.getOrganizer().getFirstName() + " " + event.getOrganizer().getLastName();
+                // Gửi email thông báo từ chối sự kiện
+                String fullName = event.getOrganizer().getFirstName() + " " + event.getOrganizer().getLastName();
+                emailService.sendEventCancellationEmail(
+                        event.getOrganizer().getEmail(),
+                        fullname,
+                        event.getEventName()
+
+                );
+                Notification notification = new Notification();
+                notification.setMessage("Sự kiện của bạn đã bị hủy");
+                notification.setAccount(event.getOrganizer());
+                notification.setRead(false);
+                notification.setCreatedDate(LocalDateTime.now());
+                notification.setReadDate(null);
+                notificationRepository.saveAndFlush(notification);
+                messagingTemplate.convertAndSendToUser(event.getOrganizer().getUserName(), "/specific/messages", "Sự kiện của bạn đã bị hủy");
+            }
 
 
             default -> throw new AppException(ErrorCode.INVALID_EVENT_STATUS);

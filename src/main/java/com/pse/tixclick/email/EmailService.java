@@ -58,6 +58,23 @@ public class EmailService {
                 "</html>";
         sendNewMail(to, subject, body, fullname);
     }
+    public void sendEventCancellationEmail(String to, String fullname, String eventName) throws MessagingException {
+        String subject = "Event Cancellation Notice - TixClick";
+        String body = "<html>" +
+                "<body>" +
+                "<h2 style=\"color: #DC3545;\">Event Cancelled</h2>" +
+                "<p>Dear " + fullname + ",</p>" +
+                "<p>We regret to inform you that the following event has been cancelled:</p>" +
+                "<ul>" +
+                "<li><strong>Event:</strong> " + eventName + "</li>" +
+                "</ul>" +
+                "<p>We apologize for any inconvenience this may cause. If you have already purchased tickets, please await further instructions regarding refunds or rescheduling.</p>" +
+                "<p>Thank you for your understanding.</p>" +
+                "<p>Best regards,<br/>TixClick Team</p>" +
+                "</body>" +
+                "</html>";
+        sendNewMail(to, subject, body, fullname);
+    }
 
     public void sendAccountCreatedEmail(String to, String username, String password,String fullname) throws MessagingException {
         String subject = "Your TixClick Account Has Been Created!";
