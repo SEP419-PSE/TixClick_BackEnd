@@ -38,4 +38,6 @@ public interface CompanyService {
     List<MyCompanyResponse> getCompanysByUserName(String userName);
 
     CompanyDTO getCompanyByEventId(int eventId);
+
+    CreateCompanyResponse updateCompany(int companyId, CreateCompanyRequest updateRequest, MultipartFile file) throws IOException, MessagingException;
 }

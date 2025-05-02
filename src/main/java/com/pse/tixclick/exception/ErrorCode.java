@@ -146,6 +146,8 @@ public enum ErrorCode {
     MEMBER_TIME_CONFLICT(1128, "Thành viên đã có hoạt động trùng thời gian", HttpStatus.BAD_REQUEST),
     MEMBER_ALREADY_ASSIGNED(1129, "Thành viên đã được phân công", HttpStatus.BAD_REQUEST),
     EVENT_NOT_EXISTED(1130, "Sự kiện không tồn tại", HttpStatus.NOT_FOUND),
+    COMPANY_VERIFICATION_NOT_EXISTED(1131, "Xác minh công ty không tồn tại", HttpStatus.NOT_FOUND),
+    COMPANY_NOT_REJECTED(1132, "Công ty không bị từ chối", HttpStatus.BAD_REQUEST),
     ;
 
 

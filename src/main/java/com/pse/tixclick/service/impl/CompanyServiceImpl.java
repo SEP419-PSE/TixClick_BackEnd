@@ -551,5 +551,88 @@ public class CompanyServiceImpl implements CompanyService {
         return modelMapper.map(company, CompanyDTO.class);
     }
 
+    @Override
+    public CreateCompanyResponse updateCompany(int companyId, CreateCompanyRequest updateRequest, MultipartFile file) throws IOException, MessagingException {
+        var context = SecurityContextHolder.getContext();
+        String name = context.getAuthentication().getName();
+        var account = accountRepository.findAccountByUserName(name)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        var company = companyRepository.findCompanyByCompanyIdAndRepresentativeId_UserName(companyId, name)
+                .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_EXISTED));
+
+        if(company.getStatus() != ECompanyStatus.REJECTED) {
+            throw new AppException(ErrorCode.COMPANY_NOT_REJECTED);
+        }
+
+        if (file != null) {
+            String logoURL = cloudinary.uploadImageToCloudinary(file);
+            company.setLogoURL(logoURL);
+        }
+
+        if (updateRequest.getCompanyName() != null) company.setCompanyName(updateRequest.getCompanyName());
+        if (updateRequest.getDescription() != null) company.setDescription(updateRequest.getDescription());
+        if (updateRequest.getCodeTax() != null) company.setCodeTax(updateRequest.getCodeTax());
+        if (updateRequest.getBankingCode() != null) company.setBankingCode(updateRequest.getBankingCode());
+        if (updateRequest.getBankingName() != null) company.setBankingName(updateRequest.getBankingName());
+        if (updateRequest.getNationalId() != null) company.setNationalId(updateRequest.getNationalId());
+        if (updateRequest.getEmail() != null) company.setEmail(updateRequest.getEmail());
+        if (updateRequest.getAddress() != null) company.setAddress(updateRequest.getAddress());
+        if (updateRequest.getOwnerCard() != null) company.setOwnerCard(updateRequest.getOwnerCard());
+        company.setStatus(ECompanyStatus.PENDING);
+        companyRepository.save(company);
+        var companyVerification = companyVerificationRepository.findCompanyVerificationsByCompany_CompanyId(companyId)
+                .orElseThrow(() -> new AppException(ErrorCode.COMPANY_VERIFICATION_NOT_EXISTED));
+
+        companyVerification.setStatus(EVerificationStatus.PENDING);
+        companyVerificationRepository.save(companyVerification);
+
+        String notificationMessage = "Công ty đã được cập nhật: " + company.getCompanyName();
+        List<Account> managers = accountRepository.findAccountsByRole_RoleId(4);
+        messagingTemplate.convertAndSendToUser(companyVerification.getAccount().getUserName(), "/specific/messages", notificationMessage);
+
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        int count = notificationRepository.countNotificationByAccountId(companyVerification.getAccount().getUserName());
+        log.info("Count: {}", count);
+        if(count >= 10) {
+            Notification notification = notificationRepository.findTopByAccount_UserNameOrderByCreatedDateAsc(companyVerification.getAccount().getUserName())
+                    .orElseThrow(() -> new AppException(ErrorCode.NOTIFICATION_NOT_EXISTED));
+            notificationRepository.delete(notification);
+        }
+
+        Notification notification = new Notification();
+        notification.setAccount(companyVerification.getAccount());
+        notification.setMessage(notificationMessage);
+        notification.setRead(false);
+        notification.setCreatedDate(LocalDateTime.now());
+        notificationRepository.save(notification);
+
+        String fullname = (companyVerification.getAccount().getFirstName() != null ? companyVerification.getAccount().getFirstName() : "") +
+                " " +
+                (companyVerification.getAccount().getLastName() != null ? companyVerification.getAccount().getLastName() : "");
+
+
+        fullname = fullname.trim(); // Loại bỏ khoảng trắng thừa nếu có
+        emailService.sendCompanyCreationRequestNotification(companyVerification.getAccount().getEmail(), company.getCompanyName(), fullname);
+
+        // Tạo đối tượng response
+        return new CreateCompanyResponse(
+                company.getCompanyId(),
+                company.getCompanyName(),
+                company.getCodeTax(),
+                company.getBankingName(),
+                company.getBankingCode(),
+                company.getOwnerCard(),
+                company.getEmail(),
+                company.getNationalId(),
+                company.getLogoURL(),
+                company.getAddress(),
+                company.getDescription(),
+                company.getStatus().name(),
+                account.getAccountId(),
+                companyVerification.getCompanyVerificationId()
+        );
+    }
+
 
 }
