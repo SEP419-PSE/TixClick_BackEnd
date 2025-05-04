@@ -3,6 +3,7 @@ package com.pse.tixclick.service;
 import com.pse.tixclick.payload.dto.EventActivityDTO;
 import com.pse.tixclick.payload.request.CreateEventActivityAndTicketRequest;
 import com.pse.tixclick.payload.request.create.CreateEventActivityRequest;
+import jakarta.mail.MessagingException;
 
 import java.util.List;
 
@@ -15,7 +16,7 @@ public interface   EventActivityService {
 
     List<EventActivityDTO> getEventActivityByEventId(int eventId);
 
-    List<CreateEventActivityAndTicketRequest> createEventActivityAndTicket(List<CreateEventActivityAndTicketRequest> request, String contractCode);
+    List<CreateEventActivityAndTicketRequest> createEventActivityAndTicket(List<CreateEventActivityAndTicketRequest> request, String contractCode) throws MessagingException;
 
     List<CreateEventActivityAndTicketRequest> getEventActivityAndTicketByEventId(int eventId);
 

@@ -131,11 +131,11 @@ public class PaymentController {
 
     @PostMapping("/change-ticket")
     public ResponseEntity<ApiResponse<PayOSResponse>> changeTicket(
-            @RequestParam int purchaseId,
+            @RequestParam int ticketPurchaseId,
             @RequestBody CreateTicketPurchaseRequest ticketChange,
             HttpServletRequest request) {
         try {
-            PayOSResponse result = paymentService.changTicket(purchaseId, ticketChange, request);
+            PayOSResponse result = paymentService.changTicket(ticketPurchaseId, ticketChange, request);
             return ResponseEntity.ok(
                     ApiResponse.<PayOSResponse>builder()
                             .code(HttpStatus.OK.value())

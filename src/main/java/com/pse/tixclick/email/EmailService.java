@@ -44,6 +44,27 @@ public class EmailService {
         sendNewMail(to, subject, body,fullname);
     }
 
+
+    public void sendRescheduleNotificationToCustomer(String to, String fullname, String oldDate, String newDate, String eventName) throws MessagingException {
+        String subject = "Event Reschedule Notification - TixClick";
+        String body = "<html>" +
+                "<body>" +
+                "<h2 style=\"color: #0D6EFD;\">Event Rescheduled</h2>" +
+                "<p>Dear " + fullname + ",</p>" +
+                "<p>We are writing to inform you that the event <strong>" + eventName + "</strong> has been rescheduled.</p>" +
+                "<p>Here are the details:</p>" +
+                "<p><strong>Old Date:</strong> " + oldDate + "</p>" +
+                "<p><strong>New Date:</strong> " + newDate + "</p>" +
+                "<p>We apologize for any inconvenience this may cause. If you have any questions or concerns, please don't hesitate to reach out to us.</p>" +
+                "<p>Thank you for your understanding and continued support of TixClick!</p>" +
+                "<p>Best regards,<br/>TixClick</p>" +
+                "</body>" +
+                "</html>";
+
+        sendNewMail(to, subject, body, fullname);  // Gọi phương thức sendNewMail để gửi email
+    }
+
+
     public void sendOTPtoChangePasswordAccount(String to, String otp, String fullname) throws MessagingException {
         String subject = "OTP to reset password - TixClick";
         String body = "<html>" +

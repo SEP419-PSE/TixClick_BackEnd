@@ -138,4 +138,6 @@ ORDER BY m.month;
     int countTicketPurchasedByEventActivityIdAndTicketId(int eventActivityId, int ticketId);
 
     int countByStatusAndEvent_EventId(ETicketPurchaseStatus status, int eventId);
+
+    List<TicketPurchase> findByEventActivity_EventActivityIdAndStatus(int eventActivityId, ETicketPurchaseStatus status);
 }
