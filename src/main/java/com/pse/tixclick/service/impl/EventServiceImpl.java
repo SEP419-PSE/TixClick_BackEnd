@@ -315,6 +315,17 @@ public class EventServiceImpl implements EventService {
                     response.setAddress(event.getAddress());
                     response.setStatus(String.valueOf(event.getStatus()));
                     response.setTypeEvent(event.getTypeEvent());
+                    List<Contract> contracts = contractRepository.findContractByEventId(event.getEventId());
+
+                    if (contracts != null && !contracts.isEmpty()) {
+                        Contract contract = contracts.get(0);  // Lấy hợp đồng đầu tiên
+                        // Gán giá trị mặc định là chuỗi rỗng nếu contractCode là null
+                        response.setContractCode(contract.getContractCode() != null ? contract.getContractCode() : "");
+                    } else {
+                        response.setContractCode(null);  // Nếu không có contract, gán giá trị null hoặc chuỗi rỗng
+                    }
+
+
 
                     if (event.getOrganizer() != null) {
                         response.setOrganizerId(event.getOrganizer().getAccountId());

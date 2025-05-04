@@ -26,4 +26,5 @@ public class EventResponse {
     String organizerName;
     int companyId;
     String companyName;
+    String contractCode;
 }
