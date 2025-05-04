@@ -260,4 +260,25 @@ public class TicketPurchaseController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
         }
     }
+
+    @GetMapping("/ticket_purchase/{ticketPurchaseId}")
+    public ResponseEntity<ApiResponse<MyTicketDTO>> getTicketPurchaseById(@PathVariable int ticketPurchaseId) {
+        try {
+            MyTicketDTO myTicketDTO = ticketPurchaseService.getTicketPurchaseById(ticketPurchaseId);
+            return ResponseEntity.ok(
+                    ApiResponse.<MyTicketDTO>builder()
+                            .code(200)
+                            .message("Successfully fetched Ticket Purchase by ID")
+                            .result(myTicketDTO)
+                            .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(400)
+                    .body(ApiResponse.<MyTicketDTO>builder()
+                            .code(400)
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        }
+    }
 }

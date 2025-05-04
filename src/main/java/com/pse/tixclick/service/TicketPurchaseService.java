@@ -29,4 +29,6 @@ public interface TicketPurchaseService {
     int printActiveThreads();
 
     String cancelTicketPurchase(List<Integer> ticketPurchaseIds);
+
+    MyTicketDTO getTicketPurchaseById(int ticketPurchaseId);
 }

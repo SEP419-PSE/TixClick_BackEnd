@@ -9,6 +9,8 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
+
 @Repository
 public interface TicketPurchaseRepository extends JpaRepository<TicketPurchase, Integer> {
     @Query(value = "SELECT COUNT(*) FROM TicketPurchase WHERE status = 'PURCHASED'")
@@ -142,4 +144,6 @@ ORDER BY m.month;
     List<TicketPurchase> findByEventActivity_EventActivityIdAndStatus(int eventActivityId, ETicketPurchaseStatus status);
 
     List<TicketPurchase> findTicketPurchasesByEvent_EventIdAndStatus(int eventId, ETicketPurchaseStatus status);
+
+    Optional<TicketPurchase> findByTicketPurchaseIdAndStatusAndAccount_UserName(int ticketPurchaseId, ETicketPurchaseStatus status, String userName);
 }
