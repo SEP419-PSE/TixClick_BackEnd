@@ -149,6 +149,7 @@ public enum ErrorCode {
     COMPANY_VERIFICATION_NOT_EXISTED(1131, "Xác minh công ty không tồn tại", HttpStatus.NOT_FOUND),
     COMPANY_NOT_REJECTED(1132, "Công ty không bị từ chối", HttpStatus.BAD_REQUEST),
     TICKET_NOT_MY_ACCOUNT(1133, "Vé không thuộc tài khoản của bạn", HttpStatus.BAD_REQUEST),
+    SOLD_OUT_TICKET(1134, "Vé đã bán hết", HttpStatus.BAD_REQUEST),
     ;
 
 

@@ -205,6 +205,23 @@ public class PaymentServiceImpl implements PaymentService {
                 .findById(ticketChange.getTicketId())
                 .orElseThrow(() -> new AppException(ErrorCode.TICKET_NOT_FOUND));
 
+
+        TicketMapping ticketMapping = ticketMappingRepository
+                .findTicketMappingByTicketIdAndEventActivityId(newTicket.getTicketId(),ticketChange.getEventActivityId() )
+                .orElseThrow(() -> new AppException(ErrorCode.TICKET_MAPPING_NOT_FOUND));
+        if(ticketMapping.getQuantity() == 0) {
+            throw new AppException(ErrorCode.SOLD_OUT_TICKET);
+        } else if(ticketMapping.getQuantity()< ticketChange.getQuantity()){
+            throw new AppException(ErrorCode.TICKET_MAPPING_NOT_ENOUGH);
+        } else {
+            int total = ticketMapping.getQuantity();
+
+            ticketMapping.setQuantity(ticketMapping.getQuantity() - ticketChange.getQuantity());
+            ticketMappingRepository.save(ticketMapping);
+        }
+
+
+
         double totalAmount = newTicket.getPrice() - ticketPurchase.getTicket().getPrice();
         if (totalAmount < 0) {
             totalAmount = 0;  // Nếu vé mới rẻ hơn vé cũ, không cần trả thêm tiền, trả về 0
@@ -672,6 +689,6 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     private String getBaseUrl(HttpServletRequest request) {
-        return "https://localhost:5173";
+        return "http://localhost:5173";
     }
 }

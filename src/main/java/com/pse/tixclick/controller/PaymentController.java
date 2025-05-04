@@ -67,8 +67,8 @@ public class PaymentController {
 
     @GetMapping("/payos_call_back")
     public void payOSCallbackHandler(HttpServletRequest request, HttpServletResponse response) throws Exception {
-        String mainUrl = "https://localhost:5173/payment/queue";
-        String fallbackUrl = "https://localhost:5173/payment/queue"; // hoặc URL khác nếu cần
+        String mainUrl = "http://localhost:5173/payment/queue";
+        String fallbackUrl = "http://localhost:5173/payment/queue"; // hoặc URL khác nếu cần
 
         PaymentResponse payment = paymentService.handleCallbackPayOS(request);
 
