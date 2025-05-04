@@ -252,7 +252,7 @@ public class OrderServiceImpl implements OrderService {
         return null;
     }
 
-    private String orderCodeAutomationCreating() {
+    public String orderCodeAutomationCreating() {
         Account account = appUtils.getAccountFromAuthentication();
         int accountId = account.getAccountId(); // Giả định bạn có hàm lấy userId
 

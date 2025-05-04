@@ -645,6 +645,8 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
                     if (myTicket.getEvent() != null) {
                         myTicketDTO.setEventId(myTicket.getEvent().getEventId());
                         myTicketDTO.setEventName(myTicket.getEvent().getEventName());
+                        myTicketDTO.setEventActivityId(myTicket.getEventActivity().getEventActivityId());
+                        myTicketDTO.setTicketPurchaseId(myTicket.getTicketPurchaseId());
                         StringBuilder locationBuilder = new StringBuilder();
                         if(myTicket.getEvent().getAddress() != null) {
                             locationBuilder.append(myTicket.getEvent().getAddress()).append(", ");

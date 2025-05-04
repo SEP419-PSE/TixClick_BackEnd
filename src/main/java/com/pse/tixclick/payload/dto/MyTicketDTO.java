@@ -14,6 +14,8 @@ import java.time.LocalTime;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class MyTicketDTO {
     private int eventId;
+    private int eventActivityId;
+    private int ticketPurchaseId;
     private String eventName;
     private LocalDate eventDate;
     private LocalTime eventStartTime;

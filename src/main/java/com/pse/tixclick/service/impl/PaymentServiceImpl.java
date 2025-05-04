@@ -15,6 +15,7 @@ import com.pse.tixclick.payload.entity.seatmap.*;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
 import com.pse.tixclick.payload.entity.ticket.TicketMapping;
 import com.pse.tixclick.payload.entity.ticket.TicketPurchase;
+import com.pse.tixclick.payload.request.create.CreateTicketPurchaseRequest;
 import com.pse.tixclick.payload.response.PayOSResponse;
 import com.pse.tixclick.payload.response.PaymentResponse;
 import com.pse.tixclick.payment.PayOSUtils;
@@ -28,6 +29,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import vn.payos.type.CheckoutResponseData;
 import vn.payos.type.ItemData;
@@ -100,6 +102,8 @@ public class PaymentServiceImpl implements PaymentService {
     @Autowired
     VoucherRepository voucherRepository;
 
+    @Autowired
+    OrderServiceImpl orderServiceImpl;
 
     @Override
     public PayOSResponse changeOrderStatusPayOs(int orderId) {
@@ -177,6 +181,79 @@ public class PaymentServiceImpl implements PaymentService {
                 .data(objectMapper.valueToTree(result))
                 .build();
     }
+
+    @Override
+    public PayOSResponse changTicket(int purchaseId, CreateTicketPurchaseRequest ticketChange, HttpServletRequest request) throws Exception {
+        var context = SecurityContextHolder.getContext();
+        var userName = context.getAuthentication().getName();
+
+        var account = accountRepository.findAccountByUserName(userName)
+                .orElseThrow(() -> new AppException(ErrorCode.ACCOUNT_NOT_FOUND));
+
+        var ticketPurchase = ticketPurchaseRepository.findById(purchaseId)
+                .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
+
+        if(ticketPurchase.getAccount().getAccountId() != account.getAccountId()){
+            throw new AppException(ErrorCode.TICKET_NOT_MY_ACCOUNT);
+        }
+
+        if (!ticketPurchase.getStatus().equals(ETicketPurchaseStatus.PURCHASED)) {
+            throw new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND);
+        }
+
+        Ticket newTicket = ticketRepository
+                .findById(ticketChange.getTicketId())
+                .orElseThrow(() -> new AppException(ErrorCode.TICKET_NOT_FOUND));
+
+        double totalAmount = newTicket.getPrice() - ticketPurchase.getTicket().getPrice();
+        if (totalAmount < 0) {
+            totalAmount = 0;  // Nếu vé mới rẻ hơn vé cũ, không cần trả thêm tiền, trả về 0
+        }
+
+
+        // Cập nhật vé
+        if(ticketChange.getSeatId() == 0){
+            var zoneActivity = zoneActivityRepository
+                    .findByEventActivityIdAndZoneId(ticketPurchase.getZoneActivity().getEventActivity().getEventActivityId(), ticketChange.getZoneId())
+                    .orElseThrow(() -> new AppException(ErrorCode.ZONE_ACTIVITY_NOT_FOUND));
+
+            ticketPurchase.setZoneActivity(zoneActivity);
+            ticketPurchase.setSeatActivity(null);
+        } else {
+            var seatActivity = seatActivityRepository
+                    .findByEventActivityIdAndSeatId(ticketPurchase.getSeatActivity().getEventActivity().getEventActivityId(), ticketChange.getSeatId())
+                    .orElseThrow(() -> new AppException(ErrorCode.SEAT_ACTIVITY_NOT_FOUND));
+            ticketPurchase.setSeatActivity(seatActivity);
+            ticketPurchase.setZoneActivity(seatActivity.getZoneActivity());
+        }
+
+        ticketPurchase.setTicket(newTicket); // Cập nhật ticket mới
+        ticketPurchaseRepository.save(ticketPurchase);
+
+        // Tạo order mới
+        Order order = new Order();
+        order.setOrderCode(orderServiceImpl.orderCodeAutomationCreating());
+        order.setStatus(totalAmount == 0 ? EOrderStatus.SUCCESSFUL : EOrderStatus.PENDING);
+        order.setTotalAmount(totalAmount);
+        order.setTotalAmountDiscount(totalAmount);
+        order.setNote("Đổi vé");
+        order.setOrderDate(LocalDateTime.now());
+        order.setAccount(account);
+        orderRepository.save(order);
+
+        // Nếu không cần thanh toán, trả kết quả đơn giản
+        if (totalAmount == 0) {
+            return PayOSResponse.builder()
+                    .error("ok")
+                    .message("Đổi vé thành công, không cần thanh toán")
+                    .data(null)
+                    .build();
+        }
+
+        // Gọi PayOS để tạo link thanh toán
+        return createPaymentLink(order.getOrderId(), "", 900L, request); // expiredTime: 5 phút
+    }
+
 
     @Override
     public PaymentResponse handleCallbackPayOS(HttpServletRequest request) throws Exception {

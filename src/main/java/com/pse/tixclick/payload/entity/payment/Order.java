@@ -35,6 +35,9 @@ public class  Order {
     @Column()
     private double totalAmountDiscount;
 
+    @Column(columnDefinition = "NVARCHAR(255)")
+    private String note;
+
     @Column
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime orderDate;
