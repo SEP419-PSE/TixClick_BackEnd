@@ -6,4 +6,5 @@ public enum ETicketPurchaseStatus {
     CANCELLED,
     CHECKED_IN,
     EXPIRED,
+    REFUNDING,
 }

@@ -12,6 +12,7 @@ import com.pse.tixclick.payload.entity.entity_enum.*;
 import com.pse.tixclick.payload.entity.event.EventActivity;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
 import com.pse.tixclick.payload.entity.ticket.TicketMapping;
+import com.pse.tixclick.payload.entity.ticket.TicketPurchase;
 import com.pse.tixclick.payload.response.*;
 import com.pse.tixclick.repository.*;
 import com.pse.tixclick.service.TicketMappingService;
@@ -70,6 +71,7 @@ public class EventServiceImpl implements EventService {
     EventActivityRepository eventActivityRepository;
     CheckinLogRepository checkinLogRepository;
     CompanyVerificationRepository companyVerificationRepository;
+    SimpMessagingTemplate simpMessagingTemplate;
 
     @Override
     public EventDTO createEvent(CreateEventRequest request, MultipartFile logoURL, MultipartFile bannerURL) throws IOException {
@@ -1049,6 +1051,11 @@ public class EventServiceImpl implements EventService {
                         event.getEventName()
 
                 );
+
+                Contract contract = contractRepository.findContractsByEvent_EventId(eventId).get(0);
+                contract.setStatus(EContractStatus.CANCELLED);
+                contractRepository.save(contract);
+                // Gửi thông báo cho người tổ chức sự kiện
                 Notification notification = new Notification();
                 notification.setMessage("Sự kiện của bạn đã bị hủy");
                 notification.setAccount(event.getOrganizer());
@@ -1056,7 +1063,16 @@ public class EventServiceImpl implements EventService {
                 notification.setCreatedDate(LocalDateTime.now());
                 notification.setReadDate(null);
                 notificationRepository.saveAndFlush(notification);
-                messagingTemplate.convertAndSendToUser(event.getOrganizer().getUserName(), "/specific/messages", "Sự kiện của bạn đã bị hủy");
+
+                // Gửi thông báo đến người tổ chức sự kiện qua WebSocket
+                simpMessagingTemplate.convertAndSendToUser(event.getOrganizer().getUserName(), "/specific/messages", "Sự kiện của bạn đã bị hủy");
+
+                List<TicketPurchase> ticketPurchases = ticketPurchaseRepository.findTicketPurchasesByEvent_EventIdAndStatus(eventId, ETicketPurchaseStatus.PURCHASED);
+
+                for (TicketPurchase ticketPurchase : ticketPurchases) {
+                    ticketPurchase.setStatus(ETicketPurchaseStatus.REFUNDING);
+                    ticketPurchaseRepository.save(ticketPurchase);
+                }
             }
 
 
