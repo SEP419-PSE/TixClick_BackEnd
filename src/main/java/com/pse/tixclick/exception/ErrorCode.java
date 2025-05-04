@@ -150,6 +150,10 @@ public enum ErrorCode {
     COMPANY_NOT_REJECTED(1132, "Công ty không bị từ chối", HttpStatus.BAD_REQUEST),
     TICKET_NOT_MY_ACCOUNT(1133, "Vé không thuộc tài khoản của bạn", HttpStatus.BAD_REQUEST),
     SOLD_OUT_TICKET(1134, "Vé đã bán hết", HttpStatus.BAD_REQUEST),
+    TICKET_PURCHASE_DONT_BUY(1135, "Ticket purchase chua mua", HttpStatus.BAD_REQUEST),
+    TICKET_NOT_ENOUGH(1136, "Số lượng vé không đủ", HttpStatus.BAD_REQUEST),
+    TICKET_REQUEST_EXCEED_QUANTITY(1137, "Số lượng vé yêu cầu vượt quá số lượng có sẵn", HttpStatus.BAD_REQUEST),
+    SEAT_ALREADY_BOOKED(1138, "Ghế đã được đặt", HttpStatus.BAD_REQUEST),
     ;
 
 

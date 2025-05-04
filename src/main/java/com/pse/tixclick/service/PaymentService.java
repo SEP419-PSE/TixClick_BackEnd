@@ -15,7 +15,7 @@ public interface PaymentService
 
     PayOSResponse createPaymentLink(int orderId, String voucherCode, long expiredTime, HttpServletRequest request) throws Exception;
 
-    PayOSResponse changTicket(int purchaseId, CreateTicketPurchaseRequest ticketChange, HttpServletRequest request) throws Exception;
+    PayOSResponse changTicket(int purchaseId, List<CreateTicketPurchaseRequest> ticketChange, String caseTicket, HttpServletRequest request) throws Exception;
     PaymentResponse handleCallbackPayOS(HttpServletRequest request) throws Exception;
 
     List<PaymentDTO> getAllPayments();
