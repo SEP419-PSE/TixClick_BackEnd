@@ -26,4 +26,7 @@ public class MyTicketDTO {
     private String qrCode;
     private String zoneName;
     private int quantity;
+    boolean ishaveSeatmap;
+    String logo;
+    String banner;
 }
