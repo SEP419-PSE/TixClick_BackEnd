@@ -719,6 +719,7 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
                         myTicketDTO.setEventId(myTicket.getEvent().getEventId());
                         myTicketDTO.setEventName(myTicket.getEvent().getEventName());
                         myTicketDTO.setEventActivityId(myTicket.getEventActivity().getEventActivityId());
+                        myTicketDTO.setLocationName(myTicket.getEvent().getLocationName());
                         myTicketDTO.setTicketPurchaseId(myTicket.getTicketPurchaseId());
                         myTicketDTO.setLogo(myTicket.getEvent().getLogoURL());
                         myTicketDTO.setBanner(myTicket.getEvent().getBannerURL());

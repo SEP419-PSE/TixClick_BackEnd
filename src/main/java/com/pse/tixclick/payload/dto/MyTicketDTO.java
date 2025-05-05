@@ -19,6 +19,7 @@ public class MyTicketDTO {
     private String eventName;
     private LocalDate eventDate;
     private LocalTime eventStartTime;
+    private String locationName;
     private String location;
     private double price;
     private String seatCode;
