@@ -535,38 +535,14 @@ public class EventServiceImpl implements EventService {
             throw new AppException(ErrorCode.EVENT_NOT_FOUND);
         }
 
-        // Filter out events with future dateEvent
-        events.removeIf(event -> {
-            if (event.getEventActivities().isEmpty()) {
-                throw new AppException(ErrorCode.EVENT_ACTIVITY_NOT_FOUND);
-            }
-
-            for (EventActivity eventActivity : event.getEventActivities()) {
-                if (eventActivity.getDateEvent() == null) {
-                    throw new AppException(ErrorCode.EVENT_ACTIVITY_NOT_FOUND);
-                }
-
-                // Remove event if any activity's date is in the future
-                if (eventActivity.getDateEvent().isAfter(LocalDate.now())) {
-                    return true;
-                }
-            }
-            return false;
-        });
-
-        if (events.isEmpty()) {
-            throw new AppException(ErrorCode.EVENT_NOT_FOUND);
-        }
-
-        // Find the earliest event date from remaining activities
         var earliestEventDate = events.stream()
                 .flatMap(event -> event.getEventActivities().stream())
-                .filter(eventActivity -> eventActivity.getDateEvent() != null)
-                .map(EventActivity::getDateEvent)
-                .min(Comparator.naturalOrder())
-                .orElseThrow(() -> new AppException(ErrorCode.EVENT_ACTIVITY_NOT_FOUND));
+                .filter(eventActivity -> eventActivity.getDateEvent().isAfter(LocalDate.now()))
+                .map(EventActivity::getDateEvent)  // Chỉ lấy dateEvent
+                .min(Comparator.naturalOrder())  // Lấy dateEvent sớm nhất
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_ACTIVITY_NOT_FOUND));  // Nếu không tìm thấy thì throw exception
 
-        // Map events to response objects
+
         List<EventForConsumerResponse> responses = events.stream()
                 .map(event -> new EventForConsumerResponse(
                         event.getBannerURL(),
@@ -577,13 +553,15 @@ public class EventServiceImpl implements EventService {
                                 .orElse(0.0),
                         event.getLogoURL(),
                         earliestEventDate
+
                 ))
                 .collect(Collectors.toList());
 
-        Collections.reverse(responses); // Reverse the list as required
+        Collections.reverse(responses); // Đảo ngược danh sách
 
         return responses;
     }
+
 
     @Override
     public EventDetailForConsumer getEventDetailForConsumer(int eventId) {
