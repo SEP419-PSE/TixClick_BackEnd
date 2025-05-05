@@ -16,6 +16,7 @@ public class MyTicketDTO {
     private int eventId;
     private int eventActivityId;
     private int ticketPurchaseId;
+    private int eventCategoryId;
     private String eventName;
     private LocalDate eventDate;
     private LocalTime eventStartTime;
