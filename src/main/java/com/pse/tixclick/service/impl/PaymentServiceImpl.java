@@ -589,7 +589,8 @@ public class PaymentServiceImpl implements PaymentService {
                         .findById(detail.getTicketPurchase().getTicketPurchaseId())
                         .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
                 //Kiểm tra trạng thái của ticketPurchase xem thanh toán hay huỷ nếu không thì đi xuống dưới
-                if (ticketPurchase.getStatus().equals(ETicketPurchaseStatus.PENDING)) {
+                if (ticketPurchase.getStatus().equals(ETicketPurchaseStatus.PENDING) ||
+                        ticketPurchase.getStatus().equals(ETicketPurchaseStatus.PURCHASED)) {
                     //Nếu không ghế và có zone
                     if(ticketPurchase.getSeatActivity() == null && ticketPurchase.getZoneActivity() != null){
                         //kiểm tra Zone
