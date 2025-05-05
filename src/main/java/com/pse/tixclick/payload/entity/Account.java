@@ -90,5 +90,7 @@ public class Account {
     @OneToOne(mappedBy = "representativeId", fetch = FetchType.LAZY)
     private Company company;
 
+    @OneToMany(mappedBy = "staff", fetch = FetchType.LAZY)
+    private Collection<CheckinLog> checkinLogs;
 
 }

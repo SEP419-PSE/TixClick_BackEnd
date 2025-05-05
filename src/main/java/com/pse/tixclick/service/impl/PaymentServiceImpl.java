@@ -470,7 +470,63 @@ public class PaymentServiceImpl implements PaymentService {
                 orderDetail.setTicketPurchase(newPurchase);
                 orderDetail.setAmount(newPurchase.getTicket().getPrice() * newPurchase.getQuantity());
                 orderDetailRepository.save(orderDetail);
+
+                StringBuilder locationBuilder = new StringBuilder();
+
+                if(newPurchase.getEvent().getAddress() != null && !newPurchase.getEvent().getAddress().trim().isEmpty()) {
+                    locationBuilder.append(newPurchase.getEvent().getAddress()).append(", ");
+                }
+
+                if (newPurchase.getEvent().getWard() != null && !newPurchase.getEvent().getWard().trim().isEmpty()) {
+                    locationBuilder.append(newPurchase.getEvent().getWard()).append(", ");
+                }
+
+                if (newPurchase.getEvent().getDistrict() != null && !newPurchase.getEvent().getDistrict().trim().isEmpty()) {
+                    locationBuilder.append(newPurchase.getEvent().getDistrict()).append(", ");
+                }
+
+                if (newPurchase.getEvent().getCity() != null && !newPurchase.getEvent().getCity().trim().isEmpty()) {
+                    locationBuilder.append(newPurchase.getEvent().getCity());
+                }
+
+                if (locationBuilder.length() > 0 && locationBuilder.lastIndexOf(", ") == locationBuilder.length() - 2) {
+                    locationBuilder.delete(locationBuilder.length() - 2, locationBuilder.length());
+                }
+
+                CheckinLog checkinLog = new CheckinLog();
+                checkinLog.setCheckinTime(null);
+                checkinLog.setCheckinDevice("Mobile");
+                checkinLog.setTicketPurchase(newPurchase);
+                checkinLog.setAccount(account);
+                checkinLog.setCheckinStatus(ECheckinLogStatus.PENDING);
+                checkinLog.setStaff(null);
+                checkinLog.setCheckinLocation(locationBuilder.toString());
+                checkinLogRepository.save(checkinLog);
+
+
+
+
+
+
+                TicketQrCodeDTO qrcode = new TicketQrCodeDTO();
+                qrcode.setTicket_name(newPurchase.getTicket().getTicketName());
+                qrcode.setPurchase_date(new Date());
+                qrcode.setEvent_name(newPurchase.getEvent().getEventName());
+                qrcode.setActivity_name(newPurchase.getEventActivity().getActivityName());
+                qrcode.setZone_name(newPurchase.getZoneActivity() != null ? newPurchase.getZoneActivity().getZone().getZoneName() : null);
+                qrcode.setSeat_code(newPurchase.getSeatActivity() != null ? newPurchase.getSeatActivity().getSeat().getRowNumber() + newPurchase.getSeatActivity().getSeat().getSeatName() : null);
+                qrcode.setSeat_row_number(newPurchase.getSeatActivity() != null ? newPurchase.getSeatActivity().getSeat().getRowNumber() : null);
+                qrcode.setSeat_column_number(newPurchase.getSeatActivity() != null ? newPurchase.getSeatActivity().getSeat().getColumnNumber() : null);
+                qrcode.setAccount_name(account.getUserName());
+                qrcode.setEmail(account.getEmail());
+                qrcode.setPhone(account.getPhone());
+                qrcode.setCheckin_Log_id(0);
+                qrcode.setStatus("Đã thanh toán");
+                String qrCode1 = generateQRCode(qrcode);
+
+
                 newPurchase.setStatus(ETicketPurchaseStatus.PURCHASED);
+                newPurchase.setQrCode(qrCode1);
                 ticketPurchaseRepository.save(newPurchase);
             }
 

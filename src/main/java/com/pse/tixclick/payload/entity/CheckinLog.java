@@ -27,7 +27,7 @@ public class CheckinLog {
     @Column
     private String checkinDevice;
 
-    @Column
+    @Column(columnDefinition = "NVARCHAR(255)")
     private String checkinLocation;
 
     @Enumerated(EnumType.STRING)
@@ -37,6 +37,10 @@ public class CheckinLog {
     @ManyToOne
     @JoinColumn(name = "account_id")
     private Account account;
+
+    @ManyToOne
+    @JoinColumn(name = "Check_in_staff_id")
+    private Account staff;
 
     @ManyToOne
     @JoinColumn(name = "ticket_purchase_id")
