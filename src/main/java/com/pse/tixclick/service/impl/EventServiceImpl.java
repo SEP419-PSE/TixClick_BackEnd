@@ -608,7 +608,7 @@ public class EventServiceImpl implements EventService {
                         .map(ticket -> modelMapper.map(ticket, TicketDTO.class))
                         .collect(Collectors.toList()));
             }
-            activityResponse.setSoldOut(ticketMappingService.checkTicketMappingExist(activityResponse.getEventActivityId(), ticketDTOS.get(0).getTicketId()));
+            activityResponse.setSoldOut(!ticketMappingService.checkTicketMappingExist(activityResponse.getEventActivityId(), ticketDTOS.get(0).getTicketId()));
 
             // Gán danh sách TicketDTO vào EventActivityResponse
             activityResponse.setTickets(ticketDTOS);
