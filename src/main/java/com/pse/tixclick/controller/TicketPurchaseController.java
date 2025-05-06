@@ -160,23 +160,26 @@ public class TicketPurchaseController {
     }
 
     @GetMapping("/all_of_account")
-    public ResponseEntity<ApiResponse<List<MyTicketDTO>>> getAllTicketPurchaseByAccount() {
+    public ResponseEntity<ApiResponse<List<MyTicketDTO>>> getAllTicketPurchaseByAccount(
+            @RequestParam(defaultValue = "0") int page
+    ) {
         try {
-            List<MyTicketDTO> myTicketDTOS = ticketPurchaseService.getTicketPurchasesByAccount();
+            int size = 3; // mỗi trang có 3 vé
+            List<MyTicketDTO> myTicketDTOS = ticketPurchaseService.getTicketPurchasesByAccount(page, size);
 
             if (myTicketDTOS == null || myTicketDTOS.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.OK)
                         .body(ApiResponse.<List<MyTicketDTO>>builder()
                                 .code(HttpStatus.OK.value())
-                                .message("No ticket purchases found")
-                                .result(Collections.emptyList()) // Trả về danh sách rỗng thay vì null
+                                .message("No ticket purchases found on this page")
+                                .result(Collections.emptyList())
                                 .build());
             }
 
             return ResponseEntity.ok(
                     ApiResponse.<List<MyTicketDTO>>builder()
                             .code(200)
-                            .message("Successfully fetched all Ticket Purchase by account")
+                            .message("Successfully fetched Ticket Purchases on page " + page)
                             .result(myTicketDTOS)
                             .build()
             );
@@ -185,10 +188,11 @@ public class TicketPurchaseController {
                     .body(ApiResponse.<List<MyTicketDTO>>builder()
                             .code(400)
                             .message(e.getMessage())
-                            .result(Collections.emptyList()) // Trả về danh sách rỗng thay vì null
+                            .result(Collections.emptyList())
                             .build());
         }
     }
+
 
     @PostMapping("/decrypt_qr_code")
     public ResponseEntity<ApiResponse<TicketQrCodeDTO>> decryptQrCode(@RequestBody String qrCode) {

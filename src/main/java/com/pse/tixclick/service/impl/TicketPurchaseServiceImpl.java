@@ -697,9 +697,9 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
     }
 
     @Override
-    public List<MyTicketDTO> getTicketPurchasesByAccount() {
-        if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.BUYER) && !
-                appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.ORGANIZER)) {
+    public List<MyTicketDTO> getTicketPurchasesByAccount(int page, int size) {
+        if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.BUYER) &&
+                !appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.ORGANIZER)) {
             throw new AppException(ErrorCode.NOT_PERMISSION);
         }
 
@@ -724,57 +724,55 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
                         myTicketDTO.setTicketPurchaseId(myTicket.getTicketPurchaseId());
                         myTicketDTO.setLogo(myTicket.getEvent().getLogoURL());
                         myTicketDTO.setBanner(myTicket.getEvent().getBannerURL());
-                        if (myTicket.getEvent().getSeatMap() != null) {
-                            myTicketDTO.setIshaveSeatmap(true);
-                        } else {
-                            myTicketDTO.setIshaveSeatmap(false);
-                        }
+                        myTicketDTO.setIshaveSeatmap(myTicket.getEvent().getSeatMap() != null);
 
                         StringBuilder locationBuilder = new StringBuilder();
-                        if(myTicket.getEvent().getAddress() != null) {
-                            locationBuilder.append(myTicket.getEvent().getAddress()).append(", ");
-                        }
-                        if (myTicket.getEvent().getWard() != null) {
-                            locationBuilder.append(myTicket.getEvent().getWard()).append(", ");
-                        }
-                        if (myTicket.getEvent().getDistrict() != null) {
-                            locationBuilder.append(myTicket.getEvent().getDistrict()).append(", ");
-                        }
-                        if (myTicket.getEvent().getCity() != null) {
-                            locationBuilder.append(myTicket.getEvent().getCity());
-                        }
-                        if (locationBuilder.length() > 0) {
-                            if (locationBuilder.lastIndexOf(", ") == locationBuilder.length() - 2) {
-                                locationBuilder.delete(locationBuilder.length() - 2, locationBuilder.length());
-                            }
+                        if(myTicket.getEvent().getAddress() != null) locationBuilder.append(myTicket.getEvent().getAddress()).append(", ");
+                        if(myTicket.getEvent().getWard() != null) locationBuilder.append(myTicket.getEvent().getWard()).append(", ");
+                        if(myTicket.getEvent().getDistrict() != null) locationBuilder.append(myTicket.getEvent().getDistrict()).append(", ");
+                        if(myTicket.getEvent().getCity() != null) locationBuilder.append(myTicket.getEvent().getCity());
 
-                            myTicketDTO.setLocation(locationBuilder.toString());
-                        } else {
-                            myTicketDTO.setLocation(null);
+                        if (locationBuilder.length() > 0 && locationBuilder.lastIndexOf(", ") == locationBuilder.length() - 2) {
+                            locationBuilder.delete(locationBuilder.length() - 2, locationBuilder.length());
                         }
+
+                        myTicketDTO.setLocation(locationBuilder.length() > 0 ? locationBuilder.toString() : null);
                     }
+
                     if (myTicket.getEventActivity() != null) {
                         myTicketDTO.setEventDate(myTicket.getEventActivity().getDateEvent());
                         myTicketDTO.setEventStartTime(myTicket.getEventActivity().getStartTimeEvent());
                     }
+
                     if (myTicket.getTicket() != null) {
                         myTicketDTO.setPrice(myTicket.getTicket().getPrice());
                         myTicketDTO.setTicketType(myTicket.getTicket().getTicketName());
                     }
+
                     if (myTicket.getZoneActivity() != null && myTicket.getZoneActivity().getZone() != null) {
                         myTicketDTO.setZoneName(myTicket.getZoneActivity().getZone().getZoneName());
                     }
+
                     if (myTicket.getSeatActivity() != null && myTicket.getSeatActivity().getSeat() != null) {
                         myTicketDTO.setSeatCode(myTicket.getSeatActivity().getSeat().getSeatName());
                     }
 
                     myTicketDTO.setQuantity(myTicket.getQuantity());
                     myTicketDTO.setQrCode(myTicket.getQrCode());
+
                     return myTicketDTO;
                 })
                 .collect(Collectors.toList());
 
-        return myTicketDTOS.isEmpty() ? null : myTicketDTOS;
+        // Phân trang thủ công
+        int fromIndex = page * size;
+        int toIndex = Math.min(fromIndex + size, myTicketDTOS.size());
+
+        if (fromIndex >= myTicketDTOS.size()) {
+            return Collections.emptyList();
+        }
+
+        return myTicketDTOS.subList(fromIndex, toIndex);
     }
 
 

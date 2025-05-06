@@ -20,8 +20,7 @@ public interface TicketPurchaseService {
 
     TicketsSoldAndRevenueDTO getTicketsSoldAndRevenueByDay(int day);
 
-    List<MyTicketDTO> getTicketPurchasesByAccount();
-
+    List<MyTicketDTO> getTicketPurchasesByAccount(int page, int size);
     TicketQrCodeDTO decryptQrCode(String qrCode);
 
     int countTicketPurchaseStatusByPurchased();
