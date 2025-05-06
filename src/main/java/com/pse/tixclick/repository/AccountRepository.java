@@ -104,9 +104,8 @@ public interface AccountRepository extends JpaRepository<Account, Integer> {
 
     List<Account> findAccountsByRole_RoleId(int roleId);
 
-    @Query(value = "SELECT * " +
-            "FROM account " +
-            "WHERE email LIKE CONCAT('%', :email, '%@gmail.com')", nativeQuery = true)
+    @Query(value = "SELECT * FROM account WHERE email LIKE CONCAT('%', :email, '%')", nativeQuery = true)
     List<Account> searchAccountByEmail(@Param("email") String email);
+
 
 }
