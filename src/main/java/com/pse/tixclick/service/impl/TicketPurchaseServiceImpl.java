@@ -696,7 +696,7 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
 
         return new TicketsSoldAndRevenueDTO(days, totalTicketsSold, totalRevenue, totalEvents, avgDailyRevenue, revenueGrowth);
     }
-
+    @Override
     public PaginationResponse<MyTicketDTO> getTicketPurchasesByAccount(int page, int size) {
         if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.BUYER)
                 && !appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.ORGANIZER)) {

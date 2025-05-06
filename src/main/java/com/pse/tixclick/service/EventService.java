@@ -64,7 +64,7 @@ public interface EventService {
     List<EventDetailForConsumer>  getEventByStartDateAndEndDateAndEventTypeAndEventName(String startDate, String endDate, String eventType, String eventName,List<String> eventCategory, Double minPrice, Double maxPrice);
 
     List<EventDetailForConsumer> searchEvent(String eventName, Integer eventCategoryId, Double minPrice, String city);
-    List<EventDashboardResponse> getEventDashboardByCompanyId(int companyId);
+    PaginationResponse<EventDashboardResponse> getEventDashboardByCompanyId(int companyId, int page, int size);
 
     boolean approvedEvent(int eventId, EEventStatus status) throws MessagingException;
 
