@@ -33,10 +33,21 @@ public class MemberActivityController {
             @RequestBody CreateMemberActivityRequest request) {
         try {
             BulkMemberActivityResult result = memberActivityService.addMemberActivities(request);
+            String message;
+
+            // Determine message based on success and failed lists
+            if (result.getSuccess().isEmpty() && !result.getFailed().isEmpty()) {
+                message = "Failed to create member activities";
+            } else if (!result.getSuccess().isEmpty() && !result.getFailed().isEmpty()) {
+                message = "Some member activities were created successfully, but some failed";
+            } else {
+                message = "Member activities added successfully";
+            }
+
             return ResponseEntity.ok(
                     ApiResponse.<BulkMemberActivityResult>builder()
                             .code(HttpStatus.OK.value())
-                            .message("Member activities added successfully")
+                            .message(message)
                             .result(result)
                             .build()
             );

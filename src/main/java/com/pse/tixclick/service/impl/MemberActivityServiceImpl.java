@@ -85,14 +85,12 @@ public class MemberActivityServiceImpl implements MemberActivityService {
                 String startTimeEvent = eventActivity.getStartTimeEvent().format(DateTimeFormatter.ISO_LOCAL_TIME);
                 String endTimeEvent = eventActivity.getEndTimeEvent().format(DateTimeFormatter.ISO_LOCAL_TIME);
                 // Kiểm tra xem có sự trùng lặp về thời gian của MemberActivity không
-                int hasConflict = memberActivityRepository.checkEventTimeConflict(
-                        member.getAccount().getAccountId(),
-                        dateEvent,
-                        startTimeEvent,
-                        endTimeEvent
+                boolean hasConflict = memberActivityRepository.checkEventConflict(
+                        member.getMemberId(),
+                        eventActivity.getEventActivityId()
                 );
 
-                if (hasConflict == 1) {
+                if (hasConflict == true) {
                     failed.add(new BulkMemberActivityResult.FailedMember(memberId, "Thành viên bị trùng thời gian"));
                     continue;
                 }

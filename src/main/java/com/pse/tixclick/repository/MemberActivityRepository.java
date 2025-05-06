@@ -22,35 +22,32 @@ public interface MemberActivityRepository extends JpaRepository<MemberActivity,I
     List<MemberActivity> findMemberActivitiesByMember_MemberIdAndStatus(int memberId, EStatus status);
 
     @Query(value = """
-        SELECT CASE 
-            WHEN COUNT(ma.member_activity_id) > 0 THEN 1 
-            ELSE 0 
-        END AS HasConflict
-        FROM tixclick.dbo.member_activity ma
-        INNER JOIN tixclick.dbo.event_activity ea
-            ON ma.event_activity_id = ea.event_activity_id
-        INNER JOIN tixclick.dbo.member m
-            ON ma.member_id = m.member_id
-        WHERE m.account_id = :accountId
-          AND ea.date_event = :dateEvent
-          AND (
-            -- Check start time trong khoảng
-            CAST(CONVERT(VARCHAR(10), ea.date_event, 120) + ' ' + CONVERT(VARCHAR(8), ea.start_time_event, 108) AS DATETIME) BETWEEN 
-                CAST(CONCAT(:dateEvent, ' ', :startTimeEvent) AS DATETIME) 
-                AND CAST(CONCAT(:dateEvent, ' ', :endTimeEvent) AS DATETIME)
+        DECLARE @member_id INT = :memberId;
+        DECLARE @event_activity_id INT = :eventActivityId;
 
-            OR
-
-            -- Check end time trong khoảng
-            CAST(CONVERT(VARCHAR(10), ea.date_event, 120) + ' ' + CONVERT(VARCHAR(8), ea.end_time_event, 108) AS DATETIME) BETWEEN 
-                CAST(CONCAT(:dateEvent, ' ', :startTimeEvent) AS DATETIME) 
-                AND CAST(CONCAT(:dateEvent, ' ', :endTimeEvent) AS DATETIME)
-          )
-    """, nativeQuery = true)
-    int checkEventTimeConflict(
-            @Param("accountId") Integer accountId,
-            @Param("dateEvent") String dateEvent,
-            @Param("startTimeEvent") String startTimeEvent,   // Dùng String "HH:mm:ss"
-            @Param("endTimeEvent") String endTimeEvent
-    );
+        SELECT 
+            CASE 
+                WHEN ea.event_activity_id IS NULL THEN CAST(0 AS BIT)
+                WHEN EXISTS (
+                    SELECT 1
+                    FROM [tixclick5].[dbo].[member_activity] ma
+                    INNER JOIN [tixclick5].[dbo].[event_activity] ea2 ON ma.event_activity_id = ea2.event_activity_id
+                    INNER JOIN [tixclick5].[dbo].[member] m ON ma.member_id = m.member_id
+                    WHERE 
+                        m.member_id = @member_id
+                        AND ma.event_activity_id != @event_activity_id
+                        AND ea2.date_event = ea.date_event
+                        AND (
+                            (ea2.start_time_event <= ea.end_time_event AND ea2.end_time_event >= ea.start_time_event)
+                        )
+                ) THEN CAST(1 AS BIT)
+                ELSE CAST(0 AS BIT)
+            END AS is_conflict
+        FROM [tixclick5].[dbo].[event_activity] ea
+        LEFT JOIN [tixclick5].[dbo].[member_activity] ma ON ea.event_activity_id = ma.event_activity_id 
+            AND ma.member_id = @member_id
+        LEFT JOIN [tixclick5].[dbo].[member] m ON ma.member_id = m.member_id
+        WHERE ea.event_activity_id = @event_activity_id
+        """, nativeQuery = true)
+    boolean checkEventConflict(@Param("memberId") int memberId, @Param("eventActivityId") int eventActivityId);
 }
