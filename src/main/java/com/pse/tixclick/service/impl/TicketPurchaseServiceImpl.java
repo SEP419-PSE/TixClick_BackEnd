@@ -527,6 +527,14 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
             if (ticketPurchase.getStatus().equals(ETicketPurchaseStatus.PENDING)) {
                 //Nếu không ghế và có zone
                 if(ticketPurchase.getSeatActivity() == null && ticketPurchase.getZoneActivity() != null){
+                    if(ticketPurchase.getTicketPurchaseOldId()!= null){
+                        TicketPurchase ticketPurchaseOld = ticketPurchaseRepository
+                                .findById(ticketPurchase.getTicketPurchaseOldId())
+                                .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
+
+                        ticketPurchaseOld.setStatus(ETicketPurchaseStatus.PURCHASED);
+                        ticketPurchaseRepository.save(ticketPurchaseOld);
+                    }
                     ZoneActivity zoneActivity = zoneActivityRepository
                             .findByEventActivityIdAndZoneId(ticketPurchase.getZoneActivity().getEventActivity().getEventActivityId(), ticketPurchase.getZoneActivity().getZone().getZoneId())
                             .orElseThrow(() -> new AppException(ErrorCode.ZONE_ACTIVITY_NOT_FOUND));
@@ -546,6 +554,14 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
 
                 //Nếu có ghế và có zone
                 if(ticketPurchase.getZoneActivity() != null && ticketPurchase.getSeatActivity() != null){
+                    if(ticketPurchase.getTicketPurchaseOldId()!= null){
+                        TicketPurchase ticketPurchaseOld = ticketPurchaseRepository
+                                .findById(ticketPurchase.getTicketPurchaseOldId())
+                                .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
+
+                        ticketPurchaseOld.setStatus(ETicketPurchaseStatus.PURCHASED);
+                        ticketPurchaseRepository.save(ticketPurchaseOld);
+                    }
                     SeatActivity seatActivity = seatActivityRepository
                             .findByEventActivityIdAndSeatId(ticketPurchase.getSeatActivity().getEventActivity().getEventActivityId(), ticketPurchase.getSeatActivity().getSeat().getSeatId())
                             .orElseThrow(() -> new AppException(ErrorCode.SEAT_ACTIVITY_NOT_FOUND));
@@ -572,6 +588,14 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
 
                 //Nếu không ghế và không zone
                 if(ticketPurchase.getZoneActivity() == null && ticketPurchase.getSeatActivity() == null){
+                    if(ticketPurchase.getTicketPurchaseOldId()!= null){
+                        TicketPurchase ticketPurchaseOld = ticketPurchaseRepository
+                                .findById(ticketPurchase.getTicketPurchaseOldId())
+                                .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
+
+                        ticketPurchaseOld.setStatus(ETicketPurchaseStatus.PURCHASED);
+                        ticketPurchaseRepository.save(ticketPurchaseOld);
+                    }
                     TicketMapping ticketMapping = ticketMappingRepository
                             .findTicketMappingByTicketIdAndEventActivityId(ticketPurchase.getTicket().getTicketId(), ticketPurchase.getEventActivity().getEventActivityId())
                             .orElseThrow(() -> new AppException(ErrorCode.TICKET_MAPPING_NOT_FOUND));

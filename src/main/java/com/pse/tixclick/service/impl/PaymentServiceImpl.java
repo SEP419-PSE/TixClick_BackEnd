@@ -267,7 +267,7 @@ public class PaymentServiceImpl implements PaymentService {
                     keepPurchase.setTicket(oldTicket); // giữ nguyên vé cũ
                     keepPurchase.setZoneActivity(null);
                     keepPurchase.setSeatActivity(null);
-                    keepPurchase.setStatus(ETicketPurchaseStatus.PURCHASED); // status cho vé giữ nguyên
+                    keepPurchase.setStatus(ETicketPurchaseStatus.PENDING);
                     keepPurchase.setTicketPurchaseOldId(ticketPurchase.getTicketPurchaseId());
                     ticketPurchaseRepository.save(keepPurchase);
                     newPurchases.add(keepPurchase);
@@ -313,7 +313,7 @@ public class PaymentServiceImpl implements PaymentService {
                     newPurchase.setTicket(newTicket);
                     newPurchase.setZoneActivity(newZoneActivity);
                     newPurchase.setSeatActivity(null);
-                    newPurchase.setStatus(ETicketPurchaseStatus.PURCHASED);
+                    newPurchase.setStatus(ETicketPurchaseStatus.PENDING);
                     newPurchase.setTicketPurchaseOldId(ticketPurchase.getTicketPurchaseId());
                     ticketPurchaseRepository.save(newPurchase);
                     newPurchases.add(newPurchase);
@@ -335,7 +335,7 @@ public class PaymentServiceImpl implements PaymentService {
                     newPurchase.setTicket(newTicket);
                     newPurchase.setSeatActivity(newSeatActivity);
                     newPurchase.setZoneActivity(newSeatActivity.getZoneActivity());
-                    newPurchase.setStatus(ETicketPurchaseStatus.PURCHASED);
+                    newPurchase.setStatus(ETicketPurchaseStatus.PENDING);
                     newPurchase.setTicketPurchaseOldId(ticketPurchase.getTicketPurchaseId());
                     ticketPurchaseRepository.save(newPurchase);
                     newPurchases.add(newPurchase);
@@ -430,7 +430,7 @@ public class PaymentServiceImpl implements PaymentService {
                     keepOld.setTicket(oldTicket);
                     keepOld.setZoneActivity(ticketPurchase.getZoneActivity()); // giữ nguyên zone cũ
                     keepOld.setSeatActivity(null);
-                    keepOld.setStatus(ETicketPurchaseStatus.PURCHASED);
+                    keepOld.setStatus(ETicketPurchaseStatus.PENDING);
                     keepOld.setTicketPurchaseOldId(ticketPurchase.getTicketPurchaseId());
                     ticketPurchaseRepository.save(keepOld);
                     newPurchases.add(keepOld);
@@ -525,7 +525,7 @@ public class PaymentServiceImpl implements PaymentService {
                 String qrCode1 = generateQRCode(qrcode);
 
 
-                newPurchase.setStatus(ETicketPurchaseStatus.PURCHASED);
+                newPurchase.setStatus(ETicketPurchaseStatus.PENDING);
                 newPurchase.setQrCode(qrCode1);
                 ticketPurchaseRepository.save(newPurchase);
             }
