@@ -1149,6 +1149,13 @@ public class EventServiceImpl implements EventService {
                             latestEnd
                     );
 
+//            List<RevenueByDateProjection> dailyRevenue = ticketPurchaseRepository
+//                    .getDailyRevenueByEventAndActivity(
+//                            event.getEventId(),
+//                            activity.getEventActivityId(),
+//
+//                    );
+
             // Mapping doanh thu theo ngày
             List<CompanyDashboardResponse.EventActivityRevenueReportResponse> activityRevenueList =
                     dailyRevenue.stream()
@@ -1206,6 +1213,7 @@ public class EventServiceImpl implements EventService {
 
         return List.of(finalResponse);
     }
+
 
     @Override
     public CheckinStatsResponse getCheckinByEventActivityId(int eventActivityId) {

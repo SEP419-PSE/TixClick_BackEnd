@@ -165,9 +165,9 @@ public class TicketPurchaseController {
             List<MyTicketDTO> myTicketDTOS = ticketPurchaseService.getTicketPurchasesByAccount();
 
             if (myTicketDTOS == null || myTicketDTOS.isEmpty()) {
-                return ResponseEntity.status(404)
+                return ResponseEntity.status(HttpStatus.OK)
                         .body(ApiResponse.<List<MyTicketDTO>>builder()
-                                .code(404)
+                                .code(HttpStatus.OK.value())
                                 .message("No ticket purchases found")
                                 .result(Collections.emptyList()) // Trả về danh sách rỗng thay vì null
                                 .build());
