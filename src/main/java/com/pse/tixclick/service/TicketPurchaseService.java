@@ -4,6 +4,7 @@ import com.pse.tixclick.payload.dto.*;
 import com.pse.tixclick.payload.request.create.CheckinRequest;
 import com.pse.tixclick.payload.request.create.CreateTicketPurchaseRequest;
 import com.pse.tixclick.payload.request.create.ListTicketPurchaseRequest;
+import com.pse.tixclick.payload.response.PaginationResponse;
 
 import java.util.List;
 
@@ -20,7 +21,7 @@ public interface TicketPurchaseService {
 
     TicketsSoldAndRevenueDTO getTicketsSoldAndRevenueByDay(int day);
 
-    List<MyTicketDTO> getTicketPurchasesByAccount(int page, int size);
+    PaginationResponse<MyTicketDTO> getTicketPurchasesByAccount(int page, int size);
     TicketQrCodeDTO decryptQrCode(String qrCode);
 
     int countTicketPurchaseStatusByPurchased();

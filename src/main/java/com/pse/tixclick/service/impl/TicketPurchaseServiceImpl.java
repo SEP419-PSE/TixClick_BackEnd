@@ -13,6 +13,7 @@ import com.pse.tixclick.payload.entity.ticket.TicketMapping;
 import com.pse.tixclick.payload.entity.ticket.TicketPurchase;
 import com.pse.tixclick.payload.request.create.CreateTicketPurchaseRequest;
 import com.pse.tixclick.payload.request.create.ListTicketPurchaseRequest;
+import com.pse.tixclick.payload.response.PaginationResponse;
 import com.pse.tixclick.repository.*;
 import com.pse.tixclick.service.TicketPurchaseService;
 import com.pse.tixclick.utils.AppUtils;
@@ -696,10 +697,9 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
         return new TicketsSoldAndRevenueDTO(days, totalTicketsSold, totalRevenue, totalEvents, avgDailyRevenue, revenueGrowth);
     }
 
-    @Override
-    public List<MyTicketDTO> getTicketPurchasesByAccount(int page, int size) {
-        if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.BUYER) &&
-                !appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.ORGANIZER)) {
+    public PaginationResponse<MyTicketDTO> getTicketPurchasesByAccount(int page, int size) {
+        if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.BUYER)
+                && !appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.ORGANIZER)) {
             throw new AppException(ErrorCode.NOT_PERMISSION);
         }
 
@@ -707,73 +707,76 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
                 .getTicketPurchasesByAccount(appUtils.getAccountFromAuthentication().getAccountId());
 
         if (ticketPurchases.isEmpty()) {
-            return null;
+            return new PaginationResponse<>(Collections.emptyList(), page, 0, 0, size);
         }
 
         List<MyTicketDTO> myTicketDTOS = ticketPurchases.stream()
-                .filter(ticketPurchase -> ticketPurchase.getStatus().equals(ETicketPurchaseStatus.PURCHASED))
-                .map(myTicket -> {
-                    MyTicketDTO myTicketDTO = new MyTicketDTO();
+                .filter(tp -> tp.getStatus().equals(ETicketPurchaseStatus.PURCHASED))
+                .map(tp -> {
+                    MyTicketDTO dto = new MyTicketDTO();
 
-                    if (myTicket.getEvent() != null) {
-                        myTicketDTO.setEventId(myTicket.getEvent().getEventId());
-                        myTicketDTO.setEventCategoryId(myTicket.getEvent().getCategory().getEventCategoryId());
-                        myTicketDTO.setEventName(myTicket.getEvent().getEventName());
-                        myTicketDTO.setEventActivityId(myTicket.getEventActivity().getEventActivityId());
-                        myTicketDTO.setLocationName(myTicket.getEvent().getLocationName());
-                        myTicketDTO.setTicketPurchaseId(myTicket.getTicketPurchaseId());
-                        myTicketDTO.setLogo(myTicket.getEvent().getLogoURL());
-                        myTicketDTO.setBanner(myTicket.getEvent().getBannerURL());
-                        myTicketDTO.setIshaveSeatmap(myTicket.getEvent().getSeatMap() != null);
+                    if (tp.getEvent() != null) {
+                        dto.setEventId(tp.getEvent().getEventId());
+                        dto.setEventCategoryId(tp.getEvent().getCategory().getEventCategoryId());
+                        dto.setEventName(tp.getEvent().getEventName());
+                        dto.setEventActivityId(tp.getEventActivity().getEventActivityId());
+                        dto.setLocationName(tp.getEvent().getLocationName());
+                        dto.setTicketPurchaseId(tp.getTicketPurchaseId());
+                        dto.setLogo(tp.getEvent().getLogoURL());
+                        dto.setBanner(tp.getEvent().getBannerURL());
+                        dto.setIshaveSeatmap(tp.getEvent().getSeatMap() != null);
 
                         StringBuilder locationBuilder = new StringBuilder();
-                        if(myTicket.getEvent().getAddress() != null) locationBuilder.append(myTicket.getEvent().getAddress()).append(", ");
-                        if(myTicket.getEvent().getWard() != null) locationBuilder.append(myTicket.getEvent().getWard()).append(", ");
-                        if(myTicket.getEvent().getDistrict() != null) locationBuilder.append(myTicket.getEvent().getDistrict()).append(", ");
-                        if(myTicket.getEvent().getCity() != null) locationBuilder.append(myTicket.getEvent().getCity());
+                        if (tp.getEvent().getAddress() != null) locationBuilder.append(tp.getEvent().getAddress()).append(", ");
+                        if (tp.getEvent().getWard() != null) locationBuilder.append(tp.getEvent().getWard()).append(", ");
+                        if (tp.getEvent().getDistrict() != null) locationBuilder.append(tp.getEvent().getDistrict()).append(", ");
+                        if (tp.getEvent().getCity() != null) locationBuilder.append(tp.getEvent().getCity());
 
                         if (locationBuilder.length() > 0 && locationBuilder.lastIndexOf(", ") == locationBuilder.length() - 2) {
                             locationBuilder.delete(locationBuilder.length() - 2, locationBuilder.length());
                         }
 
-                        myTicketDTO.setLocation(locationBuilder.length() > 0 ? locationBuilder.toString() : null);
+                        dto.setLocation(locationBuilder.length() > 0 ? locationBuilder.toString() : null);
                     }
 
-                    if (myTicket.getEventActivity() != null) {
-                        myTicketDTO.setEventDate(myTicket.getEventActivity().getDateEvent());
-                        myTicketDTO.setEventStartTime(myTicket.getEventActivity().getStartTimeEvent());
+                    if (tp.getEventActivity() != null) {
+                        dto.setEventDate(tp.getEventActivity().getDateEvent());
+                        dto.setEventStartTime(tp.getEventActivity().getStartTimeEvent());
                     }
 
-                    if (myTicket.getTicket() != null) {
-                        myTicketDTO.setPrice(myTicket.getTicket().getPrice());
-                        myTicketDTO.setTicketType(myTicket.getTicket().getTicketName());
+                    if (tp.getTicket() != null) {
+                        dto.setPrice(tp.getTicket().getPrice());
+                        dto.setTicketType(tp.getTicket().getTicketName());
                     }
 
-                    if (myTicket.getZoneActivity() != null && myTicket.getZoneActivity().getZone() != null) {
-                        myTicketDTO.setZoneName(myTicket.getZoneActivity().getZone().getZoneName());
+                    if (tp.getZoneActivity() != null && tp.getZoneActivity().getZone() != null) {
+                        dto.setZoneName(tp.getZoneActivity().getZone().getZoneName());
                     }
 
-                    if (myTicket.getSeatActivity() != null && myTicket.getSeatActivity().getSeat() != null) {
-                        myTicketDTO.setSeatCode(myTicket.getSeatActivity().getSeat().getSeatName());
+                    if (tp.getSeatActivity() != null && tp.getSeatActivity().getSeat() != null) {
+                        dto.setSeatCode(tp.getSeatActivity().getSeat().getSeatName());
                     }
 
-                    myTicketDTO.setQuantity(myTicket.getQuantity());
-                    myTicketDTO.setQrCode(myTicket.getQrCode());
+                    dto.setQuantity(tp.getQuantity());
+                    dto.setQrCode(tp.getQrCode());
 
-                    return myTicketDTO;
-                })
-                .collect(Collectors.toList());
+                    return dto;
+                }).collect(Collectors.toList());
 
-        // Phân trang thủ công
+        int totalElements = myTicketDTOS.size();
+        int totalPages = (int) Math.ceil((double) totalElements / size);
         int fromIndex = page * size;
-        int toIndex = Math.min(fromIndex + size, myTicketDTOS.size());
+        int toIndex = Math.min(fromIndex + size, totalElements);
 
-        if (fromIndex >= myTicketDTOS.size()) {
-            return Collections.emptyList();
+        if (fromIndex >= totalElements) {
+            return new PaginationResponse<>(Collections.emptyList(), page, totalPages, totalElements, size);
         }
 
-        return myTicketDTOS.subList(fromIndex, toIndex);
+        List<MyTicketDTO> pageItems = myTicketDTOS.subList(fromIndex, toIndex);
+
+        return new PaginationResponse<>(pageItems, page, totalPages, totalElements, size);
     }
+
 
 
     @Override
