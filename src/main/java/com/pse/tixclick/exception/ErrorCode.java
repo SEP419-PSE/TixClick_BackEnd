@@ -155,6 +155,8 @@ public enum ErrorCode {
     TICKET_REQUEST_EXCEED_QUANTITY(1137, "Số lượng vé yêu cầu vượt quá số lượng có sẵn", HttpStatus.BAD_REQUEST),
     SEAT_ALREADY_BOOKED(1138, "Ghế đã được đặt", HttpStatus.BAD_REQUEST),
     EVENT_NOT_SCHEDULED(1139, "Sự kiện không được lên lịch", HttpStatus.BAD_REQUEST),
+    FORBIDDEN(1140, "Bạn không có quyền truy cập tài nguyên này", HttpStatus.FORBIDDEN),
+    NOT_FOUNT_ROLE(1141, "Không tìm thấy vai trò", HttpStatus.NOT_FOUND),
     ;
 
 

@@ -27,6 +27,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.nio.file.AccessDeniedException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -93,6 +94,7 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
 
     @Override
     public List<TicketPurchaseDTO> createTicketPurchase(ListTicketPurchaseRequest createTicketPurchaseRequest) {
+        AppUtils.checkRole(ERole.BUYER,ERole.ORGANIZER);
         if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.BUYER) &&
                 !appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.ORGANIZER)) {
             throw new AppException(ErrorCode.NOT_PERMISSION);
@@ -697,7 +699,10 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
         return new TicketsSoldAndRevenueDTO(days, totalTicketsSold, totalRevenue, totalEvents, avgDailyRevenue, revenueGrowth);
     }
     @Override
-    public PaginationResponse<MyTicketDTO> getTicketPurchasesByAccount(int page, int size) {
+    public PaginationResponse<MyTicketDTO> getTicketPurchasesByAccount(int page, int size) throws AccessDeniedException {
+
+        appUtils.checkRole(ERole.BUYER, ERole.ORGANIZER);
+
         if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.BUYER)
                 && !appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.ORGANIZER)) {
             throw new AppException(ErrorCode.NOT_PERMISSION);

@@ -80,6 +80,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public EventDTO createEvent(CreateEventRequest request, MultipartFile logoURL, MultipartFile bannerURL) throws IOException {
+        AppUtils.checkRole(ERole.ORGANIZER, ERole.BUYER);
         if (request == null || request.getEventName() == null || request.getCategoryId() == 0) {
             throw new AppException(ErrorCode.INVALID_EVENT_DATA);
         }

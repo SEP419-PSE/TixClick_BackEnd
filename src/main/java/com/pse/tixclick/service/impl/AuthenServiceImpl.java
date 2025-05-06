@@ -18,6 +18,7 @@ import com.pse.tixclick.payload.response.TokenResponse;
 import com.pse.tixclick.repository.AccountRepository;
 import com.pse.tixclick.repository.RoleRepository;
 import com.pse.tixclick.service.AuthenService;
+import com.pse.tixclick.utils.AppUtils;
 import jakarta.mail.MessagingException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
+import java.nio.file.AccessDeniedException;
 import java.text.ParseException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -58,7 +60,7 @@ public class AuthenServiceImpl implements AuthenService {// Để lưu thời gi
     private String SIGNER_KEY;
 
     @Override
-    public TokenResponse login(LoginRequest loginRequest) {
+    public TokenResponse login(LoginRequest loginRequest)  {
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
         // Check user
 
