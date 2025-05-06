@@ -46,7 +46,7 @@ jobs:
       - name: Run New Docker Container
         run: |
           echo ":: Running new container - myappCommandContainer"
-          docker run -d -p 8080:8080 \
+          docker run -d -p 8443:8443 \
             --name myappCommandContainer \
             -e GOOGLE_CLIENT_ID=32425352725-p6cgsf14hrdne7tklg6f62anjs0boc3r.apps.googleusercontent.com \
             -e GOOGLE_CLIENT_SECRET=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 \
