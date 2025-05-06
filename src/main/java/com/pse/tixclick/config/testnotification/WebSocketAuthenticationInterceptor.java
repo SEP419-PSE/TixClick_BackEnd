@@ -51,6 +51,7 @@ public class WebSocketAuthenticationInterceptor implements HandshakeInterceptor 
         if (token == null || token.isEmpty()) {
             System.out.println("⚠️ Không có token trong WebSocket request!");
 //            return false; // Chặn kết nối WebSocket nếu không có token
+            return true;
         }
 
         try {

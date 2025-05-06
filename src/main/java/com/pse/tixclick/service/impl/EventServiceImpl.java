@@ -25,6 +25,7 @@ import com.pse.tixclick.payload.request.update.UpdateEventRequest;
 import com.pse.tixclick.service.EventService;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
@@ -44,12 +45,15 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Transactional
+@Slf4j
 public class EventServiceImpl implements EventService {
     EventRepository eventRepository;
     ModelMapper modelMapper;
@@ -996,12 +1000,13 @@ public class EventServiceImpl implements EventService {
         var event = eventRepository.findEventByEventId(eventId)
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
 
-        if (event.getStatus() != EEventStatus.PENDING) {
-            throw new AppException(ErrorCode.EVENT_NOT_PENDING_APPROVAL);
-        }
+
 
         switch (status) {
             case CONFIRMED -> {
+                if (event.getStatus() != EEventStatus.PENDING) {
+                    throw new AppException(ErrorCode.EVENT_NOT_PENDING_APPROVAL);
+                }
                 event.setStatus(EEventStatus.CONFIRMED);
 
                 // Gửi email thông báo cho người tổ chức sự kiện
@@ -1023,6 +1028,9 @@ public class EventServiceImpl implements EventService {
             }
 
             case REJECTED -> {
+                if (event.getStatus() != EEventStatus.PENDING) {
+                    throw new AppException(ErrorCode.EVENT_NOT_PENDING_APPROVAL);
+                }
                 event.setStatus(EEventStatus.REJECTED);
 
                 // Gửi email thông báo từ chối sự kiện
@@ -1042,21 +1050,23 @@ public class EventServiceImpl implements EventService {
                 messagingTemplate.convertAndSendToUser(event.getOrganizer().getUserName(), "/specific/messages", "Sự kiện của bạn đã bị từ chối");
             }
             case CANCELLED -> {
-                event.setStatus(EEventStatus.CANCELLED);
-                String fullname = event.getOrganizer().getFirstName() + " " + event.getOrganizer().getLastName();
-                // Gửi email thông báo từ chối sự kiện
-                String fullName = event.getOrganizer().getFirstName() + " " + event.getOrganizer().getLastName();
+                if(!event.getStatus().equals(EEventStatus.SCHEDULED)){
+                    throw new AppException(ErrorCode.EVENT_NOT_SCHEDULED);
+                }
+
+                    event.setStatus(EEventStatus.CANCELLED);
+
+                String organizerFullname = event.getOrganizer().getFirstName() + " " + event.getOrganizer().getLastName();
                 emailService.sendEventCancellationEmail(
                         event.getOrganizer().getEmail(),
-                        fullname,
+                        organizerFullname,
                         event.getEventName()
-
                 );
 
                 Contract contract = contractRepository.findContractsByEvent_EventId(eventId).get(0);
                 contract.setStatus(EContractStatus.CANCELLED);
                 contractRepository.save(contract);
-                // Gửi thông báo cho người tổ chức sự kiện
+
                 Notification notification = new Notification();
                 notification.setMessage("Sự kiện của bạn đã bị hủy");
                 notification.setAccount(event.getOrganizer());
@@ -1065,15 +1075,45 @@ public class EventServiceImpl implements EventService {
                 notification.setReadDate(null);
                 notificationRepository.saveAndFlush(notification);
 
-                // Gửi thông báo đến người tổ chức sự kiện qua WebSocket
-                simpMessagingTemplate.convertAndSendToUser(event.getOrganizer().getUserName(), "/specific/messages", "Sự kiện của bạn đã bị hủy");
+                simpMessagingTemplate.convertAndSendToUser(
+                        event.getOrganizer().getUserName(),
+                        "/specific/messages",
+                        "Sự kiện của bạn đã bị hủy"
+                );
 
-                List<TicketPurchase> ticketPurchases = ticketPurchaseRepository.findTicketPurchasesByEvent_EventIdAndStatus(eventId, ETicketPurchaseStatus.PURCHASED);
+                List<TicketPurchase> ticketPurchases = ticketPurchaseRepository
+                        .findTicketPurchasesByEvent_EventIdAndStatus(eventId, ETicketPurchaseStatus.PURCHASED);
+
+                ExecutorService executor = Executors.newFixedThreadPool(5); // Giới hạn 5 luồng
+                Set<String> sentEmails = new HashSet<>(); // Track các email đã gửi
 
                 for (TicketPurchase ticketPurchase : ticketPurchases) {
                     ticketPurchase.setStatus(ETicketPurchaseStatus.REFUNDING);
                     ticketPurchaseRepository.save(ticketPurchase);
+
+                    String email = ticketPurchase.getAccount().getEmail();
+
+                    if (!sentEmails.contains(email)) {
+                        sentEmails.add(email); // Đánh dấu đã gửi
+
+                        executor.submit(() -> {
+                            try {
+                                String buyerFullname = ticketPurchase.getAccount().getFirstName() + " " + ticketPurchase.getAccount().getLastName();
+                                emailService.sendEventCancellationEmail(
+                                        email,
+                                        buyerFullname,
+                                        ticketPurchase.getEvent().getEventName()
+                                );
+                            } catch (Exception e) {
+                                log.error("Failed to send cancellation email to " + email, e);
+                            }
+                        });
+                    }
                 }
+
+                executor.shutdown(); // Sau khi submit hết thì đóng executor
+
+
             }
 
 
