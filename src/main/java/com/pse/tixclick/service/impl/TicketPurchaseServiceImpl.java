@@ -534,6 +534,17 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
 
                         ticketPurchaseOld.setStatus(ETicketPurchaseStatus.PURCHASED);
                         ticketPurchaseRepository.save(ticketPurchaseOld);
+
+
+                        var zoneActivityOld = ticketPurchaseOld.getZoneActivity();
+                        if (zoneActivityOld != null) {
+
+
+                            zoneActivityOld.setAvailableQuantity(zoneActivityOld.getAvailableQuantity() - ticketPurchaseOld.getQuantity());
+                            zoneActivityRepository.save(zoneActivityOld);
+                        }
+
+
                     }
                     ZoneActivity zoneActivity = zoneActivityRepository
                             .findByEventActivityIdAndZoneId(ticketPurchase.getZoneActivity().getEventActivity().getEventActivityId(), ticketPurchase.getZoneActivity().getZone().getZoneId())
@@ -561,6 +572,13 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
 
                         ticketPurchaseOld.setStatus(ETicketPurchaseStatus.PURCHASED);
                         ticketPurchaseRepository.save(ticketPurchaseOld);
+
+                        var zoneActivityOld = ticketPurchaseOld.getZoneActivity();
+                        var seatActivityOld = ticketPurchaseOld.getSeatActivity();
+                        if(zoneActivityOld != null && seatActivityOld != null) {
+                            seatActivityOld.setStatus(ESeatActivityStatus.SOLD);
+                            seatActivityRepository.save(seatActivityOld);
+                        }
                     }
                     SeatActivity seatActivity = seatActivityRepository
                             .findByEventActivityIdAndSeatId(ticketPurchase.getSeatActivity().getEventActivity().getEventActivityId(), ticketPurchase.getSeatActivity().getSeat().getSeatId())
@@ -595,6 +613,19 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
 
                         ticketPurchaseOld.setStatus(ETicketPurchaseStatus.PURCHASED);
                         ticketPurchaseRepository.save(ticketPurchaseOld);
+
+                        var ticketMappingOld = ticketMappingRepository.findTicketMappingByTicketIdAndEventActivityId(
+                                ticketPurchaseOld.getTicket().getTicketId(), ticketPurchaseOld.getEventActivity().getEventActivityId())
+                                .orElseThrow(() -> new AppException(ErrorCode.TICKET_MAPPING_NOT_FOUND));
+
+                        if(ticketMappingOld.getQuantity() == 0) {
+                            ticketMappingOld.setQuantity(ticketMappingOld.getQuantity());
+                            ticketMappingOld.setStatus(true);
+                            ticketMappingRepository.save(ticketMappingOld);
+                        }else {
+                            ticketMappingOld.setQuantity(ticketMappingOld.getQuantity() + ticketPurchaseOld.getQuantity());
+                            ticketMappingRepository.save(ticketMappingOld);
+                        }
                     }
                     TicketMapping ticketMapping = ticketMappingRepository
                             .findTicketMappingByTicketIdAndEventActivityId(ticketPurchase.getTicket().getTicketId(), ticketPurchase.getEventActivity().getEventActivityId())

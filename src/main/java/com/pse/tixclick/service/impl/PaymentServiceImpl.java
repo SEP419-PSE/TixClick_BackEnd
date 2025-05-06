@@ -21,6 +21,7 @@ import com.pse.tixclick.payload.response.PaymentResponse;
 import com.pse.tixclick.payment.PayOSUtils;
 import com.pse.tixclick.repository.*;
 import com.pse.tixclick.service.PaymentService;
+import com.pse.tixclick.service.TicketPurchaseService;
 import com.pse.tixclick.utils.AppUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
@@ -41,6 +42,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @RequiredArgsConstructor
@@ -106,6 +108,8 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Autowired
     OrderServiceImpl orderServiceImpl;
+    @Autowired
+    TicketPurchaseServiceImpl ticketPurchaseService;
 
     @Override
     public PayOSResponse changeOrderStatusPayOs(int orderId) {
@@ -206,16 +210,15 @@ public class PaymentServiceImpl implements PaymentService {
         double totalAmount = 0;
         Ticket oldTicket = ticketPurchase.getTicket();
         List<TicketPurchase> newPurchases = new ArrayList<>();
+        List<Integer> ticketPurchaseIds = new ArrayList<>();
         String orderNote = "";
 
         switch (caseTicket) {
             case "noSeatMap" -> {
                 orderNote = "Đổi vé nhiều loại";
-
                 int totalRequestedQuantity = ticketChange.stream()
                         .mapToInt(CreateTicketPurchaseRequest::getQuantity)
                         .sum();
-
                 int originalQuantity = ticketPurchase.getQuantity();
 
                 if (totalRequestedQuantity > originalQuantity) {
@@ -250,10 +253,13 @@ public class PaymentServiceImpl implements PaymentService {
                     newPurchase.setTicket(newTicket);
                     newPurchase.setZoneActivity(null);
                     newPurchase.setSeatActivity(null);
-                    newPurchase.setStatus(ETicketPurchaseStatus.PENDING); // status cho vé đổi
+                    newPurchase.setStatus(ETicketPurchaseStatus.PENDING);
                     newPurchase.setTicketPurchaseOldId(ticketPurchase.getTicketPurchaseId());
-                    ticketPurchaseRepository.save(newPurchase);
+
+                    // Save and collect ID
+                    newPurchase = ticketPurchaseRepository.save(newPurchase);
                     newPurchases.add(newPurchase);
+                    ticketPurchaseIds.add(newPurchase.getTicketPurchaseId());
                 }
 
                 int remainingQuantity = originalQuantity - totalRequestedQuantity;
@@ -264,13 +270,16 @@ public class PaymentServiceImpl implements PaymentService {
                     keepPurchase.setEventActivity(ticketPurchase.getEventActivity());
                     keepPurchase.setEvent(ticketPurchase.getEvent());
                     keepPurchase.setQuantity(remainingQuantity);
-                    keepPurchase.setTicket(oldTicket); // giữ nguyên vé cũ
+                    keepPurchase.setTicket(oldTicket);
                     keepPurchase.setZoneActivity(null);
                     keepPurchase.setSeatActivity(null);
                     keepPurchase.setStatus(ETicketPurchaseStatus.PENDING);
                     keepPurchase.setTicketPurchaseOldId(ticketPurchase.getTicketPurchaseId());
-                    ticketPurchaseRepository.save(keepPurchase);
+
+                    // Save and collect ID
+                    keepPurchase = ticketPurchaseRepository.save(keepPurchase);
                     newPurchases.add(keepPurchase);
+                    ticketPurchaseIds.add(keepPurchase.getTicketPurchaseId());
                 }
 
                 if (totalRequestedQuantity > 0) {
@@ -283,6 +292,9 @@ public class PaymentServiceImpl implements PaymentService {
                     oldMapping.setQuantity(oldMapping.getQuantity() + totalRequestedQuantity);
                     ticketMappingRepository.save(oldMapping);
                 }
+
+                // Schedule status update for new ticket purchases
+                ticketPurchaseService.scheduleStatusUpdate(LocalDateTime.now(), ticketPurchaseIds);
             }
 
             case "changeSeat" -> {
@@ -300,23 +312,21 @@ public class PaymentServiceImpl implements PaymentService {
                     seatActivityRepository.save(oldSeatActivity);
                 }
 
+                TicketPurchase newPurchase = new TicketPurchase();
+                newPurchase.setAccount(account);
+                newPurchase.setEventActivity(ticketPurchase.getEventActivity());
+                newPurchase.setEvent(ticketPurchase.getEvent());
+                newPurchase.setQuantity(1);
+                newPurchase.setTicket(newTicket);
+                newPurchase.setStatus(ETicketPurchaseStatus.PENDING);
+                newPurchase.setTicketPurchaseOldId(ticketPurchase.getTicketPurchaseId());
+
                 if (ticket.getSeatId() == 0) {
                     ZoneActivity newZoneActivity = zoneActivityRepository
                             .findById(ticket.getZoneId())
                             .orElseThrow(() -> new AppException(ErrorCode.ZONE_ACTIVITY_NOT_FOUND));
-
-                    TicketPurchase newPurchase = new TicketPurchase();
-                    newPurchase.setAccount(account);
-                    newPurchase.setEventActivity(ticketPurchase.getEventActivity());
-                    newPurchase.setEvent(ticketPurchase.getEvent());
-                    newPurchase.setQuantity(1);
-                    newPurchase.setTicket(newTicket);
                     newPurchase.setZoneActivity(newZoneActivity);
                     newPurchase.setSeatActivity(null);
-                    newPurchase.setStatus(ETicketPurchaseStatus.PENDING);
-                    newPurchase.setTicketPurchaseOldId(ticketPurchase.getTicketPurchaseId());
-                    ticketPurchaseRepository.save(newPurchase);
-                    newPurchases.add(newPurchase);
                 } else {
                     int eventActivityId = ticketPurchase.getEventActivity().getEventActivityId();
                     SeatActivity newSeatActivity = seatActivityRepository
@@ -327,38 +337,32 @@ public class PaymentServiceImpl implements PaymentService {
                         throw new AppException(ErrorCode.SEAT_ALREADY_BOOKED);
                     }
 
-                    TicketPurchase newPurchase = new TicketPurchase();
-                    newPurchase.setAccount(account);
-                    newPurchase.setEventActivity(ticketPurchase.getEventActivity());
-                    newPurchase.setEvent(ticketPurchase.getEvent());
-                    newPurchase.setQuantity(1);
-                    newPurchase.setTicket(newTicket);
                     newPurchase.setSeatActivity(newSeatActivity);
                     newPurchase.setZoneActivity(newSeatActivity.getZoneActivity());
-                    newPurchase.setStatus(ETicketPurchaseStatus.PENDING);
-                    newPurchase.setTicketPurchaseOldId(ticketPurchase.getTicketPurchaseId());
-                    ticketPurchaseRepository.save(newPurchase);
-                    newPurchases.add(newPurchase);
-
                     newSeatActivity.setStatus(ESeatActivityStatus.SOLD);
                     seatActivityRepository.save(newSeatActivity);
                 }
+
+                // Save and collect ID
+                newPurchase = ticketPurchaseRepository.save(newPurchase);
+                newPurchases.add(newPurchase);
+                ticketPurchaseIds.add(newPurchase.getTicketPurchaseId());
+
+                // Schedule status update
+                ticketPurchaseService.scheduleStatusUpdate(LocalDateTime.now(), ticketPurchaseIds);
             }
 
             case "changeZone" -> {
                 orderNote = "Đổi zone";
-
                 int totalRequestedQuantity = ticketChange.stream()
                         .mapToInt(CreateTicketPurchaseRequest::getQuantity)
                         .sum();
-
                 int originalQuantity = ticketPurchase.getQuantity();
 
                 if (totalRequestedQuantity > originalQuantity) {
                     throw new AppException(ErrorCode.TICKET_REQUEST_EXCEED_QUANTITY);
                 }
 
-                // Hủy ghế cũ nếu có
                 if (ticketPurchase.getSeatActivity() != null) {
                     SeatActivity oldSeatActivity = ticketPurchase.getSeatActivity();
                     oldSeatActivity.setStatus(ESeatActivityStatus.AVAILABLE);
@@ -370,7 +374,7 @@ public class PaymentServiceImpl implements PaymentService {
                             .orElseThrow(() -> new AppException(ErrorCode.TICKET_NOT_FOUND));
 
                     ZoneActivity newZoneActivity = zoneActivityRepository
-                            .findByEventActivityIdAndZoneId(ticketReq.getEventActivityId(),ticketReq.getZoneId())
+                            .findByEventActivityIdAndZoneId(ticketReq.getEventActivityId(), ticketReq.getZoneId())
                             .orElseThrow(() -> new AppException(ErrorCode.ZONE_ACTIVITY_NOT_FOUND));
 
                     double diff = newTicket.getPrice() - oldTicket.getPrice();
@@ -394,10 +398,13 @@ public class PaymentServiceImpl implements PaymentService {
                             newPurchase.setTicket(newTicket);
                             newPurchase.setZoneActivity(newZoneActivity);
                             newPurchase.setSeatActivity(newSeatActivity);
-                            newPurchase.setStatus(ETicketPurchaseStatus.PENDING); // CHỈ ĐỔI => PENDING
+                            newPurchase.setStatus(ETicketPurchaseStatus.PENDING);
                             newPurchase.setTicketPurchaseOldId(ticketPurchase.getTicketPurchaseId());
-                            ticketPurchaseRepository.save(newPurchase);
+
+                            // Save and collect ID
+                            newPurchase = ticketPurchaseRepository.save(newPurchase);
                             newPurchases.add(newPurchase);
+                            ticketPurchaseIds.add(newPurchase.getTicketPurchaseId());
 
                             newSeatActivity.setStatus(ESeatActivityStatus.SOLD);
                             seatActivityRepository.save(newSeatActivity);
@@ -411,84 +418,84 @@ public class PaymentServiceImpl implements PaymentService {
                         newPurchase.setTicket(newTicket);
                         newPurchase.setZoneActivity(newZoneActivity);
                         newPurchase.setSeatActivity(null);
-                        newPurchase.setStatus(ETicketPurchaseStatus.PENDING); // CHỈ ĐỔI => PENDING
+                        newPurchase.setStatus(ETicketPurchaseStatus.PENDING);
                         newPurchase.setTicketPurchaseOldId(ticketPurchase.getTicketPurchaseId());
-                        ticketPurchaseRepository.save(newPurchase);
+
+                        // Save and collect ID
+                        newPurchase = ticketPurchaseRepository.save(newPurchase);
                         newPurchases.add(newPurchase);
+                        ticketPurchaseIds.add(newPurchase.getTicketPurchaseId());
                     }
                 }
 
                 int remainingQuantity = originalQuantity - totalRequestedQuantity;
 
                 if (remainingQuantity > 0) {
-                    // Tạo vé giữ lại nếu còn vé cũ chưa đổi
                     TicketPurchase keepOld = new TicketPurchase();
                     keepOld.setAccount(account);
                     keepOld.setEventActivity(ticketPurchase.getEventActivity());
                     keepOld.setEvent(ticketPurchase.getEvent());
                     keepOld.setQuantity(remainingQuantity);
                     keepOld.setTicket(oldTicket);
-                    keepOld.setZoneActivity(ticketPurchase.getZoneActivity()); // giữ nguyên zone cũ
+                    keepOld.setZoneActivity(ticketPurchase.getZoneActivity());
                     keepOld.setSeatActivity(null);
                     keepOld.setStatus(ETicketPurchaseStatus.PENDING);
                     keepOld.setTicketPurchaseOldId(ticketPurchase.getTicketPurchaseId());
-                    ticketPurchaseRepository.save(keepOld);
+
+                    // Save and collect ID
+                    keepOld = ticketPurchaseRepository.save(keepOld);
                     newPurchases.add(keepOld);
+                    ticketPurchaseIds.add(keepOld.getTicketPurchaseId());
                 }
 
-                // Nếu tất cả vé cũ đã đổi, hủy luôn vé cũ ban đầu
                 if (totalRequestedQuantity == originalQuantity) {
                     ticketPurchase.setStatus(ETicketPurchaseStatus.CANCELLED);
                     ticketPurchaseRepository.save(ticketPurchase);
                 }
-            }
 
+                // Schedule status update
+                ticketPurchaseService.scheduleStatusUpdate(LocalDateTime.now(), ticketPurchaseIds);
+            }
         }
 
         ticketPurchase.setStatus(ETicketPurchaseStatus.CANCELLED);
         ticketPurchaseRepository.save(ticketPurchase);
 
-        // 🔁 Làm tròn nếu nhỏ hơn 10,000
         if (totalAmount > 0 && totalAmount < 10000) {
             totalAmount = 10000;
         }
 
-        if (totalAmount == 0) {
-            Order order = new Order();
-            order.setOrderCode(orderServiceImpl.orderCodeAutomationCreating());
-            order.setStatus(EOrderStatus.SUCCESSFUL);
-            order.setTotalAmount(0);
-            order.setTotalAmountDiscount(0);
-            order.setNote(orderNote);
-            order.setOrderDate(LocalDateTime.now());
-            order.setAccount(account);
-            orderRepository.save(order);
+        Order order = new Order();
+        order.setOrderCode(orderServiceImpl.orderCodeAutomationCreating());
+        order.setStatus(totalAmount == 0 ? EOrderStatus.SUCCESSFUL : EOrderStatus.PENDING);
+        order.setTotalAmount(totalAmount);
+        order.setTotalAmountDiscount(totalAmount);
+        order.setNote(orderNote);
+        order.setOrderDate(LocalDateTime.now());
+        order.setAccount(account);
+        orderRepository.save(order);
 
-            for (TicketPurchase newPurchase : newPurchases) {
-                OrderDetail orderDetail = new OrderDetail();
-                orderDetail.setOrder(order);
-                orderDetail.setTicketPurchase(newPurchase);
-                orderDetail.setAmount(newPurchase.getTicket().getPrice() * newPurchase.getQuantity());
-                orderDetailRepository.save(orderDetail);
+        for (TicketPurchase newPurchase : newPurchases) {
+            OrderDetail orderDetail = new OrderDetail();
+            orderDetail.setOrder(order);
+            orderDetail.setTicketPurchase(newPurchase);
+            orderDetail.setAmount(newPurchase.getTicket().getPrice() * newPurchase.getQuantity());
+            orderDetailRepository.save(orderDetail);
 
+            if (totalAmount == 0) {
                 StringBuilder locationBuilder = new StringBuilder();
-
-                if(newPurchase.getEvent().getAddress() != null && !newPurchase.getEvent().getAddress().trim().isEmpty()) {
+                if (newPurchase.getEvent().getAddress() != null && !newPurchase.getEvent().getAddress().trim().isEmpty()) {
                     locationBuilder.append(newPurchase.getEvent().getAddress()).append(", ");
                 }
-
                 if (newPurchase.getEvent().getWard() != null && !newPurchase.getEvent().getWard().trim().isEmpty()) {
                     locationBuilder.append(newPurchase.getEvent().getWard()).append(", ");
                 }
-
                 if (newPurchase.getEvent().getDistrict() != null && !newPurchase.getEvent().getDistrict().trim().isEmpty()) {
                     locationBuilder.append(newPurchase.getEvent().getDistrict()).append(", ");
                 }
-
                 if (newPurchase.getEvent().getCity() != null && !newPurchase.getEvent().getCity().trim().isEmpty()) {
                     locationBuilder.append(newPurchase.getEvent().getCity());
                 }
-
                 if (locationBuilder.length() > 0 && locationBuilder.lastIndexOf(", ") == locationBuilder.length() - 2) {
                     locationBuilder.delete(locationBuilder.length() - 2, locationBuilder.length());
                 }
@@ -502,11 +509,6 @@ public class PaymentServiceImpl implements PaymentService {
                 checkinLog.setStaff(null);
                 checkinLog.setCheckinLocation(locationBuilder.toString());
                 checkinLogRepository.save(checkinLog);
-
-
-
-
-
 
                 TicketQrCodeDTO qrcode = new TicketQrCodeDTO();
                 qrcode.setTicket_name(newPurchase.getTicket().getTicketName());
@@ -524,35 +526,18 @@ public class PaymentServiceImpl implements PaymentService {
                 qrcode.setStatus("Đã thanh toán");
                 String qrCode1 = generateQRCode(qrcode);
 
-
-                newPurchase.setStatus(ETicketPurchaseStatus.PENDING);
+                newPurchase.setStatus(ETicketPurchaseStatus.PURCHASED);
                 newPurchase.setQrCode(qrCode1);
                 ticketPurchaseRepository.save(newPurchase);
             }
+        }
 
+        if (totalAmount == 0) {
             return PayOSResponse.builder()
                     .error("ok")
                     .message("Đổi vé thành công, không cần thanh toán")
                     .data(null)
                     .build();
-        }
-
-        Order order = new Order();
-        order.setOrderCode(orderServiceImpl.orderCodeAutomationCreating());
-        order.setStatus(EOrderStatus.PENDING);
-        order.setTotalAmount(totalAmount);
-        order.setTotalAmountDiscount(totalAmount);
-        order.setNote(orderNote);
-        order.setOrderDate(LocalDateTime.now());
-        order.setAccount(account);
-        orderRepository.save(order);
-
-        for (TicketPurchase newPurchase : newPurchases) {
-            OrderDetail orderDetail = new OrderDetail();
-            orderDetail.setOrder(order);
-            orderDetail.setTicketPurchase(newPurchase);
-            orderDetail.setAmount(newPurchase.getTicket().getPrice() * newPurchase.getQuantity());
-            orderDetailRepository.save(orderDetail);
         }
 
         ObjectMapper objectMapper = new ObjectMapper();
@@ -608,7 +593,6 @@ public class PaymentServiceImpl implements PaymentService {
                 .data(objectMapper.valueToTree(result))
                 .build();
     }
-
     @Override
     public PaymentResponse handleCallbackPayOS(HttpServletRequest request) throws Exception {
         String status = request.getParameter("status");
