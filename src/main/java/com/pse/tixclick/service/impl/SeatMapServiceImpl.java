@@ -429,7 +429,7 @@ public class SeatMapServiceImpl implements SeatMapService {
                     .y(Integer.parseInt(zone.getYPosition()))
                     .width(Integer.parseInt(zone.getWidth()))
                     .height(Integer.parseInt(zone.getHeight()))
-                    .capacity(availableSeatsCount)
+                    .capacity(zoneActivity.getAvailableQuantity())
                     .type(zoneTypeEnum.name())
                     .priceId(zone.getTicket() != null ? zone.getTicket().getTicketCode() : null)
                     .price(zone.getTicket() != null ? zone.getTicket().getPrice() : 0)
