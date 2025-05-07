@@ -275,7 +275,7 @@ public class TicketPurchaseController {
         }
     }
 
-    @GetMapping("/ticket_purchase/{ticketPurchaseId}")
+    @GetMapping("/{ticketPurchaseId}")
     public ResponseEntity<ApiResponse<MyTicketDTO>> getTicketPurchaseById(@PathVariable int ticketPurchaseId) {
         try {
             MyTicketDTO myTicketDTO = ticketPurchaseService.getTicketPurchaseById(ticketPurchaseId);

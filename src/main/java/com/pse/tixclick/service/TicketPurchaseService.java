@@ -32,4 +32,5 @@ public interface TicketPurchaseService {
     String cancelTicketPurchase(List<Integer> ticketPurchaseIds);
 
     MyTicketDTO getTicketPurchaseById(int ticketPurchaseId);
+
 }

@@ -1,5 +1,7 @@
 package com.pse.tixclick.service.impl;
 
+import com.pse.tixclick.config.testnotification.Message;
+import com.pse.tixclick.config.testnotification.MessageController;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.*;
@@ -90,7 +92,11 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
 
     @Autowired
     SimpMessagingTemplate messagingTemplate;
+    @Autowired
+    MessageController messageController;
 
+    @Autowired
+    SimpMessagingTemplate simpMessagingTemplate;
 
     @Override
     public List<TicketPurchaseDTO> createTicketPurchase(ListTicketPurchaseRequest createTicketPurchaseRequest) {
@@ -327,6 +333,7 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
             }
         }
         CompletableFuture.runAsync(() -> scheduleStatusUpdate(LocalDateTime.now(), listTicketPurchase_id));
+        simpMessagingTemplate.convertAndSend("/all/messages", "call api"); // Gửi tới kênh "/all/messages"
 
         return ticketPurchaseDTOList;
     }

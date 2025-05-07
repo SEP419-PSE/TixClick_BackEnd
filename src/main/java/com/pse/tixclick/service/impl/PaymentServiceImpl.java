@@ -30,6 +30,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import vn.payos.type.CheckoutResponseData;
@@ -110,6 +111,9 @@ public class PaymentServiceImpl implements PaymentService {
     OrderServiceImpl orderServiceImpl;
     @Autowired
     TicketPurchaseServiceImpl ticketPurchaseService;
+
+    @Autowired
+    SimpMessagingTemplate simpMessagingTemplate;
 
     @Override
     public PayOSResponse changeOrderStatusPayOs(int orderId) {
@@ -586,6 +590,9 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setPaymentMethod("Thanh toán ngân hàng");
         payment.setAccount(account);
         paymentRepository.save(payment);
+
+        simpMessagingTemplate.convertAndSend("/all/messages", "call api"); // Gửi tới kênh "/all/messages"
+
 
         return PayOSResponse.builder()
                 .error("ok")
