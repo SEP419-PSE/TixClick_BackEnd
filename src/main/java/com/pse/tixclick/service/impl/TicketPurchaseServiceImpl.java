@@ -343,7 +343,7 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
     @Async
     public void scheduleStatusUpdate(LocalDateTime startTime, List<Integer> listTicketPurchase_id) {
         LocalDateTime currentTime = LocalDateTime.now();
-        long delay = java.time.Duration.between(currentTime, startTime.plusMinutes(15)).toSeconds();
+        long delay = java.time.Duration.between(currentTime, startTime.plusMinutes(5)).toSeconds();
         String code = String.valueOf(listTicketPurchase_id.get(0));
         if (delay >= 0) {
             // Gửi countdown đến WebSocket mỗi giây
