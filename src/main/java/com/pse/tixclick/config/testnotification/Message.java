@@ -17,4 +17,8 @@ public class Message {
     public void setTo(String to) {
         this.to = to;
     }
+
+    public void setText(String text) {
+        this.text = text;
+    }
 }

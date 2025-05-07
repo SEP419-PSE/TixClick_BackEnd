@@ -54,6 +54,8 @@ public class TicketPurchaseController {
                     .result(null)
                     .build();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 

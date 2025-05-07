@@ -10,7 +10,7 @@ import java.nio.file.AccessDeniedException;
 import java.util.List;
 
 public interface TicketPurchaseService {
-    List<TicketPurchaseDTO> createTicketPurchase(ListTicketPurchaseRequest createTicketPurchaseRequest);
+    List<TicketPurchaseDTO> createTicketPurchase(ListTicketPurchaseRequest createTicketPurchaseRequest) throws Exception;
 
     String checkinTicketPurchase(int checkinId);
 

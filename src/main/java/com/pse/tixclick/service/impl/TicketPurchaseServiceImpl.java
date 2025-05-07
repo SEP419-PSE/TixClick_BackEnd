@@ -99,7 +99,7 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
     SimpMessagingTemplate simpMessagingTemplate;
 
     @Override
-    public List<TicketPurchaseDTO> createTicketPurchase(ListTicketPurchaseRequest createTicketPurchaseRequest) {
+    public List<TicketPurchaseDTO> createTicketPurchase(ListTicketPurchaseRequest createTicketPurchaseRequest) throws Exception {
         AppUtils.checkRole(ERole.BUYER,ERole.ORGANIZER);
         if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.BUYER) &&
                 !appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.ORGANIZER)) {
@@ -333,7 +333,9 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
             }
         }
         CompletableFuture.runAsync(() -> scheduleStatusUpdate(LocalDateTime.now(), listTicketPurchase_id));
-        simpMessagingTemplate.convertAndSend("/all/messages", "call api"); // Gửi tới kênh "/all/messages"
+
+        simpMessagingTemplate.convertAndSend("/all/messages",
+                "call api"); // Gửi Object Message
 
         return ticketPurchaseDTOList;
     }

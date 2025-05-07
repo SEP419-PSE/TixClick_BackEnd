@@ -591,8 +591,8 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setAccount(account);
         paymentRepository.save(payment);
 
-        simpMessagingTemplate.convertAndSend("/all/messages", "call api"); // Gửi tới kênh "/all/messages"
-
+        simpMessagingTemplate.convertAndSend("/all/messages",
+                "call api"); // Gửi Object Message
 
         return PayOSResponse.builder()
                 .error("ok")
