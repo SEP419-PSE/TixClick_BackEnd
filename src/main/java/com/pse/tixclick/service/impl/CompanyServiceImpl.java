@@ -556,9 +556,9 @@ public class CompanyServiceImpl implements CompanyService {
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
         Company company = companyRepository.findCompanyByCompanyIdAndRepresentativeId_UserName(companyId, name)
                 .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_EXISTED));
-//        if (company.getStatus() != ECompanyStatus.REJECTED) {
-//            throw new AppException(ErrorCode.COMPANY_NOT_REJECTED);
-//        }
+        if (company.getStatus() != ECompanyStatus.REJECTED) {
+            throw new AppException(ErrorCode.COMPANY_NOT_REJECTED);
+        }
 
         CompanyVerification companyVerification = companyVerificationRepository
                 .findCompanyVerificationsByCompany_CompanyId(companyId)
