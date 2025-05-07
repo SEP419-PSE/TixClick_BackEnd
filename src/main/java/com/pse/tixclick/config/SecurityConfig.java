@@ -91,8 +91,8 @@ public class SecurityConfig {
             "/api/tickets/**",
             "/api/notification/**",
             "/api/test-oauth2/**",
-            "/api/ws/**"
-
+            "/api/ws/**",
+            "/api/ticket-mapping/**",
     };
 
     @Bean
