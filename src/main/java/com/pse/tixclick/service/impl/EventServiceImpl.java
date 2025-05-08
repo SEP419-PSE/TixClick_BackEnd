@@ -346,7 +346,14 @@ public class EventServiceImpl implements EventService {
                     }
 
                     return response;
-                }).collect(Collectors.toList());
+                }).collect(Collectors.collectingAndThen(
+                        Collectors.toList(),
+                        list -> {
+                            Collections.reverse(list);
+                            return list;
+                        }
+                ));
+
     }
 
 
