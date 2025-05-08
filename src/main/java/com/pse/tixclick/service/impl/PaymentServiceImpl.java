@@ -361,6 +361,7 @@ public class PaymentServiceImpl implements PaymentService {
                     ZoneActivity newZoneActivity = zoneActivityRepository
                             .findByEventActivityIdAndZoneId(ticketPurchase.getEventActivity().getEventActivityId(), ticket.getZoneId())
                             .orElseThrow(() -> new AppException(ErrorCode.ZONE_ACTIVITY_NOT_FOUND));
+                    newZoneActivity.setAvailableQuantity(newZoneActivity.getAvailableQuantity() - 1);
                     newPurchase.setZoneActivity(newZoneActivity);
                     newPurchase.setSeatActivity(null);
                 }
@@ -369,6 +370,7 @@ public class PaymentServiceImpl implements PaymentService {
                 newPurchase = ticketPurchaseRepository.save(newPurchase);
                 newPurchases.add(newPurchase);
                 ticketPurchaseIds.add(newPurchase.getTicketPurchaseId());
+
 
                 // Schedule status update
                 ticketPurchaseService.scheduleStatusUpdate(LocalDateTime.now(), ticketPurchaseIds);
