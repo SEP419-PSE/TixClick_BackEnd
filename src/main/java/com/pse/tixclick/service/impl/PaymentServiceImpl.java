@@ -677,7 +677,7 @@ public class PaymentServiceImpl implements PaymentService {
 
                         ticketMapping.setQuantity(ticketMapping.getQuantity() + oldTicketPurchase.getQuantity());
                         ticketMappingRepository.save(ticketMapping);
-                    } else if(oldTicketPurchase.getSeatActivity() == null  && oldTicketPurchase.getZoneActivity() != null){
+                    } else if(oldTicketPurchase.getSeatActivity() == null  && oldTicketPurchase.getZoneActivity() != null && oldTicketPurchase.getTicket() != null){
                         ZoneActivity zoneActivity = zoneActivityRepository.findByEventActivityIdAndZoneId(
                                 oldTicketPurchase.getEventActivity().getEventActivityId(),
                                 oldTicketPurchase.getZoneActivity().getZoneActivityId()
