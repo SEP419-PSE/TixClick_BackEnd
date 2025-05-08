@@ -508,48 +508,44 @@ public class PaymentServiceImpl implements PaymentService {
 
             if (totalAmount == 0) {
 
-                var oldTicket1 = newPurchase.getTicketPurchaseOldId();
-                if (oldTicket1 != null) {
-
+                var oldTicketId = newPurchase.getTicketPurchaseOldId();
+                if (oldTicketId != null) {
                     TicketPurchase oldPurchase = ticketPurchaseRepository
-                            .findById(oldTicket1)
+                            .findById(oldTicketId)
                             .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
-                    if(oldPurchase.getSeatActivity() != null) {
+
+                    if (oldPurchase.getSeatActivity() != null) {
                         oldPurchase.getSeatActivity().setStatus(ESeatActivityStatus.AVAILABLE);
                         seatActivityRepository.save(oldPurchase.getSeatActivity());
-                    } else if(oldPurchase.getZoneActivity() != null && oldPurchase.getSeatActivity() == null) {
-                        oldPurchase.getZoneActivity().setAvailableQuantity(oldPurchase.getZoneActivity().getAvailableQuantity() + oldPurchase.getQuantity());
-                        zoneActivityRepository.save(oldPurchase.getZoneActivity());
-                    } else if(oldPurchase.getZoneActivity() == null){
+                    } else if (oldPurchase.getZoneActivity() != null) {
+                        var zoneActivity = oldPurchase.getZoneActivity();
+                        zoneActivity.setAvailableQuantity(zoneActivity.getAvailableQuantity() + oldPurchase.getQuantity());
+                        zoneActivityRepository.save(zoneActivity);
+                    } else {
                         TicketMapping oldMapping = ticketMappingRepository
                                 .findTicketMappingByTicketIdAndEventActivityId(
                                         oldPurchase.getTicket().getTicketId(),
                                         oldPurchase.getEventActivity().getEventActivityId())
                                 .orElseThrow(() -> new AppException(ErrorCode.TICKET_MAPPING_NOT_FOUND));
-
                         oldMapping.setQuantity(oldMapping.getQuantity() + oldPurchase.getQuantity());
                         ticketMappingRepository.save(oldMapping);
                     }
-
-                    ticketPurchaseRepository.save(oldPurchase);
                 }
+
+                // Ghép địa chỉ check-in
                 StringBuilder locationBuilder = new StringBuilder();
-                if (newPurchase.getEvent().getAddress() != null && !newPurchase.getEvent().getAddress().trim().isEmpty()) {
+                if (newPurchase.getEvent().getAddress() != null && !newPurchase.getEvent().getAddress().isBlank())
                     locationBuilder.append(newPurchase.getEvent().getAddress()).append(", ");
-                }
-                if (newPurchase.getEvent().getWard() != null && !newPurchase.getEvent().getWard().trim().isEmpty()) {
+                if (newPurchase.getEvent().getWard() != null && !newPurchase.getEvent().getWard().isBlank())
                     locationBuilder.append(newPurchase.getEvent().getWard()).append(", ");
-                }
-                if (newPurchase.getEvent().getDistrict() != null && !newPurchase.getEvent().getDistrict().trim().isEmpty()) {
+                if (newPurchase.getEvent().getDistrict() != null && !newPurchase.getEvent().getDistrict().isBlank())
                     locationBuilder.append(newPurchase.getEvent().getDistrict()).append(", ");
-                }
-                if (newPurchase.getEvent().getCity() != null && !newPurchase.getEvent().getCity().trim().isEmpty()) {
+                if (newPurchase.getEvent().getCity() != null && !newPurchase.getEvent().getCity().isBlank())
                     locationBuilder.append(newPurchase.getEvent().getCity());
-                }
-                if (locationBuilder.length() > 0 && locationBuilder.lastIndexOf(", ") == locationBuilder.length() - 2) {
-                    locationBuilder.delete(locationBuilder.length() - 2, locationBuilder.length());
-                }
+                if (locationBuilder.toString().endsWith(", "))
+                    locationBuilder.setLength(locationBuilder.length() - 2);
 
+                // Tạo CheckinLog
                 CheckinLog checkinLog = new CheckinLog();
                 checkinLog.setCheckinTime(null);
                 checkinLog.setCheckinDevice("Mobile");
@@ -560,26 +556,41 @@ public class PaymentServiceImpl implements PaymentService {
                 checkinLog.setCheckinLocation(locationBuilder.toString());
                 checkinLogRepository.save(checkinLog);
 
+                // Tạo QR Code
                 TicketQrCodeDTO qrcode = new TicketQrCodeDTO();
                 qrcode.setTicket_name(newPurchase.getTicket().getTicketName());
                 qrcode.setPurchase_date(new Date());
                 qrcode.setEvent_name(newPurchase.getEvent().getEventName());
                 qrcode.setActivity_name(newPurchase.getEventActivity().getActivityName());
-                qrcode.setZone_name(newPurchase.getZoneActivity() != null ? newPurchase.getZoneActivity().getZone().getZoneName() : null);
-                qrcode.setSeat_code(newPurchase.getSeatActivity() != null ? newPurchase.getSeatActivity().getSeat().getRowNumber() + newPurchase.getSeatActivity().getSeat().getSeatName() : null);
-                qrcode.setSeat_row_number(newPurchase.getSeatActivity() != null ? newPurchase.getSeatActivity().getSeat().getRowNumber() : null);
-                qrcode.setSeat_column_number(newPurchase.getSeatActivity() != null ? newPurchase.getSeatActivity().getSeat().getColumnNumber() : null);
+                qrcode.setZone_name(
+                        newPurchase.getZoneActivity() != null
+                                ? newPurchase.getZoneActivity().getZone().getZoneName()
+                                : null);
+                qrcode.setSeat_code(
+                        newPurchase.getSeatActivity() != null
+                                ? newPurchase.getSeatActivity().getSeat().getRowNumber()
+                                + newPurchase.getSeatActivity().getSeat().getSeatName()
+                                : null);
+                qrcode.setSeat_row_number(
+                        newPurchase.getSeatActivity() != null
+                                ? newPurchase.getSeatActivity().getSeat().getRowNumber()
+                                : null);
+                qrcode.setSeat_column_number(
+                        newPurchase.getSeatActivity() != null
+                                ? newPurchase.getSeatActivity().getSeat().getColumnNumber()
+                                : null);
                 qrcode.setAccount_name(account.getUserName());
                 qrcode.setEmail(account.getEmail());
                 qrcode.setPhone(account.getPhone());
-                qrcode.setCheckin_Log_id(0);
+                qrcode.setCheckin_Log_id(0); // vì chưa checkin
                 qrcode.setStatus("Đã thanh toán");
-                String qrCode1 = generateQRCode(qrcode);
 
+                String qrCode1 = generateQRCode(qrcode);
                 newPurchase.setStatus(ETicketPurchaseStatus.PURCHASED);
                 newPurchase.setQrCode(qrCode1);
                 ticketPurchaseRepository.save(newPurchase);
             }
+
         }
 
         if (totalAmount == 0) {
@@ -646,6 +657,8 @@ public class PaymentServiceImpl implements PaymentService {
                 .data(objectMapper.valueToTree(result))
                 .build();
     }
+
+
     @Override
     public PaymentResponse handleCallbackPayOS(HttpServletRequest request) throws Exception {
         String status = request.getParameter("status");
