@@ -692,40 +692,8 @@ public class PaymentServiceImpl implements PaymentService {
                         .findById(detail.getTicketPurchase().getTicketPurchaseId())
                         .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
                 //Kiểm tra trạng thái của ticketPurchase xem thanh toán hay huỷ nếu không thì đi xuống dưới
-                if (ticketPurchase.getStatus().equals(ETicketPurchaseStatus.PENDING) ) {
-
-                    var ticketOld = ticketPurchase.getTicketPurchaseOldId();
-                    if(ticketOld != null){
-                        TicketPurchase ticketPurchaseOld = ticketPurchaseRepository
-                                .findById(ticketOld)
-                                .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
-
-                        ticketPurchaseOld.setStatus(ETicketPurchaseStatus.CANCELLED);
-
-                        if(ticketPurchaseOld.getSeatActivity()== null && ticketPurchaseOld.getZoneActivity()== null ){
-                            TicketMapping ticketMapping = ticketMappingRepository.findTicketMappingByTicketIdAndEventActivityId(
-                                            ticketPurchaseOld.getTicket().getTicketId(),
-                                            ticketPurchaseOld.getEventActivity().getEventActivityId())
-                                    .orElseThrow(() -> new AppException(ErrorCode.TICKET_MAPPING_NOT_FOUND));
-                            ticketMapping.setQuantity(ticketMapping.getQuantity() + ticketPurchaseOld.getQuantity());
-                            ticketMappingRepository.save(ticketMapping);
-                        }else if(ticketPurchaseOld.getSeatActivity() == null){
-                            ZoneActivity zoneActivity = zoneActivityRepository
-                                    .findByEventActivityIdAndZoneId(ticketPurchaseOld.getZoneActivity().getEventActivity().getEventActivityId(), ticketPurchaseOld.getZoneActivity().getZone().getZoneId())
-                                    .orElseThrow(() -> new AppException(ErrorCode.ZONE_ACTIVITY_NOT_FOUND));
-
-                            zoneActivity.setAvailableQuantity(zoneActivity.getAvailableQuantity() + ticketPurchaseOld.getQuantity());
-                            zoneActivityRepository.save(zoneActivity);
-                        }else {
-                            SeatActivity seatActivity = seatActivityRepository
-                                    .findByEventActivityIdAndSeatId(ticketPurchaseOld.getSeatActivity().getEventActivity().getEventActivityId(), ticketPurchaseOld.getSeatActivity().getSeat().getSeatId())
-                                    .orElseThrow(() -> new AppException(ErrorCode.SEAT_ACTIVITY_NOT_FOUND));
-                            seatActivity.setStatus(ESeatActivityStatus.AVAILABLE);
-                            seatActivityRepository.save(seatActivity);
-
-                        }
-                        ticketPurchaseRepository.save(ticketPurchaseOld);
-                    }
+                if (ticketPurchase.getStatus().equals(ETicketPurchaseStatus.PENDING) ||
+                        ticketPurchase.getStatus().equals(ETicketPurchaseStatus.PURCHASED)) {
                     //Nếu không ghế và có zone
                     if(ticketPurchase.getSeatActivity() == null && ticketPurchase.getZoneActivity() != null){
                         //kiểm tra Zone
@@ -954,6 +922,7 @@ public class PaymentServiceImpl implements PaymentService {
                 Optional<TicketPurchase> oldPurchaseOpt = ticketPurchaseRepository.findById(ticketPurchase.getTicketPurchaseOldId());
                 if (oldPurchaseOpt.isPresent()) {
                     oldPurchaseOpt.get().setStatus(ETicketPurchaseStatus.PURCHASED);
+                    ticketPurchase.setStatus(ETicketPurchaseStatus.CANCELLED);
                     // xử lý logic với oldPurchase
                 }
 
@@ -1077,7 +1046,8 @@ public class PaymentServiceImpl implements PaymentService {
             transactionRepository.save(transaction);
             return new PaymentResponse(status, "CANCELLED", mapper.map(payment, PaymentResponse.class));
         }
-    }    private String convert(String input) {
+    }
+    private String convert(String input) {
             // Giả sử input là định dạng như: "1743505747899-r0-c0"
             String[] parts = input.split("-");
             if (parts.length < 3) return input;
