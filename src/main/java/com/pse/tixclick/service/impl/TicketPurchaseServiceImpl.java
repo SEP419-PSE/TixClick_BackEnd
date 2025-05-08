@@ -763,8 +763,7 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
         return new TicketsSoldAndRevenueDTO(days, totalTicketsSold, totalRevenue, totalEvents, avgDailyRevenue, revenueGrowth);
     }
     @Override
-    public PaginationResponse<MyTicketDTO> getTicketPurchasesByAccount(int page, int size) throws AccessDeniedException {
-
+    public PaginationResponse<MyTicketDTO> getTicketPurchasesByAccount(int page, int size, String sortDirection) {
         appUtils.checkRole(ERole.BUYER, ERole.ORGANIZER);
 
         if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.BUYER)
@@ -788,9 +787,7 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
                         dto.setEventId(tp.getEvent().getEventId());
                         dto.setEventCategoryId(tp.getEvent().getCategory().getEventCategoryId());
                         dto.setEventName(tp.getEvent().getEventName());
-                        dto.setEventActivityId(tp.getEventActivity().getEventActivityId());
                         dto.setLocationName(tp.getEvent().getLocationName());
-                        dto.setTicketPurchaseId(tp.getTicketPurchaseId());
                         dto.setLogo(tp.getEvent().getLogoURL());
                         dto.setBanner(tp.getEvent().getBannerURL());
                         dto.setIshaveSeatmap(tp.getEvent().getSeatMap() != null);
@@ -809,6 +806,7 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
                     }
 
                     if (tp.getEventActivity() != null) {
+                        dto.setEventActivityId(tp.getEventActivity().getEventActivityId());
                         dto.setEventDate(tp.getEventActivity().getDateEvent());
                         dto.setEventStartTime(tp.getEventActivity().getStartTimeEvent());
                     }
@@ -828,9 +826,19 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
 
                     dto.setQuantity(tp.getQuantity());
                     dto.setQrCode(tp.getQrCode());
+                    dto.setTicketPurchaseId(tp.getTicketPurchaseId());
 
                     return dto;
-                }).collect(Collectors.toList());
+
+
+    }).collect(Collectors.toList());
+
+        // Sort theo eventDate
+        if (sortDirection != null && sortDirection.equalsIgnoreCase("desc")) {
+            myTicketDTOS.sort(Comparator.comparing(MyTicketDTO::getEventDate, Comparator.nullsLast(Comparator.reverseOrder())));
+        } else {
+            myTicketDTOS.sort(Comparator.comparing(MyTicketDTO::getEventDate, Comparator.nullsLast(Comparator.naturalOrder())));
+        }
 
         int totalElements = myTicketDTOS.size();
         int totalPages = (int) Math.ceil((double) totalElements / size);

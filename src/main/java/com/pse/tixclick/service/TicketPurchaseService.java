@@ -22,7 +22,7 @@ public interface TicketPurchaseService {
 
     TicketsSoldAndRevenueDTO getTicketsSoldAndRevenueByDay(int day);
 
-    PaginationResponse<MyTicketDTO> getTicketPurchasesByAccount(int page, int size) throws AccessDeniedException;
+    PaginationResponse<MyTicketDTO> getTicketPurchasesByAccount(int page, int size, String sortDirection);
     TicketQrCodeDTO decryptQrCode(String qrCode);
 
     int countTicketPurchaseStatusByPurchased();

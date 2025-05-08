@@ -164,11 +164,12 @@ public class TicketPurchaseController {
 
     @GetMapping("/all_of_account")
     public ResponseEntity<ApiResponse<PaginationResponse<MyTicketDTO>>> getAllTicketPurchaseByAccount(
-            @RequestParam(defaultValue = "0") int page
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam String sortDirection
     ) {
         try {
             int size = 3; // mỗi trang có 3 vé
-            PaginationResponse<MyTicketDTO> response = ticketPurchaseService.getTicketPurchasesByAccount(page, size);
+            PaginationResponse<MyTicketDTO> response = ticketPurchaseService.getTicketPurchasesByAccount(page, size,sortDirection);
 
             if (response == null || response.getItems().isEmpty()) {
                 return ResponseEntity.ok(
