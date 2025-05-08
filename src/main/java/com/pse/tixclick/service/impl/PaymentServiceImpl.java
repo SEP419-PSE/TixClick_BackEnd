@@ -558,6 +558,9 @@ public class PaymentServiceImpl implements PaymentService {
                 ticketPurchaseRepository.save(newPurchase);
             }
 
+            simpMessagingTemplate.convertAndSend("/all/messages",
+                    "call api"); // Gửi Object Message
+
             return PayOSResponse.builder()
                     .error("ok")
                     .message("Đổi vé thành công, không cần thanh toán")
@@ -882,6 +885,9 @@ public class PaymentServiceImpl implements PaymentService {
             transaction.setType(ETransactionType.DIRECT_PAYMENT);
             transactionRepository.save(transaction);
 
+            simpMessagingTemplate.convertAndSend("/all/messages",
+                    "call api"); // Gửi Object Message
+
             return new PaymentResponse(status, "SUCCESSFUL", mapper.map(payment, PaymentResponse.class));
         }
         else {
@@ -1068,6 +1074,10 @@ public class PaymentServiceImpl implements PaymentService {
             transaction.setContractPayment(null);
             transaction.setType(ETransactionType.DIRECT_PAYMENT);
             transactionRepository.save(transaction);
+
+            simpMessagingTemplate.convertAndSend("/all/messages",
+                    "call api"); // Gửi Object Message
+
             return new PaymentResponse(status, "CANCELLED", mapper.map(payment, PaymentResponse.class));
         }
     }
