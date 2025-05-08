@@ -661,37 +661,33 @@ public class PaymentServiceImpl implements PaymentService {
                 TicketPurchase ticketPurchase = ticketPurchaseRepository
                         .findById(detail.getTicketPurchase().getTicketPurchaseId())
                         .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
-                var oldTicketPurchase = ticketPurchaseRepository
-                        .findById(ticketPurchase.getTicketPurchaseOldId())
-                        .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
 
-                if(oldTicketPurchase != null){
-                    oldTicketPurchase.setStatus(ETicketPurchaseStatus.CANCELLED);
-                    ticketPurchaseRepository.save(oldTicketPurchase);
+                if(ticketPurchase.getTicketPurchaseOldId()!= null) {
+                    Optional<TicketPurchase> oldTicketPurchase = ticketPurchaseRepository
+                            .findTicketPurchaseByTicketPurchaseId(ticketPurchase.getTicketPurchaseOldId());
 
-                    if(oldTicketPurchase.getZoneActivity()== null && oldTicketPurchase.getTicket() !=null){
-                        TicketMapping ticketMapping = ticketMappingRepository.findTicketMappingByTicketIdAndEventActivityId(
-                                oldTicketPurchase.getTicket().getTicketId(),
-                                oldTicketPurchase.getEventActivity().getEventActivityId()
-                        ).orElseThrow(() -> new AppException(ErrorCode.TICKET_MAPPING_NOT_FOUND));
+                    if (oldTicketPurchase.isPresent()) {
+                        oldTicketPurchase.get().setStatus(ETicketPurchaseStatus.CANCELLED);
+                        ticketPurchaseRepository.save(oldTicketPurchase.get());
 
-                        ticketMapping.setQuantity(ticketMapping.getQuantity() + oldTicketPurchase.getQuantity());
-                        ticketMappingRepository.save(ticketMapping);
-                    } else if(oldTicketPurchase.getSeatActivity() == null  && oldTicketPurchase.getZoneActivity() != null && oldTicketPurchase.getTicket() != null){
-                        ZoneActivity zoneActivity = zoneActivityRepository.findByEventActivityIdAndZoneId(
-                                oldTicketPurchase.getEventActivity().getEventActivityId(),
-                                oldTicketPurchase.getZoneActivity().getZoneActivityId()
-                        ).orElseThrow(() -> new AppException(ErrorCode.ZONE_ACTIVITY_NOT_FOUND));
+                        if (oldTicketPurchase.get().getZoneActivity() == null && oldTicketPurchase.get().getTicket() != null) {
+                            TicketMapping ticketMapping = ticketMappingRepository.findTicketMappingByTicketIdAndEventActivityId(
+                                    oldTicketPurchase.get().getTicket().getTicketId(),
+                                    oldTicketPurchase.get().getEventActivity().getEventActivityId()
+                            ).orElseThrow(() -> new AppException(ErrorCode.TICKET_MAPPING_NOT_FOUND));
 
-                        zoneActivity.setAvailableQuantity(zoneActivity.getAvailableQuantity() + oldTicketPurchase.getQuantity());
-                        zoneActivityRepository.save(zoneActivity);
-                    } else {
-                        SeatActivity seatActivity = seatActivityRepository.findByEventActivityIdAndSeatId(
-                                oldTicketPurchase.getEventActivity().getEventActivityId(),
-                                oldTicketPurchase.getSeatActivity().getSeatActivityId()
-                        ).orElseThrow(() -> new AppException(ErrorCode.SEAT_ACTIVITY_NOT_FOUND));
-                        seatActivity.setStatus(ESeatActivityStatus.AVAILABLE);
-                        seatActivityRepository.save(seatActivity);
+                            ticketMapping.setQuantity(ticketMapping.getQuantity() + oldTicketPurchase.get().getQuantity());
+                            ticketMappingRepository.save(ticketMapping);
+                        } else if (oldTicketPurchase.get().getSeatActivity() == null && oldTicketPurchase.get().getZoneActivity() != null && oldTicketPurchase.get().getTicket() != null) {
+                            ZoneActivity zoneActivity = oldTicketPurchase.get().getZoneActivity();
+
+                            zoneActivity.setAvailableQuantity(zoneActivity.getAvailableQuantity() + oldTicketPurchase.get().getQuantity());
+                            zoneActivityRepository.save(zoneActivity);
+                        } else {
+                            SeatActivity seatActivity = oldTicketPurchase.get().getSeatActivity();
+                            seatActivity.setStatus(ESeatActivityStatus.AVAILABLE);
+                            seatActivityRepository.save(seatActivity);
+                        }
                     }
                 }
                 //Kiểm tra trạng thái của ticketPurchase xem thanh toán hay huỷ nếu không thì đi xuống dưới
@@ -924,8 +920,10 @@ public class PaymentServiceImpl implements PaymentService {
                 TicketPurchase ticketPurchase = ticketPurchaseRepository
                         .findById(detail.getTicketPurchase().getTicketPurchaseId())
                         .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
+                if(ticketPurchase.getTicketPurchaseOldId() != null){
 
-                Optional<TicketPurchase> oldPurchaseOpt = ticketPurchaseRepository.findById(ticketPurchase.getTicketPurchaseOldId());
+
+                Optional<TicketPurchase> oldPurchaseOpt = ticketPurchaseRepository.findTicketPurchaseByTicketPurchaseId(ticketPurchase.getTicketPurchaseOldId());
                 if (oldPurchaseOpt.isPresent()) {
                     oldPurchaseOpt.get().setStatus(ETicketPurchaseStatus.PURCHASED);
                     ticketPurchase.setStatus(ETicketPurchaseStatus.CANCELLED);
@@ -954,6 +952,7 @@ public class PaymentServiceImpl implements PaymentService {
                         seatActivity.setStatus(ESeatActivityStatus.SOLD);
                         seatActivityRepository.save(seatActivity);
                     }
+                }
                 }
 
 
@@ -1117,6 +1116,6 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     private String getBaseUrl(HttpServletRequest request) {
-        return "http://localhost:5173";
+        return "https://tixclick.site";
     }
 }

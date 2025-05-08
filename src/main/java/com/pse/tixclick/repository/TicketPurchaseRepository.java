@@ -198,4 +198,7 @@ ORDER BY m.month;
                 c.[date]
         """, nativeQuery = true)
     List<RevenueByDateProjection>  getDailyRevenueByEventAndActivity(@Param("eventId") int eventId, @Param("eventActivityId") int eventActivityId);
+
+    Optional<TicketPurchase> findTicketPurchaseByTicketPurchaseId(int ticketPurchaseId);
+
 }
