@@ -20,9 +20,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -74,7 +77,7 @@ public class VoucherServiceImpl implements VoucherService {
         voucher.setVoucherName(createVoucherRequest.getVoucherName());
         voucher.setVoucherCode(createVoucherRequest.getVoucherCode());
         voucher.setDiscount(createVoucherRequest.getDiscount());
-        voucher.setStatus(EVoucherStatus.ACTIVE);
+        voucher.setStatus(EVoucherStatus.INACTIVE);
         voucher.setCreatedDate(LocalDateTime.now());
         voucher.setQuantity(createVoucherRequest.getQuantity());
         voucher.setStartDate(createVoucherRequest.getStartDate());
@@ -96,17 +99,15 @@ public class VoucherServiceImpl implements VoucherService {
     }
 
     @Override
-    public String changeVoucherStatus(int voucherId, EVoucherStatus status) {
+    public String changeVoucherStatus(int voucherId) {
         Voucher voucher = voucherRepository.findById(voucherId)
                 .orElseThrow(() -> new AppException(ErrorCode.VOUCHER_NOT_FOUND));
 
         if (voucher.getEvent() == null) {
             throw new AppException(ErrorCode.VOUCHER_NOT_FOUND);
         }
-
-        voucher.setStatus(status);
-        voucherRepository.save(voucher);
-        return "Voucher status changed successfully";
+        voucherRepository.delete(voucher);
+        return "Voucher status deleted successfully";
     }
 
     @Override
@@ -127,5 +128,34 @@ public class VoucherServiceImpl implements VoucherService {
         } else {
             throw new AppException(ErrorCode.VOUCHER_INACTIVE);
         }
+    }
+@Transactional
+    @Scheduled(cron = "0 43 15 * * ?") // Chạy vào 0h mỗi ngày // second/minute/hour/day/month
+    public void updateExpiredVoucherStatus() {
+        List<Voucher> vouchers = voucherRepository.findAll();
+        LocalDateTime now = LocalDateTime.now();
+        List<Voucher> updatedVouchers = new ArrayList<>();
+
+
+        for (Voucher voucher : vouchers) {
+            LocalDateTime startDate = voucher.getStartDate();
+            LocalDateTime endDate = voucher.getEndDate();
+
+            if (voucher.getStatus().equals(EVoucherStatus.INACTIVE)) {
+                if (startDate != null && !startDate.isAfter(now)) {
+                    voucher.setStatus(EVoucherStatus.ACTIVE);
+                    updatedVouchers.add(voucher);
+
+                }
+            }
+            else if (voucher.getStatus().equals(EVoucherStatus.ACTIVE)) {
+                if (endDate != null && endDate.isBefore(now)) {
+                    voucher.setStatus(EVoucherStatus.EXPIRED);
+                    updatedVouchers.add(voucher);
+
+                }
+            }
+        }
+        voucherRepository.saveAll(updatedVouchers);
     }
 }

@@ -12,7 +12,7 @@ public interface VoucherService {
 
     List<VoucherDTO> getAllVouchers(int eventId, EVoucherStatus status);
 
-    String changeVoucherStatus(int voucherId,EVoucherStatus status);
+    String changeVoucherStatus(int voucherId);
 
     VoucherPercentageResponse checkVoucherCode(String voucherCode, int eventId);
 }
