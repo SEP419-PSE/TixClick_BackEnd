@@ -131,18 +131,16 @@ public class TransactionServiceImpl implements TransactionService {
         }
 
         Sort sort = Sort.by("transactionDate");
-        sort = sortDirection.equalsIgnoreCase("desc") ? sort.descending() : sort.ascending();
+        sort = "desc".equalsIgnoreCase(sortDirection) ? sort.descending() : sort.ascending();
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        int offset = page * size;
-        List<Transaction> transactions = transactionRepository.findAllByEventIdPaged(eventId, offset, size);
-        long totalElements = transactionRepository.countByEventId(eventId);
+        Page<Transaction> transactionPage = transactionRepository.findAllByEventId(eventId, pageable);
 
-        if (transactions.isEmpty()) {
+        if (transactionPage.isEmpty()) {
             throw new AppException(ErrorCode.TRANSACTION_NOT_FOUND);
         }
 
-        List<TransactionCompanyByEventDTO> dtos = transactions.stream().map(transaction -> {
+        List<TransactionCompanyByEventDTO> dtos = transactionPage.getContent().stream().map(transaction -> {
             var payment = transaction.getPayment();
             if (payment == null) throw new AppException(ErrorCode.PAYMENT_NOT_FOUND);
 
@@ -161,14 +159,13 @@ public class TransactionServiceImpl implements TransactionService {
                     .build();
         }).toList();
 
-        int totalPages = (int) Math.ceil((double) totalElements / size);
-
         return PaginationResponse.<TransactionCompanyByEventDTO>builder()
                 .items(dtos)
                 .currentPage(page)
-                .totalPages(totalPages)
-                .totalElements(totalElements)
+                .totalPages(transactionPage.getTotalPages())
+                .totalElements(transactionPage.getTotalElements())
                 .pageSize(size)
                 .build();
     }
+
 }
