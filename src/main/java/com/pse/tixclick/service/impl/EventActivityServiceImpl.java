@@ -193,15 +193,9 @@ public class EventActivityServiceImpl implements EventActivityService {
                 if (!ERole.MANAGER.equals(account.getRole().getRoleName())) {
                     throw new AppException(ErrorCode.NOT_PERMISSION);
                 }
-            } else {
-                throw new AppException(ErrorCode.CAN_NOT_UPDATE);
-            }
 
-            EventActivity eventActivity;
-
-            if (request.getEventActivityId() != null) {
                 // ✅ Cập nhật EventActivity
-                eventActivity = eventActivityRepository.findById(request.getEventActivityId())
+                EventActivity eventActivity = eventActivityRepository.findById(request.getEventActivityId())
                         .orElseThrow(() -> new AppException(ErrorCode.EVENT_ACTIVITY_NOT_FOUND));
 
                 if(eventActivity.getUpdatedByManager() != null) {
@@ -213,6 +207,16 @@ public class EventActivityServiceImpl implements EventActivityService {
                 if (request.getDateEvent().isBefore(eventActivity.getDateEvent())) {
                     throw new AppException(ErrorCode.INVALID_EVENT_DATE); // Bạn có thể định nghĩa lỗi này
                 }
+            } else {
+                throw new AppException(ErrorCode.CAN_NOT_UPDATE);
+            }
+
+            EventActivity eventActivity;
+
+            if (request.getEventActivityId() != null) {
+                // ✅ Cập nhật EventActivity
+                eventActivity = eventActivityRepository.findById(request.getEventActivityId())
+                        .orElseThrow(() -> new AppException(ErrorCode.EVENT_ACTIVITY_NOT_FOUND));
 
                 String oldActivityDate = String.valueOf(eventActivity.getDateEvent());
                 eventActivity.setActivityName(request.getActivityName());
@@ -232,7 +236,7 @@ public class EventActivityServiceImpl implements EventActivityService {
                 );
 
 
-                if (!ticketPurchases.isEmpty()) {
+                if (!ticketPurchases.isEmpty()  && event.getStatus() == EEventStatus.SCHEDULED) {
                     // Gửi email lại cho tất cả người dùng đã mua vé
                     for (TicketPurchase ticketPurchase : ticketPurchases) {
                         String fullName = ticketPurchase.getAccount().getFirstName() + " " + ticketPurchase.getAccount().getLastName();
