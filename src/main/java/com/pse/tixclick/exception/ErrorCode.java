@@ -162,6 +162,7 @@ public enum ErrorCode {
     ORDER_DETAIL_NOT_FOUND(1144,"Không tìm thấy order detail",HttpStatus.NOT_FOUND),
     VOUCHER_INACTIVE(1145,"Voucher hết hạn hoặc không hoạt động",HttpStatus.BAD_REQUEST),
     PAYMENT_NOT_FOUND(1146,"Không tìm thấy payment",HttpStatus.NOT_FOUND),
+    INVALID_EVENT_DATE(1147,"Ngày sự kiện mới phải sau ngày sự kiện cũ",HttpStatus.BAD_REQUEST),
     ;
 
 

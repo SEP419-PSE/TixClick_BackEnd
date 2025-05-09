@@ -203,6 +203,17 @@ public class EventActivityServiceImpl implements EventActivityService {
                 // ✅ Cập nhật EventActivity
                 eventActivity = eventActivityRepository.findById(request.getEventActivityId())
                         .orElseThrow(() -> new AppException(ErrorCode.EVENT_ACTIVITY_NOT_FOUND));
+
+                if(eventActivity.getUpdatedByManager() != null) {
+                    if (eventActivity.getUpdatedByManager().getAccountId() != account.getAccountId()) {
+                        throw new AppException(ErrorCode.NOT_PERMISSION);
+                    }
+                }
+
+                if (request.getDateEvent().isBefore(eventActivity.getDateEvent())) {
+                    throw new AppException(ErrorCode.INVALID_EVENT_DATE); // Bạn có thể định nghĩa lỗi này
+                }
+
                 String oldActivityDate = String.valueOf(eventActivity.getDateEvent());
                 eventActivity.setActivityName(request.getActivityName());
                 eventActivity.setDateEvent(request.getDateEvent());
