@@ -130,17 +130,32 @@ public class TransactionServiceImpl implements TransactionService {
             throw new AppException(ErrorCode.EVENT_NOT_COMPANY);
         }
 
-        Sort sort = Sort.by("transactionDate");
-        sort = "desc".equalsIgnoreCase(sortDirection) ? sort.descending() : sort.ascending();
-        Pageable pageable = PageRequest.of(page, size, sort);
+        // Lấy tất cả các giao dịch từ repository (không phân trang)
+        List<Transaction> transactions = transactionRepository.findAllByEventId(eventId);
 
-        Page<Transaction> transactionPage = transactionRepository.findAllByEventId(eventId, pageable);
+        // Sắp xếp danh sách giao dịch theo transactionDate
+        transactions.sort((t1, t2) -> {
+            if (sortDirection.equalsIgnoreCase("desc")) {
+                return t2.getTransactionDate().compareTo(t1.getTransactionDate());
+            } else {
+                return t1.getTransactionDate().compareTo(t2.getTransactionDate());
+            }
+        });
 
-        if (transactionPage.isEmpty()) {
+        // Tính toán phân trang
+        int startIndex = page * size;
+        int endIndex = Math.min(startIndex + size, transactions.size());
+
+        // Kiểm tra nếu có dữ liệu
+        if (transactions.isEmpty()) {
             throw new AppException(ErrorCode.TRANSACTION_NOT_FOUND);
         }
 
-        List<TransactionCompanyByEventDTO> dtos = transactionPage.getContent().stream().map(transaction -> {
+        // Lấy danh sách giao dịch theo trang
+        List<Transaction> pagedTransactions = transactions.subList(startIndex, endIndex);
+
+        // Chuyển đổi các Transaction thành DTO
+        List<TransactionCompanyByEventDTO> dtos = pagedTransactions.stream().map(transaction -> {
             var payment = transaction.getPayment();
             if (payment == null) throw new AppException(ErrorCode.PAYMENT_NOT_FOUND);
 
@@ -159,13 +174,18 @@ public class TransactionServiceImpl implements TransactionService {
                     .build();
         }).toList();
 
+        // Tính tổng số trang
+        int totalElements = transactions.size();
+        int totalPages = (int) Math.ceil((double) totalElements / size);
+
         return PaginationResponse.<TransactionCompanyByEventDTO>builder()
                 .items(dtos)
                 .currentPage(page)
-                .totalPages(transactionPage.getTotalPages())
-                .totalElements(transactionPage.getTotalElements())
+                .totalPages(totalPages)
+                .totalElements(totalElements)
                 .pageSize(size)
                 .build();
     }
+
 
 }
