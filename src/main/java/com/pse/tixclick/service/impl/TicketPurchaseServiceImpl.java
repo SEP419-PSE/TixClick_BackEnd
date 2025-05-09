@@ -1,5 +1,7 @@
 package com.pse.tixclick.service.impl;
 
+import com.pse.tixclick.config.testnotification.Message;
+import com.pse.tixclick.config.testnotification.MessageController;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.*;
@@ -7,12 +9,15 @@ import com.pse.tixclick.payload.entity.CheckinLog;
 import com.pse.tixclick.payload.entity.entity_enum.*;
 import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.entity.event.EventActivity;
+import com.pse.tixclick.payload.entity.payment.Order;
+import com.pse.tixclick.payload.entity.payment.OrderDetail;
 import com.pse.tixclick.payload.entity.seatmap.*;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
 import com.pse.tixclick.payload.entity.ticket.TicketMapping;
 import com.pse.tixclick.payload.entity.ticket.TicketPurchase;
 import com.pse.tixclick.payload.request.create.CreateTicketPurchaseRequest;
 import com.pse.tixclick.payload.request.create.ListTicketPurchaseRequest;
+import com.pse.tixclick.payload.response.PaginationResponse;
 import com.pse.tixclick.repository.*;
 import com.pse.tixclick.service.TicketPurchaseService;
 import com.pse.tixclick.utils.AppUtils;
@@ -23,8 +28,11 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.nio.file.AccessDeniedException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -87,10 +95,21 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
 
     @Autowired
     SimpMessagingTemplate messagingTemplate;
+    @Autowired
+    MessageController messageController;
 
+    @Autowired
+    SimpMessagingTemplate simpMessagingTemplate;
+
+    @Autowired
+    OrderDetailRepository orderDetailRepository;
+
+    @Autowired
+    OrderRepository orderRepository;
 
     @Override
-    public List<TicketPurchaseDTO> createTicketPurchase(ListTicketPurchaseRequest createTicketPurchaseRequest) {
+    public List<TicketPurchaseDTO> createTicketPurchase(ListTicketPurchaseRequest createTicketPurchaseRequest) throws Exception {
+        AppUtils.checkRole(ERole.BUYER,ERole.ORGANIZER);
         if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.BUYER) &&
                 !appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.ORGANIZER)) {
             throw new AppException(ErrorCode.NOT_PERMISSION);
@@ -324,13 +343,16 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
         }
         CompletableFuture.runAsync(() -> scheduleStatusUpdate(LocalDateTime.now(), listTicketPurchase_id));
 
+        simpMessagingTemplate.convertAndSend("/all/messages",
+                "call api"); // Gửi Object Message
+
         return ticketPurchaseDTOList;
     }
 
     @Async
     public void scheduleStatusUpdate(LocalDateTime startTime, List<Integer> listTicketPurchase_id) {
         LocalDateTime currentTime = LocalDateTime.now();
-        long delay = java.time.Duration.between(currentTime, startTime.plusMinutes(15)).toSeconds();
+        long delay = java.time.Duration.between(currentTime, startTime.plusMinutes(5)).toSeconds();
         String code = String.valueOf(listTicketPurchase_id.get(0));
         if (delay >= 0) {
             // Gửi countdown đến WebSocket mỗi giây
@@ -442,6 +464,79 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
         return "Cancel ticket purchase successfully";
     }
 
+    @Override
+    public MyTicketDTO getTicketPurchaseById(int ticketPurchaseId) {
+        var context = SecurityContextHolder.getContext();
+        var userName = context.getAuthentication().getName();
+
+        TicketPurchase myTicket = ticketPurchaseRepository
+                .findByTicketPurchaseIdAndStatusAndAccount_UserName(
+                        ticketPurchaseId,
+                        ETicketPurchaseStatus.PURCHASED,
+                        userName
+                )
+                .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
+
+        MyTicketDTO myTicketDTO = new MyTicketDTO();
+
+        if (myTicket.getEvent() != null) {
+            myTicketDTO.setEventId(myTicket.getEvent().getEventId());
+            myTicketDTO.setEventName(myTicket.getEvent().getEventName());
+            myTicketDTO.setEventActivityId(myTicket.getEventActivity().getEventActivityId());
+            myTicketDTO.setTicketPurchaseId(myTicket.getTicketPurchaseId());
+            myTicketDTO.setLogo(myTicket.getEvent().getLogoURL());
+            myTicketDTO.setBanner(myTicket.getEvent().getBannerURL());
+            myTicketDTO.setIshaveSeatmap(myTicket.getEvent().getSeatMap() != null);
+            myTicketDTO.setLocationName(myTicket.getEvent().getLocationName());
+
+            StringBuilder locationBuilder = new StringBuilder();
+            if(myTicket.getEvent().getAddress() != null) {
+                locationBuilder.append(myTicket.getEvent().getAddress()).append(", ");
+            }
+            if (myTicket.getEvent().getWard() != null) {
+                locationBuilder.append(myTicket.getEvent().getWard()).append(", ");
+            }
+            if (myTicket.getEvent().getDistrict() != null) {
+                locationBuilder.append(myTicket.getEvent().getDistrict()).append(", ");
+            }
+            if (myTicket.getEvent().getCity() != null) {
+                locationBuilder.append(myTicket.getEvent().getCity());
+            }
+            if (locationBuilder.length() > 0) {
+                if (locationBuilder.lastIndexOf(", ") == locationBuilder.length() - 2) {
+                    locationBuilder.delete(locationBuilder.length() - 2, locationBuilder.length());
+                }
+                myTicketDTO.setLocation(locationBuilder.toString());
+            } else {
+                myTicketDTO.setLocation(null);
+            }
+        }
+
+        if (myTicket.getEventActivity() != null) {
+            myTicketDTO.setEventDate(myTicket.getEventActivity().getDateEvent());
+            myTicketDTO.setEventStartTime(myTicket.getEventActivity().getStartTimeEvent());
+        }
+
+        if (myTicket.getTicket() != null) {
+            myTicketDTO.setPrice(myTicket.getTicket().getPrice());
+            myTicketDTO.setTicketType(myTicket.getTicket().getTicketName());
+        }
+
+        if (myTicket.getZoneActivity() != null && myTicket.getZoneActivity().getZone() != null) {
+            myTicketDTO.setZoneName(myTicket.getZoneActivity().getZone().getZoneName());
+        }
+
+        if (myTicket.getSeatActivity() != null && myTicket.getSeatActivity().getSeat() != null) {
+            myTicketDTO.setSeatCode(myTicket.getSeatActivity().getSeat().getSeatName());
+        }
+
+        myTicketDTO.setQuantity(myTicket.getQuantity());
+        myTicketDTO.setQrCode(myTicket.getQrCode());
+
+        return myTicketDTO;
+    }
+
+
     private void updateTicketPurchaseStatus(List<Integer> listTicketPurchaseId){
         for(Integer ticketPurchase_id : listTicketPurchaseId){
             TicketPurchase ticketPurchase = ticketPurchaseRepository
@@ -451,6 +546,25 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
             if (ticketPurchase.getStatus().equals(ETicketPurchaseStatus.PENDING)) {
                 //Nếu không ghế và có zone
                 if(ticketPurchase.getSeatActivity() == null && ticketPurchase.getZoneActivity() != null){
+                    if(ticketPurchase.getTicketPurchaseOldId()!= null){
+                        TicketPurchase ticketPurchaseOld = ticketPurchaseRepository
+                                .findById(ticketPurchase.getTicketPurchaseOldId())
+                                .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
+
+                        ticketPurchaseOld.setStatus(ETicketPurchaseStatus.PURCHASED);
+                        ticketPurchaseRepository.save(ticketPurchaseOld);
+
+
+                        var zoneActivityOld = ticketPurchaseOld.getZoneActivity();
+                        if (zoneActivityOld != null) {
+
+
+                            zoneActivityOld.setAvailableQuantity(zoneActivityOld.getAvailableQuantity() - ticketPurchaseOld.getQuantity());
+                            zoneActivityRepository.save(zoneActivityOld);
+                        }
+
+
+                    }
                     ZoneActivity zoneActivity = zoneActivityRepository
                             .findByEventActivityIdAndZoneId(ticketPurchase.getZoneActivity().getEventActivity().getEventActivityId(), ticketPurchase.getZoneActivity().getZone().getZoneId())
                             .orElseThrow(() -> new AppException(ErrorCode.ZONE_ACTIVITY_NOT_FOUND));
@@ -470,6 +584,21 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
 
                 //Nếu có ghế và có zone
                 if(ticketPurchase.getZoneActivity() != null && ticketPurchase.getSeatActivity() != null){
+                    if(ticketPurchase.getTicketPurchaseOldId()!= null){
+                        TicketPurchase ticketPurchaseOld = ticketPurchaseRepository
+                                .findById(ticketPurchase.getTicketPurchaseOldId())
+                                .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
+
+                        ticketPurchaseOld.setStatus(ETicketPurchaseStatus.PURCHASED);
+                        ticketPurchaseRepository.save(ticketPurchaseOld);
+
+                        var zoneActivityOld = ticketPurchaseOld.getZoneActivity();
+                        var seatActivityOld = ticketPurchaseOld.getSeatActivity();
+                        if(zoneActivityOld != null && seatActivityOld != null) {
+                            seatActivityOld.setStatus(ESeatActivityStatus.SOLD);
+                            seatActivityRepository.save(seatActivityOld);
+                        }
+                    }
                     SeatActivity seatActivity = seatActivityRepository
                             .findByEventActivityIdAndSeatId(ticketPurchase.getSeatActivity().getEventActivity().getEventActivityId(), ticketPurchase.getSeatActivity().getSeat().getSeatId())
                             .orElseThrow(() -> new AppException(ErrorCode.SEAT_ACTIVITY_NOT_FOUND));
@@ -496,6 +625,27 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
 
                 //Nếu không ghế và không zone
                 if(ticketPurchase.getZoneActivity() == null && ticketPurchase.getSeatActivity() == null){
+                    if(ticketPurchase.getTicketPurchaseOldId()!= null){
+                        TicketPurchase ticketPurchaseOld = ticketPurchaseRepository
+                                .findById(ticketPurchase.getTicketPurchaseOldId())
+                                .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
+
+                        ticketPurchaseOld.setStatus(ETicketPurchaseStatus.PURCHASED);
+                        ticketPurchaseRepository.save(ticketPurchaseOld);
+
+                        var ticketMappingOld = ticketMappingRepository.findTicketMappingByTicketIdAndEventActivityId(
+                                ticketPurchaseOld.getTicket().getTicketId(), ticketPurchaseOld.getEventActivity().getEventActivityId())
+                                .orElseThrow(() -> new AppException(ErrorCode.TICKET_MAPPING_NOT_FOUND));
+
+                        if(ticketMappingOld.getQuantity() == 0) {
+                            ticketMappingOld.setQuantity(ticketMappingOld.getQuantity());
+                            ticketMappingOld.setStatus(true);
+                            ticketMappingRepository.save(ticketMappingOld);
+                        }else {
+                            ticketMappingOld.setQuantity(ticketMappingOld.getQuantity() + ticketPurchaseOld.getQuantity());
+                            ticketMappingRepository.save(ticketMappingOld);
+                        }
+                    }
                     TicketMapping ticketMapping = ticketMappingRepository
                             .findTicketMappingByTicketIdAndEventActivityId(ticketPurchase.getTicket().getTicketId(), ticketPurchase.getEventActivity().getEventActivityId())
                             .orElseThrow(() -> new AppException(ErrorCode.TICKET_MAPPING_NOT_FOUND));
@@ -622,11 +772,12 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
 
         return new TicketsSoldAndRevenueDTO(days, totalTicketsSold, totalRevenue, totalEvents, avgDailyRevenue, revenueGrowth);
     }
-
     @Override
-    public List<MyTicketDTO> getTicketPurchasesByAccount() {
-        if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.BUYER) && !
-                appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.ORGANIZER)) {
+    public PaginationResponse<MyTicketDTO> getTicketPurchasesByAccount(int page, int size, String sortDirection) {
+        appUtils.checkRole(ERole.BUYER, ERole.ORGANIZER);
+
+        if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.BUYER)
+                && !appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.ORGANIZER)) {
             throw new AppException(ErrorCode.NOT_PERMISSION);
         }
 
@@ -634,62 +785,186 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
                 .getTicketPurchasesByAccount(appUtils.getAccountFromAuthentication().getAccountId());
 
         if (ticketPurchases.isEmpty()) {
-            return null;
+            return new PaginationResponse<>(Collections.emptyList(), page, 0, 0, size);
         }
 
         List<MyTicketDTO> myTicketDTOS = ticketPurchases.stream()
-                .filter(ticketPurchase -> ticketPurchase.getStatus().equals(ETicketPurchaseStatus.PURCHASED))
-                .map(myTicket -> {
-                    MyTicketDTO myTicketDTO = new MyTicketDTO();
+                .filter(tp -> tp.getStatus().equals(ETicketPurchaseStatus.PURCHASED))
+                .map(tp -> {
+                    MyTicketDTO dto = new MyTicketDTO();
 
-                    if (myTicket.getEvent() != null) {
-                        myTicketDTO.setEventId(myTicket.getEvent().getEventId());
-                        myTicketDTO.setEventName(myTicket.getEvent().getEventName());
+                    if (tp.getEvent() != null) {
+                        OrderDetail orderDetail = orderDetailRepository.findOrderDetailByTicketPurchase_TicketPurchaseId(tp.getTicketPurchaseId())
+                                .orElseThrow(() -> new AppException(ErrorCode.ORDER_DETAIL_NOT_FOUND));
+                        Order order = orderRepository.findById(orderDetail.getOrder().getOrderId())
+                                .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+
+                        dto.setEventId(tp.getEvent().getEventId());
+                        dto.setEventCategoryId(tp.getEvent().getCategory().getEventCategoryId());
+                        dto.setEventName(tp.getEvent().getEventName());
+                        dto.setLocationName(tp.getEvent().getLocationName());
+                        dto.setLogo(tp.getEvent().getLogoURL());
+                        dto.setBanner(tp.getEvent().getBannerURL());
+                        dto.setIshaveSeatmap(tp.getEvent().getSeatMap() != null);
+                        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+                        dto.setTimeBuyTicket(sdf.format(order.getOrderDate()));
                         StringBuilder locationBuilder = new StringBuilder();
-                        if(myTicket.getEvent().getAddress() != null) {
-                            locationBuilder.append(myTicket.getEvent().getAddress()).append(", ");
-                        }
-                        if (myTicket.getEvent().getWard() != null) {
-                            locationBuilder.append(myTicket.getEvent().getWard()).append(", ");
-                        }
-                        if (myTicket.getEvent().getDistrict() != null) {
-                            locationBuilder.append(myTicket.getEvent().getDistrict()).append(", ");
-                        }
-                        if (myTicket.getEvent().getCity() != null) {
-                            locationBuilder.append(myTicket.getEvent().getCity());
-                        }
-                        if (locationBuilder.length() > 0) {
-                            if (locationBuilder.lastIndexOf(", ") == locationBuilder.length() - 2) {
-                                locationBuilder.delete(locationBuilder.length() - 2, locationBuilder.length());
-                            }
+                        if (tp.getEvent().getAddress() != null) locationBuilder.append(tp.getEvent().getAddress()).append(", ");
+                        if (tp.getEvent().getWard() != null) locationBuilder.append(tp.getEvent().getWard()).append(", ");
+                        if (tp.getEvent().getDistrict() != null) locationBuilder.append(tp.getEvent().getDistrict()).append(", ");
+                        if (tp.getEvent().getCity() != null) locationBuilder.append(tp.getEvent().getCity());
 
-                            myTicketDTO.setLocation(locationBuilder.toString());
-                        } else {
-                            myTicketDTO.setLocation(null);
+                        if (locationBuilder.length() > 0 && locationBuilder.lastIndexOf(", ") == locationBuilder.length() - 2) {
+                            locationBuilder.delete(locationBuilder.length() - 2, locationBuilder.length());
                         }
-                    }
-                    if (myTicket.getEventActivity() != null) {
-                        myTicketDTO.setEventDate(myTicket.getEventActivity().getDateEvent());
-                        myTicketDTO.setEventStartTime(myTicket.getEventActivity().getStartTimeEvent());
-                    }
-                    if (myTicket.getTicket() != null) {
-                        myTicketDTO.setPrice(myTicket.getTicket().getPrice());
-                        myTicketDTO.setTicketType(myTicket.getTicket().getTicketName());
-                    }
-                    if (myTicket.getZoneActivity() != null && myTicket.getZoneActivity().getZone() != null) {
-                        myTicketDTO.setZoneName(myTicket.getZoneActivity().getZone().getZoneName());
-                    }
-                    if (myTicket.getSeatActivity() != null && myTicket.getSeatActivity().getSeat() != null) {
-                        myTicketDTO.setSeatCode(myTicket.getSeatActivity().getSeat().getSeatName());
+
+                        dto.setLocation(locationBuilder.length() > 0 ? locationBuilder.toString() : null);
                     }
 
-                    myTicketDTO.setQuantity(myTicket.getQuantity());
-                    myTicketDTO.setQrCode(myTicket.getQrCode());
-                    return myTicketDTO;
-                })
-                .collect(Collectors.toList());
+                    if (tp.getEventActivity() != null) {
+                        dto.setEventActivityId(tp.getEventActivity().getEventActivityId());
+                        dto.setEventDate(tp.getEventActivity().getDateEvent());
+                        dto.setEventStartTime(tp.getEventActivity().getStartTimeEvent());
+                    }
 
-        return myTicketDTOS.isEmpty() ? null : myTicketDTOS;
+                    if (tp.getTicket() != null) {
+                        dto.setPrice(tp.getTicket().getPrice());
+                        dto.setTicketType(tp.getTicket().getTicketName());
+                    }
+
+                    if (tp.getZoneActivity() != null && tp.getZoneActivity().getZone() != null) {
+                        dto.setZoneName(tp.getZoneActivity().getZone().getZoneName());
+                    }
+
+                    if (tp.getSeatActivity() != null && tp.getSeatActivity().getSeat() != null) {
+                        dto.setSeatCode(tp.getSeatActivity().getSeat().getSeatName());
+                    }
+
+                    dto.setQuantity(tp.getQuantity());
+                    dto.setQrCode(tp.getQrCode());
+                    dto.setTicketPurchaseId(tp.getTicketPurchaseId());
+
+                    return dto;
+
+                }).collect(Collectors.toList());
+
+        // Sort theo timeBuyTicket thay vì eventDate
+        if (sortDirection != null && sortDirection.equalsIgnoreCase("desc")) {
+            myTicketDTOS.sort(Comparator.comparing(MyTicketDTO::getTimeBuyTicket, Comparator.nullsLast(Comparator.reverseOrder())));
+        } else {
+            myTicketDTOS.sort(Comparator.comparing(MyTicketDTO::getTimeBuyTicket, Comparator.nullsLast(Comparator.naturalOrder())));
+        }
+
+        int totalElements = myTicketDTOS.size();
+        int totalPages = (int) Math.ceil((double) totalElements / size);
+        int fromIndex = page * size;
+        int toIndex = Math.min(fromIndex + size, totalElements);
+
+        if (fromIndex >= totalElements) {
+            return new PaginationResponse<>(Collections.emptyList(), page, totalPages, totalElements, size);
+        }
+
+        List<MyTicketDTO> pageItems = myTicketDTOS.subList(fromIndex, toIndex);
+
+        return new PaginationResponse<>(pageItems, page, totalPages, totalElements, size);
+    }
+
+    @Override
+    public PaginationResponse<MyTicketDTO> searchTicketPurchasesByEventName(int page, int size, String sortDirection, String eventName) {
+        appUtils.checkRole(ERole.BUYER, ERole.ORGANIZER);
+
+        if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.BUYER)
+                && !appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.ORGANIZER)) {
+            throw new AppException(ErrorCode.NOT_PERMISSION);
+        }
+
+        List<TicketPurchase> ticketPurchases = ticketPurchaseRepository
+                .getTicketPurchasesByAccount(appUtils.getAccountFromAuthentication().getAccountId());
+
+        if (ticketPurchases.isEmpty()) {
+            return new PaginationResponse<>(Collections.emptyList(), page, 0, 0, size);
+        }
+
+        List<MyTicketDTO> myTicketDTOS = ticketPurchases.stream()
+                .filter(tp -> tp.getStatus().equals(ETicketPurchaseStatus.PURCHASED))
+                .filter(tp -> tp.getEvent() != null && tp.getEvent().getEventName() != null
+                        && tp.getEvent().getEventName().toLowerCase().contains(
+                        eventName != null ? eventName.toLowerCase() : ""))
+                .map(tp -> {
+                    MyTicketDTO dto = new MyTicketDTO();
+
+                    if (tp.getEvent() != null) {
+                        OrderDetail orderDetail = orderDetailRepository.findOrderDetailByTicketPurchase_TicketPurchaseId(tp.getTicketPurchaseId())
+                                .orElseThrow(() -> new AppException(ErrorCode.ORDER_DETAIL_NOT_FOUND));
+                        Order order = orderRepository.findById(orderDetail.getOrder().getOrderId())
+                                .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+
+                        dto.setEventId(tp.getEvent().getEventId());
+                        dto.setEventCategoryId(tp.getEvent().getCategory().getEventCategoryId());
+                        dto.setEventName(tp.getEvent().getEventName());
+                        dto.setLocationName(tp.getEvent().getLocationName());
+                        dto.setLogo(tp.getEvent().getLogoURL());
+                        dto.setBanner(tp.getEvent().getBannerURL());
+                        dto.setIshaveSeatmap(tp.getEvent().getSeatMap() != null);
+                        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+                        dto.setTimeBuyTicket(sdf.format(order.getOrderDate()));                        StringBuilder locationBuilder = new StringBuilder();
+                        if (tp.getEvent().getAddress() != null) locationBuilder.append(tp.getEvent().getAddress()).append(", ");
+                        if (tp.getEvent().getWard() != null) locationBuilder.append(tp.getEvent().getWard()).append(", ");
+                        if (tp.getEvent().getDistrict() != null) locationBuilder.append(tp.getEvent().getDistrict()).append(", ");
+                        if (tp.getEvent().getCity() != null) locationBuilder.append(tp.getEvent().getCity());
+
+                        if (locationBuilder.length() > 0 && locationBuilder.lastIndexOf(", ") == locationBuilder.length() - 2) {
+                            locationBuilder.delete(locationBuilder.length() - 2, locationBuilder.length());
+                        }
+
+                        dto.setLocation(locationBuilder.length() > 0 ? locationBuilder.toString() : null);
+                    }
+
+                    if (tp.getEventActivity() != null) {
+                        dto.setEventActivityId(tp.getEventActivity().getEventActivityId());
+                        dto.setEventDate(tp.getEventActivity().getDateEvent());
+                        dto.setEventStartTime(tp.getEventActivity().getStartTimeEvent());
+                    }
+
+                    if (tp.getTicket() != null) {
+                        dto.setPrice(tp.getTicket().getPrice());
+                        dto.setTicketType(tp.getTicket().getTicketName());
+                    }
+
+                    if (tp.getZoneActivity() != null && tp.getZoneActivity().getZone() != null) {
+                        dto.setZoneName(tp.getZoneActivity().getZone().getZoneName());
+                    }
+
+                    if (tp.getSeatActivity() != null && tp.getSeatActivity().getSeat() != null) {
+                        dto.setSeatCode(tp.getSeatActivity().getSeat().getSeatName());
+                    }
+
+                    dto.setQuantity(tp.getQuantity());
+                    dto.setQrCode(tp.getQrCode());
+                    dto.setTicketPurchaseId(tp.getTicketPurchaseId());
+
+                    return dto;
+                }).collect(Collectors.toList());
+
+        // Sort theo timeBuyTicket
+        if (sortDirection != null && sortDirection.equalsIgnoreCase("desc")) {
+            myTicketDTOS.sort(Comparator.comparing(MyTicketDTO::getTimeBuyTicket, Comparator.nullsLast(Comparator.reverseOrder())));
+        } else {
+            myTicketDTOS.sort(Comparator.comparing(MyTicketDTO::getTimeBuyTicket, Comparator.nullsLast(Comparator.naturalOrder())));
+        }
+
+        int totalElements = myTicketDTOS.size();
+        int totalPages = (int) Math.ceil((double) totalElements / size);
+        int fromIndex = page * size;
+        int toIndex = Math.min(fromIndex + size, totalElements);
+
+        if (fromIndex >= totalElements) {
+            return new PaginationResponse<>(Collections.emptyList(), page, totalPages, totalElements, size);
+        }
+
+        List<MyTicketDTO> pageItems = myTicketDTOS.subList(fromIndex, toIndex);
+
+        return new PaginationResponse<>(pageItems, page, totalPages, totalElements, size);
     }
 
 

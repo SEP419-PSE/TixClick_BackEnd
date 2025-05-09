@@ -1,9 +1,11 @@
 package com.pse.tixclick.controller;
 
+import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.payload.dto.OrderDTO;
 import com.pse.tixclick.payload.dto.PaymentDTO;
 import com.pse.tixclick.payload.dto.TicketQrCodeDTO;
 import com.pse.tixclick.payload.request.create.CreateOrderRequest;
+import com.pse.tixclick.payload.request.create.CreateTicketPurchaseRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
 import com.pse.tixclick.payload.response.PayOSResponse;
 import com.pse.tixclick.payload.response.PaymentResponse;
@@ -126,4 +128,37 @@ public class PaymentController {
                             .build());
         }
     }
+
+    @PostMapping("/change-ticket")
+    public ResponseEntity<ApiResponse<PayOSResponse>> changeTicket(
+            @RequestParam int ticketPurchaseId,
+            @RequestBody List<CreateTicketPurchaseRequest> ticketChange,
+            @RequestParam String caseTicket,
+            HttpServletRequest request) {
+        try {
+            PayOSResponse result = paymentService.changTicket(ticketPurchaseId, ticketChange, caseTicket, request);
+            return ResponseEntity.ok(
+                    ApiResponse.<PayOSResponse>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Successfully changed ticket")
+                            .result(result)
+                            .build()
+            );
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.<PayOSResponse>builder()
+                            .code(e.getErrorCode().getCode())
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<PayOSResponse>builder()
+                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .message("Unexpected error: " + e.getMessage())
+                            .result(null)
+                            .build());
+        }
+    }
+
 }

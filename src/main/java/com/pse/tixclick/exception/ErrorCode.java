@@ -145,6 +145,22 @@ public enum ErrorCode {
     CAN_NOT_UPDATE(1127, "Không thể cập nhật", HttpStatus.BAD_REQUEST),
     MEMBER_TIME_CONFLICT(1128, "Thành viên đã có hoạt động trùng thời gian", HttpStatus.BAD_REQUEST),
     MEMBER_ALREADY_ASSIGNED(1129, "Thành viên đã được phân công", HttpStatus.BAD_REQUEST),
+    EVENT_NOT_EXISTED(1130, "Sự kiện không tồn tại", HttpStatus.NOT_FOUND),
+    COMPANY_VERIFICATION_NOT_EXISTED(1131, "Xác minh công ty không tồn tại", HttpStatus.NOT_FOUND),
+    COMPANY_NOT_REJECTED(1132, "Công ty không bị từ chối", HttpStatus.BAD_REQUEST),
+    TICKET_NOT_MY_ACCOUNT(1133, "Vé không thuộc tài khoản của bạn", HttpStatus.BAD_REQUEST),
+    SOLD_OUT_TICKET(1134, "Vé đã bán hết", HttpStatus.BAD_REQUEST),
+    TICKET_PURCHASE_DONT_BUY(1135, "Ticket purchase chua mua", HttpStatus.BAD_REQUEST),
+    TICKET_NOT_ENOUGH(1136, "Số lượng vé không đủ", HttpStatus.BAD_REQUEST),
+    TICKET_REQUEST_EXCEED_QUANTITY(1137, "Số lượng vé yêu cầu vượt quá số lượng có sẵn", HttpStatus.BAD_REQUEST),
+    SEAT_ALREADY_BOOKED(1138, "Ghế đã được đặt", HttpStatus.BAD_REQUEST),
+    EVENT_NOT_SCHEDULED(1139, "Sự kiện không được lên lịch", HttpStatus.BAD_REQUEST),
+    FORBIDDEN(1140, "Bạn không có quyền truy cập tài nguyên này", HttpStatus.FORBIDDEN),
+    NOT_FOUNT_ROLE(1141, "Không tìm thấy vai trò", HttpStatus.NOT_FOUND),
+    NO_CHANGE_TICKET_SAME(1142,"Không thể đổi vé cùng loai được",HttpStatus.BAD_REQUEST),
+    NO_CHANGE_ZONE_TICKET(1143,"Không thể đổi vé đứng cùng loại được", HttpStatus.BAD_REQUEST),
+    ORDER_DETAIL_NOT_FOUND(1144,"Không tìm thấy order detail",HttpStatus.NOT_FOUND),
+    VOUCHER_INACTIVE(1145,"Voucher hết hạn hoặc không hoạt động",HttpStatus.BAD_REQUEST),
     ;
 
 

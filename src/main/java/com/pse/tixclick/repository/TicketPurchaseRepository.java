@@ -2,6 +2,7 @@ package com.pse.tixclick.repository;
 
 import com.pse.tixclick.payload.entity.entity_enum.ETicketPurchaseStatus;
 import com.pse.tixclick.payload.entity.ticket.TicketPurchase;
+import com.pse.tixclick.payload.response.RevenueByDateProjection;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -9,6 +10,8 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
+
 @Repository
 public interface TicketPurchaseRepository extends JpaRepository<TicketPurchase, Integer> {
     @Query(value = "SELECT COUNT(*) FROM TicketPurchase WHERE status = 'PURCHASED'")
@@ -138,4 +141,64 @@ ORDER BY m.month;
     int countTicketPurchasedByEventActivityIdAndTicketId(int eventActivityId, int ticketId);
 
     int countByStatusAndEvent_EventId(ETicketPurchaseStatus status, int eventId);
+
+    List<TicketPurchase> findByEventActivity_EventActivityIdAndStatus(int eventActivityId, ETicketPurchaseStatus status);
+
+    List<TicketPurchase> findTicketPurchasesByEvent_EventIdAndStatus(int eventId, ETicketPurchaseStatus status);
+
+    Optional<TicketPurchase> findByTicketPurchaseIdAndStatusAndAccount_UserName(int ticketPurchaseId, ETicketPurchaseStatus status, String userName);
+
+    @Query(value = """
+            WITH Calendar AS (
+                SELECT start_ticket_sale AS [date]
+                FROM event_activity
+                WHERE event_activity_id = :eventActivityId
+                UNION ALL
+                SELECT DATEADD(DAY, 1, [date])
+                FROM Calendar
+                WHERE [date] < (
+                    SELECT end_ticket_sale 
+                    FROM event_activity 
+                    WHERE event_activity_id = :eventActivityId
+                )
+            ),
+            RevenuePerDay AS (
+                SELECT 
+                    CAST(o.order_date AS DATE) AS [date],
+                    SUM(tp.quantity * t.price) AS revenue
+                FROM 
+                    ticket_purchase tp
+                    JOIN ticket t ON tp.ticket_id = t.ticket_id
+                    JOIN order_detail od ON od.ticket_purchase_id = tp.ticket_purchase_id
+                    JOIN orders o ON o.order_id = od.order_id
+                WHERE 
+                    tp.status = 'PURCHASED'
+                    AND o.status = 'SUCCESSFUL'
+                    AND tp.event_id = :eventId
+                    AND tp.event_activity_id = :eventActivityId
+                    AND CAST(o.order_date AS DATE) BETWEEN (
+                        SELECT start_ticket_sale 
+                        FROM event_activity 
+                        WHERE event_activity_id = :eventActivityId
+                    ) AND (
+                        SELECT end_ticket_sale 
+                        FROM event_activity 
+                        WHERE event_activity_id = :eventActivityId
+                    )
+                GROUP BY 
+                    CAST(o.order_date AS DATE)
+            )
+            SELECT 
+                c.[date],
+                ISNULL(r.revenue, 0) AS revenue
+            FROM 
+                Calendar c
+                LEFT JOIN RevenuePerDay r ON r.[date] = c.[date]
+            ORDER BY 
+                c.[date]
+        """, nativeQuery = true)
+    List<RevenueByDateProjection>  getDailyRevenueByEventAndActivity(@Param("eventId") int eventId, @Param("eventActivityId") int eventActivityId);
+
+    Optional<TicketPurchase> findTicketPurchaseByTicketPurchaseId(int ticketPurchaseId);
+
 }

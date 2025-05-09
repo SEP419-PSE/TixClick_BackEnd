@@ -6,6 +6,7 @@ import com.pse.tixclick.payload.request.create.CreateSeatMapRequest;
 import com.pse.tixclick.payload.request.create.CreateTicketPurchaseRequest;
 import com.pse.tixclick.payload.request.create.ListTicketPurchaseRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
+import com.pse.tixclick.payload.response.PaginationResponse;
 import com.pse.tixclick.service.OrderService;
 import com.pse.tixclick.service.TicketPurchaseService;
 import com.pse.tixclick.service.TransactionService;
@@ -53,6 +54,8 @@ public class TicketPurchaseController {
                     .result(null)
                     .build();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -160,35 +163,49 @@ public class TicketPurchaseController {
     }
 
     @GetMapping("/all_of_account")
-    public ResponseEntity<ApiResponse<List<MyTicketDTO>>> getAllTicketPurchaseByAccount() {
+    public ResponseEntity<ApiResponse<PaginationResponse<MyTicketDTO>>> getAllTicketPurchaseByAccount(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam String sortDirection
+    ) {
         try {
-            List<MyTicketDTO> myTicketDTOS = ticketPurchaseService.getTicketPurchasesByAccount();
+            int size = 3; // mỗi trang có 3 vé
+            PaginationResponse<MyTicketDTO> response = ticketPurchaseService.getTicketPurchasesByAccount(page, size,sortDirection);
 
-            if (myTicketDTOS == null || myTicketDTOS.isEmpty()) {
-                return ResponseEntity.status(404)
-                        .body(ApiResponse.<List<MyTicketDTO>>builder()
-                                .code(404)
-                                .message("No ticket purchases found")
-                                .result(Collections.emptyList()) // Trả về danh sách rỗng thay vì null
-                                .build());
+            if (response == null || response.getItems().isEmpty()) {
+                return ResponseEntity.ok(
+                        ApiResponse.<PaginationResponse<MyTicketDTO>>builder()
+                                .code(HttpStatus.OK.value())
+                                .message("No ticket purchases found on this page")
+                                .result(PaginationResponse.<MyTicketDTO>builder()
+                                        .items(Collections.emptyList())
+                                        .currentPage(page)
+                                        .totalPages(0)
+                                        .totalElements(0)
+                                        .pageSize(size)
+                                        .build())
+                                .build()
+                );
             }
 
             return ResponseEntity.ok(
-                    ApiResponse.<List<MyTicketDTO>>builder()
+                    ApiResponse.<PaginationResponse<MyTicketDTO>>builder()
                             .code(200)
-                            .message("Successfully fetched all Ticket Purchase by account")
-                            .result(myTicketDTOS)
+                            .message("Successfully fetched ticket purchases on page " + page)
+                            .result(response)
                             .build()
             );
         } catch (Exception e) {
-            return ResponseEntity.status(400)
-                    .body(ApiResponse.<List<MyTicketDTO>>builder()
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.<PaginationResponse<MyTicketDTO>>builder()
                             .code(400)
-                            .message(e.getMessage())
-                            .result(Collections.emptyList()) // Trả về danh sách rỗng thay vì null
+                            .message("Error: " + e.getMessage())
+                            .result(null)
                             .build());
         }
     }
+
+
+
 
     @PostMapping("/decrypt_qr_code")
     public ResponseEntity<ApiResponse<TicketQrCodeDTO>> decryptQrCode(@RequestBody String qrCode) {
@@ -258,6 +275,70 @@ public class TicketPurchaseController {
                             .result(null)
                             .build();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        }
+    }
+
+    @GetMapping("/{ticketPurchaseId}")
+    public ResponseEntity<ApiResponse<MyTicketDTO>> getTicketPurchaseById(@PathVariable int ticketPurchaseId) {
+        try {
+            MyTicketDTO myTicketDTO = ticketPurchaseService.getTicketPurchaseById(ticketPurchaseId);
+            return ResponseEntity.ok(
+                    ApiResponse.<MyTicketDTO>builder()
+                            .code(200)
+                            .message("Successfully fetched Ticket Purchase by ID")
+                            .result(myTicketDTO)
+                            .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(400)
+                    .body(ApiResponse.<MyTicketDTO>builder()
+                            .code(400)
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        }
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<PaginationResponse<MyTicketDTO>>> searchTicketPurchasesByEventName(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam String sortDirection,
+            @RequestParam String eventName
+    ) {
+        try {
+            int size = 3; // mỗi trang có 3 vé
+            PaginationResponse<MyTicketDTO> response = ticketPurchaseService.searchTicketPurchasesByEventName(page, size, sortDirection, eventName);
+
+            if (response == null || response.getItems().isEmpty()) {
+                return ResponseEntity.ok(
+                        ApiResponse.<PaginationResponse<MyTicketDTO>>builder()
+                                .code(HttpStatus.OK.value())
+                                .message("No ticket purchases found on this page")
+                                .result(PaginationResponse.<MyTicketDTO>builder()
+                                        .items(Collections.emptyList())
+                                        .currentPage(page)
+                                        .totalPages(0)
+                                        .totalElements(0)
+                                        .pageSize(size)
+                                        .build())
+                                .build()
+                );
+            }
+
+            return ResponseEntity.ok(
+                    ApiResponse.<PaginationResponse<MyTicketDTO>>builder()
+                            .code(200)
+                            .message("Successfully fetched ticket purchases on page " + page)
+                            .result(response)
+                            .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.<PaginationResponse<MyTicketDTO>>builder()
+                            .code(400)
+                            .message("Error: " + e.getMessage())
+                            .result(null)
+                            .build());
         }
     }
 }

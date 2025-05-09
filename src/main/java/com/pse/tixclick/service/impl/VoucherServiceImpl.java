@@ -8,6 +8,7 @@ import com.pse.tixclick.payload.entity.entity_enum.EVoucherStatus;
 import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.entity.payment.Voucher;
 import com.pse.tixclick.payload.request.create.CreateVoucherRequest;
+import com.pse.tixclick.payload.response.VoucherPercentageResponse;
 import com.pse.tixclick.repository.CompanyRepository;
 import com.pse.tixclick.repository.EventRepository;
 import com.pse.tixclick.repository.VoucherRepository;
@@ -95,31 +96,36 @@ public class VoucherServiceImpl implements VoucherService {
     }
 
     @Override
-    public String changeVoucherStatus(int voucherId) {
+    public String changeVoucherStatus(int voucherId, EVoucherStatus status) {
         Voucher voucher = voucherRepository.findById(voucherId)
                 .orElseThrow(() -> new AppException(ErrorCode.VOUCHER_NOT_FOUND));
 
-        if (voucher.getStatus().equals(EVoucherStatus.ACTIVE)) {
-            voucher.setStatus(EVoucherStatus.INACTIVE);
-        } else {
-            return "Voucher is already inactive";
+        if (voucher.getEvent() == null) {
+            throw new AppException(ErrorCode.VOUCHER_NOT_FOUND);
         }
+
+        voucher.setStatus(status);
         voucherRepository.save(voucher);
-        return "Voucher status changed to inactive";
+        return "Voucher status changed successfully";
     }
 
     @Override
-    public String checkVoucherCode(String voucherCode, int eventId) {
+    public VoucherPercentageResponse checkVoucherCode(String voucherCode, int eventId) {
         Voucher voucher = voucherRepository.findByVoucherCodeAndEvent(voucherCode, eventId)
                 .orElseThrow(() -> new AppException(ErrorCode.VOUCHER_NOT_FOUND));
+        VoucherPercentageResponse voucherPercentageResponse = new VoucherPercentageResponse();
         if (voucher.getEvent() != null && voucher.getEvent().getEventId() != eventId) {
-            return "Voucher is not valid for this event";
+            throw new AppException(ErrorCode.VOUCHER_INACTIVE);
         }
 
         if (voucher.getStatus().equals(EVoucherStatus.ACTIVE)) {
-            return "Voucher is valid";
+            voucherPercentageResponse.setDiscount(voucher.getDiscount());
+            voucherPercentageResponse.setVoucherCode(voucherCode);
+            voucherPercentageResponse.setVoucherName(voucher.getVoucherName());
+            voucherPercentageResponse.setNotice("Voucher is valid for this event");
+            return voucherPercentageResponse;
         } else {
-            return "Voucher is inactive";
+            throw new AppException(ErrorCode.VOUCHER_INACTIVE);
         }
     }
 }

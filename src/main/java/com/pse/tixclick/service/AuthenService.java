@@ -12,6 +12,7 @@ import jakarta.mail.MessagingException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
+import java.nio.file.AccessDeniedException;
 import java.text.ParseException;
 
 public interface AuthenService {

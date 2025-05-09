@@ -9,8 +9,12 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
+
 @Repository
 public interface OrderDetailRepository extends JpaRepository<OrderDetail, Integer>{
     @Query("SELECT od FROM OrderDetail od WHERE od.order.orderId = :id")
     List<OrderDetail> findByOrderId(@Param("id") int orderId);
+
+    Optional<OrderDetail> findOrderDetailByTicketPurchase_TicketPurchaseId(int ticketPurchaseId);
 }

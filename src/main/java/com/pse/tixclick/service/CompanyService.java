@@ -36,4 +36,8 @@ public interface CompanyService {
     GetTransactionPaymenByCompanyIdResponse getTransactionPaymentContractByCompanyId(int companyId);
 
     List<MyCompanyResponse> getCompanysByUserName(String userName);
+
+    CompanyDTO getCompanyByEventId(int eventId);
+
+    CreateCompanyResponse updateCompany(int companyId, CreateCompanyRequest updateRequest, MultipartFile file, List<MultipartFile> fileDocument) throws IOException, MessagingException;
 }

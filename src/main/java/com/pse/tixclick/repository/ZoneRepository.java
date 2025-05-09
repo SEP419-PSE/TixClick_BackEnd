@@ -20,4 +20,6 @@ public interface ZoneRepository extends JpaRepository<Zone, Integer> {
     List<Zone> findBySeatMap_SeatMapId(int seatMapId);
 
     Optional<Zone> findZoneByZoneCode(String code);
+
+    Optional<Zone> findZoneByZoneId(int zoneId);
 }

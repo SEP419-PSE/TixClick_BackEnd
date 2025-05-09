@@ -2,14 +2,13 @@ package com.pse.tixclick.startup;
 
 import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.Role;
+import com.pse.tixclick.payload.entity.entity_enum.EEventStatus;
 import com.pse.tixclick.payload.entity.entity_enum.ERole;
 import com.pse.tixclick.payload.entity.entity_enum.ZoneTypeEnum;
+import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.entity.event.EventCategory;
 import com.pse.tixclick.payload.entity.seatmap.ZoneType;
-import com.pse.tixclick.repository.AccountRepository;
-import com.pse.tixclick.repository.EventCategoryRepository;
-import com.pse.tixclick.repository.RoleRepository;
-import com.pse.tixclick.repository.ZoneTypeRepository;
+import com.pse.tixclick.repository.*;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -30,7 +29,7 @@ public class RoleInitializer {
     AccountRepository accountRepository;
     EventCategoryRepository eventCategoryRepository;
     ZoneTypeRepository zoneTypeRepository;
-
+    EventRepository eventRepository;
     @Bean
     public CommandLineRunner initRolesAndAdmin() {
         return args -> {
@@ -87,5 +86,7 @@ public class RoleInitializer {
                 System.out.println("✅ Admin account created: admin/admin");
             }
         };
+
+
     }
 }

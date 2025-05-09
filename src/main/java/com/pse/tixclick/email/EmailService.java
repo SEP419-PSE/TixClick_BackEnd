@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @Service
 public class EmailService {
@@ -44,6 +45,27 @@ public class EmailService {
         sendNewMail(to, subject, body,fullname);
     }
 
+
+    public void sendRescheduleNotificationToCustomer(String to, String fullname, String oldDate, String newDate, String eventName) throws MessagingException {
+        String subject = "Event Reschedule Notification - TixClick";
+        String body = "<html>" +
+                "<body>" +
+                "<h2 style=\"color: #0D6EFD;\">Event Rescheduled</h2>" +
+                "<p>Dear " + fullname + ",</p>" +
+                "<p>We are writing to inform you that the event <strong>" + eventName + "</strong> has been rescheduled.</p>" +
+                "<p>Here are the details:</p>" +
+                "<p><strong>Old Date:</strong> " + oldDate + "</p>" +
+                "<p><strong>New Date:</strong> " + newDate + "</p>" +
+                "<p>We apologize for any inconvenience this may cause. If you have any questions or concerns, please don't hesitate to reach out to us.</p>" +
+                "<p>Thank you for your understanding and continued support of TixClick!</p>" +
+                "<p>Best regards,<br/>TixClick</p>" +
+                "</body>" +
+                "</html>";
+
+        sendNewMail(to, subject, body, fullname);  // Gọi phương thức sendNewMail để gửi email
+    }
+
+
     public void sendOTPtoChangePasswordAccount(String to, String otp, String fullname) throws MessagingException {
         String subject = "OTP to reset password - TixClick";
         String body = "<html>" +
@@ -58,6 +80,51 @@ public class EmailService {
                 "</html>";
         sendNewMail(to, subject, body, fullname);
     }
+    public void sendEventCancellationEmail(String to, String fullname, String eventName) throws MessagingException {
+        String subject = "Event Cancellation Notice - TixClick";
+        String body = "<html>" +
+                "<body>" +
+                "<h2 style=\"color: #DC3545;\">Event Cancelled</h2>" +
+                "<p>Dear " + fullname + ",</p>" +
+                "<p>We regret to inform you that the following event has been cancelled:</p>" +
+                "<ul>" +
+                "<li><strong>Event:</strong> " + eventName + "</li>" +
+                "</ul>" +
+                "<p>We apologize for any inconvenience this may cause. If you have already purchased tickets, please await further instructions regarding refunds or rescheduling.</p>" +
+                "<p>Thank you for your understanding.</p>" +
+                "<p>Best regards,<br/>TixClick Team</p>" +
+                "</body>" +
+                "</html>";
+        sendNewMail(to, subject, body, fullname);
+    }
+
+    public void sendEventCancellationEmailToMany(List<String> emails, String eventName) throws MessagingException {
+        String subject = "Event Cancellation Notice - TixClick";
+
+        String body = "<html>" +
+                "<body>" +
+                "<h2 style=\"color: #DC3545;\">Event Cancelled</h2>" +
+                "<p>We regret to inform you that the following event has been cancelled:</p>" +
+                "<ul>" +
+                "<li><strong>Event:</strong> " + eventName + "</li>" +
+                "</ul>" +
+                "<p>We apologize for any inconvenience this may cause. If you have already purchased tickets, please await further instructions regarding refunds or rescheduling.</p>" +
+                "<p>Thank you for your understanding.</p>" +
+                "<p>Best regards,<br/>TixClick Team</p>" +
+                "</body>" +
+                "</html>";
+
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        helper.setTo(emails.toArray(new String[0]));
+        helper.setSubject(subject);
+        helper.setText(body, true); // HTML
+        helper.setFrom("no-reply@tixclick.site");
+
+        mailSender.send(message);
+    }
+
 
     public void sendAccountCreatedEmail(String to, String username, String password,String fullname) throws MessagingException {
         String subject = "Your TixClick Account Has Been Created!";

@@ -118,12 +118,15 @@ public class OrderServiceImpl implements OrderService {
         if (createOrderRequest.getVoucherCode() != null && !createOrderRequest.getVoucherCode().isEmpty()) {
             Voucher voucher = voucherRepository.findByVoucherCodeAndEvent(createOrderRequest.getVoucherCode(), ticketPurchase.getEvent().getEventId())
                     .orElseThrow(() -> new AppException(ErrorCode.VOUCHER_NOT_FOUND));
+            if(voucher.getStatus().equals(EVoucherStatus.INACTIVE)) {
+                throw new AppException(ErrorCode.VOUCHER_INACTIVE);
+            }
             double newTotalAmount = totalAmount - (totalAmount * voucher.getDiscount() / 100);
             newTotalAmount1 = newTotalAmount;
             order.setTotalAmountDiscount(newTotalAmount);
             voucher.setQuantity(voucher.getQuantity() - 1);
             if(voucher.getQuantity() == 0) {
-                voucher.setStatus(EVoucherStatus.INACTIVE);
+                    voucher.setStatus(EVoucherStatus.INACTIVE);
             }
             voucherRepository.save(voucher);
         }else {
@@ -252,7 +255,7 @@ public class OrderServiceImpl implements OrderService {
         return null;
     }
 
-    private String orderCodeAutomationCreating() {
+    public String orderCodeAutomationCreating() {
         Account account = appUtils.getAccountFromAuthentication();
         int accountId = account.getAccountId(); // Giả định bạn có hàm lấy userId
 

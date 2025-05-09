@@ -26,16 +26,14 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/ws")
-                .setAllowedOrigins("http://localhost:5173")
+        registry.addEndpoint("/api/ws") // <-- đổi từ "/ws" sang "/api/ws"
+                .setAllowedOrigins("*") // hoặc origin cụ thể
                 .setHandshakeHandler(new DefaultHandshakeHandler() {
                     @Override
                     protected Principal determineUser(ServerHttpRequest request,
                                                       WebSocketHandler wsHandler,
                                                       Map<String, Object> attributes) {
-                        Principal user = (Principal) attributes.get("principal");
-                        System.out.println("🔍 Principal in WebSocket: " + (user != null ? user.getName() : "NULL"));
-                        return user;
+                        return (Principal) attributes.get("principal");
                     }
                 })
                 .addInterceptors(new WebSocketAuthenticationInterceptor());

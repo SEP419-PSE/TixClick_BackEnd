@@ -347,11 +347,25 @@ public class SeatMapServiceImpl implements SeatMapService {
     @Override
     public List<SectionResponse> deleteZone(List<SectionRequest> sectionResponse, String zoneId, int eventId) {
         designZone(sectionResponse, eventId);
-        Zone zone = zoneRepository.findZoneByZoneCode(zoneId)
+        var event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+        var seatMap = seatMapRepository.findSeatMapByEvent(event.getEventId())
+                .orElseThrow(() -> new AppException(ErrorCode.SEATMAP_NOT_FOUND));
+
+        var zone = zoneRepository.findZoneByZoneCode(zoneId)
                 .orElseThrow(() -> new AppException(ErrorCode.ZONE_NOT_FOUND));
+
+        var seats = seatRepository.findSeatsByZone_ZoneId(zone.getZoneId());
+        if (!seats.isEmpty()) {
+            seatRepository.deleteAll(seats);
+            seatRepository.flush();
+        }
         zoneRepository.delete(zone);
 
+        zoneRepository.flush();
+
         return getSectionsByEventId(eventId);
+
 
     }
 
@@ -415,7 +429,7 @@ public class SeatMapServiceImpl implements SeatMapService {
                     .y(Integer.parseInt(zone.getYPosition()))
                     .width(Integer.parseInt(zone.getWidth()))
                     .height(Integer.parseInt(zone.getHeight()))
-                    .capacity(availableSeatsCount)
+                    .capacity(zoneActivity.getAvailableQuantity())
                     .type(zoneTypeEnum.name())
                     .priceId(zone.getTicket() != null ? zone.getTicket().getTicketCode() : null)
                     .price(zone.getTicket() != null ? zone.getTicket().getPrice() : 0)

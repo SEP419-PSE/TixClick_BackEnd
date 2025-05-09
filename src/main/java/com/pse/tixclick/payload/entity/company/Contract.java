@@ -18,6 +18,7 @@ import java.util.List;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
+@Builder
 public class Contract {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

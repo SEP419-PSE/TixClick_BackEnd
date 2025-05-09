@@ -1,19 +1,23 @@
 package com.pse.tixclick.service.impl;
 
+import com.pse.tixclick.email.EmailService;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.EventActivityDTO;
 import com.pse.tixclick.payload.entity.entity_enum.EEventStatus;
 import com.pse.tixclick.payload.entity.entity_enum.ERole;
 import com.pse.tixclick.payload.entity.entity_enum.ESubRole;
+import com.pse.tixclick.payload.entity.entity_enum.ETicketPurchaseStatus;
 import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.entity.event.EventActivity;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
 import com.pse.tixclick.payload.entity.ticket.TicketMapping;
+import com.pse.tixclick.payload.entity.ticket.TicketPurchase;
 import com.pse.tixclick.payload.request.CreateEventActivityAndTicketRequest;
 import com.pse.tixclick.payload.request.create.CreateEventActivityRequest;
 import com.pse.tixclick.repository.*;
 import com.pse.tixclick.service.EventActivityService;
+import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +46,8 @@ public class EventActivityServiceImpl implements EventActivityService {
     TicketRepository ticketRepository;
     TicketMappingRepository ticketMappingRepository;
     ContractRepository contractRepository;
+    TicketPurchaseRepository ticketPurchaseRepository;
+    EmailService emailService;
     @Override
     public EventActivityDTO createEventActivity(CreateEventActivityRequest eventActivityRequest) {
         var context = SecurityContextHolder.getContext();
@@ -144,7 +150,7 @@ public class EventActivityServiceImpl implements EventActivityService {
         return modelMapper.map(eventActivities, new TypeToken<List<EventActivityDTO>>() {}.getType());
     }
     @Override
-    public List<CreateEventActivityAndTicketRequest> createEventActivityAndTicket(List<CreateEventActivityAndTicketRequest> requestList, String contractCode) {
+    public List<CreateEventActivityAndTicketRequest> createEventActivityAndTicket(List<CreateEventActivityAndTicketRequest> requestList, String contractCode) throws MessagingException {
         if (requestList == null || requestList.isEmpty()) {
             throw new IllegalArgumentException("Request list cannot be empty");
         }
@@ -197,7 +203,7 @@ public class EventActivityServiceImpl implements EventActivityService {
                 // ✅ Cập nhật EventActivity
                 eventActivity = eventActivityRepository.findById(request.getEventActivityId())
                         .orElseThrow(() -> new AppException(ErrorCode.EVENT_ACTIVITY_NOT_FOUND));
-
+                String oldActivityDate = String.valueOf(eventActivity.getDateEvent());
                 eventActivity.setActivityName(request.getActivityName());
                 eventActivity.setDateEvent(request.getDateEvent());
                 eventActivity.setStartTimeEvent(request.getStartTimeEvent());
@@ -209,6 +215,27 @@ public class EventActivityServiceImpl implements EventActivityService {
                 }
                 eventActivityRepository.saveAndFlush(eventActivity);
 
+                List<TicketPurchase> ticketPurchases = ticketPurchaseRepository.findByEventActivity_EventActivityIdAndStatus(
+                        eventActivity.getEventActivityId(),
+                        ETicketPurchaseStatus.PURCHASED
+                );
+
+
+                if (!ticketPurchases.isEmpty()) {
+                    // Gửi email lại cho tất cả người dùng đã mua vé
+                    for (TicketPurchase ticketPurchase : ticketPurchases) {
+                        String fullName = ticketPurchase.getAccount().getFirstName() + " " + ticketPurchase.getAccount().getLastName();
+                        emailService.sendRescheduleNotificationToCustomer(ticketPurchase.getAccount().getEmail(),
+                                fullName,
+                                oldActivityDate,
+                                String.valueOf(request.getDateEvent()),
+                                event.getEventName()
+                                );
+
+
+
+                    }
+                }
             } else {
                 // ✅ Xử lý xóa như cũ
                 List<EventActivity> eventActivities = eventActivityRepository.findEventActivitiesByEvent_EventId(request.getEventId());

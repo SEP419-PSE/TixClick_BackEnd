@@ -6,11 +6,13 @@ import com.pse.tixclick.payload.dto.*;
 import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.Notification;
 import com.pse.tixclick.payload.entity.company.Company;
+import com.pse.tixclick.payload.entity.company.CompanyVerification;
 import com.pse.tixclick.payload.entity.company.Contract;
 import com.pse.tixclick.payload.entity.entity_enum.*;
 import com.pse.tixclick.payload.entity.event.EventActivity;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
 import com.pse.tixclick.payload.entity.ticket.TicketMapping;
+import com.pse.tixclick.payload.entity.ticket.TicketPurchase;
 import com.pse.tixclick.payload.response.*;
 import com.pse.tixclick.repository.*;
 import com.pse.tixclick.service.TicketMappingService;
@@ -21,6 +23,10 @@ import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.request.create.CreateEventRequest;
 import com.pse.tixclick.payload.request.update.UpdateEventRequest;
 import com.pse.tixclick.service.EventService;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.jpa.domain.Specification;
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -37,13 +43,17 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Transactional
+@Slf4j
 public class EventServiceImpl implements EventService {
     EventRepository eventRepository;
     ModelMapper modelMapper;
@@ -65,9 +75,12 @@ public class EventServiceImpl implements EventService {
     OrderDetailRepository orderDetailRepository;
     EventActivityRepository eventActivityRepository;
     CheckinLogRepository checkinLogRepository;
+    CompanyVerificationRepository companyVerificationRepository;
+    SimpMessagingTemplate simpMessagingTemplate;
 
     @Override
     public EventDTO createEvent(CreateEventRequest request, MultipartFile logoURL, MultipartFile bannerURL) throws IOException {
+        AppUtils.checkRole(ERole.ORGANIZER, ERole.BUYER);
         if (request == null || request.getEventName() == null || request.getCategoryId() == 0) {
             throw new AppException(ErrorCode.INVALID_EVENT_DATA);
         }
@@ -95,6 +108,10 @@ public class EventServiceImpl implements EventService {
         // Tạo eventCode từ tên sự kiện và mã danh mục, có thể kết hợp thêm các phần tử khác như ngày tháng để đảm bảo tính duy nhất
         String eventCode = category.getCategoryName().toUpperCase() + System.currentTimeMillis();
         event.setEventCode(eventCode);  // Gán eventCode cho sự kiện
+
+        CompanyVerification companyVerification = companyVerificationRepository.findCompanyVerificationsByCompany_CompanyId(company.getCompanyId())
+                .orElseThrow(() -> new AppException(ErrorCode.COMPANY_VERIFICATION_NOT_FOUND));
+        event.setManagerId(companyVerification.getAccount().getAccountId());
         event.setEventName(request.getEventName());
         String typeEvent = request.getTypeEvent().toUpperCase();
 
@@ -280,9 +297,17 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public List<EventResponse> getAllEventScheduledAndPendingApproved() {
-        List<Event> events = contractRepository.findEventsByAccountId(appUtils.getAccountFromAuthentication().getAccountId());
+        var context = SecurityContextHolder.getContext();
+        String name = context.getAuthentication().getName();
+        Account account = accountRepository.findAccountByUserName(name)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        List<Event> events = eventRepository.findEventsByManagerId(account.getAccountId());
+
+        if (events.isEmpty()) {
+            return Collections.emptyList();
+        }
         return events.stream()
-                .filter(event -> event.getStatus() == EEventStatus.APPROVED || event.getStatus() == EEventStatus.PENDING || event.getStatus() == EEventStatus.REJECTED)
                 .map(event -> {
                     EventResponse response = new EventResponse();
                     response.setEventId(event.getEventId());
@@ -295,8 +320,20 @@ public class EventServiceImpl implements EventService {
                     response.setCity(event.getCity());
                     response.setDistrict(event.getDistrict());
                     response.setWard(event.getWard());
+                    response.setAddress(event.getAddress());
                     response.setStatus(String.valueOf(event.getStatus()));
                     response.setTypeEvent(event.getTypeEvent());
+                    List<Contract> contracts = contractRepository.findContractByEventId(event.getEventId());
+
+                    if (contracts != null && !contracts.isEmpty()) {
+                        Contract contract = contracts.get(0);  // Lấy hợp đồng đầu tiên
+                        // Gán giá trị mặc định là chuỗi rỗng nếu contractCode là null
+                        response.setContractCode(contract.getContractCode() != null ? contract.getContractCode() : "");
+                    } else {
+                        response.setContractCode(null);  // Nếu không có contract, gán giá trị null hoặc chuỗi rỗng
+                    }
+
+
 
                     if (event.getOrganizer() != null) {
                         response.setOrganizerId(event.getOrganizer().getAccountId());
@@ -309,7 +346,14 @@ public class EventServiceImpl implements EventService {
                     }
 
                     return response;
-                }).collect(Collectors.toList());
+                }).collect(Collectors.collectingAndThen(
+                        Collectors.toList(),
+                        list -> {
+                            Collections.reverse(list);
+                            return list;
+                        }
+                ));
+
     }
 
 
@@ -576,7 +620,7 @@ public class EventServiceImpl implements EventService {
                         .map(ticket -> modelMapper.map(ticket, TicketDTO.class))
                         .collect(Collectors.toList()));
             }
-            activityResponse.setSoldOut(ticketMappingService.checkTicketMappingExist(activityResponse.getEventActivityId(), ticketDTOS.get(0).getTicketId()));
+            activityResponse.setSoldOut(!ticketMappingService.checkTicketMappingExist(activityResponse.getEventActivityId(), ticketDTOS.get(0).getTicketId()));
 
             // Gán danh sách TicketDTO vào EventActivityResponse
             activityResponse.setTickets(ticketDTOS);
@@ -590,9 +634,9 @@ public class EventServiceImpl implements EventService {
                 event.getEventId(),
                 event.getEventName(),
                 event.getAddress(),
-                event.getWard(),
-                event.getDistrict(),
                 event.getCity(),
+                event.getDistrict(),
+                event.getWard(),
                 event.getLocationName(),
                 event.getLogoURL(),
                 event.getBannerURL(),
@@ -781,13 +825,97 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public List<EventDashboardResponse> getEventDashboardByCompanyId(int companyId) {
+    public List<EventDetailForConsumer> searchEvent(String eventName, Integer eventCategoryId, Double minPrice, String city) {
+
+        // Chuẩn hóa input để lọc
+        String finalEventName = (eventName != null && !eventName.trim().isEmpty()) ? eventName.trim().toLowerCase() : null;
+        Integer finalCategoryId = (eventCategoryId != null && eventCategoryId != 0) ? eventCategoryId : null;
+        Double finalMinPrice = (minPrice != null && minPrice > 0) ? minPrice : null;
+        String finalCity = ("all".equalsIgnoreCase(city)) ? null : city;
+
+        // Lấy tất cả sự kiện có trạng thái SCHEDULED
+        List<Event> events = eventRepository.findEventsByStatus(EEventStatus.SCHEDULED);
+        if (events.isEmpty()) return Collections.emptyList();
+
+        // Lọc theo điều kiện
+        List<Event> filteredEvents = events.stream()
+                .filter(e -> finalEventName == null || e.getEventName().toLowerCase().contains(finalEventName))
+                .filter(e -> finalCategoryId == null ||
+                        (e.getCategory() != null && e.getCategory().getEventCategoryId()==finalCategoryId))
+                .filter(e -> finalMinPrice == null ||
+                        ticketRepository.findMinTicketByEvent_EventId(e.getEventId())
+                                .map(t -> t.getPrice() >= finalMinPrice)
+                                .orElse(false))
+                .filter(e -> {
+                    if (finalCity == null) return true;
+                    String eventCity = e.getCity() != null ? e.getCity().toLowerCase() : "";
+                    if ("other".equalsIgnoreCase(finalCity)) {
+                        return !List.of("Thành phố Hà Nội", "Thành phố Hồ Chí Minh", "Thành phố Đà Nẵng").contains(eventCity);
+                    } else {
+                        return eventCity.equals(finalCity.toLowerCase());
+                    }
+                })
+                .collect(Collectors.toList());
+
+        if (filteredEvents.isEmpty()) return Collections.emptyList();
+
+        // Chuyển đổi sang DTO
+        return filteredEvents.stream()
+                .map(event -> {
+                    Company company = event.getCompany();
+                    boolean isHaveSeatMap = event.getSeatMap() != null;
+                    List<EventActivityDTO> eventActivityDTOList = event.getEventActivities().stream()
+                            .map(activity -> modelMapper.map(activity, EventActivityDTO.class))
+                            .collect(Collectors.toList());
+
+                    List<EventActivityResponse> eventActivityResponseList = modelMapper.map(
+                            eventActivityDTOList, new TypeToken<List<EventActivityResponse>>() {}.getType()
+                    );
+
+                    double minEventPrice = ticketRepository.findMinTicketByEvent_EventId(event.getEventId())
+                            .map(Ticket::getPrice)
+                            .orElse(0.0);
+
+                    int eventCategoryId1 = event.getCategory() != null ? event.getCategory().getEventCategoryId() : 0;
+
+                    return new EventDetailForConsumer(
+                            event.getEventId(),
+                            event.getEventName(),
+                            event.getAddress(),
+                            event.getWard(),
+                            event.getDistrict(),
+                            event.getCity(),
+                            event.getLocationName(),
+                            event.getLogoURL(),
+                            event.getBannerURL(),
+                            company != null ? company.getLogoURL() : null,
+                            company != null ? company.getCompanyName() : null,
+                            company != null ? company.getDescription() : null,
+                            event.getStatus().name(),
+                            event.getTypeEvent(),
+                            event.getDescription(),
+                            event.getCategory() != null ? event.getCategory().getCategoryName() : null,
+                            eventCategoryId1,
+                            eventActivityResponseList,
+                            isHaveSeatMap,
+                            minEventPrice
+                    );
+                })
+                .collect(Collectors.toList());
+    }
+
+
+
+    @Override
+    public PaginationResponse<EventDashboardResponse> getEventDashboardByCompanyId(int companyId, int page, int size) {
+        // Authenticate user
         var context = SecurityContextHolder.getContext();
         String username = context.getAuthentication().getName();
 
         var account = accountRepository.findAccountByUserName(username)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
+        // Validate company
         var company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new AppException(ErrorCode.ACCOUNT_NOT_CREATE_COMPANY));
 
@@ -799,11 +927,18 @@ public class EventServiceImpl implements EventService {
             throw new AppException(ErrorCode.INVALID_COMPANY);
         }
 
+        // Fetch events for the company
         List<Event> events = eventRepository.findEventsByCompany_CompanyId(companyId)
-                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+                .orElse(new ArrayList<>());
+
+        // If no events found, return empty paginated response
+        if (events.isEmpty()) {
+            return new PaginationResponse<>(new ArrayList<>(), page, 0, 0, size);
+        }
 
         List<EventDashboardResponse> eventDashboardResponses = new ArrayList<>();
 
+        // Process each event
         for (Event event : events) {
             EventDashboardResponse response = new EventDashboardResponse();
             response.setEventId(event.getEventId());
@@ -823,45 +958,38 @@ public class EventServiceImpl implements EventService {
             response.setEventCategory(event.getCategory() != null ? event.getCategory().getCategoryName() : null);
             response.setHaveSeatMap(event.getSeatMap() != null);
 
-            // Dùng ModelMapper để map sang DTO
+            // Map event activities to DTOs
             List<EventActivityDTO> eventActivityDTOList = event.getEventActivities().stream()
                     .map(activity -> modelMapper.map(activity, EventActivityDTO.class))
                     .collect(Collectors.toList());
 
-            // Ánh xạ từ EventActivityDTO sang EventActivityResponse
+            // Map to EventActivityResponse
             List<EventActivityResponse> eventActivityResponseList = modelMapper.map(eventActivityDTOList, new TypeToken<List<EventActivityResponse>>() {
             }.getType());
 
+            // Process tickets for each activity
             for (EventActivityResponse activityResponse : eventActivityResponseList) {
-                // Lấy danh sách TicketMapping liên quan đến EventActivity
                 List<TicketMapping> ticketMappingList = ticketMappingRepository.findTicketMappingsByEventActivity_EventActivityId(activityResponse.getEventActivityId());
-
-                // Nếu không có TicketMapping, tiếp tục với việc lấy vé từ các Ticket
                 List<TicketDTO> ticketDTOS = new ArrayList<>();
 
                 if (!ticketMappingList.isEmpty()) {
-                    // Lấy danh sách Ticket từ TicketMapping
                     for (TicketMapping ticketMapping : ticketMappingList) {
                         Optional<Ticket> ticketOpt = ticketRepository.findById(ticketMapping.getTicket().getTicketId());
                         ticketOpt.ifPresent(ticket -> ticketDTOS.add(modelMapper.map(ticket, TicketDTO.class)));
                     }
                 } else {
-                    // Nếu không có TicketMapping, lấy Ticket trực tiếp từ EventActivity hoặc Zone
-                    // Bạn có thể thêm logic để lấy vé từ Zone hoặc Seat nếu cần
-                    // Trong trường hợp này, tôi chỉ lấy Ticket mặc định nếu không có TicketMapping
                     List<Ticket> tickets = ticketRepository.findTicketsByEvent_EventId(event.getEventId());
                     ticketDTOS.addAll(tickets.stream()
                             .map(ticket -> modelMapper.map(ticket, TicketDTO.class))
                             .collect(Collectors.toList()));
                 }
 
-                // Gán danh sách TicketDTO vào EventActivityResponse
                 activityResponse.setTickets(ticketDTOS);
             }
-            // Gán vào response
+
             response.setEventActivityDTOList(eventActivityResponseList);
 
-            // Tính tổng số vé bán được & tổng doanh thu
+            // Calculate total tickets sold and revenue
             Integer totalTicketSold = ticketPurchaseRepository.getTotalTicketsSoldByEventId(event.getEventId());
             Double totalRevenue = ticketPurchaseRepository.getTotalPriceByEventId(event.getEventId());
 
@@ -871,10 +999,23 @@ public class EventServiceImpl implements EventService {
             eventDashboardResponses.add(response);
         }
 
-        return eventDashboardResponses;
-    }
+        // Pagination logic
+        int totalElements = eventDashboardResponses.size();
+        int totalPages = (int) Math.ceil((double) totalElements / size);
+        int fromIndex = page * size;
+        int toIndex = Math.min(fromIndex + size, totalElements);
 
-    @Override
+        // If fromIndex exceeds totalElements, return empty list with correct metadata
+        if (fromIndex > totalElements) {
+            return new PaginationResponse<>(new ArrayList<>(), page, totalPages, totalElements, size);
+        }
+
+        // If fromIndex equals totalElements, return empty list for that page
+        List<EventDashboardResponse> pageItems = fromIndex == totalElements ?
+                new ArrayList<>() : eventDashboardResponses.subList(fromIndex, toIndex);
+
+        return new PaginationResponse<>(pageItems, page, totalPages, totalElements, size);
+    }    @Override
     public boolean approvedEvent(int eventId, EEventStatus status) throws MessagingException {
         var context = SecurityContextHolder.getContext();
         String name = context.getAuthentication().getName();
@@ -882,13 +1023,14 @@ public class EventServiceImpl implements EventService {
         var event = eventRepository.findEventByEventId(eventId)
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
 
-        if (event.getStatus() != EEventStatus.PENDING) {
-            throw new AppException(ErrorCode.EVENT_NOT_PENDING_APPROVAL);
-        }
+
 
         switch (status) {
-            case APPROVED -> {
-                event.setStatus(EEventStatus.APPROVED);
+            case CONFIRMED -> {
+                if (event.getStatus() != EEventStatus.PENDING) {
+                    throw new AppException(ErrorCode.EVENT_NOT_PENDING_APPROVAL);
+                }
+                event.setStatus(EEventStatus.CONFIRMED);
 
                 // Gửi email thông báo cho người tổ chức sự kiện
                 String fullName = event.getOrganizer().getFirstName() + " " + event.getOrganizer().getLastName();
@@ -909,6 +1051,9 @@ public class EventServiceImpl implements EventService {
             }
 
             case REJECTED -> {
+                if (event.getStatus() != EEventStatus.PENDING) {
+                    throw new AppException(ErrorCode.EVENT_NOT_PENDING_APPROVAL);
+                }
                 event.setStatus(EEventStatus.REJECTED);
 
                 // Gửi email thông báo từ chối sự kiện
@@ -926,6 +1071,72 @@ public class EventServiceImpl implements EventService {
                 notification.setReadDate(null);
                 notificationRepository.saveAndFlush(notification);
                 messagingTemplate.convertAndSendToUser(event.getOrganizer().getUserName(), "/specific/messages", "Sự kiện của bạn đã bị từ chối");
+            }
+            case CANCELLED -> {
+                if(!event.getStatus().equals(EEventStatus.SCHEDULED)){
+                    throw new AppException(ErrorCode.EVENT_NOT_SCHEDULED);
+                }
+
+                    event.setStatus(EEventStatus.CANCELLED);
+
+                String organizerFullname = event.getOrganizer().getFirstName() + " " + event.getOrganizer().getLastName();
+                emailService.sendEventCancellationEmail(
+                        event.getOrganizer().getEmail(),
+                        organizerFullname,
+                        event.getEventName()
+                );
+
+                Contract contract = contractRepository.findContractsByEvent_EventId(eventId).get(0);
+                contract.setStatus(EContractStatus.CANCELLED);
+                contractRepository.save(contract);
+
+                Notification notification = new Notification();
+                notification.setMessage("Sự kiện của bạn đã bị hủy");
+                notification.setAccount(event.getOrganizer());
+                notification.setRead(false);
+                notification.setCreatedDate(LocalDateTime.now());
+                notification.setReadDate(null);
+                notificationRepository.saveAndFlush(notification);
+
+                simpMessagingTemplate.convertAndSendToUser(
+                        event.getOrganizer().getUserName(),
+                        "/specific/messages",
+                        "Sự kiện của bạn đã bị hủy"
+                );
+
+                List<TicketPurchase> ticketPurchases = ticketPurchaseRepository
+                        .findTicketPurchasesByEvent_EventIdAndStatus(eventId, ETicketPurchaseStatus.PURCHASED);
+
+                ExecutorService executor = Executors.newFixedThreadPool(5); // Giới hạn 5 luồng
+                Set<String> sentEmails = new HashSet<>(); // Track các email đã gửi
+
+                for (TicketPurchase ticketPurchase : ticketPurchases) {
+                    ticketPurchase.setStatus(ETicketPurchaseStatus.REFUNDING);
+                    ticketPurchaseRepository.save(ticketPurchase);
+
+                    String email = ticketPurchase.getAccount().getEmail();
+
+                    if (!sentEmails.contains(email)) {
+                        sentEmails.add(email); // Đánh dấu đã gửi
+
+                        executor.submit(() -> {
+                            try {
+                                String buyerFullname = ticketPurchase.getAccount().getFirstName() + " " + ticketPurchase.getAccount().getLastName();
+                                emailService.sendEventCancellationEmail(
+                                        email,
+                                        buyerFullname,
+                                        ticketPurchase.getEvent().getEventName()
+                                );
+                            } catch (Exception e) {
+                                log.error("Failed to send cancellation email to " + email, e);
+                            }
+                        });
+                    }
+                }
+
+                executor.shutdown(); // Sau khi submit hết thì đóng executor
+
+
             }
 
 
@@ -979,7 +1190,7 @@ public class EventServiceImpl implements EventService {
 
         if (!(event.getStatus().equals(EEventStatus.SCHEDULED)
                 || event.getStatus().equals(EEventStatus.COMPLETED)
-                || event.getStatus().equals(EEventStatus.APPROVED))) {
+                || event.getStatus().equals(EEventStatus.CONFIRMED))) {
             throw new AppException(ErrorCode.EVENT_NOT_APPROVED);
         }
 
@@ -1000,6 +1211,13 @@ public class EventServiceImpl implements EventService {
                             earliestStart,
                             latestEnd
                     );
+
+//            List<RevenueByDateProjection> dailyRevenue = ticketPurchaseRepository
+//                    .getDailyRevenueByEventAndActivity(
+//                            event.getEventId(),
+//                            activity.getEventActivityId(),
+//
+//                    );
 
             // Mapping doanh thu theo ngày
             List<CompanyDashboardResponse.EventActivityRevenueReportResponse> activityRevenueList =
@@ -1058,6 +1276,7 @@ public class EventServiceImpl implements EventService {
 
         return List.of(finalResponse);
     }
+
 
     @Override
     public CheckinStatsResponse getCheckinByEventActivityId(int eventActivityId) {

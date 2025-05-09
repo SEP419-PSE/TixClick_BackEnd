@@ -279,7 +279,7 @@ public class AuthenController {
         TokenResponse tokenResponse = authenService.signupAndLoginWithGoogle(principal);
 
         // Tạo URL với các query parameters
-        String redirectUrl = "http://localhost:5173/login-google-success/accessToken=" + tokenResponse.getAccessToken()
+        String redirectUrl = "https://tixclick.site/login-google-success?accessToken=" + tokenResponse.getAccessToken()
                 + "&refreshToken=" + tokenResponse.getRefreshToken();
 
         // Thực hiện redirect đến URL với các query parameters

@@ -41,6 +41,9 @@ public class TicketPurchase {
     @JoinColumn(name = "zone_activity_id")
     private ZoneActivity zoneActivity;
 
+    @Column
+    private Integer ticketPurchaseOldId;
+
     @ManyToOne
     @JoinColumn(name="ticket_id", nullable = false)
     private Ticket ticket;

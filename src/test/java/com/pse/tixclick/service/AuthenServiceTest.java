@@ -39,6 +39,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+import java.nio.file.AccessDeniedException;
 import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -86,7 +87,7 @@ public class AuthenServiceTest {
     }
 
     @Test
-    void login_ShouldReturnTokenResponse_WhenValidCredentials() {
+    void login_ShouldReturnTokenResponse_WhenValidCredentials() throws AccessDeniedException {
         // Arrange
         String username = "testuser";
         String rawPassword = "123456";
@@ -152,7 +153,7 @@ public class AuthenServiceTest {
         assertEquals(ErrorCode.USER_NOT_EXISTED, exception.getErrorCode());
     }
     @Test
-    void login_ShouldReturnTokenResponseWithInactiveStatus_WhenUserIsInactive() {
+    void login_ShouldReturnTokenResponseWithInactiveStatus_WhenUserIsInactive() throws AccessDeniedException {
         // Arrange
         String username = "inactiveUser";
         String rawPassword = "password";
@@ -210,7 +211,7 @@ public class AuthenServiceTest {
         assertEquals(ErrorCode.UNAUTHENTICATED, exception.getErrorCode());
     }
     @Test
-    void login_ShouldDeleteOldTokenInRedis_WhenKeyExists() {
+    void login_ShouldDeleteOldTokenInRedis_WhenKeyExists() throws AccessDeniedException {
         // Arrange
         String username = "testuser";
         String rawPassword = "123456";
@@ -249,7 +250,7 @@ public class AuthenServiceTest {
         verify(stringRedisTemplate.opsForValue()).set(anyString(), anyString(), eq(7L), eq(TimeUnit.DAYS));
     }
     @Test
-    void login_ShouldNotDeleteOldTokenInRedis_WhenKeyDoesNotExist() {
+    void login_ShouldNotDeleteOldTokenInRedis_WhenKeyDoesNotExist() throws AccessDeniedException {
         // Arrange
         String username = "testuser";
         String rawPassword = "123456";

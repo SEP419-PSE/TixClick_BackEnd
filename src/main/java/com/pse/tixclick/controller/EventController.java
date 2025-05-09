@@ -144,11 +144,11 @@ public class EventController {
         List<EventResponse> events = eventService.getAllEventScheduledAndPendingApproved();
 
         if (events.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            return ResponseEntity.status(HttpStatus.OK)
                     .body(ApiResponse.<List<EventResponse>>builder()
-                            .code(HttpStatus.NOT_FOUND.value())
+                            .code(HttpStatus.OK.value())
                             .message("No events found")
-                            .result(null)
+                            .result(Collections.emptyList())
                             .build());
         }
 
@@ -566,32 +566,23 @@ public class EventController {
         }
     }
 
-    @GetMapping("/filter")
-    public ResponseEntity<ApiResponse<List<EventDetailForConsumer>>> getEventByFilters(
-            @RequestParam(required = false) String startDate,
-            @RequestParam(required = false) String endDate,
-            @RequestParam(required = false) String eventType,
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<List<EventDetailForConsumer>>> searchEvents(
             @RequestParam(required = false) String eventName,
-            @RequestParam(required = false) List<String> eventCategory,
-            @RequestParam(required = false) Double minPrice, // Đổi từ double → Double
-            @RequestParam(required = false) Double maxPrice) {
+            @RequestParam(required = false) Integer eventCategoryId,
+            @RequestParam(required = false) Double minPrice,
+            @RequestParam(required = false) String city
+    ) {
         try {
-            List<EventDetailForConsumer> events = eventService.getEventByStartDateAndEndDateAndEventTypeAndEventName(startDate, endDate, eventType, eventName, eventCategory, minPrice, maxPrice);
-
-            if (events.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.OK)
-                        .body(ApiResponse.<List<EventDetailForConsumer>>builder()
-                                .code(HttpStatus.OK.value())
-                                .message("No events found with the provided filters")
-                                .result(Collections.emptyList())
-                                .build());
-            }
+            List<EventDetailForConsumer> events = eventService.searchEvent(eventName, eventCategoryId, minPrice, city);
+            int totalResults = events.size();  // Tính tổng số kết quả
 
             return ResponseEntity.ok(
                     ApiResponse.<List<EventDetailForConsumer>>builder()
                             .code(HttpStatus.OK.value())
-                            .message("Get all events with the provided filters successfully")
-                            .result(events)
+                            .message(totalResults == 0
+                                    ? "No events found with the provided filters"
+                                    : "Successfully retrieved " + totalResults + " events with the provided filters")                            .result(events)
                             .build()
             );
         } catch (Exception e) {
@@ -605,31 +596,47 @@ public class EventController {
     }
 
     @GetMapping("/dashboard/{companyId}")
-    public ResponseEntity<ApiResponse<List<EventDashboardResponse>>> getEventDashboardByCompanyId(@PathVariable int companyId) {
+    public ResponseEntity<ApiResponse<PaginationResponse<EventDashboardResponse>>> getEventDashboardByCompanyId(
+            @PathVariable int companyId,
+            @RequestParam(defaultValue = "0") int page) {
         try {
-            List<EventDashboardResponse> events = eventService.getEventDashboardByCompanyId(companyId);
+            int size = 6; // Mặc định mỗi trang có 6 sự kiện
+            PaginationResponse<EventDashboardResponse> response = eventService.getEventDashboardByCompanyId(companyId, page, size);
 
-            if (events.isEmpty()) {
+            if (response.getItems().isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(ApiResponse.<List<EventDashboardResponse>>builder()
+                        .body(ApiResponse.<PaginationResponse<EventDashboardResponse>>builder()
                                 .code(HttpStatus.NOT_FOUND.value())
                                 .message("No events found for company id: " + companyId)
-                                .result(null)
+                                .result(PaginationResponse.<EventDashboardResponse>builder()
+                                        .items(Collections.emptyList())
+                                        .currentPage(page)
+                                        .totalPages(0)
+                                        .totalElements(0)
+                                        .pageSize(size)
+                                        .build())
                                 .build());
             }
 
             return ResponseEntity.ok(
-                    ApiResponse.<List<EventDashboardResponse>>builder()
+                    ApiResponse.<PaginationResponse<EventDashboardResponse>>builder()
                             .code(HttpStatus.OK.value())
-                            .message("Get all events for company id: " + companyId + " successfully")
-                            .result(events)
+                            .message("Successfully retrieved events for company id: " + companyId)
+                            .result(response)
                             .build()
             );
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.<PaginationResponse<EventDashboardResponse>>builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.<List<EventDashboardResponse>>builder()
+                    .body(ApiResponse.<PaginationResponse<EventDashboardResponse>>builder()
                             .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                            .message("An error occurred while retrieving the events for company id: " + companyId)
+                            .message("An unexpected error occurred while retrieving events for company id: " + companyId)
                             .result(null)
                             .build());
         }

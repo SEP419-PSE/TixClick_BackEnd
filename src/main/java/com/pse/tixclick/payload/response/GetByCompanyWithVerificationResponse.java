@@ -15,6 +15,7 @@ import java.util.List;
 public class GetByCompanyWithVerificationResponse {
     private int companyId;
     private String companyName;
+    private String email;
     private String codeTax;
     private String bankingName;
     private String bankingCode;

@@ -14,9 +14,14 @@ import java.time.LocalTime;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class MyTicketDTO {
     private int eventId;
+    private int eventActivityId;
+    private int ticketPurchaseId;
+    private int eventCategoryId;
     private String eventName;
     private LocalDate eventDate;
     private LocalTime eventStartTime;
+    private String timeBuyTicket;
+    private String locationName;
     private String location;
     private double price;
     private String seatCode;
@@ -24,4 +29,7 @@ public class MyTicketDTO {
     private String qrCode;
     private String zoneName;
     private int quantity;
+    boolean ishaveSeatmap;
+    String logo;
+    String banner;
 }

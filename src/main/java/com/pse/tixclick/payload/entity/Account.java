@@ -23,6 +23,7 @@ import java.util.List;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
+@Builder
 public class Account {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -89,5 +90,7 @@ public class Account {
     @OneToOne(mappedBy = "representativeId", fetch = FetchType.LAZY)
     private Company company;
 
+    @OneToMany(mappedBy = "staff", fetch = FetchType.LAZY)
+    private Collection<CheckinLog> checkinLogs;
 
 }

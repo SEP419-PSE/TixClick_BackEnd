@@ -5,11 +5,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
+import com.pse.tixclick.exception.AppException;
+import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.TicketQrCodeDTO;
 import com.pse.tixclick.payload.entity.Account;
+import com.pse.tixclick.payload.entity.entity_enum.ERole;
 import com.pse.tixclick.repository.*;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import org.springframework.security.core.GrantedAuthority;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.TaskScheduler;
@@ -17,6 +21,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
 
 import com.google.zxing.qrcode.QRCodeWriter;
@@ -29,10 +34,13 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
+import java.nio.file.AccessDeniedException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Base64;
+import java.util.List;
 import java.util.concurrent.ScheduledFuture;
 
 import static javax.crypto.Cipher.SECRET_KEY;
@@ -138,5 +146,47 @@ public class AppUtils {
     public static LocalDate getEndOfWeekend(LocalDate referenceDate) {
         return referenceDate.with(java.time.temporal.TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
     }
+
+    public static String getCurrentRole() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth.getAuthorities().stream()
+                .findFirst()
+                .map(GrantedAuthority::getAuthority)
+                .orElse(null); // hoặc throw nếu muốn
+    }
+
+    public static void checkRole(ERole... rolesAllowed)  {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        // Extract roleName from JWT token
+        String roleName;
+        if (authentication instanceof JwtAuthenticationToken) {
+            JwtAuthenticationToken jwtAuth = (JwtAuthenticationToken) authentication;
+            roleName = (String) jwtAuth.getTokenAttributes().get("roleName"); // Extract roleName claim
+        } else {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        if (roleName == null) {
+            throw new AppException(ErrorCode.NOT_FOUNT_ROLE);
+        }
+
+        // Convert allowed roles to a list of role names
+        List<String> allowedRoleNames = Arrays.stream(rolesAllowed)
+                .map(Enum::name)
+                .toList();
+
+        // Check if the roleName from the JWT matches any of the allowed roles
+        boolean hasRole = allowedRoleNames.contains(roleName);
+
+        if (!hasRole) {
+            throw new AppException(ErrorCode.FORBIDDEN);
+        }
+    }
+
 
 }

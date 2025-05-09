@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -392,4 +393,82 @@ public class CompanyController {
                             .build());
         }
     }
+
+    @GetMapping("/get-company-by-event-id/{eventId}")
+    public ResponseEntity<ApiResponse<CompanyDTO>> getCompanyByEventId(@PathVariable int eventId) {
+        try {
+            CompanyDTO companyDTO = companyService.getCompanyByEventId(eventId);
+            return ResponseEntity.ok(
+                    ApiResponse.<CompanyDTO>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Get company by event id successfully")
+                            .result(companyDTO)
+                            .build()
+            );
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.<CompanyDTO>builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<CompanyDTO>builder()
+                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .message("Internal server error")
+                            .result(null)
+                            .build());
+        }
+    }
+
+    @PutMapping(value = "/{companyId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<CreateCompanyResponse>> updateCompany(
+            @PathVariable int companyId,
+            @RequestParam(required = false) String companyName,
+            @RequestParam(required = false) String codeTax,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String ownerCard,
+            @RequestParam(required = false) String bankingName,
+            @RequestParam(required = false) String bankingCode,
+            @RequestParam(required = false) String nationalId,
+            @RequestParam(required = false) String address,
+            @RequestParam(required = false) String description,
+            @RequestPart(value = "logo", required = false) MultipartFile file,
+            @RequestParam(value = "documents", required = false) List<MultipartFile> fileDocument
+    ) {
+        CreateCompanyRequest updateRequest = new CreateCompanyRequest(
+                companyName, codeTax, email, ownerCard,
+                bankingName, bankingCode, nationalId,
+                address, description
+        );
+
+        try {
+            CreateCompanyResponse companyDTO = companyService.updateCompany(companyId, updateRequest, file,fileDocument);
+            return ResponseEntity.ok(
+                    ApiResponse.<CreateCompanyResponse>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Company updated successfully")
+                            .result(companyDTO)
+                            .build()
+            );
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.<CreateCompanyResponse>builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<CreateCompanyResponse>builder()
+                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .message("File upload failed. Please try again.")
+                            .result(null)
+                            .build());
+        } catch (MessagingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 }

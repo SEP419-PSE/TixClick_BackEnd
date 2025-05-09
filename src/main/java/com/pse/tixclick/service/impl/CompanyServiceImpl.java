@@ -35,10 +35,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -61,6 +58,7 @@ public class CompanyServiceImpl implements CompanyService {
     ContractRepository contractRepository;
     ContractDetailRepository contractDetailRepository;
     MemberRepository memberRepository;
+    EventRepository eventRepository;
     @Override
     public CreateCompanyResponse createCompany(CreateCompanyRequest createCompanyRequest, MultipartFile file) throws IOException, MessagingException {
         var context = SecurityContextHolder.getContext();
@@ -320,6 +318,7 @@ public class CompanyServiceImpl implements CompanyService {
             return new GetByCompanyWithVerificationResponse(
                     company.getCompanyId(),
                     company.getCompanyName(),
+                    company.getEmail(),
                     company.getCodeTax(),
                     company.getBankingName(),
                     company.getBankingCode(),
@@ -536,6 +535,111 @@ public class CompanyServiceImpl implements CompanyService {
 
         return companies;
     }
+
+    @Override
+    public CompanyDTO getCompanyByEventId(int eventId) {
+        var event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_EXISTED));
+
+        var company = event.getCompany();
+
+        if(company == null) {
+            throw new AppException(ErrorCode.COMPANY_NOT_EXISTED);
+        }
+        return modelMapper.map(company, CompanyDTO.class);
+    }
+
+    @Override
+    public CreateCompanyResponse updateCompany(int companyId, CreateCompanyRequest updateRequest, MultipartFile file, List<MultipartFile> fileDocument) throws IOException, MessagingException {
+        String name = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        Account account = accountRepository.findAccountByUserName(name)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        Company company = companyRepository.findCompanyByCompanyIdAndRepresentativeId_UserName(companyId, name)
+                .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_EXISTED));
+        if (company.getStatus() != ECompanyStatus.REJECTED) {
+            throw new AppException(ErrorCode.COMPANY_NOT_REJECTED);
+        }
+
+        CompanyVerification companyVerification = companyVerificationRepository
+                .findCompanyVerificationsByCompany_CompanyId(companyId)
+                .orElseThrow(() -> new AppException(ErrorCode.COMPANY_VERIFICATION_NOT_EXISTED));
+
+        // Upload và tạo document
+        CreateCompanyDocumentRequest docRequest = new CreateCompanyDocumentRequest();
+        docRequest.setCompanyId(company.getCompanyId());
+        docRequest.setCompanyVerificationId(companyVerification.getCompanyVerificationId());
+        docRequest.setUploadDate(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        companyDocumentService.createCompanyDocument(docRequest, fileDocument);
+
+        // Upload logo mới nếu có
+        if (file != null) {
+            company.setLogoURL(cloudinary.uploadImageToCloudinary(file));
+        }
+
+        // Cập nhật các trường thông tin
+        Optional.ofNullable(updateRequest.getCompanyName()).ifPresent(company::setCompanyName);
+        Optional.ofNullable(updateRequest.getDescription()).ifPresent(company::setDescription);
+        Optional.ofNullable(updateRequest.getCodeTax()).ifPresent(company::setCodeTax);
+        Optional.ofNullable(updateRequest.getBankingCode()).ifPresent(company::setBankingCode);
+        Optional.ofNullable(updateRequest.getBankingName()).ifPresent(company::setBankingName);
+        Optional.ofNullable(updateRequest.getNationalId()).ifPresent(company::setNationalId);
+        Optional.ofNullable(updateRequest.getEmail()).ifPresent(company::setEmail);
+        Optional.ofNullable(updateRequest.getAddress()).ifPresent(company::setAddress);
+        Optional.ofNullable(updateRequest.getOwnerCard()).ifPresent(company::setOwnerCard);
+
+        // Cập nhật trạng thái công ty và xác minh
+        company.setStatus(ECompanyStatus.PENDING);
+        companyRepository.save(company);
+        companyVerification.setStatus(EVerificationStatus.PENDING);
+        companyVerificationRepository.save(companyVerification);
+
+        // Gửi notification realtime
+        String notifyMsg = "Công ty đã được cập nhật: " + company.getCompanyName();
+        messagingTemplate.convertAndSendToUser(companyVerification.getAccount().getUserName(), "/specific/messages", notifyMsg);
+
+        // Xử lý giới hạn 10 thông báo
+        int count = notificationRepository.countNotificationByAccountId(companyVerification.getAccount().getUserName());
+        if (count >= 10) {
+            Notification oldest = notificationRepository.findTopByAccount_UserNameOrderByCreatedDateAsc(companyVerification.getAccount().getUserName())
+                    .orElseThrow(() -> new AppException(ErrorCode.NOTIFICATION_NOT_EXISTED));
+            notificationRepository.delete(oldest);
+        }
+
+        // Lưu notification mới
+        Notification notification = new Notification();
+        notification.setAccount(companyVerification.getAccount());
+        notification.setMessage(notifyMsg);
+        notification.setRead(false);
+        notification.setCreatedDate(LocalDateTime.now());
+        notificationRepository.save(notification);
+
+        // Gửi email thông báo
+        String fullname = (companyVerification.getAccount().getFirstName() != null ? companyVerification.getAccount().getFirstName() : "") +
+                " " + (companyVerification.getAccount().getLastName() != null ? companyVerification.getAccount().getLastName() : "");
+        emailService.sendCompanyCreationRequestNotification(
+                companyVerification.getAccount().getEmail(), company.getCompanyName(), fullname.trim()
+        );
+
+        // Trả response
+        return new CreateCompanyResponse(
+                company.getCompanyId(),
+                company.getCompanyName(),
+                company.getCodeTax(),
+                company.getBankingName(),
+                company.getBankingCode(),
+                company.getOwnerCard(),
+                company.getEmail(),
+                company.getNationalId(),
+                company.getLogoURL(),
+                company.getAddress(),
+                company.getDescription(),
+                company.getStatus().name(),
+                account.getAccountId(),
+                companyVerification.getCompanyVerificationId()
+        );
+    }
+
 
 
 }
