@@ -10,9 +10,13 @@ import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.company.Company;
 import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.entity.payment.ContractPayment;
-import com.pse.tixclick.payload.entity.payment.OrderDetail;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import com.pse.tixclick.payload.entity.payment.Payment;
 import com.pse.tixclick.payload.entity.payment.Transaction;
+import com.pse.tixclick.payload.response.PaginationResponse;
 import com.pse.tixclick.repository.CompanyRepository;
 import com.pse.tixclick.repository.EventRepository;
 import com.pse.tixclick.repository.OrderDetailRepository;
@@ -115,31 +119,56 @@ public class TransactionServiceImpl implements TransactionService {
 
 
     @Override
-    public List<TransactionCompanyByEventDTO> getTransactionCompanyByEvent(int eventId) {
-        Event event = eventRepository
-                .findById(eventId)
+    public PaginationResponse<TransactionCompanyByEventDTO> getTransactionCompanyByEvent(
+            int eventId, int page, int size, String sortDirection) {
+
+        Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+
         Company company = event.getCompany();
         if (appUtils.getAccountFromAuthentication().getAccountId() != company.getRepresentativeId().getAccountId()) {
             throw new AppException(ErrorCode.EVENT_NOT_COMPANY);
         }
 
-        List<Transaction> transactions = transactionRepository.findAllByEventId(eventId);
+        Sort sort = Sort.by("transactionDate");
+        sort = sortDirection.equalsIgnoreCase("desc") ? sort.descending() : sort.ascending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        int offset = page * size;
+        List<Transaction> transactions = transactionRepository.findAllByEventIdPaged(eventId, offset, size);
+        long totalElements = transactionRepository.countByEventId(eventId);
+
         if (transactions.isEmpty()) {
             throw new AppException(ErrorCode.TRANSACTION_NOT_FOUND);
         }
-        return transactions.stream()
-                .map(transaction -> {
-                    TransactionCompanyByEventDTO dto = new TransactionCompanyByEventDTO();
-                    dto.setTransactionCode(transaction.getTransactionCode());
-                    dto.setTransactionDate(transaction.getTransactionDate());
-                    dto.setAmount(transaction.getAmount());
-                    dto.setStatus(transaction.getStatus().name());
-                    dto.setAccountName(transaction.getAccount().getUserName());
-                    dto.setAccountMail(transaction.getAccount().getEmail());
-                    dto.setTransactionType(transaction.getType().name());
-                    return dto;
-                })
-                .toList();
+
+        List<TransactionCompanyByEventDTO> dtos = transactions.stream().map(transaction -> {
+            var payment = transaction.getPayment();
+            if (payment == null) throw new AppException(ErrorCode.PAYMENT_NOT_FOUND);
+
+            var order = payment.getOrder();
+            String note = (order.getNote() == null) ? "Thanh toán vé" : order.getNote();
+
+            return TransactionCompanyByEventDTO.builder()
+                    .transactionCode(transaction.getTransactionCode())
+                    .transactionDate(transaction.getTransactionDate())
+                    .amount(transaction.getAmount())
+                    .status(transaction.getStatus().name())
+                    .note(note)
+                    .accountName(transaction.getAccount().getUserName())
+                    .accountMail(transaction.getAccount().getEmail())
+                    .transactionType(transaction.getType().name())
+                    .build();
+        }).toList();
+
+        int totalPages = (int) Math.ceil((double) totalElements / size);
+
+        return PaginationResponse.<TransactionCompanyByEventDTO>builder()
+                .items(dtos)
+                .currentPage(page)
+                .totalPages(totalPages)
+                .totalElements(totalElements)
+                .pageSize(size)
+                .build();
     }
 }

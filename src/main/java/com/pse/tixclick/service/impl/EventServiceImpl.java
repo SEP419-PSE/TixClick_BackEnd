@@ -908,6 +908,8 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public PaginationResponse<EventDashboardResponse> getEventDashboardByCompanyId(int companyId, int page, int size) {
+        AppUtils.checkRole(ERole.ORGANIZER);
+
         // Authenticate user
         var context = SecurityContextHolder.getContext();
         String username = context.getAuthentication().getName();
@@ -1361,6 +1363,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public DashboardEventResponse getDashboardEvent(int eventId) {
+        AppUtils.checkRole(ERole.ORGANIZER);
         var event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
 

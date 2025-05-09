@@ -161,6 +161,7 @@ public enum ErrorCode {
     NO_CHANGE_ZONE_TICKET(1143,"Không thể đổi vé đứng cùng loại được", HttpStatus.BAD_REQUEST),
     ORDER_DETAIL_NOT_FOUND(1144,"Không tìm thấy order detail",HttpStatus.NOT_FOUND),
     VOUCHER_INACTIVE(1145,"Voucher hết hạn hoặc không hoạt động",HttpStatus.BAD_REQUEST),
+    PAYMENT_NOT_FOUND(1146,"Không tìm thấy payment",HttpStatus.NOT_FOUND),
     ;
 
 

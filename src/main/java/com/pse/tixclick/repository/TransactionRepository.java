@@ -2,6 +2,8 @@ package com.pse.tixclick.repository;
 
 import com.pse.tixclick.payload.entity.payment.Transaction;
 import io.lettuce.core.dynamic.annotation.Param;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -54,6 +56,7 @@ ORDER BY m.month;
     Double getTotalAmountByEventId(@Param("eventId") int eventId);
 
 
+    // Truy vấn có phân trang
     @Query(value = """
     SELECT t.* 
     FROM transactions t
@@ -62,8 +65,25 @@ ORDER BY m.month;
     JOIN order_detail od ON o.order_id = od.order_id
     JOIN ticket_purchase tp ON od.ticket_purchase_id = tp.ticket_purchase_id
     WHERE tp.event_id = :eventId
+    ORDER BY t.transaction_date
+    OFFSET :offset ROWS FETCH NEXT :size ROWS ONLY
     """, nativeQuery = true)
-    List<Transaction> findAllByEventId(@Param("eventId") int eventId);
+    List<Transaction> findAllByEventIdPaged(@Param("eventId") int eventId,
+                                            @Param("offset") int offset,
+                                            @Param("size") int size);
+
+    // Truy vấn đếm tổng số bản ghi
+    @Query(value = """
+    SELECT COUNT(*) 
+    FROM transactions t
+    JOIN payment p ON t.payment_id = p.payment_id
+    JOIN orders o ON p.order_id = o.order_id
+    JOIN order_detail od ON o.order_id = od.order_id
+    JOIN ticket_purchase tp ON od.ticket_purchase_id = tp.ticket_purchase_id
+    WHERE tp.event_id = :eventId
+    """, nativeQuery = true)
+    long countByEventId(@Param("eventId") int eventId);
+
 
 
     @Query("SELECT t FROM Transaction t WHERE t.transactionCode = :transactionCode")

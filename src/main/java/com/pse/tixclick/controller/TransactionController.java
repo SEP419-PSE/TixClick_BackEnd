@@ -5,6 +5,7 @@ import com.pse.tixclick.payload.dto.TicketQrCodeDTO;
 import com.pse.tixclick.payload.dto.TransactionCompanyByEventDTO;
 import com.pse.tixclick.payload.dto.TransactionDTO;
 import com.pse.tixclick.payload.response.ApiResponse;
+import com.pse.tixclick.payload.response.PaginationResponse;
 import com.pse.tixclick.service.TransactionService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -90,22 +91,34 @@ public class TransactionController {
     }
 
     @GetMapping("/total_transaction_company/{eventId}")
-    public ResponseEntity<ApiResponse<List<TransactionCompanyByEventDTO>>> decryptQrCode(@PathVariable int eventId) {
+    public ResponseEntity<ApiResponse<PaginationResponse<TransactionCompanyByEventDTO>>> getTransactionsByEvent(
+            @PathVariable int eventId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "desc") String sortDirection) {
         try {
-            List<TransactionCompanyByEventDTO> transactionCompanyByEventDTOS = transactionService.getTransactionCompanyByEvent(eventId);
-            ApiResponse<List<TransactionCompanyByEventDTO>> response = ApiResponse.<List<TransactionCompanyByEventDTO>>builder()
-                    .code(HttpStatus.OK.value())
-                    .message("Successfully fetch transactions by event")
-                    .result(transactionCompanyByEventDTOS)
-                    .build();
-            return ResponseEntity.status(HttpStatus.OK).body(response);
+            int size = 6;
+            PaginationResponse<TransactionCompanyByEventDTO> pagination = transactionService
+                    .getTransactionCompanyByEvent(eventId, page, size, sortDirection);
+
+            ApiResponse<PaginationResponse<TransactionCompanyByEventDTO>> response =
+                    ApiResponse.<PaginationResponse<TransactionCompanyByEventDTO>>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Successfully fetched transactions by event")
+                            .result(pagination)
+                            .build();
+
+            return ResponseEntity.ok(response);
+
         } catch (AppException e) {
-            ApiResponse<List<TransactionCompanyByEventDTO>> errorResponse = ApiResponse.<List<TransactionCompanyByEventDTO>>builder()
-                    .code(HttpStatus.BAD_REQUEST.value())
-                    .message(e.getMessage())
-                    .result(null)
-                    .build();
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+            ApiResponse<PaginationResponse<TransactionCompanyByEventDTO>> errorResponse =
+                    ApiResponse.<PaginationResponse<TransactionCompanyByEventDTO>>builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .result(null)
+                            .build();
+
+            return ResponseEntity.badRequest().body(errorResponse);
         }
     }
+
 }
