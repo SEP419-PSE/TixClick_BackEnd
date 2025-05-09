@@ -17,8 +17,8 @@ public interface VoucherRepository extends JpaRepository<Voucher, Integer> {
     @Query("SELECT v FROM Voucher v WHERE v.voucherCode = :code")
     Voucher existsByVoucherCode(@Param("code") String code);
 
-    @Query("SELECT v FROM Voucher v WHERE v.status = :status AND v.event.eventId = :eventId")
-    List<Voucher> findByStatusAndEvent(@Param("status") String status, @Param("eventId") int eventId);
+    @Query("SELECT v FROM Voucher v WHERE v.event.eventId = :eventId")
+    List<Voucher> findByEvent(@Param("eventId") int eventId);
 
     List<Voucher> findVouchersByStatusAndEvent_EventId(EVoucherStatus status, int eventId);
 }
