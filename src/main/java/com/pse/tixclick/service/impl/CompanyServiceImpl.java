@@ -318,6 +318,7 @@ public class CompanyServiceImpl implements CompanyService {
             return new GetByCompanyWithVerificationResponse(
                     company.getCompanyId(),
                     company.getCompanyName(),
+                    company.getEmail(),
                     company.getCodeTax(),
                     company.getBankingName(),
                     company.getBankingCode(),
