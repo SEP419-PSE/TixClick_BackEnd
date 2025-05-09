@@ -96,10 +96,17 @@ public class VoucherServiceImpl implements VoucherService {
 
     @Override
     public List<VoucherDTO> getAllVouchers(int eventId, EVoucherStatus status) {
-        List<Voucher> vouchers = voucherRepository.findVouchersByStatusAndEvent_EventId(status, eventId);
-        return vouchers.stream()
-                .map(voucher -> modelMapper.map(voucher, VoucherDTO.class))
-                .toList();
+        if(status.equals(EVoucherStatus.ALL)){
+            List<Voucher> vouchersByEvent = voucherRepository.findByEvent(eventId);
+            return vouchersByEvent.stream()
+                    .map(voucher -> modelMapper.map(voucher, VoucherDTO.class))
+                    .toList();
+        }else {
+            List<Voucher> vouchers = voucherRepository.findVouchersByStatusAndEvent_EventId(status, eventId);
+            return vouchers.stream()
+                    .map(voucher -> modelMapper.map(voucher, VoucherDTO.class))
+                    .toList();
+        }
     }
 
     @Override

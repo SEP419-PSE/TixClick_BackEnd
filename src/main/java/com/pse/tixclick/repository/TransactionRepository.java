@@ -56,19 +56,17 @@ ORDER BY m.month;
     Double getTotalAmountByEventId(@Param("eventId") int eventId);
 
 
-    // Truy vấn có phân trang
-    @Query("""
-        SELECT t 
-        FROM Transaction t
-        JOIN t.payment p
-        JOIN p.order o
-        JOIN o.orderDetails od
-        JOIN od.ticketPurchase tp
-        WHERE tp.event.eventId = :eventId
-        and tp.status = 'PURCHASED'
-    """)
-    Page<Transaction> findAllByEventId(@Param("eventId") int eventId, Pageable pageable);
-
+    @Query(value = """
+    SELECT t.* 
+    FROM transactions t
+    JOIN payment p ON t.payment_id = p.payment_id
+    JOIN orders o ON p.order_id = o.order_id
+    JOIN order_detail od ON o.order_id = od.order_id
+    JOIN ticket_purchase tp ON od.ticket_purchase_id = tp.ticket_purchase_id
+    WHERE tp.event_id = :eventId
+    AND tp.status = 'PURCHASED'
+    """, nativeQuery = true)
+    List<Transaction> findAllByEventId(@Param("eventId") int eventId);
 
     @Query("SELECT t FROM Transaction t WHERE t.transactionCode = :transactionCode")
     Transaction findByTransactionCode(@Param("transactionCode") String transactionCode);
