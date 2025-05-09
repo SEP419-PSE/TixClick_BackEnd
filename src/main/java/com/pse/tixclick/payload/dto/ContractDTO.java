@@ -24,4 +24,5 @@ public class ContractDTO {
     int accountId;
     int eventId;
     int companyId;
+    String companyName;
 }
