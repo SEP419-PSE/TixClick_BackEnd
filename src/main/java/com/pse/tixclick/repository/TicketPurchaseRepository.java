@@ -201,4 +201,6 @@ ORDER BY m.month;
 
     Optional<TicketPurchase> findTicketPurchaseByTicketPurchaseId(int ticketPurchaseId);
 
+
+    Integer countTicketPurchaseByEventActivity_EventActivityIdAndStatus(int eventActivityId, ETicketPurchaseStatus status);
 }

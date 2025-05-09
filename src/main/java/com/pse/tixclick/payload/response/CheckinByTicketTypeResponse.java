@@ -24,6 +24,7 @@ public class CheckinByTicketTypeResponse {
         double price;
         int checkedIn;
         int total;
+        int totalTicket;
         double percentage;
     }
 }
