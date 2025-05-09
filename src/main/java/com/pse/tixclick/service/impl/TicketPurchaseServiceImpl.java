@@ -5,6 +5,7 @@ import com.pse.tixclick.config.testnotification.MessageController;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.*;
+import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.CheckinLog;
 import com.pse.tixclick.payload.entity.entity_enum.*;
 import com.pse.tixclick.payload.entity.event.Event;
@@ -66,6 +67,9 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
 
     @Autowired
     TicketPurchaseRepository ticketPurchaseRepository;
+
+    @Autowired
+    AccountRepository accountRepository;
 
     @Autowired
     ZoneRepository zoneRepository;
@@ -971,6 +975,11 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
 
     @Override
     public TicketQrCodeDTO decryptQrCode(String qrCode){
+        var context = SecurityContextHolder.getContext();
+        var userName = context.getAuthentication().getName();
+        Account account = accountRepository.findAccountByUserName(userName)
+                .orElseThrow(() -> new AppException(ErrorCode.ACCOUNT_NOT_FOUND));
+
         if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.ORGANIZER)) {
             throw new AppException(ErrorCode.NOT_PERMISSION);
         }
@@ -996,6 +1005,7 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
         if (checkinLog.getCheckinStatus().equals(ECheckinLogStatus.PENDING)) {
             checkinLog.setCheckinTime(LocalDateTime.now());
             checkinLog.setCheckinStatus(ECheckinLogStatus.CHECKED_IN);
+            checkinLog.setStaff(account);
         }
         else if (checkinLog.getCheckinStatus().equals(ECheckinLogStatus.CHECKED_IN)) {
             throw new AppException(ErrorCode.CHECKIN_LOG_CHECKED_IN);
@@ -1007,9 +1017,13 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
         }
 
         ticketPurchase.setStatus(ETicketPurchaseStatus.CHECKED_IN);
+
         ticketPurchaseRepository.save(ticketPurchase);
         checkinLogRepository.save(checkinLog);
         ticketQrCodeDTO.setStatus(ticketPurchase.getStatus().name());
+
+        simpMessagingTemplate.convertAndSend("/all/checkin",
+                "call api"); // Gửi Object Message
         return ticketQrCodeDTO;
     }
 
