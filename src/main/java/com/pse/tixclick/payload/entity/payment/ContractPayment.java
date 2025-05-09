@@ -35,7 +35,7 @@ public class ContractPayment {
     @Column(nullable = false)
     private EContractPaymentStatus status;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "NVARCHAR(255)")
     private String note;
 
     @OneToOne

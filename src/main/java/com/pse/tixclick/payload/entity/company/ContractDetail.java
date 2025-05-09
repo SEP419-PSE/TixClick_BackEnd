@@ -22,13 +22,13 @@ public class ContractDetail {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int contractDetailId;
 
-    @Column
+    @Column(columnDefinition = "NVARCHAR(255)")
     private String contractDetailName;
 
     @Column
     private String contractDetailCode;
 
-    @Column
+    @Column(columnDefinition = "NVARCHAR(255)")
     private String description;
 
     @Column
