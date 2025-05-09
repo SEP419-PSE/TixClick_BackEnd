@@ -226,9 +226,19 @@ public class PaymentServiceImpl implements PaymentService {
                     throw new AppException(ErrorCode.TICKET_REQUEST_EXCEED_QUANTITY);
                 }
 
+
+
                 for (CreateTicketPurchaseRequest ticketReq : ticketChange) {
+
+
+
                     Ticket newTicket = ticketRepository.findById(ticketReq.getTicketId())
                             .orElseThrow(() -> new AppException(ErrorCode.TICKET_NOT_FOUND));
+                    if(ticketPurchase.getTicket().equals(newTicket)){
+                        throw new AppException(ErrorCode.NO_CHANGE_TICKET_SAME);
+                    }
+
+
 
                     TicketMapping ticketMapping = ticketMappingRepository
                             .findTicketMappingByTicketIdAndEventActivityId(
@@ -354,11 +364,18 @@ public class PaymentServiceImpl implements PaymentService {
                     Ticket newTicket = ticketRepository.findById(ticketReq.getTicketId())
                             .orElseThrow(() -> new AppException(ErrorCode.TICKET_NOT_FOUND));
 
+
                     ZoneActivity newZoneActivity = zoneActivityRepository
                             .findByEventActivityIdAndZoneId(ticketReq.getEventActivityId(), ticketReq.getZoneId())
                             .orElseThrow(() -> new AppException(ErrorCode.ZONE_ACTIVITY_NOT_FOUND));
 
-                    double diff = newTicket.getPrice() - oldTicket.getPrice();
+
+                    if(ticketPurchase.getZoneActivity().equals(newZoneActivity)){
+                        throw new AppException(ErrorCode.NO_CHANGE_ZONE_TICKET);
+                    }
+
+
+                        double diff = newTicket.getPrice() - oldTicket.getPrice();
                     totalAmount += Math.max(diff, 0) * ticketReq.getQuantity();
 
                     if (ticketReq.getSeatId() != 0) {

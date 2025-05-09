@@ -157,6 +157,8 @@ public enum ErrorCode {
     EVENT_NOT_SCHEDULED(1139, "Sự kiện không được lên lịch", HttpStatus.BAD_REQUEST),
     FORBIDDEN(1140, "Bạn không có quyền truy cập tài nguyên này", HttpStatus.FORBIDDEN),
     NOT_FOUNT_ROLE(1141, "Không tìm thấy vai trò", HttpStatus.NOT_FOUND),
+    NO_CHANGE_TICKET_SAME(1142,"Không thể đổi vé cùng loai được",HttpStatus.BAD_REQUEST),
+    NO_CHANGE_ZONE_TICKET(1143,"Không thể đổi vé đứng cùng loại được", HttpStatus.BAD_REQUEST)
     ;
 
 
