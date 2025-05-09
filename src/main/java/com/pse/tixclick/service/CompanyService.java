@@ -1,6 +1,7 @@
 package com.pse.tixclick.service;
 
 import com.pse.tixclick.payload.dto.CompanyDTO;
+import com.pse.tixclick.payload.dto.CompanyDocumentDTO;
 import com.pse.tixclick.payload.request.create.CreateCompanyRequest;
 import com.pse.tixclick.payload.request.update.UpdateCompanyRequest;
 import com.pse.tixclick.payload.response.*;
@@ -40,4 +41,6 @@ public interface CompanyService {
     CompanyDTO getCompanyByEventId(int eventId);
 
     CreateCompanyResponse updateCompany(int companyId, CreateCompanyRequest updateRequest, MultipartFile file, List<MultipartFile> fileDocument) throws IOException, MessagingException;
+
+    List<CompanyDocumentDTO> getDocumentByCompanyId(int companyId);
 }

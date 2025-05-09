@@ -20,6 +20,7 @@ import com.pse.tixclick.repository.*;
 import com.pse.tixclick.service.CompanyDocumentService;
 import com.pse.tixclick.service.CompanyService;
 import com.pse.tixclick.service.CompanyVerificationService;
+import com.pse.tixclick.utils.AppUtils;
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -27,6 +28,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.modelmapper.TypeToken;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -640,6 +642,25 @@ public class CompanyServiceImpl implements CompanyService {
         );
     }
 
+    @Override
+    public List<CompanyDocumentDTO> getDocumentByCompanyId(int companyId) {
+        AppUtils.checkRole(ERole.ORGANIZER);
+
+        var context = SecurityContextHolder.getContext();
+        String name = context.getAuthentication().getName();
+        var account = accountRepository.findAccountByUserName(name)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        var company = companyRepository.findCompanyByCompanyIdAndRepresentativeId_UserName(companyId, name)
+                .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_EXISTED));
+        if (company.getStatus() != ECompanyStatus.ACTIVE) {
+            throw new AppException(ErrorCode.COMPANY_NOT_ACTIVE);
+        }
+
+        List<CompanyDocuments> companyDocuments = companyDocumentRepository.findCompanyDocumentsByCompany_CompanyId(companyId);
+
+        return modelMapper.map(companyDocuments, new TypeToken<List<CompanyDocumentDTO>>() {}.getType());
+    }
 
 
 }

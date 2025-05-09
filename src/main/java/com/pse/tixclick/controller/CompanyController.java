@@ -2,6 +2,7 @@ package com.pse.tixclick.controller;
 
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.payload.dto.CompanyDTO;
+import com.pse.tixclick.payload.dto.CompanyDocumentDTO;
 import com.pse.tixclick.payload.request.create.CreateCompanyRequest;
 import com.pse.tixclick.payload.request.create.CreateEventRequest;
 import com.pse.tixclick.payload.request.update.UpdateCompanyRequest;
@@ -471,4 +472,32 @@ public class CompanyController {
         }
     }
 
+
+    @GetMapping("/get-document-by-company-id/{companyId}")
+    public ResponseEntity<ApiResponse<List<CompanyDocumentDTO>>> getDocumentByCompanyId(@PathVariable int companyId) {
+        try {
+            List<CompanyDocumentDTO> companyDocumentDTOList = companyService.getDocumentByCompanyId(companyId);
+            return ResponseEntity.ok(
+                    ApiResponse.<List<CompanyDocumentDTO>>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Get document by company id successfully")
+                            .result(companyDocumentDTOList)
+                            .build()
+            );
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.<List<CompanyDocumentDTO>>builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<List<CompanyDocumentDTO>>builder()
+                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .message("Internal server error")
+                            .result(null)
+                            .build());
+        }
+    }
 }
