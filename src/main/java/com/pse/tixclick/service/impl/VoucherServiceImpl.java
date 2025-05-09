@@ -77,10 +77,14 @@ public class VoucherServiceImpl implements VoucherService {
         voucher.setVoucherName(createVoucherRequest.getVoucherName());
         voucher.setVoucherCode(createVoucherRequest.getVoucherCode());
         voucher.setDiscount(createVoucherRequest.getDiscount());
-        voucher.setStatus(EVoucherStatus.INACTIVE);
         voucher.setCreatedDate(LocalDateTime.now());
-        voucher.setQuantity(createVoucherRequest.getQuantity());
         voucher.setStartDate(createVoucherRequest.getStartDate());
+        if (createVoucherRequest.getStartDate() != null && createVoucherRequest.getStartDate().toLocalDate().equals(LocalDate.now())) {
+            voucher.setStatus(EVoucherStatus.ACTIVE);
+        }else {
+            voucher.setStatus(EVoucherStatus.INACTIVE);
+        }
+        voucher.setQuantity(createVoucherRequest.getQuantity());
         voucher.setEndDate(createVoucherRequest.getEndDate());
         voucher.setAccount(appUtils.getAccountFromAuthentication());
         voucher.setEvent(event);
