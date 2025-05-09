@@ -133,7 +133,7 @@ public class VoucherServiceImpl implements VoucherService {
         }
     }
 @Transactional
-    @Scheduled(cron = "0 43 15 * * ?") // Chạy vào 0h mỗi ngày // second/minute/hour/day/month
+    @Scheduled(cron = "0 0 0 * * ?") // Chạy vào 0h mỗi ngày // second/minute/hour/day/month
     public void updateExpiredVoucherStatus() {
         List<Voucher> vouchers = voucherRepository.findAll();
         LocalDateTime now = LocalDateTime.now();
