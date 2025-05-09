@@ -4,5 +4,6 @@ public enum EContractStatus {
     PENDING,
     APPROVED,
     REJECTED,
-    CANCELLED
+    CANCELLED,
+    COMPLETED,
 }

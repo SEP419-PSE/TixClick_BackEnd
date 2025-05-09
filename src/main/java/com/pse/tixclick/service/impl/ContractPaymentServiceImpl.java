@@ -123,10 +123,12 @@ public class ContractPaymentServiceImpl implements ContractPaymentService {
                                 break;
                             }
                         }
+
                         if(allPaid) {
                             var event = eventRepository.findEventByEventId(contract.getEvent().getEventId())
                                     .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
                              event.setStatus(EEventStatus.COMPLETED);
+                            contract.setStatus(EContractStatus.COMPLETED);
                             eventRepository.save(event);
                         }
 
