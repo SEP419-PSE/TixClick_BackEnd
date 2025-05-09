@@ -4,6 +4,7 @@ import com.pse.tixclick.payload.dto.VoucherDTO;
 import com.pse.tixclick.payload.entity.entity_enum.EVoucherStatus;
 import com.pse.tixclick.payload.request.create.CreateVoucherRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
+import com.pse.tixclick.payload.response.VoucherPercentageResponse;
 import com.pse.tixclick.service.VoucherService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -90,19 +91,18 @@ public class VoucherController {
     }
 
     @GetMapping("/check/{voucherCode}/{eventId}")
-    public ResponseEntity<ApiResponse<String>> checkVoucherCode(@PathVariable String voucherCode, @PathVariable int eventId) {
+    public ResponseEntity<ApiResponse<VoucherPercentageResponse>> checkVoucherCode(@PathVariable String voucherCode, @PathVariable int eventId) {
         try {
-            String message = voucherService.checkVoucherCode(voucherCode, eventId);
+            VoucherPercentageResponse message = voucherService.checkVoucherCode(voucherCode, eventId);
             return ResponseEntity.ok(
-                    ApiResponse.<String>builder()
+                    ApiResponse.<VoucherPercentageResponse>builder()
                             .code(200)
-                            .message(message)
-                            .result(null)
+                            .result(message)
                             .build()
             );
         } catch (Exception e) {
             return ResponseEntity.status(400)
-                    .body(ApiResponse.<String>builder()
+                    .body(ApiResponse.<VoucherPercentageResponse>builder()
                             .code(400)
                             .message(e.getMessage())
                             .result(null)

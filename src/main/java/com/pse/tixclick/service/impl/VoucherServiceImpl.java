@@ -8,6 +8,7 @@ import com.pse.tixclick.payload.entity.entity_enum.EVoucherStatus;
 import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.entity.payment.Voucher;
 import com.pse.tixclick.payload.request.create.CreateVoucherRequest;
+import com.pse.tixclick.payload.response.VoucherPercentageResponse;
 import com.pse.tixclick.repository.CompanyRepository;
 import com.pse.tixclick.repository.EventRepository;
 import com.pse.tixclick.repository.VoucherRepository;
@@ -95,7 +96,7 @@ public class VoucherServiceImpl implements VoucherService {
     }
 
     @Override
-    public String changeVoucherStatus(int voucherId,EVoucherStatus status) {
+    public String changeVoucherStatus(int voucherId, EVoucherStatus status) {
         Voucher voucher = voucherRepository.findById(voucherId)
                 .orElseThrow(() -> new AppException(ErrorCode.VOUCHER_NOT_FOUND));
 
@@ -109,17 +110,22 @@ public class VoucherServiceImpl implements VoucherService {
     }
 
     @Override
-    public String checkVoucherCode(String voucherCode, int eventId) {
+    public VoucherPercentageResponse checkVoucherCode(String voucherCode, int eventId) {
         Voucher voucher = voucherRepository.findByVoucherCodeAndEvent(voucherCode, eventId)
                 .orElseThrow(() -> new AppException(ErrorCode.VOUCHER_NOT_FOUND));
+        VoucherPercentageResponse voucherPercentageResponse = new VoucherPercentageResponse();
         if (voucher.getEvent() != null && voucher.getEvent().getEventId() != eventId) {
-            return "Voucher is not valid for this event";
+            throw new AppException(ErrorCode.VOUCHER_INACTIVE);
         }
 
         if (voucher.getStatus().equals(EVoucherStatus.ACTIVE)) {
-            return "Voucher is valid";
+            voucherPercentageResponse.setDiscount(voucher.getDiscount());
+            voucherPercentageResponse.setVoucherCode(voucherCode);
+            voucherPercentageResponse.setVoucherName(voucher.getVoucherName());
+            voucherPercentageResponse.setNotice("Voucher is valid for this event");
+            return voucherPercentageResponse;
         } else {
-            return "Voucher is inactive";
+            throw new AppException(ErrorCode.VOUCHER_INACTIVE);
         }
     }
 }

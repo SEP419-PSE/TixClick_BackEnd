@@ -118,6 +118,9 @@ public class OrderServiceImpl implements OrderService {
         if (createOrderRequest.getVoucherCode() != null && !createOrderRequest.getVoucherCode().isEmpty()) {
             Voucher voucher = voucherRepository.findByVoucherCodeAndEvent(createOrderRequest.getVoucherCode(), ticketPurchase.getEvent().getEventId())
                     .orElseThrow(() -> new AppException(ErrorCode.VOUCHER_NOT_FOUND));
+            if(voucher.getStatus().equals(EVoucherStatus.INACTIVE)) {
+                throw new AppException(ErrorCode.VOUCHER_INACTIVE);
+            }
             double newTotalAmount = totalAmount - (totalAmount * voucher.getDiscount() / 100);
             newTotalAmount1 = newTotalAmount;
             order.setTotalAmountDiscount(newTotalAmount);
