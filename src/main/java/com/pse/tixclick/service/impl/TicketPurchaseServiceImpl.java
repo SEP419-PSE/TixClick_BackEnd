@@ -9,6 +9,8 @@ import com.pse.tixclick.payload.entity.CheckinLog;
 import com.pse.tixclick.payload.entity.entity_enum.*;
 import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.entity.event.EventActivity;
+import com.pse.tixclick.payload.entity.payment.Order;
+import com.pse.tixclick.payload.entity.payment.OrderDetail;
 import com.pse.tixclick.payload.entity.seatmap.*;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
 import com.pse.tixclick.payload.entity.ticket.TicketMapping;
@@ -97,6 +99,12 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
 
     @Autowired
     SimpMessagingTemplate simpMessagingTemplate;
+
+    @Autowired
+    OrderDetailRepository orderDetailRepository;
+
+    @Autowired
+    OrderRepository orderRepository;
 
     @Override
     public List<TicketPurchaseDTO> createTicketPurchase(ListTicketPurchaseRequest createTicketPurchaseRequest) throws Exception {
@@ -785,6 +793,12 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
                     MyTicketDTO dto = new MyTicketDTO();
 
                     if (tp.getEvent() != null) {
+                        OrderDetail orderDetail = orderDetailRepository.findOrderDetailByTicketPurchase_TicketPurchaseId(tp.getTicketPurchaseId())
+                                .orElseThrow(() -> new AppException(ErrorCode.ORDER_DETAIL_NOT_FOUND));
+                        Order order = orderRepository.findById(orderDetail.getOrder().getOrderId())
+                                .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+
+
                         dto.setEventId(tp.getEvent().getEventId());
                         dto.setEventCategoryId(tp.getEvent().getCategory().getEventCategoryId());
                         dto.setEventName(tp.getEvent().getEventName());
@@ -792,7 +806,7 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
                         dto.setLogo(tp.getEvent().getLogoURL());
                         dto.setBanner(tp.getEvent().getBannerURL());
                         dto.setIshaveSeatmap(tp.getEvent().getSeatMap() != null);
-
+                        dto.setTimeBuyTicket(order.getOrderDate());
                         StringBuilder locationBuilder = new StringBuilder();
                         if (tp.getEvent().getAddress() != null) locationBuilder.append(tp.getEvent().getAddress()).append(", ");
                         if (tp.getEvent().getWard() != null) locationBuilder.append(tp.getEvent().getWard()).append(", ");
