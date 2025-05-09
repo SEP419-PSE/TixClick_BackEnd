@@ -1296,6 +1296,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public CheckinByTicketTypeResponse getCheckinByTicketType(int eventActivityId) {
+        AppUtils.checkRole(ERole.ORGANIZER);
         var eventActivity = eventActivityRepository.findById(eventActivityId)
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_ACTIVITY_NOT_FOUND));
 
@@ -1309,14 +1310,20 @@ public class EventServiceImpl implements EventService {
                 .map(s -> {
                     int total = s.getTotalPurchased() != null ? s.getTotalPurchased() : 0;
                     int checkedIn = s.getCheckedIn() != null ? s.getCheckedIn() : 0;
-                    double percentage = total > 0 ? (checkedIn * 100.0) / total : 0.0;
+
                     Ticket ticket = ticketRepository.findById(s.getTicketId())
                             .orElseThrow(() -> new AppException(ErrorCode.TICKET_NOT_FOUND));
+                    Integer totalTicket = ticketPurchaseRepository.countTicketPurchaseByEventActivity_EventActivityIdAndStatus(eventActivityId,ETicketPurchaseStatus.PURCHASED);
+                    if(totalTicket == null){
+                        totalTicket = 0;
+                    }
+                    double percentage = total > 0 ? (checkedIn * 100.0) / totalTicket : 0.0;
                     return new CheckinByTicketTypeResponse.TicketTypeCheckinStat(
                             s.getTicketName(),
                             ticket.getPrice(),
                             checkedIn,
                             total,
+                            totalTicket,
                             Math.round(percentage * 100.0) / 100.0 // làm tròn 2 chữ số
                     );
                 })
