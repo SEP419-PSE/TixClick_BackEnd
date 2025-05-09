@@ -298,4 +298,47 @@ public class TicketPurchaseController {
                             .build());
         }
     }
+
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<PaginationResponse<MyTicketDTO>>> searchTicketPurchasesByEventName(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam String sortDirection,
+            @RequestParam String eventName
+    ) {
+        try {
+            int size = 3; // mỗi trang có 3 vé
+            PaginationResponse<MyTicketDTO> response = ticketPurchaseService.searchTicketPurchasesByEventName(page, size, sortDirection, eventName);
+
+            if (response == null || response.getItems().isEmpty()) {
+                return ResponseEntity.ok(
+                        ApiResponse.<PaginationResponse<MyTicketDTO>>builder()
+                                .code(HttpStatus.OK.value())
+                                .message("No ticket purchases found on this page")
+                                .result(PaginationResponse.<MyTicketDTO>builder()
+                                        .items(Collections.emptyList())
+                                        .currentPage(page)
+                                        .totalPages(0)
+                                        .totalElements(0)
+                                        .pageSize(size)
+                                        .build())
+                                .build()
+                );
+            }
+
+            return ResponseEntity.ok(
+                    ApiResponse.<PaginationResponse<MyTicketDTO>>builder()
+                            .code(200)
+                            .message("Successfully fetched ticket purchases on page " + page)
+                            .result(response)
+                            .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.<PaginationResponse<MyTicketDTO>>builder()
+                            .code(400)
+                            .message("Error: " + e.getMessage())
+                            .result(null)
+                            .build());
+        }
+    }
 }
