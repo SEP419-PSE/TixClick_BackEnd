@@ -100,6 +100,9 @@ public class VoucherServiceImpl implements VoucherService {
 
     @Override
     public String changeVoucherStatus(int voucherId) {
+        if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.ORGANIZER)) {
+            throw new AppException(ErrorCode.NOT_PERMISSION);
+        }
         Voucher voucher = voucherRepository.findById(voucherId)
                 .orElseThrow(() -> new AppException(ErrorCode.VOUCHER_NOT_FOUND));
 
