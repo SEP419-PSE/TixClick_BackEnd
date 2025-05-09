@@ -126,7 +126,7 @@ public class OrderServiceImpl implements OrderService {
             order.setTotalAmountDiscount(newTotalAmount);
             voucher.setQuantity(voucher.getQuantity() - 1);
             if(voucher.getQuantity() == 0) {
-                voucher.setStatus(EVoucherStatus.INACTIVE);
+                    voucher.setStatus(EVoucherStatus.INACTIVE);
             }
             voucherRepository.save(voucher);
         }else {

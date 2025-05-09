@@ -77,6 +77,7 @@ public class ModelMapperConfig {
             @Override
             protected void configure() {
                 map().setCompanyId(source.getCompany().getCompanyId());
+                map().setCompanyName(source.getCompany().getCompanyName());
                 map().setAccountId(source.getAccount().getAccountId());
                 map().setEventId(source.getEvent().getEventId()); // Thêm ánh xạ rõ ràng cho eventId
             }

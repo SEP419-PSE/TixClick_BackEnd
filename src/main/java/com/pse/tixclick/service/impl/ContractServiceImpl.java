@@ -253,7 +253,12 @@ public class ContractServiceImpl implements ContractService {
 
         // Các trường trong CreateContractAndDetailRequest
         dto.setContractCode(extract(text, "Số:\\s*(\\S+?)\\)"));
-        dto.setContractName(extract(text, "HỢP ĐỒNG CUNG ỨNG DỊCH VỤ TỔ CHỨC SỰ KIỆN"));
+        String keyword = "HỢP ĐỒNG CUNG ỨNG DỊCH VỤ TỔ CHỨC SỰ KIỆN";
+        Pattern pattern = Pattern.compile(keyword + ".*");
+        Matcher matcher = pattern.matcher(text);
+        if (matcher.find()) {
+            dto.setContractName(matcher.group().trim());
+        }
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
         dto.setContractStartDate(LocalDate.parse(extract(text, "kí: (\\d{2}/\\d{2}/\\d{4})"), formatter));
