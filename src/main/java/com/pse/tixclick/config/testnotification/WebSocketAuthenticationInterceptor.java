@@ -45,7 +45,7 @@ public class WebSocketAuthenticationInterceptor implements HandshakeInterceptor 
             token = query.substring(6); // Cắt bỏ "token="
         }
 
-        // Debug token
+        // Debug token sdgsadvdsv
         System.out.println("🔑 Token received in WebSocket: " + token);
 
         if (token == null || token.isEmpty()) {
