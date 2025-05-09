@@ -906,8 +906,8 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
                         dto.setLogo(tp.getEvent().getLogoURL());
                         dto.setBanner(tp.getEvent().getBannerURL());
                         dto.setIshaveSeatmap(tp.getEvent().getSeatMap() != null);
-                        dto.setTimeBuyTicket(order.getOrderDate());
-                        StringBuilder locationBuilder = new StringBuilder();
+                        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+                        dto.setTimeBuyTicket(sdf.format(order.getOrderDate()));                        StringBuilder locationBuilder = new StringBuilder();
                         if (tp.getEvent().getAddress() != null) locationBuilder.append(tp.getEvent().getAddress()).append(", ");
                         if (tp.getEvent().getWard() != null) locationBuilder.append(tp.getEvent().getWard()).append(", ");
                         if (tp.getEvent().getDistrict() != null) locationBuilder.append(tp.getEvent().getDistrict()).append(", ");
