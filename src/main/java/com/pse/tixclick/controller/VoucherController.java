@@ -69,10 +69,10 @@ public class VoucherController {
         }
     }
 
-    @PutMapping("/change-status/{voucherId}")
-    public ResponseEntity<ApiResponse<String>> changeVoucherStatus(@PathVariable int voucherId, @RequestParam EVoucherStatus status) {
+    @DeleteMapping("/delete/{voucherId}")
+    public ResponseEntity<ApiResponse<String>> changeVoucherStatus(@PathVariable int voucherId) {
         try {
-            String message = voucherService.changeVoucherStatus(voucherId, status);
+            String message = voucherService.changeVoucherStatus(voucherId);
             return ResponseEntity.ok(
                     ApiResponse.<String>builder()
                             .code(200)
