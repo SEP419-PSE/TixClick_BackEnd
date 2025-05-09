@@ -798,7 +798,6 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
                         Order order = orderRepository.findById(orderDetail.getOrder().getOrderId())
                                 .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
 
-
                         dto.setEventId(tp.getEvent().getEventId());
                         dto.setEventCategoryId(tp.getEvent().getCategory().getEventCategoryId());
                         dto.setEventName(tp.getEvent().getEventName());
@@ -845,14 +844,13 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
 
                     return dto;
 
+                }).collect(Collectors.toList());
 
-    }).collect(Collectors.toList());
-
-        // Sort theo eventDate
+        // Sort theo timeBuyTicket thay vì eventDate
         if (sortDirection != null && sortDirection.equalsIgnoreCase("desc")) {
-            myTicketDTOS.sort(Comparator.comparing(MyTicketDTO::getEventDate, Comparator.nullsLast(Comparator.reverseOrder())));
+            myTicketDTOS.sort(Comparator.comparing(MyTicketDTO::getTimeBuyTicket, Comparator.nullsLast(Comparator.reverseOrder())));
         } else {
-            myTicketDTOS.sort(Comparator.comparing(MyTicketDTO::getEventDate, Comparator.nullsLast(Comparator.naturalOrder())));
+            myTicketDTOS.sort(Comparator.comparing(MyTicketDTO::getTimeBuyTicket, Comparator.nullsLast(Comparator.naturalOrder())));
         }
 
         int totalElements = myTicketDTOS.size();
@@ -868,7 +866,6 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
 
         return new PaginationResponse<>(pageItems, page, totalPages, totalElements, size);
     }
-
 
 
     @Override
