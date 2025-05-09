@@ -1022,7 +1022,7 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
         checkinLogRepository.save(checkinLog);
         ticketQrCodeDTO.setStatus(ticketPurchase.getStatus().name());
 
-        simpMessagingTemplate.convertAndSend("/all/checkin",
+        simpMessagingTemplate.convertAndSend("/all/messages",
                 "call api"); // Gửi Object Message
         return ticketQrCodeDTO;
     }
