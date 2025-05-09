@@ -163,6 +163,7 @@ public enum ErrorCode {
     VOUCHER_INACTIVE(1145,"Voucher hết hạn hoặc không hoạt động",HttpStatus.BAD_REQUEST),
     PAYMENT_NOT_FOUND(1146,"Không tìm thấy payment",HttpStatus.NOT_FOUND),
     INVALID_EVENT_DATE(1147,"Ngày sự kiện mới phải sau ngày sự kiện cũ",HttpStatus.BAD_REQUEST),
+    TRANSACTION_ALREADY_EXISTS(1148,"Giao dịch đã tồn tại",HttpStatus.BAD_REQUEST),
     ;
 
 

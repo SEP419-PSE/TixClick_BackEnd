@@ -92,7 +92,10 @@ public class ContractPaymentServiceImpl implements ContractPaymentService {
                         contractPayment.setStatus(EContractPaymentStatus.PAID);
                         contractPayment.setPaymentDate(LocalDateTime.now());
                         contractPaymentRepository.save(contractPayment);
-
+                        var transaction1 = transactionRepository.findByTransactionCode(transactionCode);
+                        if(transaction1 != null) {
+                            throw new AppException(ErrorCode.TRANSACTION_ALREADY_EXISTS);
+                        }
                         // Lưu thông tin giao dịch
                         Transaction transaction = new Transaction();
                         transaction.setAmount(amount);
