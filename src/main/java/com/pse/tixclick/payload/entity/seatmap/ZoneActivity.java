@@ -12,7 +12,10 @@ import java.util.Collection;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "zone_activity")
+@Table(
+        name = "zone_activity",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"event_activity_id", "zone_id"})
+)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
 public class ZoneActivity {
