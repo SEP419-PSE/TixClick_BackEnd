@@ -2,6 +2,8 @@ package com.pse.tixclick.repository;
 
 import com.pse.tixclick.payload.entity.entity_enum.EEventStatus;
 import com.pse.tixclick.payload.entity.event.Event;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -53,21 +55,22 @@ public interface EventRepository extends JpaRepository<Event, Integer>, JpaSpeci
 
     Optional<Event> findEventByEventIdAndCompany_RepresentativeId_UserName(int eventId, String userName);
 
-    @Query("SELECT e FROM Event e " +
+    @Query("SELECT DISTINCT e FROM Event e " +
             "JOIN e.tickets t " +
             "WHERE (:eventType IS NULL OR e.typeEvent = :eventType) " +
             "AND (:eventName IS NULL OR LOWER(e.eventName) LIKE LOWER(CONCAT('%', :eventName, '%'))) " +
             "AND (:eventCategories IS NULL OR e.category.categoryName IN :eventCategories) " +
-            "AND t.price >= :minPrice " +
+            "AND (:minPrice IS NULL OR t.price >= :minPrice) " +
             "AND (:maxPrice IS NULL OR t.price <= :maxPrice) " +
-            "AND e.status = 'SCHEDULED' " +
-            "ORDER BY e.eventName")
-    List<Event> findEventsByFilter(
+            "AND e.status = 'SCHEDULED'")
+    Page<Event> findEventsByFilter(
             @Param("eventType") String eventType,
             @Param("eventName") String eventName,
             @Param("eventCategories") List<String> eventCategories,
-            @Param("minPrice") double minPrice,
-            @Param("maxPrice") Double maxPrice);
+            @Param("minPrice") Double minPrice,
+            @Param("maxPrice") Double maxPrice,
+            Pageable pageable);
+
 
 
     @Query("SELECT e FROM Event e WHERE e.eventCode = :eventCode")

@@ -567,33 +567,34 @@ public class EventController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<ApiResponse<List<EventDetailForConsumer>>> searchEvents(
+    public ResponseEntity<ApiResponse<PaginationResponse<EventDetailForConsumer>>> searchEvents(
             @RequestParam(required = false) String eventName,
             @RequestParam(required = false) Integer eventCategoryId,
             @RequestParam(required = false) Double minPrice,
-            @RequestParam(required = false) String city
+            @RequestParam(required = false) String city,
+            @RequestParam(defaultValue = "0") int page
     ) {
         try {
-            List<EventDetailForConsumer> events = eventService.searchEvent(eventName, eventCategoryId, minPrice, city);
-            int totalResults = events.size();  // Tính tổng số kết quả
+            int size = 6;
+            PaginationResponse<EventDetailForConsumer> paginationResponse = eventService.searchEvent(eventName, eventCategoryId, minPrice, city, page, size);
 
             return ResponseEntity.ok(
-                    ApiResponse.<List<EventDetailForConsumer>>builder()
+                    ApiResponse.<PaginationResponse<EventDetailForConsumer>>builder()
                             .code(HttpStatus.OK.value())
-                            .message(totalResults == 0
-                                    ? "No events found with the provided filters"
-                                    : "Successfully retrieved " + totalResults + " events with the provided filters")                            .result(events)
+                            .message("Successfully retrieved events with the provided filters")
+                            .result(paginationResponse)
                             .build()
             );
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.<List<EventDetailForConsumer>>builder()
+                    .body(ApiResponse.<PaginationResponse<EventDetailForConsumer>>builder()
                             .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .message("An error occurred while retrieving the events with the provided filters")
                             .result(null)
                             .build());
         }
     }
+
 
     @GetMapping("/dashboard/{companyId}")
     public ResponseEntity<ApiResponse<PaginationResponse<EventDashboardResponse>>> getEventDashboardByCompanyId(

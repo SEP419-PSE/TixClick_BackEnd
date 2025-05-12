@@ -744,88 +744,10 @@ public class EventServiceImpl implements EventService {
     }
 
 
-    @Override
-    public List<EventDetailForConsumer> getEventByStartDateAndEndDateAndEventTypeAndEventName(
-            String startDate, String endDate, String eventType, String eventName, List<String> eventCategories, Double minPrice, Double maxPrice) {
-
-        // Chuyển đổi startDate và endDate từ String sang LocalDate
-        LocalDate start = (startDate != null && !startDate.isEmpty()) ? LocalDate.parse(startDate) : null;
-        LocalDate end = (endDate != null && !endDate.isEmpty()) ? LocalDate.parse(endDate) : null;
-
-        // Lấy danh sách sự kiện từ repository với các bộ lọc
-        List<Event> events = eventRepository.findEventsByFilter(
-                eventType,
-                eventName,
-                eventCategories,
-                minPrice,
-                maxPrice
-        );
-        // Lọc danh sách sự kiện theo ngày bắt đầu và kết thúc
-        if (start != null && end != null) {
-            events = events.stream()
-                    .filter(event -> event.getEventActivities().stream()
-                            .anyMatch(activity -> !activity.getDateEvent().isBefore(start) && !activity.getDateEvent().isAfter(end)))
-                    .collect(Collectors.toList());
-        } else if (start != null) {
-            events = events.stream()
-                    .filter(event -> event.getEventActivities().stream()
-                            .anyMatch(activity -> !activity.getDateEvent().isBefore(start)))
-                    .collect(Collectors.toList());
-        } else if (end != null) {
-            events = events.stream()
-                    .filter(event -> event.getEventActivities().stream()
-                            .anyMatch(activity -> !activity.getDateEvent().isAfter(end)))
-                    .collect(Collectors.toList());
-        }
-
-        // Chuyển đổi danh sách sự kiện thành danh sách EventDetailForConsumer
-        List<EventDetailForConsumer> eventDetails = events.stream()
-                .map(event -> {
-                    Company company = event.getCompany();
-                    boolean isHaveSeatMap = event.getSeatMap() != null;
-                    List<EventActivityDTO> eventActivityDTOList = event.getEventActivities().stream()
-                            .map(activity -> modelMapper.map(activity, EventActivityDTO.class))
-                            .collect(Collectors.toList());
-
-                    List<EventActivityResponse> eventActivityResponseList = modelMapper.map(eventActivityDTOList, new TypeToken<List<EventActivityResponse>>() {
-                    }.getType());
-
-                    // Lấy giá ticket thấp nhất của sự kiện
-                    double minEventPrice = ticketRepository.findMinTicketByEvent_EventId(event.getEventId())
-                            .map(Ticket::getPrice)
-                            .orElse(0.0);
-                    int eventCategoryId = event.getCategory() != null ? event.getCategory().getEventCategoryId() : 0;
-
-                    return new EventDetailForConsumer(
-                            event.getEventId(),
-                            event.getEventName(),
-                            event.getAddress(),
-                            event.getWard(),
-                            event.getDistrict(),
-                            event.getCity(),
-                            event.getLocationName(),
-                            event.getLogoURL(),
-                            event.getBannerURL(),
-                            company != null ? company.getLogoURL() : null,
-                            company != null ? company.getCompanyName() : null,
-                            company != null ? company.getDescription() : null,
-                            event.getStatus().name(),
-                            event.getTypeEvent(),
-                            event.getDescription(),
-                            event.getCategory() != null ? event.getCategory().getCategoryName() : null,
-                            eventCategoryId,
-                            eventActivityResponseList,
-                            isHaveSeatMap,
-                            minEventPrice
-                    );
-                })
-                .collect(Collectors.toList());
-
-        return eventDetails;
-    }
 
     @Override
-    public List<EventDetailForConsumer> searchEvent(String eventName, Integer eventCategoryId, Double minPrice, String city) {
+    public PaginationResponse<EventDetailForConsumer> searchEvent(
+            String eventName, Integer eventCategoryId, Double minPrice, String city, int page, int size) {
 
         // Chuẩn hóa input để lọc
         String finalEventName = (eventName != null && !eventName.trim().isEmpty()) ? eventName.trim().toLowerCase() : null;
@@ -835,13 +757,15 @@ public class EventServiceImpl implements EventService {
 
         // Lấy tất cả sự kiện có trạng thái SCHEDULED
         List<Event> events = eventRepository.findEventsByStatus(EEventStatus.SCHEDULED);
-        if (events.isEmpty()) return Collections.emptyList();
+        if (events.isEmpty()) {
+            return new PaginationResponse<>(Collections.emptyList(), page, 0, 0, size);
+        }
 
         // Lọc theo điều kiện
         List<Event> filteredEvents = events.stream()
                 .filter(e -> finalEventName == null || e.getEventName().toLowerCase().contains(finalEventName))
                 .filter(e -> finalCategoryId == null ||
-                        (e.getCategory() != null && e.getCategory().getEventCategoryId()==finalCategoryId))
+                        (e.getCategory() != null && e.getCategory().getEventCategoryId() == finalCategoryId))
                 .filter(e -> finalMinPrice == null ||
                         ticketRepository.findMinTicketByEvent_EventId(e.getEventId())
                                 .map(t -> t.getPrice() >= finalMinPrice)
@@ -857,13 +781,23 @@ public class EventServiceImpl implements EventService {
                 })
                 .collect(Collectors.toList());
 
-        if (filteredEvents.isEmpty()) return Collections.emptyList();
+        if (filteredEvents.isEmpty()) {
+            return new PaginationResponse<>(Collections.emptyList(), page, 0, 0, size);
+        }
+
+        // Phân trang
+        int totalElements = filteredEvents.size();
+        int totalPages = (int) Math.ceil((double) totalElements / size);
+        int fromIndex = Math.min(page * size, totalElements);
+        int toIndex = Math.min(fromIndex + size, totalElements);
+        List<Event> pagedEvents = filteredEvents.subList(fromIndex, toIndex);
 
         // Chuyển đổi sang DTO
-        return filteredEvents.stream()
+        List<EventDetailForConsumer> dtoList = pagedEvents.stream()
                 .map(event -> {
                     Company company = event.getCompany();
                     boolean isHaveSeatMap = event.getSeatMap() != null;
+
                     List<EventActivityDTO> eventActivityDTOList = event.getEventActivities().stream()
                             .map(activity -> modelMapper.map(activity, EventActivityDTO.class))
                             .collect(Collectors.toList());
@@ -902,9 +836,9 @@ public class EventServiceImpl implements EventService {
                     );
                 })
                 .collect(Collectors.toList());
+
+        return new PaginationResponse<>(dtoList, page, totalElements, totalPages, size);
     }
-
-
 
     @Override
     public PaginationResponse<EventDashboardResponse> getEventDashboardByCompanyId(int companyId, int page, int size) {
