@@ -18,6 +18,7 @@ import com.pse.tixclick.payload.entity.ticket.TicketMapping;
 import com.pse.tixclick.payload.entity.ticket.TicketPurchase;
 import com.pse.tixclick.payload.request.create.CreateTicketPurchaseRequest;
 import com.pse.tixclick.payload.request.create.ListTicketPurchaseRequest;
+import com.pse.tixclick.payload.response.MyTicketResponse;
 import com.pse.tixclick.payload.response.PaginationResponse;
 import com.pse.tixclick.repository.*;
 import com.pse.tixclick.service.TicketPurchaseService;
@@ -41,6 +42,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -778,89 +780,80 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
         return new TicketsSoldAndRevenueDTO(days, totalTicketsSold, totalRevenue, totalEvents, avgDailyRevenue, revenueGrowth);
     }
     @Override
-    public PaginationResponse<MyTicketDTO> getTicketPurchasesByAccount(int page, int size, String sortDirection) {
+    public PaginationResponse<MyTicketResponse> getTicketPurchasesByAccount(int page, int size, String sortDirection) {
         appUtils.checkRole(ERole.BUYER, ERole.ORGANIZER);
 
-        if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.BUYER)
-                && !appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.ORGANIZER)) {
-            throw new AppException(ErrorCode.NOT_PERMISSION);
+        if (page < 0 || size <= 0) {
+            throw new AppException(ErrorCode.INVALID_PAGE_SIZE);
         }
 
-        List<TicketPurchase> ticketPurchases = ticketPurchaseRepository
-                .getTicketPurchasesByAccount(appUtils.getAccountFromAuthentication().getAccountId());
+        int accountId = appUtils.getAccountFromAuthentication().getAccountId();
 
-        if (ticketPurchases.isEmpty()) {
+        List<MyTicketFlatDTO> flatDTOs = orderRepository.findAllTicketInfoForAccount(
+                accountId, EOrderStatus.SUCCESSFUL, ETicketPurchaseStatus.PURCHASED
+        );
+
+        if (flatDTOs.isEmpty()) {
             return new PaginationResponse<>(Collections.emptyList(), page, 0, 0, size);
         }
 
-        List<MyTicketDTO> myTicketDTOS = ticketPurchases.stream()
-                .filter(tp -> tp.getStatus().equals(ETicketPurchaseStatus.PURCHASED))
-                .map(tp -> {
-                    MyTicketDTO dto = new MyTicketDTO();
+        // Gom nhóm theo orderId để tạo MyTicketResponse
+        Map<Integer, MyTicketResponse> orderMap = new LinkedHashMap<>();
 
-                    if (tp.getEvent() != null) {
-                        OrderDetail orderDetail = orderDetailRepository.findOrderDetailByTicketPurchase_TicketPurchaseId(tp.getTicketPurchaseId())
-                                .orElseThrow(() -> new AppException(ErrorCode.ORDER_DETAIL_NOT_FOUND));
-                        Order order = orderRepository.findById(orderDetail.getOrder().getOrderId())
-                                .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
-                        dto.setEventId(tp.getEvent().getEventId());
-                        dto.setEventCategoryId(tp.getEvent().getCategory().getEventCategoryId());
-                        dto.setEventName(tp.getEvent().getEventName());
-                        dto.setLocationName(tp.getEvent().getLocationName());
-                        dto.setLogo(tp.getEvent().getLogoURL());
-                        dto.setBanner(tp.getEvent().getBannerURL());
-                        dto.setIshaveSeatmap(tp.getEvent().getSeatMap() != null);
-                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-                        dto.setTimeBuyTicket(order.getOrderDate().format(formatter));
-                        StringBuilder locationBuilder = new StringBuilder();
-                        if (tp.getEvent().getAddress() != null) locationBuilder.append(tp.getEvent().getAddress()).append(", ");
-                        if (tp.getEvent().getWard() != null) locationBuilder.append(tp.getEvent().getWard()).append(", ");
-                        if (tp.getEvent().getDistrict() != null) locationBuilder.append(tp.getEvent().getDistrict()).append(", ");
-                        if (tp.getEvent().getCity() != null) locationBuilder.append(tp.getEvent().getCity());
+        for (MyTicketFlatDTO flat : flatDTOs) {
+            MyTicketResponse response = orderMap.computeIfAbsent(flat.getOrderId(), oid -> {
+                MyTicketResponse res = new MyTicketResponse();
+                res.setOrderId(flat.getOrderId());
+                res.setOrderCode(flat.getOrderCode());
+                res.setOrderDate(flat.getOrderDate().format(formatter));
+                res.setTotalPrice(flat.getTotalPrice());
+                res.setTotalDiscount(flat.getTotalDiscount());
+                res.setTicketPurchases(new ArrayList<>());
+                return res;
+            });
 
-                        if (locationBuilder.length() > 0 && locationBuilder.lastIndexOf(", ") == locationBuilder.length() - 2) {
-                            locationBuilder.delete(locationBuilder.length() - 2, locationBuilder.length());
-                        }
+            MyTicketDTO dto = new MyTicketDTO();
+            dto.setTicketPurchaseId(flat.getTicketPurchaseId());
+            dto.setQrCode(flat.getQrCode());
+            dto.setQuantity(flat.getQuantity());
+            dto.setPrice(flat.getPrice());
+            dto.setTicketType(flat.getTicketType());
 
-                        dto.setLocation(locationBuilder.length() > 0 ? locationBuilder.toString() : null);
-                    }
+            dto.setEventId(flat.getEventId());
+            dto.setEventName(flat.getEventName());
+            dto.setLogo(flat.getLogo());
+            dto.setBanner(flat.getBanner());
+            dto.setLocationName(flat.getLocationName());
+            dto.setEventCategoryId(flat.getEventCategoryId());
 
-                    if (tp.getEventActivity() != null) {
-                        dto.setEventActivityId(tp.getEventActivity().getEventActivityId());
-                        dto.setEventDate(tp.getEventActivity().getDateEvent());
-                        dto.setEventStartTime(tp.getEventActivity().getStartTimeEvent());
-                    }
+            dto.setLocation(Stream.of(flat.getAddress(), flat.getWard(), flat.getDistrict(), flat.getCity())
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.joining(", ")));
 
-                    if (tp.getTicket() != null) {
-                        dto.setPrice(tp.getTicket().getPrice());
-                        dto.setTicketType(tp.getTicket().getTicketName());
-                    }
+            dto.setIshaveSeatmap(Boolean.TRUE.equals(flat.getIshaveSeatmap()));
+            dto.setEventActivityId(flat.getEventActivityId());
+            dto.setEventDate(flat.getEventDate());
+            dto.setEventStartTime(flat.getEventStartTime());
+            dto.setZoneName(flat.getZoneName());
+            dto.setSeatCode(flat.getSeatCode());
 
-                    if (tp.getZoneActivity() != null && tp.getZoneActivity().getZone() != null) {
-                        dto.setZoneName(tp.getZoneActivity().getZone().getZoneName());
-                    }
-
-                    if (tp.getSeatActivity() != null && tp.getSeatActivity().getSeat() != null) {
-                        dto.setSeatCode(tp.getSeatActivity().getSeat().getSeatName());
-                    }
-
-                    dto.setQuantity(tp.getQuantity());
-                    dto.setQrCode(tp.getQrCode());
-                    dto.setTicketPurchaseId(tp.getTicketPurchaseId());
-
-                    return dto;
-
-                }).collect(Collectors.toList());
-
-        // Sort theo timeBuyTicket thay vì eventDate
-        if (sortDirection != null && sortDirection.equalsIgnoreCase("desc")) {
-            myTicketDTOS.sort(Comparator.comparing(MyTicketDTO::getTimeBuyTicket, Comparator.nullsLast(Comparator.reverseOrder())));
-        } else {
-            myTicketDTOS.sort(Comparator.comparing(MyTicketDTO::getTimeBuyTicket, Comparator.nullsLast(Comparator.naturalOrder())));
+            response.getTicketPurchases().add(dto);
         }
 
-        int totalElements = myTicketDTOS.size();
+        List<MyTicketResponse> responses = new ArrayList<>(orderMap.values());
+
+        // Sort theo orderDate
+        responses.sort((o1, o2) -> {
+            if ("desc".equalsIgnoreCase(sortDirection)) {
+                return o2.getOrderDate().compareTo(o1.getOrderDate());
+            } else {
+                return o1.getOrderDate().compareTo(o2.getOrderDate());
+            }
+        });
+
+        int totalElements = responses.size();
         int totalPages = (int) Math.ceil((double) totalElements / size);
         int fromIndex = page * size;
         int toIndex = Math.min(fromIndex + size, totalElements);
@@ -869,7 +862,7 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
             return new PaginationResponse<>(Collections.emptyList(), page, totalPages, totalElements, size);
         }
 
-        List<MyTicketDTO> pageItems = myTicketDTOS.subList(fromIndex, toIndex);
+        List<MyTicketResponse> pageItems = responses.subList(fromIndex, toIndex);
 
         return new PaginationResponse<>(pageItems, page, totalPages, totalElements, size);
     }

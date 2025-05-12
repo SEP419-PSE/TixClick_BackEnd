@@ -6,6 +6,7 @@ import com.pse.tixclick.payload.request.create.CreateSeatMapRequest;
 import com.pse.tixclick.payload.request.create.CreateTicketPurchaseRequest;
 import com.pse.tixclick.payload.request.create.ListTicketPurchaseRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
+import com.pse.tixclick.payload.response.MyTicketResponse;
 import com.pse.tixclick.payload.response.PaginationResponse;
 import com.pse.tixclick.service.OrderService;
 import com.pse.tixclick.service.TicketPurchaseService;
@@ -163,20 +164,20 @@ public class TicketPurchaseController {
     }
 
     @GetMapping("/all_of_account")
-    public ResponseEntity<ApiResponse<PaginationResponse<MyTicketDTO>>> getAllTicketPurchaseByAccount(
+    public ResponseEntity<ApiResponse<PaginationResponse<MyTicketResponse>>> getAllTicketPurchaseByAccount(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam String sortDirection
     ) {
         try {
             int size = 3; // mỗi trang có 3 vé
-            PaginationResponse<MyTicketDTO> response = ticketPurchaseService.getTicketPurchasesByAccount(page, size,sortDirection);
+            PaginationResponse<MyTicketResponse> response = ticketPurchaseService.getTicketPurchasesByAccount(page, size,sortDirection);
 
             if (response == null || response.getItems().isEmpty()) {
                 return ResponseEntity.ok(
-                        ApiResponse.<PaginationResponse<MyTicketDTO>>builder()
+                        ApiResponse.<PaginationResponse<MyTicketResponse>>builder()
                                 .code(HttpStatus.OK.value())
                                 .message("No ticket purchases found on this page")
-                                .result(PaginationResponse.<MyTicketDTO>builder()
+                                .result(PaginationResponse.<MyTicketResponse>builder()
                                         .items(Collections.emptyList())
                                         .currentPage(page)
                                         .totalPages(0)
@@ -188,7 +189,7 @@ public class TicketPurchaseController {
             }
 
             return ResponseEntity.ok(
-                    ApiResponse.<PaginationResponse<MyTicketDTO>>builder()
+                    ApiResponse.<PaginationResponse<MyTicketResponse>>builder()
                             .code(200)
                             .message("Successfully fetched ticket purchases on page " + page)
                             .result(response)
@@ -196,7 +197,7 @@ public class TicketPurchaseController {
             );
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.<PaginationResponse<MyTicketDTO>>builder()
+                    .body(ApiResponse.<PaginationResponse<MyTicketResponse>>builder()
                             .code(400)
                             .message("Error: " + e.getMessage())
                             .result(null)

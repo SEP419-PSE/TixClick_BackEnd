@@ -1,5 +1,6 @@
 package com.pse.tixclick.payload.request;
 
+import com.pse.tixclick.payload.entity.entity_enum.ERole;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -30,4 +31,6 @@ public class SignUpRequest {
 
     @NotBlank(message = "Last name không được để trống")
     String lastName;
+
+    ERole roleName;
 }

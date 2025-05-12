@@ -4,6 +4,7 @@ import com.pse.tixclick.payload.dto.*;
 import com.pse.tixclick.payload.request.create.CheckinRequest;
 import com.pse.tixclick.payload.request.create.CreateTicketPurchaseRequest;
 import com.pse.tixclick.payload.request.create.ListTicketPurchaseRequest;
+import com.pse.tixclick.payload.response.MyTicketResponse;
 import com.pse.tixclick.payload.response.PaginationResponse;
 
 import java.nio.file.AccessDeniedException;
@@ -22,7 +23,7 @@ public interface TicketPurchaseService {
 
     TicketsSoldAndRevenueDTO getTicketsSoldAndRevenueByDay(int day);
 
-    PaginationResponse<MyTicketDTO> getTicketPurchasesByAccount(int page, int size, String sortDirection);
+    PaginationResponse<MyTicketResponse> getTicketPurchasesByAccount(int page, int size, String sortDirection);
 
     PaginationResponse<MyTicketDTO> searchTicketPurchasesByEventName(int page, int size, String sortDirection, String eventName);
     TicketQrCodeDTO decryptQrCode(String qrCode);

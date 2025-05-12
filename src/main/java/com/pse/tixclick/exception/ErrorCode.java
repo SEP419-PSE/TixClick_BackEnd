@@ -164,6 +164,7 @@ public enum ErrorCode {
     PAYMENT_NOT_FOUND(1146,"Không tìm thấy payment",HttpStatus.NOT_FOUND),
     INVALID_EVENT_DATE(1147,"Ngày sự kiện mới phải sau ngày sự kiện cũ",HttpStatus.BAD_REQUEST),
     TRANSACTION_ALREADY_EXISTS(1148,"Giao dịch đã tồn tại",HttpStatus.BAD_REQUEST),
+    INVALID_PAGE_SIZE(1149,"Kích thước trang không hợp lệ",HttpStatus.BAD_REQUEST),
     ;
 
 

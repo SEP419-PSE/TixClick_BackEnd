@@ -12,15 +12,8 @@ import java.io.IOException;
 import java.util.List;
 
 public interface CompanyService {
-    CreateCompanyResponse createCompany(CreateCompanyRequest createCompanyRequest, MultipartFile file) throws IOException, MessagingException;
 
-    CompanyDTO updateCompany(UpdateCompanyRequest updateCompanyRequest, int id);
 
-    String approveCompany(int id);
-
-    String rejectCompany(int id);
-
-    String inactiveCompany(int id);
 
     List<GetByCompanyResponse> getAllCompany();
 
