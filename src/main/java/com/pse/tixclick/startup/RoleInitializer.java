@@ -71,6 +71,9 @@ public class RoleInitializer {
                 Role adminRole = roleRepository.findRoleByRoleName(ERole.ADMIN)
                         .orElseThrow(() -> new RuntimeException("Role ADMIN not found"));
 
+                Role ma = roleRepository.findRoleByRoleName(ERole.MANAGER)
+                        .orElseThrow(() -> new RuntimeException("Role MANAGER not found"));
+
                 PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
 
                 Account adminAccount = new Account();
@@ -82,6 +85,17 @@ public class RoleInitializer {
                 adminAccount.setActive(true);
                 adminAccount.setRole(adminRole);
 
+                Account managerAccount = new Account();
+                managerAccount.setUserName("manager");
+                managerAccount.setPassword(passwordEncoder.encode("123456"));
+                managerAccount.setRole(ma);
+                managerAccount.setEmail("ryy1507@gmail.com");
+                managerAccount.setFirstName("Nguyen");
+                managerAccount.setLastName("Nguyen");
+                managerAccount.setActive(true);
+
+
+                accountRepository.save(managerAccount);
                 accountRepository.save(adminAccount);
                 System.out.println("✅ Admin account created: admin/admin");
             }
