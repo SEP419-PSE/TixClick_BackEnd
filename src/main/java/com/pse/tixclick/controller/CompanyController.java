@@ -382,4 +382,32 @@ public class CompanyController {
                             .build());
         }
     }
+
+    @GetMapping("/get-list-company-by-account-id")
+    public ResponseEntity<ApiResponse<ListCompanyResponse>> getListCompanyByAccountId() {
+        try {
+            ListCompanyResponse companyDTOList = companyService.getListCompanyByAccountId();
+            return ResponseEntity.ok(
+                    ApiResponse.<ListCompanyResponse>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Get list company by account id successfully")
+                            .result(companyDTOList)
+                            .build()
+            );
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.<ListCompanyResponse>builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<ListCompanyResponse>builder()
+                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .message("Internal server error")
+                            .result(null)
+                            .build());
+        }
+    }
 }

@@ -4,6 +4,7 @@ import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.payload.dto.OrderDTO;
 import com.pse.tixclick.payload.dto.PaymentDTO;
 import com.pse.tixclick.payload.dto.TicketQrCodeDTO;
+import com.pse.tixclick.payload.request.TicketPurchaseRequest;
 import com.pse.tixclick.payload.request.create.CreateOrderRequest;
 import com.pse.tixclick.payload.request.create.CreateTicketPurchaseRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
@@ -131,12 +132,12 @@ public class PaymentController {
 
     @PostMapping("/change-ticket")
     public ResponseEntity<ApiResponse<PayOSResponse>> changeTicket(
-            @RequestParam int ticketPurchaseId,
+            @RequestParam List<TicketPurchaseRequest> ticketPurchaseRequests,
             @RequestBody List<CreateTicketPurchaseRequest> ticketChange,
             @RequestParam String caseTicket,
             HttpServletRequest request) {
         try {
-            PayOSResponse result = paymentService.changTicket(ticketPurchaseId, ticketChange, caseTicket, request);
+            PayOSResponse result = paymentService.changTicket(ticketPurchaseRequests, ticketChange, caseTicket, request);
             return ResponseEntity.ok(
                     ApiResponse.<PayOSResponse>builder()
                             .code(HttpStatus.OK.value())

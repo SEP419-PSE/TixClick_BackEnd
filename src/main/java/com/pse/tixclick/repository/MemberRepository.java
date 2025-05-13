@@ -20,4 +20,5 @@ public interface MemberRepository extends JpaRepository<Member,Integer> {
 
     List<Member> findMembersByAccount_UserName(String userName);
 
+
 }

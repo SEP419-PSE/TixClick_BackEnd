@@ -165,6 +165,9 @@ public enum ErrorCode {
     INVALID_EVENT_DATE(1147,"Ngày sự kiện mới phải sau ngày sự kiện cũ",HttpStatus.BAD_REQUEST),
     TRANSACTION_ALREADY_EXISTS(1148,"Giao dịch đã tồn tại",HttpStatus.BAD_REQUEST),
     INVALID_PAGE_SIZE(1149,"Kích thước trang không hợp lệ",HttpStatus.BAD_REQUEST),
+    PAYMENT_ALREADY_COMPLETED(1150,"Thanh toán đã hoàn tất",HttpStatus.BAD_REQUEST),
+    INVALID_TICKET_CHANGE_CASE(1151,"Trường hợp đổi vé không hợp lệ",HttpStatus.BAD_REQUEST),
+    INVALID_TICKET_CHANGE_REQUEST(1152,"Yêu cầu đổi vé không hợp lệ",HttpStatus.BAD_REQUEST),
     ;
 
 

@@ -36,4 +36,6 @@ public interface CompanyService {
     CreateCompanyResponse updateCompany(int companyId, CreateCompanyRequest updateRequest, MultipartFile file, List<MultipartFile> fileDocument) throws IOException, MessagingException;
 
     List<CompanyDocumentDTO> getDocumentByCompanyId(int companyId);
+
+    ListCompanyResponse getListCompanyByAccountId();
 }

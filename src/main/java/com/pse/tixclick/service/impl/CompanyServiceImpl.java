@@ -542,5 +542,64 @@ public class CompanyServiceImpl implements CompanyService {
         return modelMapper.map(companyDocuments, new TypeToken<List<CompanyDocumentDTO>>() {}.getType());
     }
 
+    @Override
+    public ListCompanyResponse getListCompanyByAccountId() {
+        // Lấy thông tin người dùng từ SecurityContext
+        var context = SecurityContextHolder.getContext();
+        String userName = context.getAuthentication().getName();
+
+        // Tìm tài khoản
+        Account account = accountRepository.findAccountByUserName(userName)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        // Tìm công ty mà người dùng là đại diện
+        Company myCompany = companyRepository.findCompanyByRepresentativeId_UserName(userName)
+                .orElse(null);
+
+        MyCompanyResponse myCompanyResponse = null;
+        if (myCompany != null) {
+            myCompanyResponse = MyCompanyResponse.builder()
+                    .companyId(myCompany.getCompanyId())
+                    .companyName(myCompany.getCompanyName())
+                    .logoURL(myCompany.getLogoURL())
+                    .address(myCompany.getAddress())
+                    .subRole("Representative") // Vai trò mặc định cho người đại diện
+                    .representativeId(userName)
+                    .build();
+        }
+
+
+        // Tìm danh sách thành viên của tài khoản
+        List<Member> members = memberRepository.findMembersByAccount_UserName(account.getUserName())
+                .stream()
+                .filter(member -> !Objects.equals(member.getSubRole(), ESubRole.OWNER))
+                .collect(Collectors.toList());
+
+        // Tạo danh sách MyCompanyResponse cho các công ty mà người dùng là thành viên
+        List<MyCompanyResponse> listCompany = members.stream()
+                .map(member -> {
+                    Company company = member.getCompany();
+                    if (company == null) {
+                        return null; // Bỏ qua nếu công ty null
+                    }
+                    return MyCompanyResponse.builder()
+                            .companyId(company.getCompanyId())
+                            .companyName(company.getCompanyName())
+                            .logoURL(company.getLogoURL())
+                            .address(company.getAddress())
+                            .subRole(member.getSubRole() != null ? String.valueOf(member.getSubRole()) : "Member") // Lấy subRole từ Member
+                            .representativeId(company.getRepresentativeId() != null ? company.getRepresentativeId().getUserName() : null)
+                            .build();
+                })
+                .filter(Objects::nonNull) // Loại bỏ các phần tử null
+                .collect(Collectors.toList());
+
+        // Tạo và trả về ListCompanyResponse
+        return ListCompanyResponse.builder()
+                .myCompany(myCompanyResponse)
+                .listCompany(listCompany)
+                .build();
+    }
+
 
 }
