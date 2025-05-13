@@ -13,8 +13,10 @@ import com.pse.tixclick.payload.response.PaymentResponse;
 import com.pse.tixclick.payload.response.ResponseObject;
 import com.pse.tixclick.service.OrderService;
 import com.pse.tixclick.service.PaymentService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -131,13 +133,12 @@ public class PaymentController {
     }
 
     @PostMapping("/change-ticket")
+    @Operation(summary = "Change existing tickets", description = "Changes tickets based on provided ticket purchase requests and change details")
     public ResponseEntity<ApiResponse<PayOSResponse>> changeTicket(
-            @RequestParam List<TicketPurchaseRequest> ticketPurchaseRequests,
-            @RequestBody List<CreateTicketPurchaseRequest> ticketChange,
-            @RequestParam String caseTicket,
+            @Valid @RequestBody ChangeTicketRequest changeTicketRequest,
             HttpServletRequest request) {
         try {
-            PayOSResponse result = paymentService.changTicket(ticketPurchaseRequests, ticketChange, caseTicket, request);
+            PayOSResponse result = paymentService.changTicket(changeTicketRequest.ticketPurchaseRequests, changeTicketRequest.ticketChange, changeTicketRequest.caseTicket, request);
             return ResponseEntity.ok(
                     ApiResponse.<PayOSResponse>builder()
                             .code(HttpStatus.OK.value())
@@ -161,5 +162,34 @@ public class PaymentController {
                             .build());
         }
     }
+    public class ChangeTicketRequest {
+        private List<TicketPurchaseRequest> ticketPurchaseRequests;
+        private List<CreateTicketPurchaseRequest> ticketChange;
+        private String caseTicket;
 
+        // Getters and setters
+        public List<TicketPurchaseRequest> getTicketPurchaseRequests() {
+            return ticketPurchaseRequests;
+        }
+
+        public void setTicketPurchaseRequests(List<TicketPurchaseRequest> ticketPurchaseRequests) {
+            this.ticketPurchaseRequests = ticketPurchaseRequests;
+        }
+
+        public List<CreateTicketPurchaseRequest> getTicketChange() {
+            return ticketChange;
+        }
+
+        public void setTicketChange(List<CreateTicketPurchaseRequest> ticketChange) {
+            this.ticketChange = ticketChange;
+        }
+
+        public String getCaseTicket() {
+            return caseTicket;
+        }
+
+        public void setCaseTicket(String caseTicket) {
+            this.caseTicket = caseTicket;
+        }
+    }
 }
