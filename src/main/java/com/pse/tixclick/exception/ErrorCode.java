@@ -168,6 +168,7 @@ public enum ErrorCode {
     PAYMENT_ALREADY_COMPLETED(1150,"Thanh toán đã hoàn tất",HttpStatus.BAD_REQUEST),
     INVALID_TICKET_CHANGE_CASE(1151,"Trường hợp đổi vé không hợp lệ",HttpStatus.BAD_REQUEST),
     INVALID_TICKET_CHANGE_REQUEST(1152,"Yêu cầu đổi vé không hợp lệ",HttpStatus.BAD_REQUEST),
+    TICKET_SALE_NOT_STARTED(1153,"Bán vé chưa bắt đầu",HttpStatus.BAD_REQUEST),
     ;
 
 

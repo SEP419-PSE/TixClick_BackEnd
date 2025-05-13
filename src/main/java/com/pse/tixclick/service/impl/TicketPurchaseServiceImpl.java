@@ -153,6 +153,12 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
                 EventActivity eventActivity = eventActivityRepository.findById(createTicketPurchaseRequest1.getEventActivityId())
                         .orElseThrow(() -> new AppException(ErrorCode.EVENT_ACTIVITY_NOT_FOUND));
 
+                LocalDateTime now = LocalDateTime.now();
+                LocalDateTime startTime = eventActivity.getStartTicketSale();
+                if (startTime.isAfter(now)) {
+                    throw new AppException(ErrorCode.TICKET_SALE_NOT_STARTED);
+                }
+
                 //Kiểm tra zone
                 ZoneActivity zoneActivity = zoneActivityRepository
                         .findByEventActivityIdAndZoneId(createTicketPurchaseRequest1.getEventActivityId(), createTicketPurchaseRequest1.getZoneId())
