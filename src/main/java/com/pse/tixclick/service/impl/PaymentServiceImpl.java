@@ -40,6 +40,7 @@ import vn.payos.type.PaymentData;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
@@ -677,6 +678,9 @@ public class PaymentServiceImpl implements PaymentService {
                     .getTicketPurchase().getEventActivity().getEventActivityId());
             ticketQrCodeDTO.setOrder_id(order.getOrderId());
             String qrCode = generateQRCode(ticketQrCodeDTO);
+            ZoneId vietnamZone = ZoneId.of("Asia/Ho_Chi_Minh");
+            LocalDateTime vietnamTime = LocalDateTime.now(vietnamZone);
+            order.setOrderDate(vietnamTime);
             order.setQrCode(qrCode);
             order.setStatus(EOrderStatus.SUCCESSFUL);
             orderRepository.save(order);
@@ -857,7 +861,9 @@ public class PaymentServiceImpl implements PaymentService {
             Transaction transaction = new Transaction();
             transaction.setAmount(Double.valueOf(amount));
             transaction.setTransactionCode(transactionNo);
-            transaction.setTransactionDate(LocalDateTime.now());
+
+
+            transaction.setTransactionDate(vietnamTime);
             transaction.setDescription("Thanh toan don hang: " + orderCode);
             transaction.setAccount(account);
             transaction.setPayment(payment);
