@@ -161,17 +161,7 @@ public class PaymentServiceImpl implements PaymentService {
                 "&amount=" + itemData.getPrice() +
                 "&name=" + itemData.getName();
         long expiredAt = Instant.now().getEpochSecond() + expiredTime;
-        PaymentData paymentData = PaymentData.builder()
-                .expiredAt(expiredAt)
-                .orderCode(orderCode)
-                .amount(totalAmount)
-                .description("Thanh toán đơn hàng")
-                .returnUrl(returnUrl)  // Sử dụng returnUrl đã xây dựng
-                .cancelUrl(cancelUrl)  // Sử dụng cancelUrl đã xây dựng
-                .item(itemData)
-                .build();
 
-        CheckoutResponseData result = payOSUtils.payOS().createPaymentLink(paymentData);
 
         String fullname = order.getAccount().getFirstName() + " " + order.getAccount().getLastName();
         List<TicketPurchase> ticketPurchases = ticketPurchaseRepository.findTicketPurchaseByOrderCode(order.getOrderCode());
@@ -187,6 +177,20 @@ public class PaymentServiceImpl implements PaymentService {
         // Gộp lại để truyền vào description
         String description = "Thanh toán đơn hàng cho " + fullname + " - " + fullSeatInfo;
 
+        PaymentData paymentData = PaymentData.builder()
+                .expiredAt(expiredAt)
+                .orderCode(orderCode)
+                .amount(totalAmount)
+                .description(description)
+                .returnUrl(returnUrl)  // Sử dụng returnUrl đã xây dựng
+                .cancelUrl(cancelUrl)  // Sử dụng cancelUrl đã xây dựng
+                .item(itemData)
+                .build();
+
+        CheckoutResponseData result = payOSUtils.payOS().createPaymentLink(paymentData);
+
+
+
 
 
 
@@ -196,7 +200,7 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setPaymentDate(LocalDateTime.now());
         payment.setOrderCode(order.getOrderCode());
         payment.setOrder(order);
-        payment.setPaymentMethod(description);
+        payment.setPaymentMethod("Thanh toán ngân hàng");
         payment.setAccount(account);
         paymentRepository.save(payment);
 
