@@ -537,23 +537,13 @@ public class PaymentServiceImpl implements PaymentService {
                 checkinLog.setCheckinLocation(locationBuilder.toString());
                 checkinLogRepository.save(checkinLog);
 
-                TicketQrCodeDTO qrcode = new TicketQrCodeDTO();
-                qrcode.setTicket_name(newPurchase.getTicket().getTicketName());
-                qrcode.setPurchase_date(new Date());
-                qrcode.setEvent_name(newPurchase.getEvent().getEventName());
-                qrcode.setActivity_name(newPurchase.getEventActivity().getActivityName());
-                qrcode.setZone_name(newPurchase.getZoneActivity() != null ? newPurchase.getZoneActivity().getZone().getZoneName() : null);
-                qrcode.setSeat_code(newPurchase.getSeatActivity() != null ?
-                        newPurchase.getSeatActivity().getSeat().getRowNumber() + newPurchase.getSeatActivity().getSeat().getSeatName() : null);
-                qrcode.setSeat_row_number(newPurchase.getSeatActivity() != null ? newPurchase.getSeatActivity().getSeat().getRowNumber() : null);
-                qrcode.setSeat_column_number(newPurchase.getSeatActivity() != null ? newPurchase.getSeatActivity().getSeat().getColumnNumber() : null);
-                qrcode.setAccount_name(account.getUserName());
-                qrcode.setEmail(account.getEmail());
-                qrcode.setPhone(account.getPhone());
-                qrcode.setCheckin_Log_id(0);
-                qrcode.setStatus("Đã thanh toán");
+                TicketQrCodeDTO ticketQrCodeDTO = new TicketQrCodeDTO();
+                ticketQrCodeDTO.setTicket_purchase_id(newPurchase.getTicketPurchaseId());
+                ticketQrCodeDTO.setEvent_activity_id(newPurchase.getEventActivity().getEventActivityId());
+                ticketQrCodeDTO.setUser_name(account.getUserName());
+                ticketQrCodeDTO.setCheckin_Log_id(checkinLog.getCheckinId());
 
-                String qrCode = generateQRCode(qrcode);
+                String qrCode = generateQRCode(ticketQrCodeDTO);
                 newPurchase.setStatus(ETicketPurchaseStatus.PURCHASED);
                 newPurchase.setQrCode(qrCode);
                 ticketPurchaseRepository.save(newPurchase);
@@ -803,55 +793,10 @@ public class PaymentServiceImpl implements PaymentService {
                 checkinLogRepository.save(checkinLog);
 
                 TicketQrCodeDTO ticketQrCodeDTO = new TicketQrCodeDTO();
-                String seatCode = null;
-                if(ticketPurchase.getSeatActivity() != null) {
-                    String input = ticketPurchase.getSeatActivity().getSeat().getRowNumber() + ticketPurchase.getSeatActivity().getSeat().getSeatName();
-                    String result = convert(input);
-                    seatCode = ticketPurchase.getZoneActivity().getZone().getZoneName() + "-" + result;
-
-                    ticketQrCodeDTO.setTicket_name(ticket.getTicketName());
-                    ticketQrCodeDTO.setPurchase_date(new Date());
-                    ticketQrCodeDTO.setEvent_name(event.getEventName());
-                    ticketQrCodeDTO.setActivity_name(eventActivity.getActivityName());
-                    ticketQrCodeDTO.setZone_name(ticketPurchase.getZoneActivity().getZone().getZoneName());
-                    ticketQrCodeDTO.setSeat_code(seatCode);
-                    ticketQrCodeDTO.setSeat_row_number(ticketPurchase.getSeatActivity().getSeat().getRowNumber());
-                    ticketQrCodeDTO.setSeat_column_number(ticketPurchase.getSeatActivity().getSeat().getColumnNumber());
-                    ticketQrCodeDTO.setAccount_name(account.getUserName());
-                    ticketQrCodeDTO.setEmail(account.getEmail());
-                    ticketQrCodeDTO.setPhone(account.getPhone());
-                    ticketQrCodeDTO.setCheckin_Log_id(checkinLog.getCheckinId());
-                }
-                else if(ticketPurchase.getSeatActivity() == null && ticketPurchase.getZoneActivity() != null) {
-                    seatCode = null;
-                    ticketQrCodeDTO.setTicket_name(ticket.getTicketName());
-                    ticketQrCodeDTO.setPurchase_date(new Date());
-                    ticketQrCodeDTO.setEvent_name(event.getEventName());
-                    ticketQrCodeDTO.setActivity_name(eventActivity.getActivityName());
-                    ticketQrCodeDTO.setZone_name(ticketPurchase.getZoneActivity().getZone().getZoneName());
-                    ticketQrCodeDTO.setSeat_code(seatCode);
-                    ticketQrCodeDTO.setSeat_row_number(null);
-                    ticketQrCodeDTO.setSeat_column_number(null);
-                    ticketQrCodeDTO.setAccount_name(account.getUserName());
-                    ticketQrCodeDTO.setEmail(account.getEmail());
-                    ticketQrCodeDTO.setPhone(account.getPhone());
-                    ticketQrCodeDTO.setCheckin_Log_id(checkinLog.getCheckinId());
-                }
-                else if(ticketPurchase.getSeatActivity() == null && ticketPurchase.getZoneActivity() == null) {
-                    seatCode = null;
-                    ticketQrCodeDTO.setTicket_name(ticket.getTicketName());
-                    ticketQrCodeDTO.setPurchase_date(new Date());
-                    ticketQrCodeDTO.setEvent_name(event.getEventName());
-                    ticketQrCodeDTO.setActivity_name(eventActivity.getActivityName());
-                    ticketQrCodeDTO.setZone_name(null);
-                    ticketQrCodeDTO.setSeat_code(seatCode);
-                    ticketQrCodeDTO.setSeat_row_number(null);
-                    ticketQrCodeDTO.setSeat_column_number(null);
-                    ticketQrCodeDTO.setAccount_name(account.getUserName());
-                    ticketQrCodeDTO.setEmail(account.getEmail());
-                    ticketQrCodeDTO.setPhone(account.getPhone());
-                    ticketQrCodeDTO.setCheckin_Log_id(checkinLog.getCheckinId());
-                }
+                ticketQrCodeDTO.setTicket_purchase_id(ticketPurchase.getTicketPurchaseId());
+                ticketQrCodeDTO.setEvent_activity_id(ticketPurchase.getEventActivity().getEventActivityId());
+                ticketQrCodeDTO.setUser_name(account.getUserName());
+                ticketQrCodeDTO.setCheckin_Log_id(checkinLog.getCheckinId());
 
                 String qrCode = generateQRCode(ticketQrCodeDTO);
                 ticketPurchase.setQrCode(qrCode);
