@@ -173,13 +173,30 @@ public class PaymentServiceImpl implements PaymentService {
 
         CheckoutResponseData result = payOSUtils.payOS().createPaymentLink(paymentData);
 
+        String fullname = order.getAccount().getFirstName() + " " + order.getAccount().getLastName();
+        List<TicketPurchase> ticketPurchases = ticketPurchaseRepository.findTicketPurchaseByOrderCode(order.getOrderCode());
+
+        List<String> seatDescriptions = ticketPurchases.stream()
+                .map(TicketPurchase::getSeatActivity)
+                .filter(Objects::nonNull)
+                .map(AppUtils::parseSeatDisplayName)
+                .toList();
+
+        String fullSeatInfo = String.join("; ", seatDescriptions);
+
+        // Gộp lại để truyền vào description
+        String description = "Thanh toán đơn hàng cho " + fullname + " - " + fullSeatInfo;
+
+
+
+
         Payment payment = new Payment();
         payment.setAmount(totalAmount);
         payment.setStatus(EPaymentStatus.PENDING);
         payment.setPaymentDate(LocalDateTime.now());
         payment.setOrderCode(order.getOrderCode());
         payment.setOrder(order);
-        payment.setPaymentMethod("Thanh toán ngân hàng");
+        payment.setPaymentMethod(description);
         payment.setAccount(account);
         paymentRepository.save(payment);
 

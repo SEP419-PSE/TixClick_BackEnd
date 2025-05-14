@@ -9,6 +9,7 @@ import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.TicketQrCodeDTO;
 import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.entity_enum.ERole;
+import com.pse.tixclick.payload.entity.seatmap.SeatActivity;
 import com.pse.tixclick.repository.*;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -200,6 +201,41 @@ public class AppUtils {
             throw new AppException(ErrorCode.FORBIDDEN);
         }
     }
+    public static String rowIndexToLetter(int rowIndex) {
+        return String.valueOf((char) ('A' + rowIndex));
+    }
+
+    public static String parseSeatDisplayName(SeatActivity seatActivity) {
+        if (seatActivity == null || seatActivity.getSeat() == null) return "";
+
+        String rawSeatName = seatActivity.getSeat().getSeatName();  // ví dụ: 1747214534816-r0-c0
+
+        // Tách r0 và c0
+        String[] parts = rawSeatName.split("-");
+        String rowStr = null, colStr = null;
+
+        for (String part : parts) {
+            if (part.startsWith("r")) rowStr = part.substring(1);  // "0"
+            if (part.startsWith("c")) colStr = part.substring(1);  // "0"
+        }
+
+        int rowIndex = rowStr != null ? Integer.parseInt(rowStr) : -1;
+        int colIndex = colStr != null ? Integer.parseInt(colStr) : -1;
+
+        String rowLetter = rowIndex >= 0 ? rowIndexToLetter(rowIndex) : "?";
+        String colNumber = colIndex >= 0 ? String.valueOf(colIndex + 1) : "?";
+
+        // Lấy tên zone (nếu có)
+        String zoneName = "";
+        if (seatActivity.getZoneActivity() != null) {
+            zoneName = seatActivity.getZoneActivity().getZone().getZoneName();  // từ entity Zone
+        } else if (seatActivity.getZoneActivity() != null && seatActivity.getZoneActivity().getZone() != null) {
+            zoneName = seatActivity.getZoneActivity().getZone().getZoneName();  // từ ZoneActivity
+        }
+
+        return "Ghế " + colNumber + ", Hàng " + rowLetter + ", Zone " + zoneName;
+    }
+
 
 
 }
