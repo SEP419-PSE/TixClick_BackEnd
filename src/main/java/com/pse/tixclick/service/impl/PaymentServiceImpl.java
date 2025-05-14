@@ -336,23 +336,26 @@ public class PaymentServiceImpl implements PaymentService {
         // Handle remaining quantity
         int remainingQuantity = totalOriginalQuantity - totalRequestedQuantity;
         if (remainingQuantity > 0) {
-            TicketPurchase oldPurchase = ticketPurchaseRepository.findById(ticketPurchaseRequests.get(0).getTicketPurchaseId())
-                    .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
+            for (TicketPurchaseRequest req : ticketPurchaseRequests) {
+                TicketPurchase oldPurchase = ticketPurchaseRepository.findTicketPurchaseByTicketPurchaseId(req.getTicketPurchaseId())
+                        .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
 
-            TicketPurchase keepPurchase = new TicketPurchase();
-            keepPurchase.setAccount(account);
-            keepPurchase.setEventActivity(oldPurchase.getEventActivity());
-            keepPurchase.setEvent(oldPurchase.getEvent());
-            keepPurchase.setQuantity(remainingQuantity);
-            keepPurchase.setTicket(oldPurchase.getTicket());
-            keepPurchase.setZoneActivity(oldPurchase.getZoneActivity());
-            keepPurchase.setSeatActivity(oldPurchase.getSeatActivity());
-            keepPurchase.setStatus(ETicketPurchaseStatus.PENDING);
-            keepPurchase.setTicketPurchaseOldId(oldPurchase.getTicketPurchaseId());
 
-            keepPurchase = ticketPurchaseRepository.save(keepPurchase);
-            newPurchases.add(keepPurchase);
-            ticketPurchaseIds.add(keepPurchase.getTicketPurchaseId());
+                TicketPurchase keepPurchase = new TicketPurchase();
+                keepPurchase.setAccount(account);
+                keepPurchase.setEventActivity(oldPurchase.getEventActivity());
+                keepPurchase.setEvent(oldPurchase.getEvent());
+                keepPurchase.setQuantity(remainingQuantity);
+                keepPurchase.setTicket(oldPurchase.getTicket());
+                keepPurchase.setZoneActivity(oldPurchase.getZoneActivity());
+                keepPurchase.setSeatActivity(oldPurchase.getSeatActivity());
+                keepPurchase.setStatus(ETicketPurchaseStatus.PENDING);
+                keepPurchase.setTicketPurchaseOldId(oldPurchase.getTicketPurchaseId());
+
+                keepPurchase = ticketPurchaseRepository.save(keepPurchase);
+                newPurchases.add(keepPurchase);
+                ticketPurchaseIds.add(keepPurchase.getTicketPurchaseId());
+            }
         }
 
         // Cancel old ticket purchases
