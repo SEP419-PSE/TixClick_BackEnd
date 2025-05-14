@@ -262,8 +262,14 @@ public class PaymentServiceImpl implements PaymentService {
             Ticket newTicket = ticketRepository.findById(ticketReq.getTicketId())
                     .orElseThrow(() -> new AppException(ErrorCode.TICKET_NOT_FOUND));
 
-            TicketPurchase oldPurchase = ticketPurchaseRepository.findById(ticketPurchaseRequests.get(0).getTicketPurchaseId())
-                    .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
+            for(TicketPurchaseRequest oldPurchase111 : ticketPurchaseRequests) {
+                var oldPurchase = ticketPurchaseRepository.findTicketPurchaseByTicketPurchaseId(oldPurchase111.getTicketPurchaseId())
+                        .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
+
+
+
+
+
             Ticket oldTicket = oldPurchase.getTicket();
 
 
@@ -324,6 +330,7 @@ public class PaymentServiceImpl implements PaymentService {
             newPurchase = ticketPurchaseRepository.save(newPurchase);
             newPurchases.add(newPurchase);
             ticketPurchaseIds.add(newPurchase.getTicketPurchaseId());
+            }
         }
 
         // Handle remaining quantity
