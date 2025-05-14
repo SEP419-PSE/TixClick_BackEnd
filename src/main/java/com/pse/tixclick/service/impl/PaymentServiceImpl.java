@@ -413,8 +413,8 @@ public class PaymentServiceImpl implements PaymentService {
         Order newOrder = new Order();
         newOrder.setOrderCode(orderServiceImpl.orderCodeAutomationCreating());
         newOrder.setStatus(priceDiff == 0 ? EOrderStatus.SUCCESSFUL : EOrderStatus.PENDING);
-        newOrder.setTotalAmount(priceDiff);
-        newOrder.setTotalAmountDiscount(totalAmount);
+        newOrder.setTotalAmount(totalAmount);
+        newOrder.setTotalAmountDiscount(priceDiff);
         newOrder.setNote(orderNote);
         newOrder.setOrderDate(LocalDateTime.now());
         newOrder.setAccount(account);
