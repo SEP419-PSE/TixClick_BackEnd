@@ -163,7 +163,7 @@ public class PaymentServiceImpl implements PaymentService {
         long expiredAt = Instant.now().getEpochSecond() + expiredTime;
 
 
-        String fullname = order.getAccount().getFirstName() + " " + order.getAccount().getLastName();
+        String fullname = order.getAccount().getUserName();
         List<TicketPurchase> ticketPurchases = ticketPurchaseRepository.findTicketPurchaseByOrderCode(order.getOrderCode());
 
         List<String> seatDescriptions = ticketPurchases.stream()
