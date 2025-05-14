@@ -15,7 +15,7 @@ import java.util.Date;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class TicketQrCodeDTO {
     private int event_activity_id;
-    private int ticket_purchase_id;
+    private int order_id;
     private String user_name;
     private int checkin_Log_id;
 

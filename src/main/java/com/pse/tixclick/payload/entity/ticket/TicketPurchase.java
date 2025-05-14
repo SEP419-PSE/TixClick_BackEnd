@@ -23,9 +23,6 @@ public class TicketPurchase {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int ticketPurchaseId;
 
-    @Column(columnDefinition = "NVARCHAR(MAX)")
-    private String qrCode;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ETicketPurchaseStatus status;

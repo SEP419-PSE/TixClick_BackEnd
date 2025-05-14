@@ -70,7 +70,7 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
 
     @Query("SELECT new com.pse.tixclick.payload.dto.MyTicketFlatDTO(" +
             "o.orderId, o.orderCode, o.orderDate, o.totalAmount, o.totalAmountDiscount, " +
-            "tp.ticketPurchaseId, tp.qrCode, tp.quantity, t.price, t.ticketName, " +
+            "tp.ticketPurchaseId, o.qrCode, tp.quantity, t.price, t.ticketName, " +
             "e.eventId, e.eventName, e.logoURL, e.bannerURL, e.locationName, e.category.eventCategoryId, " +
             "e.address, e.ward, e.district, e.city, (e.seatMap IS NOT NULL), " +
             "ea.eventActivityId, ea.dateEvent, ea.startTimeEvent, " +

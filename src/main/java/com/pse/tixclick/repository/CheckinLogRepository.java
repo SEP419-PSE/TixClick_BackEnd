@@ -15,9 +15,7 @@ public interface CheckinLogRepository extends JpaRepository<CheckinLog, Integer>
     @Query(value = "SELECT COUNT(*) FROM CheckinLog WHERE checkinStatus = 'CHECKED_IN'")
     int countTotalCheckins();
 
-    int countByTicketPurchase_EventActivity_EventActivityIdAndCheckinStatus(int eventActivityId, ECheckinLogStatus checkinStatus);
 
-    int countByTicketPurchase_EventActivity_EventActivityId(int eventActivityId);
 
     @Query(value = """
         SELECT 

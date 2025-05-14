@@ -489,6 +489,29 @@ public class PaymentServiceImpl implements PaymentService {
         // Xử lý khi không cần thanh toán (totalAmount = 0)
         if (totalAmount == 0) {
             Set<Integer> processedOldTicketIds = new HashSet<>();
+
+            CheckinLog checkinLog = new CheckinLog();
+            checkinLog.setCheckinTime(null);
+            checkinLog.setCheckinDevice("Mobile");
+            checkinLog.setOrder(order);
+            checkinLog.setCheckinStatus(ECheckinLogStatus.PENDING);
+            checkinLog.setCheckinLocation(null);
+            checkinLog.setStaff(null);
+            checkinLog.setAccount(order.getAccount());
+            checkinLogRepository.save(checkinLog);
+
+            TicketQrCodeDTO ticketQrCodeDTO = new TicketQrCodeDTO();
+            ticketQrCodeDTO.setCheckin_Log_id(checkinLog.getCheckinId());
+            ticketQrCodeDTO.setUser_name(account.getUserName());
+            ticketQrCodeDTO.setEvent_activity_id(order.getOrderDetails().stream()
+                    .findFirst()
+                    .orElseThrow(() -> new AppException(ErrorCode.ORDER_DETAIL_NOT_FOUND))
+                    .getTicketPurchase().getEventActivity().getEventActivityId());
+            ticketQrCodeDTO.setOrder_id(order.getOrderId());
+            String qrCode = generateQRCode(ticketQrCodeDTO);
+            order.setQrCode(qrCode);
+            order.setStatus(EOrderStatus.SUCCESSFUL);
+            orderRepository.save(order);
             for (TicketPurchase newPurchase : newPurchases) {
                 var oldTicketId = newPurchase.getTicketPurchaseOldId();
                 if (oldTicketId != null && !processedOldTicketIds.contains(oldTicketId)) {
@@ -527,25 +550,25 @@ public class PaymentServiceImpl implements PaymentService {
                 if (locationBuilder.toString().endsWith(", "))
                     locationBuilder.setLength(locationBuilder.length() - 2);
 
-                CheckinLog checkinLog = new CheckinLog();
-                checkinLog.setCheckinTime(null);
-                checkinLog.setCheckinDevice("Mobile");
-                checkinLog.setTicketPurchase(newPurchase);
-                checkinLog.setAccount(account);
-                checkinLog.setCheckinStatus(ECheckinLogStatus.PENDING);
-                checkinLog.setStaff(null);
-                checkinLog.setCheckinLocation(locationBuilder.toString());
-                checkinLogRepository.save(checkinLog);
-
-                TicketQrCodeDTO ticketQrCodeDTO = new TicketQrCodeDTO();
-                ticketQrCodeDTO.setTicket_purchase_id(newPurchase.getTicketPurchaseId());
-                ticketQrCodeDTO.setEvent_activity_id(newPurchase.getEventActivity().getEventActivityId());
-                ticketQrCodeDTO.setUser_name(account.getUserName());
-                ticketQrCodeDTO.setCheckin_Log_id(checkinLog.getCheckinId());
-
-                String qrCode = generateQRCode(ticketQrCodeDTO);
-                newPurchase.setStatus(ETicketPurchaseStatus.PURCHASED);
-                newPurchase.setQrCode(qrCode);
+//                CheckinLog checkinLog = new CheckinLog();
+//                checkinLog.setCheckinTime(null);
+//                checkinLog.setCheckinDevice("Mobile");
+//                checkinLog.setTicketPurchase(newPurchase);
+//                checkinLog.setAccount(account);
+//                checkinLog.setCheckinStatus(ECheckinLogStatus.PENDING);
+//                checkinLog.setStaff(null);
+//                checkinLog.setCheckinLocation(locationBuilder.toString());
+//                checkinLogRepository.save(checkinLog);
+//
+//                TicketQrCodeDTO ticketQrCodeDTO = new TicketQrCodeDTO();
+//                ticketQrCodeDTO.setTicket_purchase_id(newPurchase.getTicketPurchaseId());
+//                ticketQrCodeDTO.setEvent_activity_id(newPurchase.getEventActivity().getEventActivityId());
+//                ticketQrCodeDTO.setUser_name(account.getUserName());
+//                ticketQrCodeDTO.setCheckin_Log_id(checkinLog.getCheckinId());
+//
+//                String qrCode = generateQRCode(ticketQrCodeDTO);
+//                newPurchase.setStatus(ETicketPurchaseStatus.PURCHASED);
+//                newPurchase.setQrCode(qrCode);
                 ticketPurchaseRepository.save(newPurchase);
             }
 
@@ -636,6 +659,25 @@ public class PaymentServiceImpl implements PaymentService {
                     .findById(Integer.valueOf(orderId))
                     .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
 
+            CheckinLog checkinLog = new CheckinLog();
+            checkinLog.setCheckinTime(null);
+            checkinLog.setCheckinDevice("Mobile");
+            checkinLog.setOrder(order);
+            checkinLog.setCheckinStatus(ECheckinLogStatus.PENDING);
+            checkinLog.setCheckinLocation(null);
+            checkinLog.setStaff(null);
+            checkinLog.setAccount(order.getAccount());
+            checkinLogRepository.save(checkinLog);
+            TicketQrCodeDTO ticketQrCodeDTO = new TicketQrCodeDTO();
+            ticketQrCodeDTO.setCheckin_Log_id(checkinLog.getCheckinId());
+            ticketQrCodeDTO.setUser_name(userName);
+            ticketQrCodeDTO.setEvent_activity_id(order.getOrderDetails().stream()
+                    .findFirst()
+                    .orElseThrow(() -> new AppException(ErrorCode.ORDER_DETAIL_NOT_FOUND))
+                    .getTicketPurchase().getEventActivity().getEventActivityId());
+            ticketQrCodeDTO.setOrder_id(order.getOrderId());
+            String qrCode = generateQRCode(ticketQrCodeDTO);
+            order.setQrCode(qrCode);
             order.setStatus(EOrderStatus.SUCCESSFUL);
             orderRepository.save(order);
 
@@ -759,47 +801,47 @@ public class PaymentServiceImpl implements PaymentService {
                         .findById(ticketPurchase.getEvent().getEventId())
                         .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
 
-                CheckinLog checkinLog = new CheckinLog();
-                checkinLog.setCheckinTime(null);
-                checkinLog.setCheckinDevice("Mobile");
-                checkinLog.setTicketPurchase(ticketPurchase);
-                checkinLog.setAccount(account);
-
-
-                StringBuilder locationBuilder = new StringBuilder();
-
-                if(event.getAddress() != null && !event.getAddress().trim().isEmpty()) {
-                    locationBuilder.append(event.getAddress()).append(", ");
-                }
-
-                if (event.getWard() != null && !event.getWard().trim().isEmpty()) {
-                    locationBuilder.append(event.getWard()).append(", ");
-                }
-
-                if (event.getDistrict() != null && !event.getDistrict().trim().isEmpty()) {
-                    locationBuilder.append(event.getDistrict()).append(", ");
-                }
-
-                if (event.getCity() != null && !event.getCity().trim().isEmpty()) {
-                    locationBuilder.append(event.getCity());
-                }
-
-                if (locationBuilder.length() > 0 && locationBuilder.lastIndexOf(", ") == locationBuilder.length() - 2) {
-                    locationBuilder.delete(locationBuilder.length() - 2, locationBuilder.length());
-                }
-
-                checkinLog.setCheckinLocation(locationBuilder.toString());
-                checkinLog.setCheckinStatus(ECheckinLogStatus.PENDING);
-                checkinLogRepository.save(checkinLog);
-
-                TicketQrCodeDTO ticketQrCodeDTO = new TicketQrCodeDTO();
-                ticketQrCodeDTO.setTicket_purchase_id(ticketPurchase.getTicketPurchaseId());
-                ticketQrCodeDTO.setEvent_activity_id(ticketPurchase.getEventActivity().getEventActivityId());
-                ticketQrCodeDTO.setUser_name(account.getUserName());
-                ticketQrCodeDTO.setCheckin_Log_id(checkinLog.getCheckinId());
-
-                String qrCode = generateQRCode(ticketQrCodeDTO);
-                ticketPurchase.setQrCode(qrCode);
+//                CheckinLog checkinLog = new CheckinLog();
+//                checkinLog.setCheckinTime(null);
+//                checkinLog.setCheckinDevice("Mobile");
+//                checkinLog.setTicketPurchase(ticketPurchase);
+//                checkinLog.setAccount(account);
+//
+//
+//                StringBuilder locationBuilder = new StringBuilder();
+//
+//                if(event.getAddress() != null && !event.getAddress().trim().isEmpty()) {
+//                    locationBuilder.append(event.getAddress()).append(", ");
+//                }
+//
+//                if (event.getWard() != null && !event.getWard().trim().isEmpty()) {
+//                    locationBuilder.append(event.getWard()).append(", ");
+//                }
+//
+//                if (event.getDistrict() != null && !event.getDistrict().trim().isEmpty()) {
+//                    locationBuilder.append(event.getDistrict()).append(", ");
+//                }
+//
+//                if (event.getCity() != null && !event.getCity().trim().isEmpty()) {
+//                    locationBuilder.append(event.getCity());
+//                }
+//
+//                if (locationBuilder.length() > 0 && locationBuilder.lastIndexOf(", ") == locationBuilder.length() - 2) {
+//                    locationBuilder.delete(locationBuilder.length() - 2, locationBuilder.length());
+//                }
+//
+//                checkinLog.setCheckinLocation(locationBuilder.toString());
+//                checkinLog.setCheckinStatus(ECheckinLogStatus.PENDING);
+//                checkinLogRepository.save(checkinLog);
+//
+//                TicketQrCodeDTO ticketQrCodeDTO = new TicketQrCodeDTO();
+//                ticketQrCodeDTO.setTicket_purchase_id(ticketPurchase.getTicketPurchaseId());
+//                ticketQrCodeDTO.setEvent_activity_id(ticketPurchase.getEventActivity().getEventActivityId());
+//                ticketQrCodeDTO.setUser_name(account.getUserName());
+//                ticketQrCodeDTO.setCheckin_Log_id(checkinLog.getCheckinId());
+//
+//                String qrCode = generateQRCode(ticketQrCodeDTO);
+//                ticketPurchase.setQrCode(qrCode);
                 ticketPurchase.setStatus(ETicketPurchaseStatus.PURCHASED);
                 ticketPurchaseRepository.save(ticketPurchase);
             }

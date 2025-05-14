@@ -1226,10 +1226,12 @@ public class EventServiceImpl implements EventService {
         var eventActivity = eventActivityRepository.findById(eventActivityId)
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_ACTIVITY_NOT_FOUND));
 
-        int countCheckinAll = checkinLogRepository.countByTicketPurchase_EventActivity_EventActivityId(eventActivityId);
-        int countCheckin = checkinLogRepository.countByTicketPurchase_EventActivity_EventActivityIdAndCheckinStatus(eventActivityId,ECheckinLogStatus.CHECKED_IN);
-        int countCheckinNot = checkinLogRepository.countByTicketPurchase_EventActivity_EventActivityIdAndCheckinStatus(eventActivityId,ECheckinLogStatus.PENDING);
-
+//        int countCheckinAll = checkinLogRepository.countByTicketPurchase_EventActivity_EventActivityId(eventActivityId);
+//        int countCheckin = checkinLogRepository.countByTicketPurchase_EventActivity_EventActivityIdAndCheckinStatus(eventActivityId,ECheckinLogStatus.CHECKED_IN);
+//        int countCheckinNot = checkinLogRepository.countByTicketPurchase_EventActivity_EventActivityIdAndCheckinStatus(eventActivityId,ECheckinLogStatus.PENDING);
+        int countCheckinAll = 0;
+        int countCheckin= 0;
+        int countCheckinNot = 0;
         return new CheckinStatsResponse(
                 countCheckinAll,
                 countCheckin,
