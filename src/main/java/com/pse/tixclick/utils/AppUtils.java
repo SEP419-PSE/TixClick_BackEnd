@@ -209,8 +209,6 @@ public class AppUtils {
         if (seatActivity == null || seatActivity.getSeat() == null) return "";
 
         String rawSeatName = seatActivity.getSeat().getSeatName();  // ví dụ: 1747214534816-r0-c0
-
-        // Tách r0 và c0
         String[] parts = rawSeatName.split("-");
         String rowStr = null, colStr = null;
 
@@ -227,14 +225,14 @@ public class AppUtils {
 
         // Lấy tên zone (nếu có)
         String zoneName = "";
-        if (seatActivity.getZoneActivity() != null) {
-            zoneName = seatActivity.getZoneActivity().getZone().getZoneName();  // từ entity Zone
-        } else if (seatActivity.getZoneActivity() != null && seatActivity.getZoneActivity().getZone() != null) {
-            zoneName = seatActivity.getZoneActivity().getZone().getZoneName();  // từ ZoneActivity
+        if (seatActivity.getZoneActivity() != null && seatActivity.getZoneActivity().getZone() != null) {
+            zoneName = String.valueOf(seatActivity.getZoneActivity().getZone().getZoneId());  // từ ZoneActivity
         }
 
-        return "Ghế " + colNumber + ", Hàng " + rowLetter + ", Zone " + zoneName;
+        // Rút gọn mô tả
+        return "G" + colNumber + "H" + rowLetter + (zoneName.isEmpty() ? "" : " " + zoneName);
     }
+
 
 
 

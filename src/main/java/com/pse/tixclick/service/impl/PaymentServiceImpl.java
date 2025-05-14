@@ -175,7 +175,7 @@ public class PaymentServiceImpl implements PaymentService {
         String fullSeatInfo = String.join("; ", seatDescriptions);
 
         // Gộp lại để truyền vào description
-        String description = "TT " + fullname + " - " + String.join(", ", seatDescriptions);
+        String description = fullname + " - " + String.join(", ", seatDescriptions);
 
         PaymentData paymentData = PaymentData.builder()
                 .expiredAt(expiredAt)
