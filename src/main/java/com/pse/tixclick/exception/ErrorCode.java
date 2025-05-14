@@ -172,6 +172,7 @@ public enum ErrorCode {
     INVALID_QR_CODE(1154,"Mã QR không hợp lệ",HttpStatus.BAD_REQUEST),
     USER_NOT_BUYER(1155,"Người dùng không phải là người mua",HttpStatus.BAD_REQUEST),
     ORDER_CANCELLED(1156,"Đơn hàng đã bị hủy",HttpStatus.BAD_REQUEST),
+    INVALID_REQUEST(1157,"Yêu cầu không hợp lệ",HttpStatus.BAD_REQUEST),
     ;
 
 
