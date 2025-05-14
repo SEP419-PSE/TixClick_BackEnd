@@ -154,14 +154,14 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
                 EventActivity eventActivity = eventActivityRepository.findById(createTicketPurchaseRequest1.getEventActivityId())
                         .orElseThrow(() -> new AppException(ErrorCode.EVENT_ACTIVITY_NOT_FOUND));
 
-                LocalDateTime currentDateTime = LocalDateTime.now(); // thời gian hiện tại
-                LocalDateTime saleStartDateTime = eventActivity.getStartTicketSale(); // thời gian bắt đầu bán vé
-
-                boolean hasSaleStarted = !saleStartDateTime.isAfter(currentDateTime); // sale đã bắt đầu nếu không sau thời điểm hiện tại
-
-                if (!hasSaleStarted) {
-                    throw new AppException(ErrorCode.TICKET_SALE_NOT_STARTED);
-                }
+//                LocalDateTime currentDateTime = LocalDateTime.now(); // thời gian hiện tại
+//                LocalDateTime saleStartDateTime = eventActivity.getStartTicketSale(); // thời gian bắt đầu bán vé
+//
+//                boolean hasSaleStarted = !saleStartDateTime.isAfter(currentDateTime); // sale đã bắt đầu nếu không sau thời điểm hiện tại
+//
+//                if (!hasSaleStarted) {
+//                    throw new AppException(ErrorCode.TICKET_SALE_NOT_STARTED);
+//                }
 
 
                 //Kiểm tra zone
