@@ -21,6 +21,7 @@ import com.pse.tixclick.payload.request.create.ListTicketPurchaseRequest;
 import com.pse.tixclick.payload.response.MyTicketResponse;
 import com.pse.tixclick.payload.response.PaginationResponse;
 import com.pse.tixclick.payload.response.TicketOwnerResponse;
+import com.pse.tixclick.payload.response.TicketQRResponse;
 import com.pse.tixclick.repository.*;
 import com.pse.tixclick.service.TicketPurchaseService;
 import com.pse.tixclick.utils.AppUtils;
@@ -983,58 +984,62 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
 
 
     @Override
-    public TicketQrCodeDTO decryptQrCode(String qrCode){
-        var context = SecurityContextHolder.getContext();
-        var userName = context.getAuthentication().getName();
-        Account account = accountRepository.findAccountByUserName(userName)
-                .orElseThrow(() -> new AppException(ErrorCode.ACCOUNT_NOT_FOUND));
+    public TicketQRResponse decryptQrCode(String encryptedQrCode) {
+//        try {
+//            // B1: Giải mã QR code
+//            String decryptedString = AppUtils.decrypt(encryptedQrCode);
+//            TicketQrCodeDTO qrDTO = AppUtils.stringToTicketQrCodeDTO(decryptedString);
+//
+//            // B2: Truy xuất dữ liệu từ DB
+//            EventActivity activity = eventActivityRepository.findById(qrDTO.getEvent_activity_id())
+//                    .orElseThrow(() -> new NotFoundException("Event activity not found"));
+//
+//            Order order = orderRepository.findById(qrDTO.getOrder_id())
+//                    .orElseThrow(() -> new NotFoundException("Order not found"));
+//
+//            Account account = accountRepository.findByUsername(qrDTO.getUser_name())
+//                    .orElseThrow(() -> new NotFoundException("Account not found"));
+//
+//            CheckinLog log = checkinLogRepository.findById(qrDTO.getCheckin_Log_id())
+//                    .orElseThrow(() -> new NotFoundException("Check-in log not found"));
+//
+//            // B3: Truy vé trong đơn hàng
+//            List<TicketPurchase> purchases = ticketPurchaseRepository.findByOrderId(order.getOrderId());
+//
+//            // B4: Build TicketDetailResponse
+//            List<TicketQRResponse.TicketDetailResponse> ticketDetails = purchases.stream().map(ticket -> {
+//                TicketQRResponse.TicketDetailResponse detail = new TicketQRResponse().new TicketDetailResponse();
+//                detail.setTicketPurchaseId(ticket.getTicketPurchaseId());
+//                detail.setPrice(ticket.getPrice());
+//                detail.setSeatCode(ticket.getSeatCode());
+//                detail.setSeatName(ticket.getSeatName());
+//                detail.setTicketType(ticket.getTicket().getTicketName());
+//                detail.setZoneName(ticket.getTicket().getZone().getZoneName());
+//                detail.setQuantity(ticket.getQuantity());
+//                detail.setOrderCode(order.getOrderCode());
+//                return detail;
+//            }).toList();
+//
+//            // B5: Build full response
+//            TicketQRResponse response = new TicketQRResponse();
+//            response.setEventName(activity.getEvent().getEventName());
+//            response.setEventDate(activity.getDateEvent());
+//            response.setStartTime(activity.getStartTimeEvent());
+//            response.setOrderCode(order.getOrderCode());
+//            response.setUserName(qrDTO.getUser_name());
+//            response.setFullName(account.getFullName());
+//            response.setCheckinStatus(log.getStatus().toString());
+//            response.setTicketDetails(ticketDetails);
+//
+//            return response;
+//
+//        } catch (Exception e) {
+//            throw new AppException(ErrorCode.INVALID_QR_CODE);
+//        }
 
-        if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.ORGANIZER)) {
-            throw new AppException(ErrorCode.NOT_PERMISSION);
-        }
-
-        TicketQrCodeDTO ticketQrCodeDTO = AppUtils.decryptQrCode(qrCode);
-        if (ticketQrCodeDTO == null) {
-            throw new AppException(ErrorCode.QR_CODE_NOT_FOUND);
-        }
-
-
-        CheckinLog checkinLog = checkinLogRepository
-                .findById(ticketQrCodeDTO.getCheckin_Log_id())
-                .orElseThrow(() -> new AppException(ErrorCode.CHECKIN_LOG_NOT_FOUND));
-
-        TicketPurchase ticketPurchase = ticketPurchaseRepository
-                .findById(checkinLog.getOrder().getOrderId())
-                .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
-
-        EventActivity eventActivity = eventActivityRepository
-                .findById(ticketPurchase.getEventActivity().getEventActivityId())
-                .orElseThrow(() -> new AppException(ErrorCode.EVENT_ACTIVITY_NOT_FOUND));
-
-        if (checkinLog.getCheckinStatus().equals(ECheckinLogStatus.PENDING)) {
-            checkinLog.setCheckinTime(LocalDateTime.now());
-            checkinLog.setCheckinStatus(ECheckinLogStatus.CHECKED_IN);
-            checkinLog.setStaff(account);
-        }
-        else if (checkinLog.getCheckinStatus().equals(ECheckinLogStatus.CHECKED_IN)) {
-            throw new AppException(ErrorCode.CHECKIN_LOG_CHECKED_IN);
-        }
-        else if(eventActivity.getEndTimeEvent().isBefore(LocalTime.now())) {
-            checkinLog.setCheckinTime(LocalDateTime.now());
-            checkinLog.setCheckinStatus(ECheckinLogStatus.EXPIRED);
-            throw new AppException(ErrorCode.CHECKIN_LOG_EXPIRED);
-        }
-
-        ticketPurchase.setStatus(ETicketPurchaseStatus.CHECKED_IN);
-
-        ticketPurchaseRepository.save(ticketPurchase);
-        checkinLogRepository.save(checkinLog);
-//        ticketQrCodeDTO.setStatus(ticketPurchase.getStatus().name());
-
-        simpMessagingTemplate.convertAndSend("/all/messages",
-                "call api"); // Gửi Object Message
-        return ticketQrCodeDTO;
+        return null;
     }
+
 
     @Override
     public int countTicketPurchaseStatusByPurchased() {

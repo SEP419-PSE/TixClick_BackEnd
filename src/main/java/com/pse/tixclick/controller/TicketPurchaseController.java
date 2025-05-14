@@ -8,6 +8,7 @@ import com.pse.tixclick.payload.request.create.ListTicketPurchaseRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
 import com.pse.tixclick.payload.response.MyTicketResponse;
 import com.pse.tixclick.payload.response.PaginationResponse;
+import com.pse.tixclick.payload.response.TicketQRResponse;
 import com.pse.tixclick.service.OrderService;
 import com.pse.tixclick.service.TicketPurchaseService;
 import com.pse.tixclick.service.TransactionService;
@@ -209,22 +210,22 @@ public class TicketPurchaseController {
 
 
     @PostMapping("/decrypt_qr_code")
-    public ResponseEntity<ApiResponse<TicketQrCodeDTO>> decryptQrCode(@RequestBody String qrCode) {
+    public ResponseEntity<ApiResponse<TicketQRResponse>> decryptQrCode(@RequestBody String qrCode) {
         try {
-            TicketQrCodeDTO qr = ticketPurchaseService.decryptQrCode(qrCode);
-            ApiResponse<TicketQrCodeDTO> response = ApiResponse.<TicketQrCodeDTO>builder()
+            TicketQRResponse qr = ticketPurchaseService.decryptQrCode(qrCode);
+            ApiResponse<TicketQRResponse> response = ApiResponse.<TicketQRResponse>builder()
                     .code(HttpStatus.OK.value())
                     .message("Successfully decrypted QR code")
                     .result(qr)
                     .build();
-            return ResponseEntity.status(HttpStatus.OK).body(response);
+            return ResponseEntity.ok(response);
         } catch (AppException e) {
-            ApiResponse<TicketQrCodeDTO> errorResponse = ApiResponse.<TicketQrCodeDTO>builder()
+            ApiResponse<TicketQRResponse> errorResponse = ApiResponse.<TicketQRResponse>builder()
                     .code(HttpStatus.BAD_REQUEST.value())
                     .message(e.getMessage())
                     .result(null)
                     .build();
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+            return ResponseEntity.badRequest().body(errorResponse);
         }
     }
 

@@ -213,4 +213,19 @@ ORDER BY m.month;
     List<TicketPurchase> findTicketPurchasesByAccount_AccountIdAndEventActivity_EventActivityIdAndStatus(
             int accountId, int eventActivityId, ETicketPurchaseStatus status);
 
+
+
+    @Query(value = """
+
+            SELECT tp.*
+    FROM [tixclick].[dbo].[ticket_purchase] tp
+    INNER JOIN [tixclick].[dbo].[order_detail] od ON tp.ticket_purchase_id = od.ticket_purchase_id
+    INNER JOIN [tixclick].[dbo].[orders] o ON od.order_id = o.order_id
+    WHERE o.order_code = :orderCode; 
+    """, nativeQuery = true)
+    List<TicketPurchase> findTicketPurchaseByOrderCode(
+            @Param("orderCode") String orderCode
+    );
+
+
 }

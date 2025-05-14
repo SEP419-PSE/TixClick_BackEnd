@@ -169,6 +169,9 @@ public enum ErrorCode {
     INVALID_TICKET_CHANGE_CASE(1151,"Trường hợp đổi vé không hợp lệ",HttpStatus.BAD_REQUEST),
     INVALID_TICKET_CHANGE_REQUEST(1152,"Yêu cầu đổi vé không hợp lệ",HttpStatus.BAD_REQUEST),
     TICKET_SALE_NOT_STARTED(1153,"Bán vé chưa bắt đầu",HttpStatus.BAD_REQUEST),
+    INVALID_QR_CODE(1154,"Mã QR không hợp lệ",HttpStatus.BAD_REQUEST),
+    USER_NOT_BUYER(1155,"Người dùng không phải là người mua",HttpStatus.BAD_REQUEST),
+    ORDER_CANCELLED(1156,"Đơn hàng đã bị hủy",HttpStatus.BAD_REQUEST),
     ;
 
 

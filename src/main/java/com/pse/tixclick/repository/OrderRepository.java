@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
+
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Integer> {
     @Query("select o from Order o where o.account.accountId = :id")
@@ -91,4 +93,6 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
                                                       @Param("tpStatus") ETicketPurchaseStatus tpStatus);
 
 
+
+    Optional<Order> findOrderByOrderCode(String orderCode);
 }
