@@ -479,6 +479,8 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
                 }
             }
         }
+        simpMessagingTemplate.convertAndSend("/all/messages",
+                "call api"); // Gửi Object Message
         return "Cancel ticket purchase successfully";
     }
 
