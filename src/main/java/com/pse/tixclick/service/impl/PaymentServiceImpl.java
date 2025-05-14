@@ -1104,9 +1104,9 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     private String generateQRCode(TicketQrCodeDTO ticketQrCodeDTO) throws Exception {
-        String dataTransfer = AppUtils.transferToString(ticketQrCodeDTO);
-        return AppUtils.encrypt(dataTransfer);
+        return AppUtils.encryptTicketQrCode(ticketQrCodeDTO);
     }
+
 
     private String getBaseUrl(HttpServletRequest request) {
         return "https://tixclick.site";

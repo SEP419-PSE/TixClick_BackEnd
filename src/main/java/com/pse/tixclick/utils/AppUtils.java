@@ -2,9 +2,8 @@ package com.pse.tixclick.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.zxing.BarcodeFormat;
-import com.google.zxing.WriterException;
-import com.google.zxing.common.BitMatrix;
+import java.util.zip.Deflater;
+import java.util.zip.Inflater;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.TicketQrCodeDTO;
@@ -71,16 +70,30 @@ public class AppUtils {
     }
 
 
-    public static String transferToString(Object object){
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(object);
+    public static String encryptTicketQrCode(TicketQrCodeDTO dto) throws Exception {
+        String json = new ObjectMapper().writeValueAsString(dto);     // Chuyển object thành JSON
+        byte[] compressed = compress(json);                           // Nén JSON
+        SecretKey secretKey = new SecretKeySpec(SECRET_KEY.getBytes(), AES_ALGORITHM);
+        Cipher cipher = Cipher.getInstance(AES_ALGORITHM);
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+        byte[] encrypted = cipher.doFinal(compressed);                // Mã hóa AES
+        return Base64.getUrlEncoder().encodeToString(encrypted);      // Base64 để tạo QR
+    }
+    public static byte[] compress(String data) throws Exception {
+        Deflater deflater = new Deflater();
+        deflater.setInput(data.getBytes("UTF-8"));
+        deflater.finish();
 
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        byte[] buffer = new byte[1024];
 
-        }catch (JsonProcessingException e){
-            e.printStackTrace();
+        while (!deflater.finished()) {
+            int count = deflater.deflate(buffer);
+            outputStream.write(buffer, 0, count);
         }
-        return "";
+
+        outputStream.close();
+        return outputStream.toByteArray();
     }
 
 
