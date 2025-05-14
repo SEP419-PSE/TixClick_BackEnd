@@ -89,4 +89,6 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
     List<MyTicketFlatDTO> findAllTicketInfoForAccount(@Param("accountId") int accountId,
                                                       @Param("status") EOrderStatus status,
                                                       @Param("tpStatus") ETicketPurchaseStatus tpStatus);
+
+
 }

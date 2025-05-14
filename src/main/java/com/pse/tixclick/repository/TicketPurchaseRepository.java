@@ -203,4 +203,14 @@ ORDER BY m.month;
 
 
     Integer countTicketPurchaseByEventActivity_EventActivityIdAndStatus(int eventActivityId, ETicketPurchaseStatus status);
+
+    @Query("SELECT DISTINCT tp.account.accountId FROM TicketPurchase tp " +
+            "WHERE tp.status = :status AND tp.eventActivity.eventActivityId = :eventActivityId")
+    List<Integer> findDistinctAccountIdsByEventActivityIdAndStatus(
+            @Param("eventActivityId") int eventActivityId,
+            @Param("status") ETicketPurchaseStatus status);
+
+    List<TicketPurchase> findTicketPurchasesByAccount_AccountIdAndEventActivity_EventActivityIdAndStatus(
+            int accountId, int eventActivityId, ETicketPurchaseStatus status);
+
 }

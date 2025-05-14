@@ -570,6 +570,7 @@ public class PaymentServiceImpl implements PaymentService {
 //                String qrCode = generateQRCode(ticketQrCodeDTO);
 //                newPurchase.setStatus(ETicketPurchaseStatus.PURCHASED);
 //                newPurchase.setQrCode(qrCode);
+                newPurchase.setOrderCode(order.getOrderCode());
                 ticketPurchaseRepository.save(newPurchase);
             }
 
@@ -847,6 +848,7 @@ public class PaymentServiceImpl implements PaymentService {
 //                String qrCode = generateQRCode(ticketQrCodeDTO);
 //                ticketPurchase.setQrCode(qrCode);
                 ticketPurchase.setStatus(ETicketPurchaseStatus.PURCHASED);
+                ticketPurchase.setOrderCode(order.getOrderCode());
                 ticketPurchaseRepository.save(ticketPurchase);
             }
 

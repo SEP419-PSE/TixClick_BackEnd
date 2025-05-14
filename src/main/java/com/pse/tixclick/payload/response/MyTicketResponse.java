@@ -31,5 +31,8 @@ public class MyTicketResponse {
     private String qrCode;
     String logo;
     String banner;
+    int quantityOrdered;
+    boolean ishaveSeatmap;
+
     List<TicketOwnerResponse> ticketPurchases;
 }

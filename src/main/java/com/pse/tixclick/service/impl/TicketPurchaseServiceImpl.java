@@ -813,14 +813,15 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
         Map<Integer, MyTicketResponse> orderMap = new LinkedHashMap<>();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
+        // Duyệt qua danh sách flatDTOs để xây dựng MyTicketResponse
         for (MyTicketFlatDTO flat : flatDTOs) {
             MyTicketResponse response = orderMap.computeIfAbsent(flat.getOrderId(), oid -> {
                 MyTicketResponse res = new MyTicketResponse();
                 res.setOrderId(flat.getOrderId());
                 res.setOrderCode(flat.getOrderCode());
                 res.setOrderDate(flat.getOrderDate().format(formatter));
-                res.setTotalPrice(flat.getTotalPrice());
-                res.setTotalDiscount(flat.getTotalDiscount());
+                res.setTotalPrice(flat.getTotalAmount());
+                res.setTotalDiscount(flat.getTotalAmountDiscount());
                 res.setEventId(flat.getEventId());
                 res.setEventActivityId(flat.getEventActivityId());
                 res.setEventCategoryId(flat.getEventCategoryId());
@@ -836,6 +837,8 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
                 res.setLogo(flat.getLogo());
                 res.setBanner(flat.getBanner());
                 res.setTicketPurchases(new ArrayList<>());
+                res.setIshaveSeatmap(Boolean.TRUE.equals(flat.getHasSeatMap()));
+                res.setQuantityOrdered(0); // Khởi tạo số lượng vé đã mua
                 return res;
             });
 
@@ -843,12 +846,14 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
             dto.setTicketPurchaseId(flat.getTicketPurchaseId());
             dto.setPrice(flat.getPrice());
             dto.setSeatCode(flat.getSeatCode());
-            dto.setTicketType(flat.getTicketType());
+            dto.setTicketType(flat.getTicketName());
             dto.setZoneName(flat.getZoneName());
             dto.setQuantity(flat.getQuantity());
-            dto.setIshaveSeatmap(Boolean.TRUE.equals(flat.getIshaveSeatmap()));
 
             response.getTicketPurchases().add(dto);
+
+            // Cộng dồn số lượng vé cho tất cả các ticketPurchase trong cùng 1 order
+            response.setQuantityOrdered(response.getQuantityOrdered() + flat.getQuantity());
         }
 
         List<MyTicketResponse> responses = new ArrayList<>(orderMap.values());
@@ -875,6 +880,8 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
 
         return new PaginationResponse<>(pageItems, page, totalPages, totalElements, size);
     }
+
+
 
     @Override
     public PaginationResponse<MyTicketDTO> searchTicketPurchasesByEventName(int page, int size, String sortDirection, String eventName) {

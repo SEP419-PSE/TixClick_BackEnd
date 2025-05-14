@@ -38,4 +38,5 @@ public interface CompanyService {
     List<CompanyDocumentDTO> getDocumentByCompanyId(int companyId);
 
     ListCompanyResponse getListCompanyByAccountId();
+
 }

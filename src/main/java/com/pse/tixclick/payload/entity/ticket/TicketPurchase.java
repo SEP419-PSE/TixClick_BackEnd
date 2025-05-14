@@ -41,6 +41,9 @@ public class TicketPurchase {
     @Column
     private Integer ticketPurchaseOldId;
 
+    @Column
+    private String orderCode;
+
     @ManyToOne
     @JoinColumn(name="ticket_id", nullable = false)
     private Ticket ticket;

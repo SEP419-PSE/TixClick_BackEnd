@@ -831,4 +831,47 @@ public class EventController {
                             .build());
         }
     }
+
+    @GetMapping("/list-consumer/{eventActivityId}")
+    public ResponseEntity<ApiResponse<List<ListCosumerResponse>>> getListConsumerByEventId(@PathVariable int eventActivityId) {
+        try {
+            List<ListCosumerResponse> consumerResponses = eventService.getCustomerByEventId(eventActivityId);
+            if(consumerResponses.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.OK.value())
+                        .body(ApiResponse.<List<ListCosumerResponse>>builder()
+                                .code(HttpStatus.OK.value())
+                                .message("No consumers found for event activity id: " + eventActivityId)
+                                .result(null)
+                                .build());
+            }
+            return ResponseEntity.ok(
+                    ApiResponse.<List<ListCosumerResponse>>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Get list consumer by event id successfully")
+                            .result(consumerResponses)
+                            .build()
+            );
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.<List<ListCosumerResponse>>builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.<List<ListCosumerResponse>>builder()
+                            .code(HttpStatus.NOT_FOUND.value())
+                            .message("Event activity not found with id: " + eventActivityId)
+                            .result(null)
+                            .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<List<ListCosumerResponse>>builder()
+                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .message("An error occurred while retrieving the list of consumers")
+                            .result(null)
+                            .build());
+        }
+    }
 }

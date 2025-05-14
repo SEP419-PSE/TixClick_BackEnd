@@ -10,6 +10,7 @@ import com.pse.tixclick.payload.entity.company.CompanyVerification;
 import com.pse.tixclick.payload.entity.company.Contract;
 import com.pse.tixclick.payload.entity.entity_enum.*;
 import com.pse.tixclick.payload.entity.event.EventActivity;
+import com.pse.tixclick.payload.entity.seatmap.Seat;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
 import com.pse.tixclick.payload.entity.ticket.TicketMapping;
 import com.pse.tixclick.payload.entity.ticket.TicketPurchase;
@@ -1319,6 +1320,72 @@ public class EventServiceImpl implements EventService {
         return response;
     }
 
+    @Override
+    public List<ListCosumerResponse> getCustomerByEventId(int eventActivityId) {
+        // Kiểm tra quyền của user (Role)
+        AppUtils.checkRole(ERole.ORGANIZER);
+
+        // Kiểm tra sự tồn tại của eventActivity
+        var event = eventActivityRepository.findById(eventActivityId)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+
+        // Lấy danh sách accountId đã mua vé với status là 'PURCHASED'
+        List<Integer> accountIds = ticketPurchaseRepository
+                .findDistinctAccountIdsByEventActivityIdAndStatus(eventActivityId, ETicketPurchaseStatus.PURCHASED);
+
+        List<ListCosumerResponse> result = new ArrayList<>();
+
+        // Duyệt qua các accountId để lấy thông tin từng người
+        for (Integer accountId : accountIds) {
+            var account = accountRepository.findById(accountId)
+                    .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+            // Lấy danh sách vé đã mua cho từng account theo eventActivityId và status là 'PURCHASED'
+            List<TicketPurchase> ticketPurchases = ticketPurchaseRepository
+                    .findTicketPurchasesByAccount_AccountIdAndEventActivity_EventActivityIdAndStatus(
+                            accountId, eventActivityId, ETicketPurchaseStatus.PURCHASED);
+
+            // Build danh sách TicketPurchaseResponse từ ticketPurchases
+            List<TicketSheetResponse> ticketSheets = new ArrayList<>();
+            Map<String, List<TicketSheetResponse.TicketPurchaseResponse>> orderCodeMap = new HashMap<>();
+
+            // Group theo orderCode và convert từng vé thành TicketPurchaseResponse
+            for (TicketPurchase tp : ticketPurchases) {
+                String orderCode = tp.getOrderCode();
+                TicketSheetResponse.TicketPurchaseResponse purchaseResponse = new TicketSheetResponse.TicketPurchaseResponse(
+                        tp.getTicketPurchaseId(),
+                        tp.getTicket().getPrice(),
+                        tp.getSeatActivity() != null ? tp.getSeatActivity().getSeat().getSeatName() : null,
+                        tp.getTicket().getTicketName(),
+                        tp.getZoneActivity().getZone().getZoneName(),
+                        tp.getQuantity()
+                );
+
+                // Group vé theo orderCode
+                orderCodeMap.computeIfAbsent(orderCode, k -> new ArrayList<>()).add(purchaseResponse);
+            }
+
+            // Convert orderCodeMap thành TicketSheetResponse
+            for (Map.Entry<String, List<TicketSheetResponse.TicketPurchaseResponse>> entry : orderCodeMap.entrySet()) {
+                TicketSheetResponse ticketSheetResponse = new TicketSheetResponse(entry.getKey(), entry.getValue());
+                ticketSheets.add(ticketSheetResponse);
+            }
+
+            // Build ListCosumerResponse cho mỗi khách hàng
+            ListCosumerResponse consumerResponse = ListCosumerResponse.builder()
+                    .username(account.getFirstName() + " " + account.getLastName())
+                    .email(account.getEmail())
+                    .phone(account.getPhone())
+                    .CCCD(null) // Nếu có thông tin CCCD
+                    .MSSV(null) // Nếu có thông tin MSSV
+                    .ticketPurchases(ticketSheets)
+                    .build();
+
+            result.add(consumerResponse);
+        }
+
+        return result;
+    }
 
 }
 

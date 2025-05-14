@@ -21,5 +21,5 @@ public class TicketOwnerResponse {
     private String ticketType;
     private String zoneName;
     private int quantity;
-    boolean ishaveSeatmap;
+    private String orderCode;
 }

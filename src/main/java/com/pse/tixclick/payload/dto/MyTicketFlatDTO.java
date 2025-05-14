@@ -10,35 +10,36 @@ import java.time.LocalTime;
 @Setter
 @AllArgsConstructor
 public class MyTicketFlatDTO {
-    int orderId;
-    String orderCode;
-    LocalDateTime orderDate;
-    double totalPrice;
-    double totalDiscount;
 
-    int ticketPurchaseId;
-    String qrCode;
-    int quantity;
-    double price;
-    String ticketType;
+    private int orderId;
+    private String orderCode;
+    private LocalDateTime orderDate;
+    private double totalAmount;
+    private double totalAmountDiscount;
 
-    int eventId;
-    String eventName;
-    String logo;
-    String banner;
-    String locationName;
-    int eventCategoryId;
+    private int ticketPurchaseId;
+    private String qrCode;
+    private int quantity;  // Lưu lại số lượng vé trong từng ticket purchase
+    private double price;
+    private String ticketName;
 
-    String address;
-    String ward;
-    String district;
-    String city;
-    Boolean ishaveSeatmap;
+    private int eventId;
+    private String eventName;
+    private String logo;
+    private String banner;
+    private String locationName;
+    private int eventCategoryId;
 
-    Integer eventActivityId;
-    LocalDate eventDate;
-    LocalTime eventStartTime;
+    private String address;
+    private String ward;
+    private String district;
+    private String city;
+    private Boolean hasSeatMap;
 
-    String zoneName;
-    String seatCode;
+    private Integer eventActivityId;
+    private LocalDate eventDate;
+    private LocalTime eventStartTime;
+
+    private String zoneName;
+    private String seatCode;
 }

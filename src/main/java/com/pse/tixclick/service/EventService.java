@@ -78,4 +78,7 @@ public interface EventService {
     List<EventForConsumerResponse> getEventsForConsumerByEventCategory(int eventCategoryId,EEventStatus status);
 
     DashboardEventResponse getDashboardEvent(int eventId);
+
+    List<ListCosumerResponse> getCustomerByEventId(int eventActivityId);
+
 }
