@@ -326,7 +326,7 @@ public class PaymentServiceImpl implements PaymentService {
                 zoneActivityRepository.save(newZoneActivity);
                 newPurchase.setZoneActivity(newZoneActivity);
             }
-
+            newPurchase.setOrderCode(oldPurchase.getOrderCode());
             newPurchase = ticketPurchaseRepository.save(newPurchase);
             newPurchases.add(newPurchase);
             ticketPurchaseIds.add(newPurchase.getTicketPurchaseId());
