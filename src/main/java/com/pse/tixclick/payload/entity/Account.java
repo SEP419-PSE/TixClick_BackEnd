@@ -48,6 +48,12 @@ public class Account {
     String phone;
 
     @Column
+    String CCCD;
+
+    @Column
+    String MSSV;
+
+    @Column
     boolean active;
 
     @Column
