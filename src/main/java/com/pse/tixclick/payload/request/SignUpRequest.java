@@ -17,7 +17,9 @@ public class SignUpRequest {
 
     @NotBlank(message = "Username không được để trống")
     @Size(min = 6, max = 20, message = "Username phải từ 6 đến 20 ký tự")
+    @Pattern(regexp = "^[^\\s]+$", message = "Username không được chứa khoảng trắng")
     String userName;
+
 
     @NotBlank(message = "Password không được để trống")
     String password;
