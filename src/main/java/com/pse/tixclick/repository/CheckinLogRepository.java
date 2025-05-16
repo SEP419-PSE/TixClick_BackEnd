@@ -62,4 +62,6 @@ public interface CheckinLogRepository extends JpaRepository<CheckinLog, Integer>
     int countTotalCheckinsByEventActivityId(@Param("eventActivityId") int eventActivityId);
 
     Optional<CheckinLog> findCheckinLogByOrder_OrderId(int orderId);
+
+    Optional<CheckinLog> findCheckinLogByOrder_OrderCode(String orderCode);
 }

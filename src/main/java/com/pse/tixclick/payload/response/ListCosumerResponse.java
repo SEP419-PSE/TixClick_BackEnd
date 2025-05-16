@@ -16,6 +16,6 @@ public class ListCosumerResponse {
     String CCCD;
     String MSSV;
     String phone;
-    String orderCode;
+
     List<TicketSheetResponse> ticketPurchases;
 }

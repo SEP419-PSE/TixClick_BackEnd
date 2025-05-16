@@ -12,6 +12,7 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class TicketSheetResponse {
     private String orderCode;
+    boolean isHaveCheckin;
     List<TicketPurchaseResponse> ticketPurchases;
 
     @Getter

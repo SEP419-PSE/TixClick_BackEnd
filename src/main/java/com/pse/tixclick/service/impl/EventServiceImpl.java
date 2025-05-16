@@ -4,6 +4,7 @@ import com.pse.tixclick.cloudinary.CloudinaryService;
 import com.pse.tixclick.email.EmailService;
 import com.pse.tixclick.payload.dto.*;
 import com.pse.tixclick.payload.entity.Account;
+import com.pse.tixclick.payload.entity.CheckinLog;
 import com.pse.tixclick.payload.entity.Notification;
 import com.pse.tixclick.payload.entity.company.Company;
 import com.pse.tixclick.payload.entity.company.CompanyVerification;
@@ -1369,9 +1370,22 @@ public class EventServiceImpl implements EventService {
 
             // Convert orderCodeMap thành TicketSheetResponse
             for (Map.Entry<String, List<TicketSheetResponse.TicketPurchaseResponse>> entry : orderCodeMap.entrySet()) {
-                TicketSheetResponse ticketSheetResponse = new TicketSheetResponse(entry.getKey(), entry.getValue());
+                String orderCode = entry.getKey();
+                boolean isHaveCheckin = false;
+
+                Optional<CheckinLog> checkin = checkinLogRepository.findCheckinLogByOrder_OrderCode(orderCode);
+                if (checkin.isPresent() && checkin.get().getCheckinStatus() == ECheckinLogStatus.CHECKED_IN) {
+                    isHaveCheckin = true;
+                }
+
+                TicketSheetResponse ticketSheetResponse = new TicketSheetResponse(
+                        orderCode,
+                        isHaveCheckin,
+                        entry.getValue()
+                );
                 ticketSheets.add(ticketSheetResponse);
             }
+
 
             // Build ListCosumerResponse cho mỗi khách hàng
             ListCosumerResponse consumerResponse = ListCosumerResponse.builder()
