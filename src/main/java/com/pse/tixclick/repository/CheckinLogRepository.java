@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface CheckinLogRepository extends JpaRepository<CheckinLog, Integer> {
@@ -59,4 +60,6 @@ public interface CheckinLogRepository extends JpaRepository<CheckinLog, Integer>
             WHERE ea.event_activity_id = :eventActivityId 
     """,nativeQuery = true)
     int countTotalCheckinsByEventActivityId(@Param("eventActivityId") int eventActivityId);
+
+    Optional<CheckinLog> findCheckinLogByOrder_OrderId(int orderId);
 }

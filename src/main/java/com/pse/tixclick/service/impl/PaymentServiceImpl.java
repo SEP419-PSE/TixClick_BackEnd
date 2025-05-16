@@ -622,6 +622,22 @@ public class PaymentServiceImpl implements PaymentService {
                         oldTicketPurchase.get().setStatus(ETicketPurchaseStatus.CANCELLED);
                         ticketPurchaseRepository.save(oldTicketPurchase.get());
 
+                        var oldOrder = orderRepository
+                                .findOrderByOrderCode(oldTicketPurchase.get().getOrderCode())
+                                .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+
+                        if(!oldOrder.getStatus().equals(EOrderStatus.REFUNDED)) {
+                           oldOrder.setStatus(EOrderStatus.REFUNDED);
+                        }
+                        var checkinLogOld = checkinLogRepository
+                                .findCheckinLogByOrder_OrderId(oldOrder.getOrderId())
+                                .orElseThrow(() -> new AppException(ErrorCode.CHECKIN_LOG_NOT_FOUND));
+
+                        checkinLogRepository.delete(checkinLogOld);
+                        orderRepository.save(oldOrder);
+                        checkinLogRepository.save(checkinLogOld);
+
+
                         if (oldTicketPurchase.get().getZoneActivity() == null && oldTicketPurchase.get().getTicket() != null) {
                             TicketMapping ticketMapping = ticketMappingRepository.findTicketMappingByTicketIdAndEventActivityId(
                                     oldTicketPurchase.get().getTicket().getTicketId(),
