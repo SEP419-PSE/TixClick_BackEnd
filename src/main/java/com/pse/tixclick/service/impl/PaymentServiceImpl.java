@@ -565,6 +565,8 @@ public class PaymentServiceImpl implements PaymentService {
         String voucherCode = request.getParameter("voucherCode");
 
         Payment payment = paymentRepository.findPaymentByOrderCode(orderCode);
+        ZoneId vietnamZone = ZoneId.of("Asia/Ho_Chi_Minh");
+        LocalDateTime vietnamTime = LocalDateTime.now(vietnamZone);
 
         if (code.equals("00") && status.equals("PAID")) {
             payment.setStatus(EPaymentStatus.SUCCESSFULLY);
@@ -595,8 +597,7 @@ public class PaymentServiceImpl implements PaymentService {
             ticketQrCodeDTO.setOrder_id(order.getOrderId());
             String qrCode = generateQRCode(ticketQrCodeDTO);
 
-            ZoneId vietnamZone = ZoneId.of("Asia/Ho_Chi_Minh");
-            LocalDateTime vietnamTime = LocalDateTime.now(vietnamZone);
+
             order.setOrderDate(vietnamTime);
             order.setQrCode(qrCode);
             order.setStatus(EOrderStatus.SUCCESSFUL);
@@ -904,7 +905,7 @@ public class PaymentServiceImpl implements PaymentService {
             Transaction transaction = new Transaction();
             transaction.setAmount(Double.valueOf(amount));
             transaction.setTransactionCode(transactionNo);
-            transaction.setTransactionDate(LocalDateTime.now());
+            transaction.setTransactionDate(vietnamTime);
             transaction.setDescription("Thanh toan don hang: " + orderCode);
             transaction.setAccount(account);
             transaction.setPayment(payment);
