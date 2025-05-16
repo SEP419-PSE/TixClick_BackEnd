@@ -164,18 +164,24 @@ public class PaymentServiceImpl implements PaymentService {
 
 
         String fullname = order.getAccount().getUserName();
-        List<TicketPurchase> ticketPurchases = ticketPurchaseRepository.findTicketPurchaseByOrderCode(order.getOrderCode());
+        String orderCodePayment = order.getOrderCode();
 
-        List<String> seatDescriptions = ticketPurchases.stream()
-                .map(TicketPurchase::getSeatActivity)
-                .filter(Objects::nonNull)
-                .map(AppUtils::parseSeatDisplayName)
-                .toList();
+        String separator = " - ";
+        String description = fullname + separator + orderCodePayment;
 
-        String fullSeatInfo = String.join("; ", seatDescriptions);
+        int maxLength = 25;
 
-        // Gộp lại để truyền vào description
-        String description = fullname + " - " + String.join(", ", seatDescriptions);
+        if (description.length() > maxLength) {
+            int allowedOrderCodeLength = maxLength - (fullname + separator).length();
+
+            // Cắt phần cuối của orderCodePayment
+            if (allowedOrderCodeLength > 0 && orderCodePayment.length() > allowedOrderCodeLength) {
+                orderCodePayment = orderCodePayment.substring(orderCodePayment.length() - allowedOrderCodeLength);
+            }
+
+            description = fullname + separator + orderCodePayment;
+        }
+
 
         PaymentData paymentData = PaymentData.builder()
                 .expiredAt(expiredAt)
