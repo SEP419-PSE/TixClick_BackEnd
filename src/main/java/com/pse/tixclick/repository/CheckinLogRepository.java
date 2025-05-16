@@ -35,4 +35,28 @@ public interface CheckinLogRepository extends JpaRepository<CheckinLog, Integer>
         GROUP BY 
             t.ticket_name, t.ticket_id
         """, nativeQuery = true)
-    List<TicketCheckinStatsProjection> getTicketCheckinStatsByEventActivityId(@Param("eventActivityId") int eventActivityId);}
+    List<TicketCheckinStatsProjection> getTicketCheckinStatsByEventActivityId(@Param("eventActivityId") int eventActivityId);
+
+    @Query(value = """
+      SELECT COUNT(cl.checkin_id) AS total_checkins
+            FROM checkin_log cl
+            JOIN orders o ON cl.order_id = o.order_id
+            JOIN order_detail od ON o.order_id = od.order_id
+            JOIN ticket_purchase tp ON od.ticket_purchase_id = tp.ticket_purchase_id
+            JOIN event_activity ea ON tp.event_activity_id = ea.event_activity_id
+            WHERE ea.event_activity_id = :eventActivityId AND cl.checkin_status = :checkinStatus
+    """,nativeQuery = true)
+    int countTotalCheckinsByEventActivityIdAndCheckinStatus(@Param("eventActivityId") int eventActivityId,
+                                            @Param("checkinStatus") String checkinStatus);
+
+    @Query(value = """
+      SELECT COUNT(cl.checkin_id) AS total_checkins
+            FROM checkin_log cl
+            JOIN orders o ON cl.order_id = o.order_id
+            JOIN order_detail od ON o.order_id = od.order_id
+            JOIN ticket_purchase tp ON od.ticket_purchase_id = tp.ticket_purchase_id
+            JOIN event_activity ea ON tp.event_activity_id = ea.event_activity_id
+            WHERE ea.event_activity_id = :eventActivityId 
+    """,nativeQuery = true)
+    int countTotalCheckinsByEventActivityId(@Param("eventActivityId") int eventActivityId);
+}
