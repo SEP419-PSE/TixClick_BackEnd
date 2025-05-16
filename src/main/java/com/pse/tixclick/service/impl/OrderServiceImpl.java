@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
 
 
@@ -62,8 +63,12 @@ public class OrderServiceImpl implements OrderService {
         Order order = new Order();
         order.setOrderCode(orderCodeAutomationCreating());
         order.setStatus(EOrderStatus.PENDING);
-        order.setOrderDate(LocalDateTime.now());
-        order.setAccount(appUtils.getAccountFromAuthentication());
+        // Lấy giờ hiện tại theo múi giờ Việt Nam
+        ZoneId zoneIdVN = ZoneId.of("Asia/Ho_Chi_Minh");
+        LocalDateTime vietnamNow = LocalDateTime.now(zoneIdVN);
+
+        // Gán cho order
+        order.setOrderDate(vietnamNow);        order.setAccount(appUtils.getAccountFromAuthentication());
         order.setTotalAmount(0);
         order = orderRepository.save(order);
 
