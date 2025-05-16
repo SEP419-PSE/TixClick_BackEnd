@@ -57,7 +57,7 @@ ORDER BY m.month;
 
 
     @Query(value = """
-    SELECT t.* 
+    SELECT DISTINCT t.* 
     FROM transactions t
     JOIN payment p ON t.payment_id = p.payment_id
     JOIN orders o ON p.order_id = o.order_id
