@@ -2,6 +2,7 @@ package com.pse.tixclick.controller;
 
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.payload.dto.*;
+import com.pse.tixclick.payload.request.QrCodeRequest;
 import com.pse.tixclick.payload.request.create.CreateSeatMapRequest;
 import com.pse.tixclick.payload.request.create.CreateTicketPurchaseRequest;
 import com.pse.tixclick.payload.request.create.ListTicketPurchaseRequest;
@@ -21,6 +22,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
 @RestController
@@ -210,7 +217,7 @@ public class TicketPurchaseController {
 
 
     @PostMapping("/decrypt_qr_code")
-    public ResponseEntity<ApiResponse<TicketQRResponse>> decryptQrCode(@RequestBody String qrCode) {
+    public ResponseEntity<ApiResponse<TicketQRResponse>> decryptQrCode(@RequestBody QrCodeRequest qrCode) {
         try {
             TicketQRResponse qr = ticketPurchaseService.decryptQrCode(qrCode);
             ApiResponse<TicketQRResponse> response = ApiResponse.<TicketQRResponse>builder()
@@ -226,6 +233,18 @@ public class TicketPurchaseController {
                     .result(null)
                     .build();
             return ResponseEntity.badRequest().body(errorResponse);
+        } catch (IllegalBlockSizeException e) {
+            throw new RuntimeException(e);
+        } catch (NoSuchPaddingException e) {
+            throw new RuntimeException(e);
+        } catch (BadPaddingException e) {
+            throw new RuntimeException(e);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (InvalidKeyException e) {
+            throw new RuntimeException(e);
         }
     }
 

@@ -173,6 +173,8 @@ public enum ErrorCode {
     USER_NOT_BUYER(1155,"Người dùng không phải là người mua",HttpStatus.BAD_REQUEST),
     ORDER_CANCELLED(1156,"Đơn hàng đã bị hủy",HttpStatus.BAD_REQUEST),
     INVALID_REQUEST(1157,"Yêu cầu không hợp lệ",HttpStatus.BAD_REQUEST),
+    EVENT_ACTIVITY_EXPIRED(1158,"Hoạt động sự kiện đã hết hạn",HttpStatus.BAD_REQUEST),
+    EVENT_ACTIVITY_NOT_STARTED_YET(1159,"Hoạt động sự kiện chưa bắt đầu",HttpStatus.BAD_REQUEST),
     ;
 
 

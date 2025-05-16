@@ -1,5 +1,7 @@
 package com.pse.tixclick.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pse.tixclick.config.testnotification.Message;
 import com.pse.tixclick.config.testnotification.MessageController;
 import com.pse.tixclick.exception.AppException;
@@ -16,6 +18,7 @@ import com.pse.tixclick.payload.entity.seatmap.*;
 import com.pse.tixclick.payload.entity.ticket.Ticket;
 import com.pse.tixclick.payload.entity.ticket.TicketMapping;
 import com.pse.tixclick.payload.entity.ticket.TicketPurchase;
+import com.pse.tixclick.payload.request.QrCodeRequest;
 import com.pse.tixclick.payload.request.create.CreateTicketPurchaseRequest;
 import com.pse.tixclick.payload.request.create.ListTicketPurchaseRequest;
 import com.pse.tixclick.payload.response.MyTicketResponse;
@@ -35,16 +38,26 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import javax.crypto.*;
+import javax.crypto.spec.SecretKeySpec;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.AccessDeniedException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.zip.DataFormatException;
+import java.util.zip.Inflater;
+
+import static com.nimbusds.jose.util.DeflateUtils.decompress;
+
 
 @Service
 @RequiredArgsConstructor
@@ -115,6 +128,8 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
 
     @Autowired
     OrderRepository orderRepository;
+    private static final String AES_ALGORITHM = "AES";
+    private static final String SECRET_KEY = "0123456789abcdef";
 
     @Override
     public List<TicketPurchaseDTO> createTicketPurchase(ListTicketPurchaseRequest createTicketPurchaseRequest) throws Exception {
@@ -984,60 +999,157 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
 
 
     @Override
-    public TicketQRResponse decryptQrCode(String encryptedQrCode) {
-//        try {
-//            // B1: Giải mã QR code
-//            String decryptedString = AppUtils.decrypt(encryptedQrCode);
-//            TicketQrCodeDTO qrDTO = AppUtils.stringToTicketQrCodeDTO(decryptedString);
-//
-//            // B2: Truy xuất dữ liệu từ DB
-//            EventActivity activity = eventActivityRepository.findById(qrDTO.getEvent_activity_id())
-//                    .orElseThrow(() -> new NotFoundException("Event activity not found"));
-//
-//            Order order = orderRepository.findById(qrDTO.getOrder_id())
-//                    .orElseThrow(() -> new NotFoundException("Order not found"));
-//
-//            Account account = accountRepository.findByUsername(qrDTO.getUser_name())
-//                    .orElseThrow(() -> new NotFoundException("Account not found"));
-//
-//            CheckinLog log = checkinLogRepository.findById(qrDTO.getCheckin_Log_id())
-//                    .orElseThrow(() -> new NotFoundException("Check-in log not found"));
-//
-//            // B3: Truy vé trong đơn hàng
-//            List<TicketPurchase> purchases = ticketPurchaseRepository.findByOrderId(order.getOrderId());
-//
-//            // B4: Build TicketDetailResponse
-//            List<TicketQRResponse.TicketDetailResponse> ticketDetails = purchases.stream().map(ticket -> {
-//                TicketQRResponse.TicketDetailResponse detail = new TicketQRResponse().new TicketDetailResponse();
-//                detail.setTicketPurchaseId(ticket.getTicketPurchaseId());
-//                detail.setPrice(ticket.getPrice());
-//                detail.setSeatCode(ticket.getSeatCode());
-//                detail.setSeatName(ticket.getSeatName());
-//                detail.setTicketType(ticket.getTicket().getTicketName());
-//                detail.setZoneName(ticket.getTicket().getZone().getZoneName());
-//                detail.setQuantity(ticket.getQuantity());
-//                detail.setOrderCode(order.getOrderCode());
-//                return detail;
-//            }).toList();
-//
-//            // B5: Build full response
-//            TicketQRResponse response = new TicketQRResponse();
-//            response.setEventName(activity.getEvent().getEventName());
-//            response.setEventDate(activity.getDateEvent());
-//            response.setStartTime(activity.getStartTimeEvent());
-//            response.setOrderCode(order.getOrderCode());
-//            response.setUserName(qrDTO.getUser_name());
-//            response.setFullName(account.getFullName());
-//            response.setCheckinStatus(log.getStatus().toString());
-//            response.setTicketDetails(ticketDetails);
-//
-//            return response;
-//
-//        } catch (Exception e) {
-//            throw new AppException(ErrorCode.INVALID_QR_CODE);
-//        }
+    public TicketQRResponse decryptQrCode(QrCodeRequest encryptedQrCode) {
+        try {
+            // 1. Kiểm tra đầu vào
+            if (encryptedQrCode.getQrCode() == null || encryptedQrCode.getQrCode().trim().isEmpty()) {
+                throw new AppException(ErrorCode.INVALID_QR_CODE);
+            }
+            String cleanedQrCode = encryptedQrCode.getQrCode().trim();
 
-        return null;
+            // 2. Giải mã Base64 URL-safe
+            byte[] encryptedBytes;
+            try {
+                encryptedBytes = Base64.getUrlDecoder().decode(cleanedQrCode);
+            } catch (IllegalArgumentException e) {
+                throw new AppException(ErrorCode.INVALID_QR_CODE);
+            }
+
+            // 3. Giải mã AES
+            SecretKey secretKey = new SecretKeySpec(SECRET_KEY.getBytes(StandardCharsets.UTF_8), "AES");
+            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+            cipher.init(Cipher.DECRYPT_MODE, secretKey);
+            byte[] compressedBytes;
+            try {
+                compressedBytes = cipher.doFinal(encryptedBytes);
+            } catch (IllegalBlockSizeException | BadPaddingException e) {
+                throw new AppException(ErrorCode.INVALID_QR_CODE);
+            }
+
+            // 4. Giải nén dữ liệu JSON
+            byte[] decompressedBytes;
+            try {
+                decompressedBytes = decompress(compressedBytes);
+            } catch (IllegalArgumentException e) {
+                throw new AppException(ErrorCode.INVALID_QR_CODE);
+            }
+            String json = new String(decompressedBytes, StandardCharsets.UTF_8);
+
+            // Debug JSON
+            System.out.println("Decrypted JSON: " + json);
+
+            // 5. Chuyển JSON thành DTO
+            ObjectMapper mapper = new ObjectMapper();
+            TicketQrCodeDTO dto;
+            try {
+                dto = mapper.readValue(json, TicketQrCodeDTO.class);
+            } catch (JsonProcessingException e) {
+                throw new AppException(ErrorCode.INVALID_QR_CODE);
+            }
+
+            // 6. Lấy thông tin sự kiện
+            var eventActivity = eventActivityRepository
+                    .findById(dto.getEvent_activity_id())
+                    .orElseThrow(() -> new AppException(ErrorCode.EVENT_ACTIVITY_NOT_FOUND));
+
+            // 7. Kiểm tra thời gian sự kiện
+            ZoneId vietnamZone = ZoneId.of("Asia/Ho_Chi_Minh");
+            ZonedDateTime nowVN = ZonedDateTime.now(vietnamZone);
+
+            LocalDateTime eventStartLocal = LocalDateTime.of(eventActivity.getDateEvent(), eventActivity.getStartTimeEvent());
+            ZonedDateTime eventStartVN = eventStartLocal.atZone(vietnamZone);
+
+            LocalDateTime eventEndLocal = LocalDateTime.of(eventActivity.getDateEvent(), eventActivity.getEndTimeEvent());
+            ZonedDateTime eventEndVN = eventEndLocal.atZone(vietnamZone);
+
+//            if (nowVN.isBefore(eventStartVN.minusHours(3))) {
+//                throw new AppException(ErrorCode.EVENT_ACTIVITY_NOT_STARTED_YET);
+//            }
+//            if (nowVN.isAfter(eventEndVN)) {
+//                throw new AppException(ErrorCode.EVENT_ACTIVITY_EXPIRED);
+//            }
+
+            // 8. Lấy order
+            var order = orderRepository
+                    .findById(dto.getOrder_id())
+                    .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+
+            // 9. Lấy checkinLog
+            var checkinLog = checkinLogRepository.findById(dto.getCheckin_Log_id())
+                    .orElseThrow(() -> new AppException(ErrorCode.CHECKIN_LOG_NOT_FOUND));
+
+            // 10. Lấy người dùng (consumer)
+            var consumer = accountRepository.findAccountByUserName(dto.getUser_name())
+                    .orElseThrow(() -> new AppException(ErrorCode.ACCOUNT_NOT_FOUND));
+
+            var event = eventActivity.getEvent();
+
+            // 11. Cập nhật trạng thái check-in (bỏ comment nếu cần)
+        /*
+        checkinLog.setCheckinStatus(ECheckinLogStatus.CHECKED_IN);
+        checkinLog.setCheckinTime(nowVN.toLocalDateTime());
+        checkinLog.setCheckinLocation(event.getLocationName());
+        checkinLog.setStaff(appUtils.getAccountFromAuthentication());
+        checkinLogRepository.save(checkinLog);
+        */
+
+            // 12. Tạo response
+            TicketQRResponse response = new TicketQRResponse();
+            response.setEventName(event.getEventName());
+            response.setEventDate(eventActivity.getDateEvent());
+            response.setStartTime(eventActivity.getStartTimeEvent());
+            response.setOrderCode(order.getOrderCode());
+            response.setUserName(dto.getUser_name());
+            response.setFullName(consumer.getFirstName() + " " + consumer.getLastName());
+            response.setCheckinStatus(checkinLog.getCheckinStatus().name());
+            response.setOrderCode(order.getOrderCode());
+            List<OrderDetail> orderDetails = (List<OrderDetail>) order.getOrderDetails();
+            List<TicketQRResponse.TicketDetailResponse> ticketDetails = new ArrayList<>();
+
+            for (OrderDetail orderDetail : orderDetails) {
+                TicketPurchase ticketPurchase = orderDetail.getTicketPurchase();
+                if (ticketPurchase != null) {
+                    TicketQRResponse.TicketDetailResponse detail = new TicketQRResponse.TicketDetailResponse();
+                    detail.setTicketPurchaseId(ticketPurchase.getTicketPurchaseId());
+                    detail.setPrice(ticketPurchase.getTicket().getPrice());
+                    detail.setSeatName(AppUtils.convertSeatName(ticketPurchase.getSeatActivity().getSeat().getSeatName()));
+                    detail.setTicketType(ticketPurchase.getTicket().getTicketName());
+                    detail.setZoneName(ticketPurchase.getZoneActivity().getZone().getZoneName());
+                    detail.setQuantity(ticketPurchase.getQuantity());
+                    ticketDetails.add(detail);
+                }
+            }
+
+            response.setTicketDetails(ticketDetails);
+
+            return response;
+
+        } catch (AppException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new AppException(ErrorCode.INVALID_QR_CODE);
+        }
+    }
+    public static byte[] decompress(byte[] compressedBytes) throws Exception {
+        Inflater inflater = new Inflater();
+        inflater.setInput(compressedBytes);
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        byte[] buffer = new byte[1024];
+
+        try {
+            while (!inflater.finished()) {
+                int count = inflater.inflate(buffer);
+                outputStream.write(buffer, 0, count);
+            }
+        } catch (DataFormatException e) {
+            throw new IllegalArgumentException("Lỗi giải nén dữ liệu: " + e.getMessage(), e);
+        } finally {
+            outputStream.close();
+            inflater.end();
+        }
+
+        return outputStream.toByteArray();
     }
 
 

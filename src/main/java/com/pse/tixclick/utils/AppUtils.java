@@ -233,6 +233,37 @@ public class AppUtils {
         return "G" + colNumber + "H" + rowLetter + (zoneName.isEmpty() ? "" : " " + zoneName);
     }
 
+    public static String convertSeatName(String rawSeatName) {
+        // Ví dụ: "1747214534816-r0-c0"
+        if (rawSeatName == null || !rawSeatName.contains("-r") || !rawSeatName.contains("-c")) {
+            return rawSeatName;
+        }
+
+        try {
+            String[] parts = rawSeatName.split("-");
+
+            String rowPart = Arrays.stream(parts)
+                    .filter(p -> p.startsWith("r"))
+                    .findFirst()
+                    .orElse("r0");
+
+            String colPart = Arrays.stream(parts)
+                    .filter(p -> p.startsWith("c"))
+                    .findFirst()
+                    .orElse("c0");
+
+            int rowIndex = Integer.parseInt(rowPart.substring(1));
+            int colIndex = Integer.parseInt(colPart.substring(1));
+
+            // Hàng = A, B, C,... (0 → A)
+            char rowChar = (char) ('A' + rowIndex);
+            int seatNumber = colIndex + 1;
+
+            return "Ghế " + seatNumber + " Hàng " + rowChar;
+        } catch (Exception e) {
+            return rawSeatName; // fallback nếu lỗi format
+        }
+    }
 
 
 

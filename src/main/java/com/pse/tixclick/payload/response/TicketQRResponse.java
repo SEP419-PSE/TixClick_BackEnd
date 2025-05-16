@@ -20,17 +20,19 @@ public class TicketQRResponse {
     private String userName;
     private String fullName;
     private String checkinStatus;
+    private int quantityTicket;
     private List<TicketDetailResponse> ticketDetails;
-
-    public class TicketDetailResponse{
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class TicketDetailResponse{
         private int ticketPurchaseId;
         private double price;
-        private String seatCode;
         private String seatName;
         private String ticketType;
         private String zoneName;
         private int quantity;
-        private String orderCode;
     }
 
 
