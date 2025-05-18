@@ -70,4 +70,7 @@ ORDER BY m.month;
 
     @Query("SELECT t FROM Transaction t WHERE t.transactionCode = :transactionCode")
     Transaction findByTransactionCode(@Param("transactionCode") String transactionCode);
+
+    @Query("SELECT t FROM Transaction t WHERE t.payment.paymentId = :paymentId")
+    Transaction findByPaymentId(@Param("paymentId") int paymentId);
 }

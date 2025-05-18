@@ -227,5 +227,7 @@ ORDER BY m.month;
             @Param("orderCode") String orderCode
     );
 
+    @Query(value = "SELECT tp FROM TicketPurchase tp WHERE tp.status = 'REFUNDING' AND tp.event.eventId = :eventId")
+    List<TicketPurchase> listTicketPurchaseRefunding(@Param("eventId") int eventId);
 
 }
