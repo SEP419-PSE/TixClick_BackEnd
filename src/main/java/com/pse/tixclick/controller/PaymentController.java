@@ -3,10 +3,12 @@ package com.pse.tixclick.controller;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.payload.dto.OrderDTO;
 import com.pse.tixclick.payload.dto.PaymentDTO;
+import com.pse.tixclick.payload.dto.TicketPurchaseDTO;
 import com.pse.tixclick.payload.dto.TicketQrCodeDTO;
 import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.request.ChangeTicketRequest;
 import com.pse.tixclick.payload.request.TicketPurchaseRequest;
+import com.pse.tixclick.payload.request.create.CreateContractAndDetailRequest;
 import com.pse.tixclick.payload.request.create.CreateOrderRequest;
 import com.pse.tixclick.payload.request.create.CreateTicketPurchaseRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
@@ -28,6 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -99,7 +102,7 @@ public class PaymentController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<ApiResponse<List<PaymentDTO>>> getAllPayments(){
+    public ResponseEntity<ApiResponse<List<PaymentDTO>>> getAllPayments() {
         try {
             List<PaymentDTO> paymentDTOS = paymentService.getAllPayments();
             return ResponseEntity.ok(
@@ -120,7 +123,7 @@ public class PaymentController {
     }
 
     @PostMapping("/test-qr")
-    public ResponseEntity<ApiResponse<String>> testQR(@RequestBody TicketQrCodeDTO ticketQrCodeDTO){
+    public ResponseEntity<ApiResponse<String>> testQR(@RequestBody TicketQrCodeDTO ticketQrCodeDTO) {
         try {
             String qr = paymentService.testQR(ticketQrCodeDTO);
             return ResponseEntity.ok(
@@ -143,7 +146,7 @@ public class PaymentController {
     @PostMapping("/change-ticket")
     @Operation(summary = "Change existing tickets", description = "Changes tickets based on provided ticket purchase requests and change details")
     public ResponseEntity<ApiResponse<PayOSResponse>> changeTicket(
-             @RequestBody ChangeTicketRequest changeTicketRequest,
+            @RequestBody ChangeTicketRequest changeTicketRequest,
             HttpServletRequest request) {
         try {
             PayOSResponse result = paymentService.changTicket(
@@ -176,8 +179,8 @@ public class PaymentController {
         }
     }
 
-    @GetMapping("/export/{eventId}")
-    public void exportRefunds(@PathVariable int eventId ,HttpServletResponse response) throws IOException {
+    @GetMapping("/export_refund/{eventId}")
+    public void exportRefunds(@PathVariable int eventId, HttpServletResponse response) throws IOException {
         /* 1. Danh sách cột cố định */
         List<String> columnList = List.of(
                 "transactionCode",
@@ -201,5 +204,24 @@ public class PaymentController {
 
         /* 3. Gọi service – ghi trực tiếp ra OutputStream */
         paymentService.exportRefunds(columnList, response.getOutputStream(), eventId);
+    }
+
+    @PostMapping("/import_refund")
+    public ResponseEntity<ApiResponse<String>> importRefund(@RequestParam("file") MultipartFile file) {
+        try {
+            String result = paymentService.readOrderCodeAndStatus(file.getInputStream());
+            ApiResponse<String> response = ApiResponse.<String>builder()
+                    .code(HttpStatus.OK.value())
+                    .result(result)
+                    .build();
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (Exception e) {
+            ApiResponse<String> response = ApiResponse.<String>builder()
+                    .code(HttpStatus.OK.value())
+                    .message(e.getMessage())
+                    .result(null)
+                    .build();
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        }
     }
 }
