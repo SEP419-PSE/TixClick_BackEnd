@@ -2,6 +2,8 @@ package com.pse.tixclick.repository;
 
 import com.pse.tixclick.payload.entity.entity_enum.EEventStatus;
 import com.pse.tixclick.payload.entity.event.Event;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -46,6 +48,9 @@ public interface EventRepository extends JpaRepository<Event, Integer>, JpaSpeci
     @Query(value = "SELECT e FROM Event e WHERE e.status = 'SCHEDULED'")
     List<Event> findScheduledEvents();
 
+    @Query(value = "SELECT e FROM Event e WHERE e.eventId = :id")
+    Event findEvent(@Param("id") int id);
+
     @Query(value = "SELECT e.eventId FROM Event e WHERE e.status = 'SCHEDULED'")
     List<Integer> findScheduledEventIds();
 
@@ -54,20 +59,22 @@ public interface EventRepository extends JpaRepository<Event, Integer>, JpaSpeci
     Optional<Event> findEventByEventIdAndCompany_RepresentativeId_UserName(int eventId, String userName);
 
     @Query("SELECT e FROM Event e " +
-            "JOIN e.tickets t " +
-            "WHERE (:eventType IS NULL OR e.typeEvent = :eventType) " +
+            "LEFT JOIN e.category c " +
+            "LEFT JOIN e.tickets t " +
+            "WHERE e.status = :status " +
             "AND (:eventName IS NULL OR LOWER(e.eventName) LIKE LOWER(CONCAT('%', :eventName, '%'))) " +
-            "AND (:eventCategories IS NULL OR e.category.categoryName IN :eventCategories) " +
-            "AND t.price >= :minPrice " +
-            "AND (:maxPrice IS NULL OR t.price <= :maxPrice) " +
-            "AND e.status = 'SCHEDULED' " +
-            "ORDER BY e.eventName")
-    List<Event> findEventsByFilter(
-            @Param("eventType") String eventType,
+            "AND (:categoryId IS NULL OR c.eventCategoryId = :categoryId) " +
+            "AND (:minPrice IS NULL OR t.price >= :minPrice) " +
+            "AND (:city IS NULL OR LOWER(e.city) = LOWER(:city) OR (:city = 'other' AND e.city NOT IN :mainCities))")
+    Page<Event> findEventsByFilters(
+            @Param("status") EEventStatus status,
             @Param("eventName") String eventName,
-            @Param("eventCategories") List<String> eventCategories,
-            @Param("minPrice") double minPrice,
-            @Param("maxPrice") Double maxPrice);
+            @Param("categoryId") Integer categoryId,
+            @Param("minPrice") Double minPrice,
+            @Param("city") String city,
+            @Param("mainCities") List<String> mainCities,
+            Pageable pageable);
+
 
 
     @Query("SELECT e FROM Event e WHERE e.eventCode = :eventCode")

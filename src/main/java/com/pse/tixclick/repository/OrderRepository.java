@@ -1,5 +1,8 @@
 package com.pse.tixclick.repository;
 
+import com.pse.tixclick.payload.dto.MyTicketFlatDTO;
+import com.pse.tixclick.payload.entity.entity_enum.EOrderStatus;
+import com.pse.tixclick.payload.entity.entity_enum.ETicketPurchaseStatus;
 import com.pse.tixclick.payload.entity.payment.Order;
 import com.pse.tixclick.payload.response.RevenueByDateProjection;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,6 +13,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
+
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Integer> {
     @Query("select o from Order o where o.account.accountId = :id")
@@ -62,4 +67,32 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate
     );
+
+    List<Order> findOrderByAccount_AccountIdAndStatus(int accountId, EOrderStatus status);
+
+    @Query("SELECT new com.pse.tixclick.payload.dto.MyTicketFlatDTO(" +
+            "o.orderId, o.orderCode, o.orderDate, o.totalAmount, o.totalAmountDiscount, " +
+            "tp.ticketPurchaseId, o.qrCode, tp.quantity, t.price, t.ticketName, " +
+            "e.eventId, e.eventName, e.logoURL, e.bannerURL, e.locationName, e.category.eventCategoryId, " +
+            "e.address, e.ward, e.district, e.city, (e.seatMap IS NOT NULL), " +
+            "ea.eventActivityId, ea.dateEvent, ea.startTimeEvent, " +
+            "z.zoneName, s.seatName) " +
+            "FROM Order o " +
+            "JOIN o.orderDetails od " +
+            "JOIN od.ticketPurchase tp " +
+            "JOIN tp.ticket t " +
+            "LEFT JOIN tp.event e " +
+            "LEFT JOIN tp.eventActivity ea " +
+            "LEFT JOIN tp.zoneActivity za " +
+            "LEFT JOIN za.zone z " +
+            "LEFT JOIN tp.seatActivity sa " +
+            "LEFT JOIN sa.seat s " +
+            "WHERE o.account.accountId = :accountId AND o.status = :status AND tp.status = :tpStatus")
+    List<MyTicketFlatDTO> findAllTicketInfoForAccount(@Param("accountId") int accountId,
+                                                      @Param("status") EOrderStatus status,
+                                                      @Param("tpStatus") ETicketPurchaseStatus tpStatus);
+
+
+
+    Optional<Order> findOrderByOrderCode(String orderCode);
 }

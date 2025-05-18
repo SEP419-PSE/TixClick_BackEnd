@@ -23,9 +23,6 @@ public class TicketPurchase {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int ticketPurchaseId;
 
-    @Column(columnDefinition = "NVARCHAR(MAX)")
-    private String qrCode;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ETicketPurchaseStatus status;
@@ -43,6 +40,9 @@ public class TicketPurchase {
 
     @Column
     private Integer ticketPurchaseOldId;
+
+    @Column
+    private String orderCode;
 
     @ManyToOne
     @JoinColumn(name="ticket_id", nullable = false)

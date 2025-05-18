@@ -20,6 +20,7 @@ import com.pse.tixclick.repository.*;
 import com.pse.tixclick.service.CompanyDocumentService;
 import com.pse.tixclick.service.CompanyService;
 import com.pse.tixclick.service.CompanyVerificationService;
+import com.pse.tixclick.utils.AppUtils;
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -27,6 +28,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.modelmapper.TypeToken;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -59,129 +61,7 @@ public class CompanyServiceImpl implements CompanyService {
     ContractDetailRepository contractDetailRepository;
     MemberRepository memberRepository;
     EventRepository eventRepository;
-    @Override
-    public CreateCompanyResponse createCompany(CreateCompanyRequest createCompanyRequest, MultipartFile file) throws IOException, MessagingException {
-        var context = SecurityContextHolder.getContext();
-        String name = context.getAuthentication().getName();
 
-        var account = accountRepository.findAccountByUserName(name)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-
-        String logoURL = cloudinary.uploadImageToCloudinary(file);
-
-        Company company = new Company();
-        company.setCompanyName(createCompanyRequest.getCompanyName());
-        company.setDescription(createCompanyRequest.getDescription());
-        company.setRepresentativeId(account);
-        company.setCodeTax(createCompanyRequest.getCodeTax());
-        company.setBankingCode(createCompanyRequest.getBankingCode());
-        company.setBankingName(createCompanyRequest.getBankingName());
-        company.setNationalId(createCompanyRequest.getNationalId());
-        company.setLogoURL(logoURL);
-        company.setEmail(createCompanyRequest.getEmail());
-        company.setAddress(createCompanyRequest.getAddress());
-        company.setStatus(ECompanyStatus.PENDING);
-        companyRepository.save(company);
-
-        CreateCompanyVerificationRequest createCompanyVerificationRequest = new CreateCompanyVerificationRequest();
-        createCompanyVerificationRequest.setCompanyId(company.getCompanyId());
-        createCompanyVerificationRequest.setStatus(EVerificationStatus.PENDING);
-
-        var companyVerification = companyVerificationService.createCompanyVerification(createCompanyVerificationRequest);
-        var companyManager = accountRepository.findById(companyVerification.getSubmitById())
-                .orElseThrow(() -> new AppException(ErrorCode.NOT_MANAGER_IN_DATABASE));
-        String fullname = (companyManager.getFirstName() != null ? companyManager.getFirstName() : "") +
-                " " +
-                (companyManager.getLastName() != null ? companyManager.getLastName() : "");
-        fullname = fullname.trim(); // Loại bỏ khoảng trắng thừa nếu có
-        String notificationMessage = "Công ty mới cần duyệt: " + company.getCompanyName();
-        List<Account> managers = accountRepository.findAccountsByRole_RoleId(4);
-
-        log.info("Sending notification to user: {}", companyManager.getUserName());
-        messagingTemplate.convertAndSendToUser(companyManager.getUserName(), "/queue/notifications", notificationMessage);
-
-        Notification notification = new Notification();
-        notification.setAccount(companyManager);
-        notification.setMessage(notificationMessage);
-        notification.setRead(false);
-        notification.setCreatedDate(LocalDateTime.now());
-        notificationRepository.save(notification);
-
-        emailService.sendCompanyCreationRequestNotification(companyManager.getEmail(), company.getCompanyName(), fullname);
-
-        // Tạo đối tượng response
-        return new CreateCompanyResponse(
-                company.getCompanyId(),
-                company.getCompanyName(),
-                company.getCodeTax(),
-                company.getBankingName(),
-                company.getBankingCode(),
-                company.getOwnerCard(),
-                company.getEmail(),
-                company.getNationalId(),
-                company.getLogoURL(),
-                company.getAddress(),
-                company.getDescription(),
-                company.getStatus().name(),
-                account.getAccountId(),
-                companyVerification.getCompanyVerificationId()
-        );
-    }
-
-
-    @Override
-    public CompanyDTO updateCompany(UpdateCompanyRequest updateCompanyRequest, int id) {
-        var context = SecurityContextHolder.getContext();
-        String name = context.getAuthentication().getName();
-
-        Company company = companyRepository.findCompanyByCompanyIdAndRepresentativeId_UserName(id, name)
-                .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_EXISTED));
-
-        company.setCompanyName(updateCompanyRequest.getCompanyName());
-        company.setDescription(updateCompanyRequest.getDescription());
-        company.setCodeTax(updateCompanyRequest.getCodeTax());
-        company.setBankingCode(updateCompanyRequest.getBankingCode());
-        company.setBankingName(updateCompanyRequest.getBankingName());
-        company.setEmail(updateCompanyRequest.getEmail());
-        company.setNationalId(updateCompanyRequest.getNationalId());
-        company.setLogoURL(updateCompanyRequest.getLogoURL());
-        company.setAddress(updateCompanyRequest.getAddress());
-        companyRepository.save(company);
-
-        return modelMapper.map(company, CompanyDTO.class);
-    }
-
-    @Override
-    public String approveCompany(int id) {
-        Company company = companyRepository
-                .findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_EXISTED));
-
-        company.setStatus(ECompanyStatus.ACTIVE);
-        companyRepository.save(company);
-        return "Company is now active";    }
-
-    @Override
-    public String rejectCompany(int id) {
-        Company company = companyRepository
-                .findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_EXISTED));
-
-        company.setStatus(ECompanyStatus.REJECTED);
-        companyRepository.save(company);
-        return "Company is now rejected";
-    }
-
-    @Override
-    public String inactiveCompany(int id) {
-        Company company = companyRepository
-                .findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_EXISTED));
-
-        company.setStatus(ECompanyStatus.INACTIVE);
-        companyRepository.save(company);
-        return "Company is now inactive";
-    }
 
     @Override
     public List<GetByCompanyResponse> getAllCompany() {
@@ -335,6 +215,7 @@ public class CompanyServiceImpl implements CompanyService {
     }
     @Override
     public CompanyAndDocumentResponse createCompanyAndDocument(CreateCompanyRequest createCompanyRequest, MultipartFile logoURL, List<MultipartFile> companyDocument) throws IOException, MessagingException {
+        AppUtils.checkRole(ERole.ORGANIZER);
         var context = SecurityContextHolder.getContext();
         String name = context.getAuthentication().getName();
 
@@ -551,6 +432,7 @@ public class CompanyServiceImpl implements CompanyService {
 
     @Override
     public CreateCompanyResponse updateCompany(int companyId, CreateCompanyRequest updateRequest, MultipartFile file, List<MultipartFile> fileDocument) throws IOException, MessagingException {
+        AppUtils.checkRole(ERole.ORGANIZER);
         String name = SecurityContextHolder.getContext().getAuthentication().getName();
 
         Account account = accountRepository.findAccountByUserName(name)
@@ -640,6 +522,84 @@ public class CompanyServiceImpl implements CompanyService {
         );
     }
 
+    @Override
+    public List<CompanyDocumentDTO> getDocumentByCompanyId(int companyId) {
+        AppUtils.checkRole(ERole.ORGANIZER);
+
+        var context = SecurityContextHolder.getContext();
+        String name = context.getAuthentication().getName();
+        var account = accountRepository.findAccountByUserName(name)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        var company = companyRepository.findCompanyByCompanyIdAndRepresentativeId_UserName(companyId, name)
+                .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_EXISTED));
+        if (company.getStatus() != ECompanyStatus.ACTIVE) {
+            throw new AppException(ErrorCode.COMPANY_NOT_ACTIVE);
+        }
+
+        List<CompanyDocuments> companyDocuments = companyDocumentRepository.findCompanyDocumentsByCompany_CompanyId(companyId);
+
+        return modelMapper.map(companyDocuments, new TypeToken<List<CompanyDocumentDTO>>() {}.getType());
+    }
+
+    @Override
+    public ListCompanyResponse getListCompanyByAccountId() {
+        // Lấy thông tin người dùng từ SecurityContext
+        var context = SecurityContextHolder.getContext();
+        String userName = context.getAuthentication().getName();
+
+        // Tìm tài khoản
+        Account account = accountRepository.findAccountByUserName(userName)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        // Tìm công ty mà người dùng là đại diện
+        Company myCompany = companyRepository.findCompanyByRepresentativeId_UserName(userName)
+                .orElse(null);
+
+        MyCompanyResponse myCompanyResponse = null;
+        if (myCompany != null) {
+            myCompanyResponse = MyCompanyResponse.builder()
+                    .companyId(myCompany.getCompanyId())
+                    .companyName(myCompany.getCompanyName())
+                    .logoURL(myCompany.getLogoURL())
+                    .address(myCompany.getAddress())
+                    .subRole("Representative") // Vai trò mặc định cho người đại diện
+                    .representativeId(userName)
+                    .build();
+        }
+
+
+        // Tìm danh sách thành viên của tài khoản
+        List<Member> members = memberRepository.findMembersByAccount_UserName(account.getUserName())
+                .stream()
+                .filter(member -> !Objects.equals(member.getSubRole(), ESubRole.OWNER))
+                .collect(Collectors.toList());
+
+        // Tạo danh sách MyCompanyResponse cho các công ty mà người dùng là thành viên
+        List<MyCompanyResponse> listCompany = members.stream()
+                .map(member -> {
+                    Company company = member.getCompany();
+                    if (company == null) {
+                        return null; // Bỏ qua nếu công ty null
+                    }
+                    return MyCompanyResponse.builder()
+                            .companyId(company.getCompanyId())
+                            .companyName(company.getCompanyName())
+                            .logoURL(company.getLogoURL())
+                            .address(company.getAddress())
+                            .subRole(member.getSubRole() != null ? String.valueOf(member.getSubRole()) : "Member") // Lấy subRole từ Member
+                            .representativeId(company.getRepresentativeId() != null ? company.getRepresentativeId().getUserName() : null)
+                            .build();
+                })
+                .filter(Objects::nonNull) // Loại bỏ các phần tử null
+                .collect(Collectors.toList());
+
+        // Tạo và trả về ListCompanyResponse
+        return ListCompanyResponse.builder()
+                .myCompany(myCompanyResponse)
+                .listCompany(listCompany)
+                .build();
+    }
 
 
 }

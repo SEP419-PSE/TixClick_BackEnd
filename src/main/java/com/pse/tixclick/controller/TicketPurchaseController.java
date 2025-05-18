@@ -2,11 +2,14 @@ package com.pse.tixclick.controller;
 
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.payload.dto.*;
+import com.pse.tixclick.payload.request.QrCodeRequest;
 import com.pse.tixclick.payload.request.create.CreateSeatMapRequest;
 import com.pse.tixclick.payload.request.create.CreateTicketPurchaseRequest;
 import com.pse.tixclick.payload.request.create.ListTicketPurchaseRequest;
 import com.pse.tixclick.payload.response.ApiResponse;
+import com.pse.tixclick.payload.response.MyTicketResponse;
 import com.pse.tixclick.payload.response.PaginationResponse;
+import com.pse.tixclick.payload.response.TicketQRResponse;
 import com.pse.tixclick.service.OrderService;
 import com.pse.tixclick.service.TicketPurchaseService;
 import com.pse.tixclick.service.TransactionService;
@@ -19,6 +22,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
 @RestController
@@ -163,20 +172,20 @@ public class TicketPurchaseController {
     }
 
     @GetMapping("/all_of_account")
-    public ResponseEntity<ApiResponse<PaginationResponse<MyTicketDTO>>> getAllTicketPurchaseByAccount(
+    public ResponseEntity<ApiResponse<PaginationResponse<MyTicketResponse>>> getAllTicketPurchaseByAccount(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam String sortDirection
     ) {
         try {
             int size = 3; // mỗi trang có 3 vé
-            PaginationResponse<MyTicketDTO> response = ticketPurchaseService.getTicketPurchasesByAccount(page, size,sortDirection);
+            PaginationResponse<MyTicketResponse> response = ticketPurchaseService.getTicketPurchasesByAccount(page, size,sortDirection);
 
             if (response == null || response.getItems().isEmpty()) {
                 return ResponseEntity.ok(
-                        ApiResponse.<PaginationResponse<MyTicketDTO>>builder()
+                        ApiResponse.<PaginationResponse<MyTicketResponse>>builder()
                                 .code(HttpStatus.OK.value())
                                 .message("No ticket purchases found on this page")
-                                .result(PaginationResponse.<MyTicketDTO>builder()
+                                .result(PaginationResponse.<MyTicketResponse>builder()
                                         .items(Collections.emptyList())
                                         .currentPage(page)
                                         .totalPages(0)
@@ -188,7 +197,7 @@ public class TicketPurchaseController {
             }
 
             return ResponseEntity.ok(
-                    ApiResponse.<PaginationResponse<MyTicketDTO>>builder()
+                    ApiResponse.<PaginationResponse<MyTicketResponse>>builder()
                             .code(200)
                             .message("Successfully fetched ticket purchases on page " + page)
                             .result(response)
@@ -196,7 +205,7 @@ public class TicketPurchaseController {
             );
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.<PaginationResponse<MyTicketDTO>>builder()
+                    .body(ApiResponse.<PaginationResponse<MyTicketResponse>>builder()
                             .code(400)
                             .message("Error: " + e.getMessage())
                             .result(null)
@@ -208,22 +217,34 @@ public class TicketPurchaseController {
 
 
     @PostMapping("/decrypt_qr_code")
-    public ResponseEntity<ApiResponse<TicketQrCodeDTO>> decryptQrCode(@RequestBody String qrCode) {
+    public ResponseEntity<ApiResponse<TicketQRResponse>> decryptQrCode(@RequestBody QrCodeRequest qrCode) {
         try {
-            TicketQrCodeDTO qr = ticketPurchaseService.decryptQrCode(qrCode);
-            ApiResponse<TicketQrCodeDTO> response = ApiResponse.<TicketQrCodeDTO>builder()
+            TicketQRResponse qr = ticketPurchaseService.decryptQrCode(qrCode);
+            ApiResponse<TicketQRResponse> response = ApiResponse.<TicketQRResponse>builder()
                     .code(HttpStatus.OK.value())
                     .message("Successfully decrypted QR code")
                     .result(qr)
                     .build();
-            return ResponseEntity.status(HttpStatus.OK).body(response);
+            return ResponseEntity.ok(response);
         } catch (AppException e) {
-            ApiResponse<TicketQrCodeDTO> errorResponse = ApiResponse.<TicketQrCodeDTO>builder()
+            ApiResponse<TicketQRResponse> errorResponse = ApiResponse.<TicketQRResponse>builder()
                     .code(HttpStatus.BAD_REQUEST.value())
                     .message(e.getMessage())
                     .result(null)
                     .build();
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+            return ResponseEntity.badRequest().body(errorResponse);
+        } catch (IllegalBlockSizeException e) {
+            throw new RuntimeException(e);
+        } catch (NoSuchPaddingException e) {
+            throw new RuntimeException(e);
+        } catch (BadPaddingException e) {
+            throw new RuntimeException(e);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (InvalidKeyException e) {
+            throw new RuntimeException(e);
         }
     }
 

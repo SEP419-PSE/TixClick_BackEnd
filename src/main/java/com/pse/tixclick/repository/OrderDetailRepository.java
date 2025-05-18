@@ -1,5 +1,8 @@
 package com.pse.tixclick.repository;
 
+import com.pse.tixclick.payload.dto.MyTicketFlatDTO;
+import com.pse.tixclick.payload.entity.entity_enum.EOrderStatus;
+import com.pse.tixclick.payload.entity.entity_enum.ETicketPurchaseStatus;
 import com.pse.tixclick.payload.entity.payment.OrderDetail;
 import com.pse.tixclick.payload.response.RevenueByDateProjection;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,4 +20,9 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetail, Intege
     List<OrderDetail> findByOrderId(@Param("id") int orderId);
 
     Optional<OrderDetail> findOrderDetailByTicketPurchase_TicketPurchaseId(int ticketPurchaseId);
+
+    List<OrderDetail> findOrderDetailsByOrder_OrderId(int orderId);
+
+
+
 }

@@ -130,6 +130,12 @@ public class AccountServiceImpl implements AccountService {
         if (accountDTO.getDob() != null) {
             user.setDob(accountDTO.getDob());
         }
+        if(accountDTO.getCCCD() != null) {
+            user.setCCCD(accountDTO.getCCCD());
+        }
+        if(accountDTO.getMSSV() != null) {
+            user.setMSSV(accountDTO.getMSSV());
+        }
 
         // Xử lý upload avatar nếu có
         if (accountDTO.getAvatarURL() != null && !accountDTO.getAvatarURL().isEmpty()) {

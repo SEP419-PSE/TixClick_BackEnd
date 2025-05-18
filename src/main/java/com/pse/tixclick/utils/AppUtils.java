@@ -2,14 +2,14 @@ package com.pse.tixclick.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.zxing.BarcodeFormat;
-import com.google.zxing.WriterException;
-import com.google.zxing.common.BitMatrix;
+import java.util.zip.Deflater;
+import java.util.zip.Inflater;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.TicketQrCodeDTO;
 import com.pse.tixclick.payload.entity.Account;
 import com.pse.tixclick.payload.entity.entity_enum.ERole;
+import com.pse.tixclick.payload.entity.seatmap.SeatActivity;
 import com.pse.tixclick.repository.*;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -71,16 +71,30 @@ public class AppUtils {
     }
 
 
-    public static String transferToString(Object object){
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(object);
+    public static String encryptTicketQrCode(TicketQrCodeDTO dto) throws Exception {
+        String json = new ObjectMapper().writeValueAsString(dto);     // Chuyển object thành JSON
+        byte[] compressed = compress(json);                           // Nén JSON
+        SecretKey secretKey = new SecretKeySpec(SECRET_KEY.getBytes(), AES_ALGORITHM);
+        Cipher cipher = Cipher.getInstance(AES_ALGORITHM);
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+        byte[] encrypted = cipher.doFinal(compressed);                // Mã hóa AES
+        return Base64.getUrlEncoder().encodeToString(encrypted);      // Base64 để tạo QR
+    }
+    public static byte[] compress(String data) throws Exception {
+        Deflater deflater = new Deflater();
+        deflater.setInput(data.getBytes("UTF-8"));
+        deflater.finish();
 
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        byte[] buffer = new byte[1024];
 
-        }catch (JsonProcessingException e){
-            e.printStackTrace();
+        while (!deflater.finished()) {
+            int count = deflater.deflate(buffer);
+            outputStream.write(buffer, 0, count);
         }
-        return "";
+
+        outputStream.close();
+        return outputStream.toByteArray();
     }
 
 
@@ -187,6 +201,70 @@ public class AppUtils {
             throw new AppException(ErrorCode.FORBIDDEN);
         }
     }
+    public static String rowIndexToLetter(int rowIndex) {
+        return String.valueOf((char) ('A' + rowIndex));
+    }
+
+    public static String parseSeatDisplayName(SeatActivity seatActivity) {
+        if (seatActivity == null || seatActivity.getSeat() == null) return "";
+
+        String rawSeatName = seatActivity.getSeat().getSeatName();  // ví dụ: 1747214534816-r0-c0
+        String[] parts = rawSeatName.split("-");
+        String rowStr = null, colStr = null;
+
+        for (String part : parts) {
+            if (part.startsWith("r")) rowStr = part.substring(1);  // "0"
+            if (part.startsWith("c")) colStr = part.substring(1);  // "0"
+        }
+
+        int rowIndex = rowStr != null ? Integer.parseInt(rowStr) : -1;
+        int colIndex = colStr != null ? Integer.parseInt(colStr) : -1;
+
+        String rowLetter = rowIndex >= 0 ? rowIndexToLetter(rowIndex) : "?";
+        String colNumber = colIndex >= 0 ? String.valueOf(colIndex + 1) : "?";
+
+        // Lấy tên zone (nếu có)
+        String zoneName = "";
+        if (seatActivity.getZoneActivity() != null && seatActivity.getZoneActivity().getZone() != null) {
+            zoneName = String.valueOf(seatActivity.getZoneActivity().getZone().getZoneId());  // từ ZoneActivity
+        }
+
+        // Rút gọn mô tả
+        return "G" + colNumber + "H" + rowLetter + (zoneName.isEmpty() ? "" : " " + zoneName);
+    }
+
+    public static String convertSeatName(String rawSeatName) {
+        // Ví dụ: "1747214534816-r0-c0"
+        if (rawSeatName == null || !rawSeatName.contains("-r") || !rawSeatName.contains("-c")) {
+            return rawSeatName;
+        }
+
+        try {
+            String[] parts = rawSeatName.split("-");
+
+            String rowPart = Arrays.stream(parts)
+                    .filter(p -> p.startsWith("r"))
+                    .findFirst()
+                    .orElse("r0");
+
+            String colPart = Arrays.stream(parts)
+                    .filter(p -> p.startsWith("c"))
+                    .findFirst()
+                    .orElse("c0");
+
+            int rowIndex = Integer.parseInt(rowPart.substring(1));
+            int colIndex = Integer.parseInt(colPart.substring(1));
+
+            // Hàng = A, B, C,... (0 → A)
+            char rowChar = (char) ('A' + rowIndex);
+            int seatNumber = colIndex + 1;
+
+            return "Ghế " + seatNumber + " Hàng " + rowChar;
+        } catch (Exception e) {
+            return rawSeatName; // fallback nếu lỗi format
+        }
+    }
+
 
 
 }

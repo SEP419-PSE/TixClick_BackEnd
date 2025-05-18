@@ -212,7 +212,7 @@ public class AuthenServiceImpl implements AuthenService {// Để lưu thời gi
         if (userRepository.findAccountByEmail(signUpRequest.getEmail()).isPresent()) {
             throw new AppException(ErrorCode.EMAIL_TAKEN);
         }
-        Role role = roleRepository.findRoleByRoleName(ERole.BUYER)
+        Role role = roleRepository.findRoleByRoleName(signUpRequest.getRoleName())
                 .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_EXISTED));
         // Nếu tất cả hợp lệ, tiếp tục tạo tài khoản mới
         Account newUser = new Account();

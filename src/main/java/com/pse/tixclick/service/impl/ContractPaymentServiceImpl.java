@@ -92,7 +92,10 @@ public class ContractPaymentServiceImpl implements ContractPaymentService {
                         contractPayment.setStatus(EContractPaymentStatus.PAID);
                         contractPayment.setPaymentDate(LocalDateTime.now());
                         contractPaymentRepository.save(contractPayment);
-
+                        var transaction1 = transactionRepository.findByTransactionCode(transactionCode);
+                        if(transaction1 != null) {
+                            throw new AppException(ErrorCode.TRANSACTION_ALREADY_EXISTS);
+                        }
                         // Lưu thông tin giao dịch
                         Transaction transaction = new Transaction();
                         transaction.setAmount(amount);
@@ -120,10 +123,12 @@ public class ContractPaymentServiceImpl implements ContractPaymentService {
                                 break;
                             }
                         }
+
                         if(allPaid) {
                             var event = eventRepository.findEventByEventId(contract.getEvent().getEventId())
                                     .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
                              event.setStatus(EEventStatus.COMPLETED);
+                            contract.setStatus(EContractStatus.COMPLETED);
                             eventRepository.save(event);
                         }
 

@@ -17,5 +17,7 @@ public class UpdateAccountRequest {
     String email;
     String phone;
     LocalDate dob;
+    String CCCD;
+    String MSSV;
     MultipartFile avatarURL;
 }

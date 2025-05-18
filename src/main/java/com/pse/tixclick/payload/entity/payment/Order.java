@@ -38,6 +38,9 @@ public class  Order {
     @Column(columnDefinition = "NVARCHAR(255)")
     private String note;
 
+    @Column(columnDefinition = "NVARCHAR(MAX)")
+    private String qrCode;
+
     @Column
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime orderDate;

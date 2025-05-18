@@ -203,4 +203,31 @@ ORDER BY m.month;
 
 
     Integer countTicketPurchaseByEventActivity_EventActivityIdAndStatus(int eventActivityId, ETicketPurchaseStatus status);
+
+    @Query("SELECT DISTINCT tp.account.accountId FROM TicketPurchase tp " +
+            "WHERE tp.status = :status AND tp.eventActivity.eventActivityId = :eventActivityId")
+    List<Integer> findDistinctAccountIdsByEventActivityIdAndStatus(
+            @Param("eventActivityId") int eventActivityId,
+            @Param("status") ETicketPurchaseStatus status);
+
+    List<TicketPurchase> findTicketPurchasesByAccount_AccountIdAndEventActivity_EventActivityIdAndStatus(
+            int accountId, int eventActivityId, ETicketPurchaseStatus status);
+
+
+
+    @Query(value = """
+
+            SELECT tp.*
+    FROM [tixclick].[dbo].[ticket_purchase] tp
+    INNER JOIN [tixclick].[dbo].[order_detail] od ON tp.ticket_purchase_id = od.ticket_purchase_id
+    INNER JOIN [tixclick].[dbo].[orders] o ON od.order_id = o.order_id
+    WHERE o.order_code = :orderCode; 
+    """, nativeQuery = true)
+    List<TicketPurchase> findTicketPurchaseByOrderCode(
+            @Param("orderCode") String orderCode
+    );
+
+    @Query(value = "SELECT tp FROM TicketPurchase tp WHERE tp.status = 'REFUNDING' AND tp.event.eventId = :eventId")
+    List<TicketPurchase> listTicketPurchaseRefunding(@Param("eventId") int eventId);
+
 }

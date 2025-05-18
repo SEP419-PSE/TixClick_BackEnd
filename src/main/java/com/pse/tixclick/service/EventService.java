@@ -61,9 +61,8 @@ public interface EventService {
 
     List<EventForConsumerResponse> getEventsForConsumerInMonth(int month);
 
-    List<EventDetailForConsumer>  getEventByStartDateAndEndDateAndEventTypeAndEventName(String startDate, String endDate, String eventType, String eventName,List<String> eventCategory, Double minPrice, Double maxPrice);
-
-    List<EventDetailForConsumer> searchEvent(String eventName, Integer eventCategoryId, Double minPrice, String city);
+    PaginationResponse<EventDetailForConsumer> searchEvent(
+            String eventName, Integer eventCategoryId, Double minPrice, String city, int page, int size);
     PaginationResponse<EventDashboardResponse> getEventDashboardByCompanyId(int companyId, int page, int size);
 
     boolean approvedEvent(int eventId, EEventStatus status) throws MessagingException;
@@ -79,4 +78,7 @@ public interface EventService {
     List<EventForConsumerResponse> getEventsForConsumerByEventCategory(int eventCategoryId,EEventStatus status);
 
     DashboardEventResponse getDashboardEvent(int eventId);
+
+    List<ListCosumerResponse> getCustomerByEventId(int eventActivityId);
+
 }

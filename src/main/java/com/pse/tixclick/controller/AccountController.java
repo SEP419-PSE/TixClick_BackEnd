@@ -109,6 +109,8 @@ public class AccountController {
     public ResponseEntity<ApiResponse<AccountDTO>> updateProfile(
             @RequestParam(required = false) String firstName,
             @RequestParam(required = false) String lastName,
+            @RequestParam(required = false) String CCCD,
+            @RequestParam(required = false) String MSSV,
             @RequestParam(required = false) String email,
             @RequestParam(required = false) String phone,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dob,
@@ -116,14 +118,17 @@ public class AccountController {
     ) {
         try {
             // Tạo DTO từ request
-            UpdateAccountRequest accountDTO = new UpdateAccountRequest(
-                    firstName,
-                    lastName,
-                    email,
-                    phone,
-                    dob,
-                    avatarURL
-            );
+            UpdateAccountRequest accountDTO = new UpdateAccountRequest();
+            if (firstName != null && !firstName.isEmpty()) accountDTO.setFirstName(firstName);
+            if (lastName != null && !lastName.isEmpty()) accountDTO.setLastName(lastName);
+            if (CCCD != null && !CCCD.isEmpty()) accountDTO.setCCCD(CCCD);
+            if (MSSV != null && !MSSV.isEmpty()) accountDTO.setMSSV(MSSV);
+            if (email != null && !email.isEmpty()) accountDTO.setEmail(email);
+            if (phone != null && !phone.isEmpty()) accountDTO.setPhone(phone);
+            if (dob != null) accountDTO.setDob(dob);
+            if (avatarURL != null && !avatarURL.isEmpty()) accountDTO.setAvatarURL(avatarURL);
+
+
 
             // Gọi service
             AccountDTO updatedAccount = accountService.updateProfile(accountDTO);

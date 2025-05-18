@@ -2,6 +2,7 @@ package com.pse.tixclick.payload.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.pse.tixclick.payload.entity.entity_enum.ECheckinLogStatus;
+import com.pse.tixclick.payload.entity.payment.Order;
 import com.pse.tixclick.payload.entity.ticket.TicketPurchase;
 import jakarta.persistence.*;
 import lombok.*;
@@ -43,6 +44,6 @@ public class CheckinLog {
     private Account staff;
 
     @ManyToOne
-    @JoinColumn(name = "ticket_purchase_id")
-    private TicketPurchase ticketPurchase;
+    @JoinColumn(name = "order_id")
+    private Order order;
 }

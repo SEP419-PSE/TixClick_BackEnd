@@ -15,6 +15,8 @@ public class AccountDTO {
     String userName;
     String email;
     String phone;
+    String CCCD;
+    String MSSV;
     boolean active;
     String avatarURL;
     String dob;

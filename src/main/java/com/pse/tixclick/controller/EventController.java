@@ -4,14 +4,23 @@ import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.payload.dto.EventDTO;
 import com.pse.tixclick.payload.dto.UpcomingEventDTO;
 import com.pse.tixclick.payload.entity.entity_enum.EEventStatus;
+import com.pse.tixclick.payload.entity.entity_enum.ERole;
 import com.pse.tixclick.payload.request.create.CreateEventRequest;
 import com.pse.tixclick.payload.request.update.UpdateEventRequest;
 import com.pse.tixclick.payload.response.*;
 import com.pse.tixclick.service.EventService;
+import com.pse.tixclick.utils.AppUtils;
 import jakarta.mail.MessagingException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
@@ -567,33 +577,34 @@ public class EventController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<ApiResponse<List<EventDetailForConsumer>>> searchEvents(
+    public ResponseEntity<ApiResponse<PaginationResponse<EventDetailForConsumer>>> searchEvents(
             @RequestParam(required = false) String eventName,
             @RequestParam(required = false) Integer eventCategoryId,
             @RequestParam(required = false) Double minPrice,
-            @RequestParam(required = false) String city
+            @RequestParam(required = false) String city,
+            @RequestParam(defaultValue = "0") int page
     ) {
         try {
-            List<EventDetailForConsumer> events = eventService.searchEvent(eventName, eventCategoryId, minPrice, city);
-            int totalResults = events.size();  // Tính tổng số kết quả
+            int size = 6;
+            PaginationResponse<EventDetailForConsumer> paginationResponse = eventService.searchEvent(eventName, eventCategoryId, minPrice, city, page, size);
 
             return ResponseEntity.ok(
-                    ApiResponse.<List<EventDetailForConsumer>>builder()
+                    ApiResponse.<PaginationResponse<EventDetailForConsumer>>builder()
                             .code(HttpStatus.OK.value())
-                            .message(totalResults == 0
-                                    ? "No events found with the provided filters"
-                                    : "Successfully retrieved " + totalResults + " events with the provided filters")                            .result(events)
+                            .message("Successfully retrieved events with the provided filters")
+                            .result(paginationResponse)
                             .build()
             );
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.<List<EventDetailForConsumer>>builder()
+                    .body(ApiResponse.<PaginationResponse<EventDetailForConsumer>>builder()
                             .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .message("An error occurred while retrieving the events with the provided filters")
                             .result(null)
                             .build());
         }
     }
+
 
     @GetMapping("/dashboard/{companyId}")
     public ResponseEntity<ApiResponse<PaginationResponse<EventDashboardResponse>>> getEventDashboardByCompanyId(
@@ -828,6 +839,133 @@ public class EventController {
                             .message("Đã xảy ra lỗi khi lấy tổng quan sự kiện")
                             .result(null)
                             .build());
+        }
+    }
+
+    @GetMapping("/list-consumer/{eventActivityId}")
+    public ResponseEntity<ApiResponse<List<ListCosumerResponse>>> getListConsumerByEventId(@PathVariable int eventActivityId) {
+        try {
+            List<ListCosumerResponse> consumerResponses = eventService.getCustomerByEventId(eventActivityId);
+            if(consumerResponses.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.OK.value())
+                        .body(ApiResponse.<List<ListCosumerResponse>>builder()
+                                .code(HttpStatus.OK.value())
+                                .message("No consumers found for event activity id: " + eventActivityId)
+                                .result(null)
+                                .build());
+            }
+            return ResponseEntity.ok(
+                    ApiResponse.<List<ListCosumerResponse>>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Get list consumer by event id successfully")
+                            .result(consumerResponses)
+                            .build()
+            );
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.<List<ListCosumerResponse>>builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.<List<ListCosumerResponse>>builder()
+                            .code(HttpStatus.NOT_FOUND.value())
+                            .message("Event activity not found with id: " + eventActivityId)
+                            .result(null)
+                            .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<List<ListCosumerResponse>>builder()
+                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .message("An error occurred while retrieving the list of consumers")
+                            .result(null)
+                            .build());
+        }
+    }
+
+
+    @GetMapping("/export-consumers/{eventActivityId}")
+    public ResponseEntity<ByteArrayResource> exportConsumersToExcel(@PathVariable int eventActivityId){
+
+        AppUtils.checkRole(ERole.ORGANIZER);
+        List<ListCosumerResponse> consumers = eventService.getCustomerByEventId(eventActivityId);
+
+        try (Workbook workbook = new XSSFWorkbook()) {
+            Sheet sheet = workbook.createSheet("Consumers");
+
+            int rowNum = 0;
+
+            // Header
+            Row header = sheet.createRow(rowNum++);
+            header.createCell(0).setCellValue("STT");
+            header.createCell(1).setCellValue("Tên");
+            header.createCell(2).setCellValue("Email");
+            header.createCell(3).setCellValue("SĐT");
+            header.createCell(4).setCellValue("Order Code");
+            header.createCell(5).setCellValue("Đã Checkin");
+            header.createCell(6).setCellValue("Loại Vé");
+            header.createCell(7).setCellValue("Khu Vực");
+            header.createCell(8).setCellValue("Ghế");
+            header.createCell(9).setCellValue("Số Lượng");
+            header.createCell(10).setCellValue("Giá");
+
+            int index = 1;
+
+            for (ListCosumerResponse c : consumers) {
+                for (TicketSheetResponse ticketSheet : c.getTicketPurchases()) {
+                    for (TicketSheetResponse.TicketPurchaseResponse tpr : ticketSheet.getTicketPurchases()) {
+                        Row row = sheet.createRow(rowNum++);
+                        row.createCell(0).setCellValue(index++);
+                        row.createCell(1).setCellValue(c.getUsername());
+                        row.createCell(2).setCellValue(c.getEmail());
+                        row.createCell(3).setCellValue(c.getPhone() != null ? c.getPhone() : "");
+                        row.createCell(4).setCellValue(ticketSheet.getOrderCode());
+                        row.createCell(5).setCellValue(ticketSheet.isHaveCheckin() ? "✓" : " ");
+                        row.createCell(6).setCellValue(tpr.getTicketType());
+                        row.createCell(7).setCellValue(tpr.getZoneName());
+                        String formattedSeat = "";
+                        if (tpr.getSeatCode() != null && tpr.getSeatCode().contains("-r") && tpr.getSeatCode().contains("-c")) {
+                            try {
+                                String[] parts = tpr.getSeatCode().split("-");
+                                String rowPart = parts[parts.length - 2]; // "r3"
+                                String colPart = parts[parts.length - 1]; // "c5"
+
+                                int row1 = Integer.parseInt(rowPart.substring(1)); // 3
+                                int col = Integer.parseInt(colPart.substring(1)); // 5
+
+                                char rowChar = (char) ('A' + row1); // 3 → 'D'
+                                int colNum = col + 1;              // 5 → 6
+
+                                formattedSeat = "Hàng " + rowChar + " Ghế " + colNum;
+                            } catch (Exception ex) {
+                                formattedSeat = tpr.getSeatCode(); // fallback nếu lỗi
+                            }
+                        }
+                        row.createCell(8).setCellValue(formattedSeat);
+                        row.createCell(9).setCellValue(tpr.getQuantity());
+                        row.createCell(10).setCellValue(tpr.getPrice());
+                    }
+                }
+            }
+
+            // Ghi workbook ra mảng byte
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            workbook.write(out);
+            ByteArrayResource resource = new ByteArrayResource(out.toByteArray());
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=consumers.xlsx");
+
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .contentLength(resource.contentLength())
+                    .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                    .body(resource);
+
+        } catch (IOException e) {
+            throw new RuntimeException("Export Excel failed", e);
         }
     }
 }

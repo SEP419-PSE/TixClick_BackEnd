@@ -2,6 +2,7 @@ package com.pse.tixclick.controller;
 
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.payload.dto.CompanyDTO;
+import com.pse.tixclick.payload.dto.CompanyDocumentDTO;
 import com.pse.tixclick.payload.request.create.CreateCompanyRequest;
 import com.pse.tixclick.payload.request.create.CreateEventRequest;
 import com.pse.tixclick.payload.request.update.UpdateCompanyRequest;
@@ -29,124 +30,6 @@ import java.util.List;
 public class CompanyController {
     @Autowired
     private CompanyService companyService;
-
-    @PostMapping("/create")
-    public ResponseEntity<ApiResponse<CreateCompanyResponse>> createCompany(
-            @ModelAttribute CreateCompanyRequest createCompanyRequest,
-            @RequestParam("file") MultipartFile file
-    ) {
-        try {
-            CreateCompanyResponse companyDTO = companyService.createCompany(createCompanyRequest, file);
-            return ResponseEntity.ok(
-                    ApiResponse.<CreateCompanyResponse>builder()
-                            .code(HttpStatus.OK.value())
-                            .message("Company created successfully")
-                            .result(companyDTO)
-                            .build()
-            );
-        } catch (AppException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.<CreateCompanyResponse>builder()
-                            .code(HttpStatus.BAD_REQUEST.value())
-                            .message(e.getMessage())
-                            .result(null)
-                            .build());
-        } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.<CreateCompanyResponse>builder()
-                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                            .message("File upload failed. Please try again.")
-                            .result(null)
-                            .build());
-        } catch (MessagingException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-
-    @PutMapping("/update/{id}")
-    public ResponseEntity<ApiResponse<CompanyDTO>> updateCompany(@RequestBody UpdateCompanyRequest updateCompanyRequest, @PathVariable int id) {
-        try {
-            CompanyDTO companyDTO = companyService.updateCompany(updateCompanyRequest, id);
-            return ResponseEntity.ok(
-                    ApiResponse.<CompanyDTO>builder()
-                            .code(HttpStatus.OK.value())
-                            .message("Company updated successfully")
-                            .result(companyDTO)
-                            .build()
-            );
-        } catch (AppException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST.value())
-                    .body(ApiResponse.<CompanyDTO>builder()
-                            .code(HttpStatus.BAD_REQUEST.value())
-                            .message(e.getMessage())
-                            .result(null)
-                            .build());
-        }
-    }
-
-    @PutMapping("/approve/{id}")
-    public ResponseEntity<ApiResponse<String>> approveCompany(@PathVariable int id) {
-        try {
-            String message = companyService.approveCompany(id);
-            return ResponseEntity.ok(
-                    ApiResponse.<String>builder()
-                            .code(HttpStatus.OK.value())
-                            .message(message)
-                            .result(null)
-                            .build()
-            );
-        } catch (AppException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.<String>builder()
-                            .code(HttpStatus.BAD_REQUEST.value())
-                            .message(e.getMessage())
-                            .result(null)
-                            .build());
-        }
-    }
-
-    @PutMapping("/reject/{id}")
-    public ResponseEntity<ApiResponse<String>> rejectCompany(@PathVariable int id) {
-        try {
-            String message = companyService.rejectCompany(id);
-            return ResponseEntity.ok(
-                    ApiResponse.<String>builder()
-                            .code(HttpStatus.OK.value())
-                            .message(message)
-                            .result(null)
-                            .build()
-            );
-        } catch (AppException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.<String>builder()
-                            .code(HttpStatus.BAD_REQUEST.value())
-                            .message(e.getMessage())
-                            .result(null)
-                            .build());
-        }
-    }
-
-    @PutMapping("/inactive/{id}")
-    public ResponseEntity<ApiResponse<String>> inactiveCompany(@PathVariable int id) {
-        try {
-            String message = companyService.inactiveCompany(id);
-            return ResponseEntity.ok(
-                    ApiResponse.<String>builder()
-                            .code(HttpStatus.OK.value())
-                            .message(message)
-                            .result(null)
-                            .build()
-            );
-        } catch (AppException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.<String>builder()
-                            .code(HttpStatus.BAD_REQUEST.value())
-                            .message(e.getMessage())
-                            .result(null)
-                            .build());
-        }
-    }
 
     @GetMapping("/all")
     public ResponseEntity<ApiResponse<List<GetByCompanyResponse>>> getAllCompany() {
@@ -471,4 +354,60 @@ public class CompanyController {
         }
     }
 
+
+    @GetMapping("/get-document-by-company-id/{companyId}")
+    public ResponseEntity<ApiResponse<List<CompanyDocumentDTO>>> getDocumentByCompanyId(@PathVariable int companyId) {
+        try {
+            List<CompanyDocumentDTO> companyDocumentDTOList = companyService.getDocumentByCompanyId(companyId);
+            return ResponseEntity.ok(
+                    ApiResponse.<List<CompanyDocumentDTO>>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Get document by company id successfully")
+                            .result(companyDocumentDTOList)
+                            .build()
+            );
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.<List<CompanyDocumentDTO>>builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<List<CompanyDocumentDTO>>builder()
+                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .message("Internal server error")
+                            .result(null)
+                            .build());
+        }
+    }
+
+    @GetMapping("/get-list-company-by-account-id")
+    public ResponseEntity<ApiResponse<ListCompanyResponse>> getListCompanyByAccountId() {
+        try {
+            ListCompanyResponse companyDTOList = companyService.getListCompanyByAccountId();
+            return ResponseEntity.ok(
+                    ApiResponse.<ListCompanyResponse>builder()
+                            .code(HttpStatus.OK.value())
+                            .message("Get list company by account id successfully")
+                            .result(companyDTOList)
+                            .build()
+            );
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.<ListCompanyResponse>builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(e.getMessage())
+                            .result(null)
+                            .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<ListCompanyResponse>builder()
+                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .message("Internal server error")
+                            .result(null)
+                            .build());
+        }
+    }
 }

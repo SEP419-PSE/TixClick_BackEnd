@@ -9,15 +9,14 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface CheckinLogRepository extends JpaRepository<CheckinLog, Integer> {
     @Query(value = "SELECT COUNT(*) FROM CheckinLog WHERE checkinStatus = 'CHECKED_IN'")
     int countTotalCheckins();
 
-    int countByTicketPurchase_EventActivity_EventActivityIdAndCheckinStatus(int eventActivityId, ECheckinLogStatus checkinStatus);
 
-    int countByTicketPurchase_EventActivity_EventActivityId(int eventActivityId);
 
     @Query(value = """
         SELECT 
@@ -37,4 +36,32 @@ public interface CheckinLogRepository extends JpaRepository<CheckinLog, Integer>
         GROUP BY 
             t.ticket_name, t.ticket_id
         """, nativeQuery = true)
-    List<TicketCheckinStatsProjection> getTicketCheckinStatsByEventActivityId(@Param("eventActivityId") int eventActivityId);}
+    List<TicketCheckinStatsProjection> getTicketCheckinStatsByEventActivityId(@Param("eventActivityId") int eventActivityId);
+
+    @Query(value = """
+      SELECT COUNT(cl.checkin_id) AS total_checkins
+            FROM checkin_log cl
+            JOIN orders o ON cl.order_id = o.order_id
+            JOIN order_detail od ON o.order_id = od.order_id
+            JOIN ticket_purchase tp ON od.ticket_purchase_id = tp.ticket_purchase_id
+            JOIN event_activity ea ON tp.event_activity_id = ea.event_activity_id
+            WHERE ea.event_activity_id = :eventActivityId AND cl.checkin_status = :checkinStatus
+    """,nativeQuery = true)
+    int countTotalCheckinsByEventActivityIdAndCheckinStatus(@Param("eventActivityId") int eventActivityId,
+                                            @Param("checkinStatus") String checkinStatus);
+
+    @Query(value = """
+      SELECT COUNT(cl.checkin_id) AS total_checkins
+            FROM checkin_log cl
+            JOIN orders o ON cl.order_id = o.order_id
+            JOIN order_detail od ON o.order_id = od.order_id
+            JOIN ticket_purchase tp ON od.ticket_purchase_id = tp.ticket_purchase_id
+            JOIN event_activity ea ON tp.event_activity_id = ea.event_activity_id
+            WHERE ea.event_activity_id = :eventActivityId 
+    """,nativeQuery = true)
+    int countTotalCheckinsByEventActivityId(@Param("eventActivityId") int eventActivityId);
+
+    Optional<CheckinLog> findCheckinLogByOrder_OrderId(int orderId);
+
+    Optional<CheckinLog> findCheckinLogByOrder_OrderCode(String orderCode);
+}

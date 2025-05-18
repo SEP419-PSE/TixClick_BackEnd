@@ -193,6 +193,20 @@ public class EventActivityServiceImpl implements EventActivityService {
                 if (!ERole.MANAGER.equals(account.getRole().getRoleName())) {
                     throw new AppException(ErrorCode.NOT_PERMISSION);
                 }
+
+                // ✅ Cập nhật EventActivity
+                EventActivity eventActivity = eventActivityRepository.findById(request.getEventActivityId())
+                        .orElseThrow(() -> new AppException(ErrorCode.EVENT_ACTIVITY_NOT_FOUND));
+
+                if(eventActivity.getUpdatedByManager() != null) {
+                    if (eventActivity.getUpdatedByManager().getAccountId() != account.getAccountId()) {
+                        throw new AppException(ErrorCode.NOT_PERMISSION);
+                    }
+                }
+
+                if (request.getDateEvent().isBefore(eventActivity.getDateEvent())) {
+                    throw new AppException(ErrorCode.INVALID_EVENT_DATE); // Bạn có thể định nghĩa lỗi này
+                }
             } else {
                 throw new AppException(ErrorCode.CAN_NOT_UPDATE);
             }
@@ -203,6 +217,7 @@ public class EventActivityServiceImpl implements EventActivityService {
                 // ✅ Cập nhật EventActivity
                 eventActivity = eventActivityRepository.findById(request.getEventActivityId())
                         .orElseThrow(() -> new AppException(ErrorCode.EVENT_ACTIVITY_NOT_FOUND));
+
                 String oldActivityDate = String.valueOf(eventActivity.getDateEvent());
                 eventActivity.setActivityName(request.getActivityName());
                 eventActivity.setDateEvent(request.getDateEvent());
@@ -221,7 +236,7 @@ public class EventActivityServiceImpl implements EventActivityService {
                 );
 
 
-                if (!ticketPurchases.isEmpty()) {
+                if (!ticketPurchases.isEmpty()  && event.getStatus() == EEventStatus.SCHEDULED) {
                     // Gửi email lại cho tất cả người dùng đã mua vé
                     for (TicketPurchase ticketPurchase : ticketPurchases) {
                         String fullName = ticketPurchase.getAccount().getFirstName() + " " + ticketPurchase.getAccount().getLastName();
