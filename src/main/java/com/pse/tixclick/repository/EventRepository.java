@@ -48,6 +48,9 @@ public interface EventRepository extends JpaRepository<Event, Integer>, JpaSpeci
     @Query(value = "SELECT e FROM Event e WHERE e.status = 'SCHEDULED'")
     List<Event> findScheduledEvents();
 
+    @Query(value = "SELECT e FROM Event e WHERE e.eventId = :id")
+    Event findEvent(@Param("id") int id);
+
     @Query(value = "SELECT e.eventId FROM Event e WHERE e.status = 'SCHEDULED'")
     List<Integer> findScheduledEventIds();
 

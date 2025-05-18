@@ -4,6 +4,7 @@ import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.payload.dto.OrderDTO;
 import com.pse.tixclick.payload.dto.PaymentDTO;
 import com.pse.tixclick.payload.dto.TicketQrCodeDTO;
+import com.pse.tixclick.payload.entity.event.Event;
 import com.pse.tixclick.payload.request.ChangeTicketRequest;
 import com.pse.tixclick.payload.request.TicketPurchaseRequest;
 import com.pse.tixclick.payload.request.create.CreateOrderRequest;
@@ -12,6 +13,7 @@ import com.pse.tixclick.payload.response.ApiResponse;
 import com.pse.tixclick.payload.response.PayOSResponse;
 import com.pse.tixclick.payload.response.PaymentResponse;
 import com.pse.tixclick.payload.response.ResponseObject;
+import com.pse.tixclick.repository.EventRepository;
 import com.pse.tixclick.service.OrderService;
 import com.pse.tixclick.service.PaymentService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,6 +30,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -43,6 +48,8 @@ public class PaymentController {
     @Autowired
     PaymentService paymentService;
 
+    @Autowired
+    EventRepository eventRepository;
 
     @PostMapping("/pay-os-create")
     public ResponseEntity<ApiResponse<PayOSResponse>> payOS(@RequestBody CreateOrderRequest request, HttpServletRequest httpServletRequest) {
@@ -169,4 +176,30 @@ public class PaymentController {
         }
     }
 
+    @GetMapping("/export/{eventId}")
+    public void exportRefunds(@PathVariable int eventId ,HttpServletResponse response) throws IOException {
+        /* 1. Danh sách cột cố định */
+        List<String> columnList = List.of(
+                "transactionCode",
+                "transactionDate",
+                "orderCode",
+                "price",
+                "userName",
+                "email",
+                "phone",
+                "status"
+        );
+
+        Event event = eventRepository.findEvent(eventId);
+
+        /* 2. Header tải file */
+        response.setContentType(
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        String filename = URLEncoder.encode(
+                "refunds_" + event.getEventCode() + "_" + LocalDate.now() + ".xlsx", StandardCharsets.UTF_8);
+        response.setHeader("Content-Disposition", "attachment; filename=" + filename);
+
+        /* 3. Gọi service – ghi trực tiếp ra OutputStream */
+        paymentService.exportRefunds(columnList, response.getOutputStream(), eventId);
+    }
 }
