@@ -140,6 +140,14 @@ public class ContractServiceImpl implements ContractService {
             throw new AppException(ErrorCode.EVENT_NOT_APPROVED);
         }
 
+        List<Contract> allContracts = contractRepository.findContractByEventId(event.getEventId());
+        for (Contract contract : allContracts) {
+            Event eventExisted = contract.getEvent();
+            if(eventExisted.getEventCode().equals(request.getEventCode()) && eventExisted.getStatus().equals(EEventStatus.SCHEDULED) && contract.getStatus().equals(EContractStatus.PENDING)) {
+                throw new AppException(ErrorCode.EVENT_CONTRACT_EXISTED);
+            }
+        }
+
         Company company = companyRepository.findCompanyByEmail(request.getEmailB())
                 .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_FOUND));
 

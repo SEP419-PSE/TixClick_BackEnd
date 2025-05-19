@@ -289,4 +289,35 @@ public class EmailService {
         mailSender.send(message);
     }
 
+
+    public void sendEventRefundNotification(String to, String eventName, String fullname,
+                                            String orderCode, double refundAmount) throws MessagingException {
+
+        String subject = "Hoàn tiền thành công – TixClick";
+
+        String body =
+                "<html>" +
+                        "<body style=\"font-family: Arial, sans-serif; line-height: 1.6; color:#212529;\">" +
+                        "<h2 style=\"color:#28a745;\">Xác nhận hoàn tiền</h2>" +
+
+                        "<p>Xin chào " + fullname + ",</p>" +
+
+                        "<p>Sự kiện <strong>" + eventName + "</strong> của bạn đã bị huỷ và chúng tôi đã tiến hành hoàn tiền thành công.</p>" +
+
+                        "<table style=\"border-collapse:collapse; margin-top:12px;\">" +
+                        "<tr><td style=\"padding:4px 8px;\">Mã đơn hàng:</td><td><strong>" + orderCode + "</strong></td></tr>" +
+                        "<tr><td style=\"padding:4px 8px;\">Số tiền hoàn:</td><td><strong>" + refundAmount + "</strong></td></tr>" +
+                        "</table>" +
+
+                        "<p>Số tiền sẽ được chuyển về phương thức thanh toán gốc trong vòng 3–5 ngày làm việc (tùy thuộc ngân hàng).</p>" +
+
+                        "<p>Nếu có bất kỳ thắc mắc nào, vui lòng liên hệ bộ phận hỗ trợ của chúng tôi qua email <a href=\"mailto:support@tixclick.com\">support@tixclick.com</a> hoặc hotline 1900-0000.</p>" +
+
+                        "<p>Trân trọng,<br/>Đội ngũ TixClick</p>" +
+                        "</body>" +
+                        "</html>";
+
+        sendNewMail(to, subject, body, fullname);
+    }
+
 }

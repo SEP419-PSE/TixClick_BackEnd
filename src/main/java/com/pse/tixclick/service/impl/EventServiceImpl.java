@@ -1033,6 +1033,9 @@ public class EventServiceImpl implements EventService {
                 );
 
                 Contract contract = contractRepository.findContractsByEvent_EventId(eventId).get(0);
+                if(contract.getContractType().equals(EContractType.INSTALLMENT.name())){
+                    throw new AppException(ErrorCode.CANCEL_INSTALLMENT_CONTRACT);
+                }
                 contract.setStatus(EContractStatus.CANCELLED);
                 contractRepository.save(contract);
 
