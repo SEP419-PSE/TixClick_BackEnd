@@ -22,4 +22,6 @@ public interface PaymentService
     List<PaymentDTO> getAllPayments();
 
     String testQR(TicketQrCodeDTO ticketQrCodeDTO) throws Exception;
+
+
 }

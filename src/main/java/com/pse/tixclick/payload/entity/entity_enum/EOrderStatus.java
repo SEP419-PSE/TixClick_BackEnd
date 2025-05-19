@@ -5,5 +5,7 @@ public enum EOrderStatus {
     SUCCESSFUL,
     FAILURE,
     REFUNDED,
+    CHANGED,
     EXPIRED,
+    CHECKED_IN,
 }

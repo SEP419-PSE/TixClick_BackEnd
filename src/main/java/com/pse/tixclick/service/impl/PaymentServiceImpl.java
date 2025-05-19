@@ -400,7 +400,7 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         // Update old order status
-        oldOrder.setStatus(EOrderStatus.REFUNDED);
+        oldOrder.setStatus(EOrderStatus.CHANGED);
         orderRepository.save(oldOrder);
 
         // Schedule status update
@@ -626,8 +626,8 @@ public class PaymentServiceImpl implements PaymentService {
                                 .findOrderByOrderCode(oldTicketPurchase.get().getOrderCode())
                                 .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
 
-                        if(!oldOrder.getStatus().equals(EOrderStatus.REFUNDED)) {
-                           oldOrder.setStatus(EOrderStatus.REFUNDED);
+                        if(!oldOrder.getStatus().equals(EOrderStatus.CHANGED)) {
+                           oldOrder.setStatus(EOrderStatus.CHANGED);
                         }
                         var checkinLogOld = checkinLogRepository
                                 .findCheckinLogByOrder_OrderId(oldOrder.getOrderId())

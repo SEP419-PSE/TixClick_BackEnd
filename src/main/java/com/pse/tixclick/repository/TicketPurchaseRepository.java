@@ -227,5 +227,7 @@ ORDER BY m.month;
             @Param("orderCode") String orderCode
     );
 
-
+    List<TicketPurchase> findTicketPurchasesByOrderCode(
+            @Param("orderCode") String orderCode
+    );
 }

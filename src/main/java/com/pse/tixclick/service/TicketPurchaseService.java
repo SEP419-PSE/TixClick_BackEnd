@@ -44,4 +44,6 @@ public interface TicketPurchaseService {
 
     MyTicketDTO getTicketPurchaseById(int ticketPurchaseId);
 
+
+    PaginationResponse<MyTicketResponse> getTicketPurchasesByStatusCheckIn(int page, int size, String sortDirection);
 }
