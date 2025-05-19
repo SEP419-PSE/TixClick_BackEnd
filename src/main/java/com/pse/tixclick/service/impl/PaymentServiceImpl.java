@@ -29,6 +29,9 @@ import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.util.CellRangeAddressList;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -38,9 +41,13 @@ import vn.payos.type.CheckoutResponseData;
 import vn.payos.type.ItemData;
 import vn.payos.type.PaymentData;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
@@ -971,5 +978,228 @@ public class PaymentServiceImpl implements PaymentService {
 
     private String getBaseUrl(HttpServletRequest request) {
         return "https://tixclick.site";
+    }
+
+    @Override
+    public void exportRefunds(List<String> columns, OutputStream os, int eventId) throws IOException {
+        if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.MANAGER)) {
+            throw new AppException(ErrorCode.NOT_PERMISSION);
+        }
+        List<TicketPurchase> ticketPurchases =
+                ticketPurchaseRepository.listTicketPurchaseRefunding(eventId);
+
+        try (Workbook wb = new XSSFWorkbook()) {
+            Event event = eventRepository
+                    .findById(eventId)
+                    .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+
+            // Lưu ý: tránh ký tự không hợp lệ trong tên sheet
+            String safeSheetName = "Refunds-" + event.getEventName().replaceAll("[\\[\\]\\*\\?/\\\\]", "-");
+            Sheet sheet = wb.createSheet(safeSheetName);
+
+            /* Header */
+            CellStyle headerStyle = buildHeaderStyle(wb);
+            Row header = sheet.createRow(0);
+            for (int i = 0; i < columns.size(); i++) {
+                Cell c = header.createCell(i);
+                c.setCellValue(getHeaderDisplay(columns.get(i)));
+                c.setCellStyle(headerStyle);
+            }
+
+            /* Style & helper dùng lại */
+            CellStyle lockedStyle = wb.createCellStyle();
+            lockedStyle.setLocked(true);
+
+            CellStyle unLockedStyle = wb.createCellStyle();
+            unLockedStyle.setLocked(false);
+
+            DataValidationHelper dvHelper = sheet.getDataValidationHelper();
+
+            int rowIdx = 1;
+            Set<String> exportedOrderCodes = new HashSet<>();  // Dùng để track orderCode đã export
+
+            for (TicketPurchase tp : ticketPurchases) {
+                String orderCode = tp.getOrderCode();
+
+                // Nếu đã xuất orderCode này rồi thì bỏ qua
+                if (!exportedOrderCodes.add(orderCode)) {
+                    continue;
+                }
+
+                Account acc = accountRepository.findById(tp.getAccount().getAccountId())
+                        .orElseThrow(() -> new AppException(ErrorCode.ACCOUNT_NOT_FOUND));
+                Payment p = paymentRepository.findPaymentByOrderCode(orderCode);
+                Transaction t = transactionRepository.findByPaymentId(p.getPaymentId());
+
+                Row row = sheet.createRow(rowIdx);
+
+                for (int i = 0; i < columns.size(); i++) {
+                    Cell cell = row.createCell(i);
+                    String col = columns.get(i);
+
+                    switch (col) {
+                        case "transactionCode" -> cell.setCellValue(t.getTransactionCode());
+                        case "transactionDate" -> cell.setCellValue(
+                                t.getTransactionDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+                        case "orderCode" -> cell.setCellValue(p != null ? p.getOrderCode() : "");
+                        case "price" -> cell.setCellValue(t.getAmount());
+                        case "userName" -> cell.setCellValue(acc.getUserName());
+                        case "email" -> cell.setCellValue(acc.getEmail());
+                        case "phone" -> cell.setCellValue(acc.getPhone());
+                        case "status" -> {
+                            cell.setCellValue("Chưa chuyển");
+
+                            DataValidationConstraint constraint = dvHelper.createExplicitListConstraint(
+                                    new String[]{"Chưa chuyển", "Đã Chuyển"});
+                            CellRangeAddressList addr = new CellRangeAddressList(rowIdx, rowIdx, i, i);
+                            sheet.addValidationData(dvHelper.createValidation(constraint, addr));
+
+                            cell.setCellStyle(unLockedStyle); // Cho phép chỉnh sửa cột status
+                        }
+                        default -> cell.setCellValue("");
+                    }
+
+                    // Lock tất cả ô trừ cột status
+                    if (!"status".equals(col)) {
+                        cell.setCellStyle(lockedStyle);
+                    }
+                }
+
+                rowIdx++;
+            }
+
+            // Auto-size cột
+            for (int i = 0; i < columns.size(); i++) {
+                sheet.autoSizeColumn(i);
+            }
+
+            // Bảo vệ sheet (password có thể thay đổi hoặc để trống)
+            sheet.protectSheet("12345");
+
+            wb.write(os);
+        }
+    }
+
+
+    private CellStyle buildHeaderStyle(Workbook wb) {
+        Font font = wb.createFont();
+        font.setBold(true);
+        CellStyle style = wb.createCellStyle();
+        style.setFont(font);
+        style.setAlignment(HorizontalAlignment.CENTER);
+        return style;
+    }
+
+    private String getHeaderDisplay(String col) {
+        return switch (col) {
+            case "transactionCode" -> "Mã giao dịch";
+            case "transactionDate" -> "Ngày giao dịch";
+            case "orderCode"     -> "Mã đơn hàng";
+            case "price"     -> "Giá (VND)";
+            case "userName"      -> "Tên khách hàng";
+            case "email"      -> "Email khách hàng";
+            case "phone"      -> "SĐT khách hàng";
+            case "status" -> "Trạng thái hoàn tiền";
+
+            default          -> col;
+        };
+    }
+
+    @Override
+    public String readOrderCodeAndStatus(InputStream is) throws IOException {
+        try (Workbook wb = new XSSFWorkbook(is)) {
+            Sheet sheet = wb.getSheetAt(0);
+
+            /* ───── 1. Xác định index hai cột cần đọc ───── */
+            Row header = sheet.getRow(0);
+            if (header == null) {
+                throw new IllegalStateException("File không có dòng tiêu đề");
+            }
+
+            int orderCodeColIdx  = -1;
+            int statusColIdx     = -1;
+
+            for (int i = 0; i < header.getLastCellNum(); i++) {
+                Cell c = header.getCell(i);
+                if (c == null) continue;
+
+                String colName = c.getStringCellValue().trim();
+                if ("Mã đơn hàng".equalsIgnoreCase(colName)) {
+                    orderCodeColIdx = i;
+                } else if ("Trạng thái hoàn tiền".equalsIgnoreCase(colName)) {
+                    statusColIdx = i;
+                }
+            }
+
+            if (orderCodeColIdx == -1 || statusColIdx == -1) {
+                throw new IllegalStateException("Thiếu cột Mã đơn hàng hoặc Trạng thái hoàn tiền");
+            }
+
+            for (int r = 1; r <= sheet.getLastRowNum(); r++) {
+                Row row = sheet.getRow(r);
+                if (row == null) continue;  // bỏ qua dòng trống
+
+                Cell statusCell = row.getCell(statusColIdx);
+                String statusVal = statusCell == null ? "" : statusCell.getStringCellValue().trim();
+
+                if ("Chưa chuyển".equalsIgnoreCase(statusVal)) {
+                    throw new IllegalStateException("Dòng " + (r + 1) + " có trạng thái 'Chưa chuyển'. Vui lòng kiểm tra lại!");
+                }
+
+                Cell orderCell = row.getCell(orderCodeColIdx);
+                String orderCode = orderCell == null ? "" : orderCell.getStringCellValue().trim();
+                if (orderCode.isEmpty()) {
+                    throw new IllegalStateException("Thiếu mã đơn hàng tại dòng " + (r + 1));
+                }
+            }
+
+            /* ───── 2. Duyệt từng dòng dữ liệu bắt đầu từ row 1 ───── */
+            for (int r = 1; r <= sheet.getLastRowNum(); r++) {
+                Row row = sheet.getRow(r);
+                if (row == null) continue;          // bỏ qua dòng trống
+                // Lấy trạng thái
+                Cell statusCell = row.getCell(statusColIdx);
+                String statusVal = statusCell == null ? "" : statusCell.getStringCellValue().trim();
+                boolean paid = "Đã Chuyển".equalsIgnoreCase(statusVal);
+                // Lấy mã đơn hàng
+                Cell orderCell = row.getCell(orderCodeColIdx);
+                String orderCode = orderCell == null ? "" : orderCell.getStringCellValue().trim();
+                if (orderCode.isEmpty()) {
+                    throw new IllegalStateException("Thiếu mã đơn hàng tại dòng " + (r + 1));
+                }
+                    List<TicketPurchase> ticketPurchases = ticketPurchaseRepository
+                            .findTicketPurchaseByOrderCode(orderCode);
+                    for (TicketPurchase ticketPurchase : ticketPurchases) {
+                        if(ticketPurchase.getStatus().equals(ETicketPurchaseStatus.REFUNDED)){
+                            return "Đơn hàng đã hoàn tiền!";
+                        }
+                        else if (ticketPurchase.getStatus().equals(ETicketPurchaseStatus.REFUNDING)) {
+                            Payment payment = paymentRepository
+                                    .findPaymentByOrderCode(ticketPurchase.getOrderCode());
+                            Transaction transaction = transactionRepository
+                                    .findByPaymentId(payment.getPaymentId());
+                            Order order = orderRepository
+                                    .findOrderByOrderCode(ticketPurchase.getOrderCode())
+                                    .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+
+                            ticketPurchase.setStatus(ETicketPurchaseStatus.REFUNDED);
+                            ticketPurchaseRepository.save(ticketPurchase);
+
+                            order.setStatus(EOrderStatus.REFUNDED);
+                            orderRepository.save(order);
+
+                            payment.setStatus(EPaymentStatus.REFUNDED);
+                            paymentRepository.save(payment);
+
+                            transaction.setStatus(ETransactionStatus.REFUNDED);
+                            transactionRepository.save(transaction);
+                        }
+                        else {
+                            return "Trạng thái đơn hàng không hợp lệ!";
+                        }
+                    }
+            }
+        }
+        return "Đã hoàn tiền thành công";
     }
 }

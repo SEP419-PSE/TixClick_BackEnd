@@ -8,6 +8,9 @@ import com.pse.tixclick.payload.response.PayOSResponse;
 import com.pse.tixclick.payload.response.PaymentResponse;
 import jakarta.servlet.http.HttpServletRequest;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.List;
 
 public interface PaymentService
@@ -23,5 +26,7 @@ public interface PaymentService
 
     String testQR(TicketQrCodeDTO ticketQrCodeDTO) throws Exception;
 
+    void exportRefunds(List<String> columns, OutputStream os, int eventId) throws IOException;
 
+    String readOrderCodeAndStatus(InputStream is) throws IOException;
 }
