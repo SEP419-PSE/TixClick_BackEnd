@@ -175,6 +175,8 @@ public enum ErrorCode {
     INVALID_REQUEST(1157,"Yêu cầu không hợp lệ",HttpStatus.BAD_REQUEST),
     EVENT_ACTIVITY_EXPIRED(1158,"Hoạt động sự kiện đã hết hạn",HttpStatus.BAD_REQUEST),
     EVENT_ACTIVITY_NOT_STARTED_YET(1159,"Hoạt động sự kiện chưa bắt đầu",HttpStatus.BAD_REQUEST),
+    CANCEL_INSTALLMENT_CONTRACT(1160,"Không thể huỷ sự kiện có hợp đồng thanh toán nhiều lần",HttpStatus.BAD_REQUEST),
+    EVENT_CONTRACT_EXISTED(1161,"Sự kiện này đã lên hợp đồng",HttpStatus.BAD_REQUEST),
     ;
 
 
