@@ -227,26 +227,22 @@ public class TicketPurchaseController {
                     .build();
             return ResponseEntity.ok(response);
         } catch (AppException e) {
-            ApiResponse<TicketQRResponse> errorResponse = ApiResponse.<TicketQRResponse>builder()
-                    .code(HttpStatus.BAD_REQUEST.value())
-                    .message(e.getMessage())
-                    .result(null)
-                    .build();
-            return ResponseEntity.badRequest().body(errorResponse);
-        } catch (IllegalBlockSizeException e) {
-            throw new RuntimeException(e);
-        } catch (NoSuchPaddingException e) {
-            throw new RuntimeException(e);
-        } catch (BadPaddingException e) {
-            throw new RuntimeException(e);
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (InvalidKeyException e) {
-            throw new RuntimeException(e);
+            return buildErrorResponse(HttpStatus.BAD_REQUEST, e.getMessage());
+        } catch (IllegalBlockSizeException | NoSuchPaddingException | BadPaddingException |
+                 NoSuchAlgorithmException | IOException | InvalidKeyException e) {
+            return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Error while decrypting QR code: " + e.getMessage());
         }
     }
+
+    private ResponseEntity<ApiResponse<TicketQRResponse>> buildErrorResponse(HttpStatus status, String message) {
+        ApiResponse<TicketQRResponse> errorResponse = ApiResponse.<TicketQRResponse>builder()
+                .code(status.value())
+                .message(message)
+                .result(null)
+                .build();
+        return ResponseEntity.status(status).body(errorResponse);
+    }
+
 
 
     @GetMapping("/overview")
@@ -356,6 +352,49 @@ public class TicketPurchaseController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponse.<PaginationResponse<MyTicketDTO>>builder()
+                            .code(400)
+                            .message("Error: " + e.getMessage())
+                            .result(null)
+                            .build());
+        }
+    }
+
+
+    @GetMapping("/all_of_checkin")
+    public ResponseEntity<ApiResponse<PaginationResponse<MyTicketResponse>>> getAllTicketPurchaseByCheckIn(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam String sortDirection
+    ) {
+        try {
+            int size = 3; // mỗi trang có 3 vé
+            PaginationResponse<MyTicketResponse> response = ticketPurchaseService.getTicketPurchasesByStatusCheckIn(page, size,sortDirection);
+
+            if (response == null || response.getItems().isEmpty()) {
+                return ResponseEntity.ok(
+                        ApiResponse.<PaginationResponse<MyTicketResponse>>builder()
+                                .code(HttpStatus.OK.value())
+                                .message("No ticket purchases found on this page")
+                                .result(PaginationResponse.<MyTicketResponse>builder()
+                                        .items(Collections.emptyList())
+                                        .currentPage(page)
+                                        .totalPages(0)
+                                        .totalElements(0)
+                                        .pageSize(size)
+                                        .build())
+                                .build()
+                );
+            }
+
+            return ResponseEntity.ok(
+                    ApiResponse.<PaginationResponse<MyTicketResponse>>builder()
+                            .code(200)
+                            .message("Successfully fetched ticket purchases on page " + page)
+                            .result(response)
+                            .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.<PaginationResponse<MyTicketResponse>>builder()
                             .code(400)
                             .message("Error: " + e.getMessage())
                             .result(null)

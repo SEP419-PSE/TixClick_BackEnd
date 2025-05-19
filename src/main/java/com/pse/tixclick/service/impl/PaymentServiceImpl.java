@@ -1,6 +1,7 @@
 package com.pse.tixclick.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pse.tixclick.email.EmailService;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
 import com.pse.tixclick.payload.dto.PaymentDTO;
@@ -24,6 +25,7 @@ import com.pse.tixclick.repository.*;
 import com.pse.tixclick.service.PaymentService;
 import com.pse.tixclick.service.TicketPurchaseService;
 import com.pse.tixclick.utils.AppUtils;
+import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -120,6 +122,9 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Autowired
     SimpMessagingTemplate simpMessagingTemplate;
+
+    @Autowired
+    EmailService emailService;
 
     @Override
     public PayOSResponse changeOrderStatusPayOs(int orderId) {
@@ -407,7 +412,7 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         // Update old order status
-        oldOrder.setStatus(EOrderStatus.REFUNDED);
+        oldOrder.setStatus(EOrderStatus.CHANGED);
         orderRepository.save(oldOrder);
 
         // Schedule status update
@@ -633,8 +638,8 @@ public class PaymentServiceImpl implements PaymentService {
                                 .findOrderByOrderCode(oldTicketPurchase.get().getOrderCode())
                                 .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
 
-                        if(!oldOrder.getStatus().equals(EOrderStatus.REFUNDED)) {
-                           oldOrder.setStatus(EOrderStatus.REFUNDED);
+                        if(!oldOrder.getStatus().equals(EOrderStatus.CHANGED)) {
+                           oldOrder.setStatus(EOrderStatus.CHANGED);
                         }
                         var checkinLogOld = checkinLogRepository
                                 .findCheckinLogByOrder_OrderId(oldOrder.getOrderId())
@@ -1193,12 +1198,15 @@ public class PaymentServiceImpl implements PaymentService {
 
                             transaction.setStatus(ETransactionStatus.REFUNDED);
                             transactionRepository.save(transaction);
+                            emailService.sendEventRefundNotification(ticketPurchase.getAccount().getEmail(), ticketPurchase.getAccount().getUserName(), ticketPurchase.getEvent().getEventName(), ticketPurchase.getOrderCode(), transaction.getAmount());
                         }
                         else {
                             return "Trạng thái đơn hàng không hợp lệ!";
                         }
                     }
             }
+        } catch (MessagingException e) {
+            throw new RuntimeException(e);
         }
         return "Đã hoàn tiền thành công";
     }
