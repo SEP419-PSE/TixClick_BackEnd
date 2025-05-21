@@ -1152,7 +1152,10 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
 
             // 9. Lấy checkinLog
             var checkinLog = checkinLogRepository.findById(dto.getCheckin_Log_id())
-                    .orElseThrow(() -> new AppException(ErrorCode.CHECKIN_LOG_NOT_FOUND));
+                    .orElse(null);
+            if(checkinLog.getCheckinStatus().equals(ECheckinLogStatus.CHECKED_IN)){
+                throw new AppException(ErrorCode.CHECKIN_LOG_CHECKED_IN);
+            }
 
             // 10. Lấy người dùng (consumer)
             var consumer = accountRepository.findAccountByUserName(dto.getUser_name())
