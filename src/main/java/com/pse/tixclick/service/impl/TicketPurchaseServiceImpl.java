@@ -1193,9 +1193,17 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
                     TicketQRResponse.TicketDetailResponse detail = new TicketQRResponse.TicketDetailResponse();
                     detail.setTicketPurchaseId(ticketPurchase.getTicketPurchaseId());
                     detail.setPrice(ticketPurchase.getTicket().getPrice());
-                    detail.setSeatName(AppUtils.convertSeatName(ticketPurchase.getSeatActivity().getSeat().getSeatName()));
+                    detail.setSeatName(ticketPurchase.getSeatActivity() != null &&
+                            ticketPurchase.getSeatActivity().getSeat() != null &&
+                            ticketPurchase.getSeatActivity().getSeat().getSeatName() != null
+                            ? AppUtils.convertSeatName(ticketPurchase.getSeatActivity().getSeat().getSeatName())
+                            : null);
                     detail.setTicketType(ticketPurchase.getTicket().getTicketName());
-                    detail.setZoneName(ticketPurchase.getZoneActivity().getZone().getZoneName());
+                    detail.setZoneName(ticketPurchase.getZoneActivity() != null &&
+                            ticketPurchase.getZoneActivity().getZone() != null &&
+                            ticketPurchase.getZoneActivity().getZone().getZoneName() != null
+                            ? ticketPurchase.getZoneActivity().getZone().getZoneName()
+                            : null);
                     detail.setQuantity(ticketPurchase.getQuantity());
                     ticketDetails.add(detail);
 
