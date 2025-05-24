@@ -994,7 +994,7 @@ public class PaymentServiceImpl implements PaymentService {
 
 
     private String getBaseUrl(HttpServletRequest request) {
-        return "http://localhost:5173";
+        return "https://tixclick.site";
     }
 
     @Override
