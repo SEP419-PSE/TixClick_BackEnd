@@ -415,8 +415,8 @@ public class PaymentServiceImpl implements PaymentService {
         oldOrder.setStatus(EOrderStatus.CHANGED);
         orderRepository.save(oldOrder);
 
-        // Schedule status update
-        ticketPurchaseService.scheduleStatusUpdate(LocalDateTime.now(), ticketPurchaseIds);
+//        // Schedule status update
+//        ticketPurchaseService.scheduleStatusUpdate(LocalDateTime.now(), ticketPurchaseIds);
         double priceDiff = totalAmount - oldAmount;
 
         // Áp dụng xử lý tối thiểu 10.000 nếu cần:
@@ -558,7 +558,7 @@ public class PaymentServiceImpl implements PaymentService {
         paymentRepository.save(payment);
 
         simpMessagingTemplate.convertAndSend("/all/messages", "call api");
-
+        ticketPurchaseService.scheduleStatusUpdateChangeTicket(LocalDateTime.now(), newOrder.getOrderCode());
         return PayOSResponse.builder()
                 .error("ok")
                 .message("Thành công")
