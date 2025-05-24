@@ -214,13 +214,13 @@ public class EventActivityServiceImpl implements EventActivityService {
             }
 
             EventActivity eventActivity;
-
+            String oldActivityDate = null;
             if (request.getEventActivityId() != null) {
                 // ✅ Cập nhật EventActivity
                 eventActivity = eventActivityRepository.findById(request.getEventActivityId())
                         .orElseThrow(() -> new AppException(ErrorCode.EVENT_ACTIVITY_NOT_FOUND));
 
-                String oldActivityDate = String.valueOf(eventActivity.getDateEvent());
+                oldActivityDate = String.valueOf(eventActivity.getDateEvent());
                 eventActivity.setActivityName(request.getActivityName());
                 eventActivity.setDateEvent(request.getDateEvent());
                 eventActivity.setStartTimeEvent(request.getStartTimeEvent());
@@ -306,6 +306,21 @@ public class EventActivityServiceImpl implements EventActivityService {
                     }
                 }
             }
+            int eventId = request.getEventId();
+
+            var event1 = eventRepository.findEventByEventId(eventId)
+                    .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+
+
+            String email = event1.getOrganizer().getEmail();
+            String fullName = event1.getOrganizer().getFirstName() + " " + event1.getOrganizer().getLastName();
+            emailService.sendRescheduleNotificationToOrganizer(
+                    email,
+                    fullName,
+                    oldActivityDate,
+                    String.valueOf(request.getDateEvent()),
+                    event1.getEventName()
+            );
 
             savedRequests.add(request);
         }
