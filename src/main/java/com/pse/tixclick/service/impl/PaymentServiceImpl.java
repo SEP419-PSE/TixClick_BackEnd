@@ -377,10 +377,17 @@ public class PaymentServiceImpl implements PaymentService {
         // Handle remaining quantity
         int remainingQuantity = totalOriginalQuantity - totalRequestedQuantity;
         if (remainingQuantity > 0) {
-            for (TicketPurchaseRequest req : ticketPurchaseRequests) {
-                TicketPurchase oldPurchase = ticketPurchaseRepository.findTicketPurchaseByTicketPurchaseId(req.getTicketPurchaseId())
-                        .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
 
+            var orderDetails = orderDetailRepository.findByOrderId(oldOrder.getOrderId());
+            for (OrderDetail orderDetail : orderDetails) {
+
+                TicketPurchase oldPurchase = orderDetail.getTicketPurchase();
+
+                for (TicketPurchaseRequest oldPurchaseReq : ticketPurchaseRequests) {
+                    if (oldPurchase.getTicketPurchaseId() == oldPurchaseReq.getTicketPurchaseId()) {
+                        continue; // Skip already processed purchases
+                    }
+                }
 
                 TicketPurchase keepPurchase = new TicketPurchase();
                 keepPurchase.setAccount(account);
