@@ -200,11 +200,12 @@ public class EventActivityServiceImpl implements EventActivityService {
                 EventActivity eventActivity = eventActivityRepository.findById(request.getEventActivityId())
                         .orElseThrow(() -> new AppException(ErrorCode.EVENT_ACTIVITY_NOT_FOUND));
 
-                if(account.getRole().equals(ERole.MANAGER)){
-                  if(  !eventActivity.getUpdatedByManager().equals(null)){
-                          throw new AppException(ErrorCode.JUST_ONE_UPDATE);
-                  }
+                if (account.getRole().equals(ERole.MANAGER)) {
+                    if (eventActivity.getUpdatedByManager() != null) {
+                        continue;
+                    }
                 }
+
 
                 if(eventActivity.getUpdatedByManager() != null) {
                     if (eventActivity.getUpdatedByManager().getAccountId() != account.getAccountId()) {
