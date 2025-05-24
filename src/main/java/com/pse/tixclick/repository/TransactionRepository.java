@@ -1,5 +1,6 @@
 package com.pse.tixclick.repository;
 
+import com.pse.tixclick.payload.entity.payment.Payment;
 import com.pse.tixclick.payload.entity.payment.Transaction;
 import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.domain.Page;
@@ -72,5 +73,5 @@ ORDER BY m.month;
     Transaction findByTransactionCode(@Param("transactionCode") String transactionCode);
 
     @Query("SELECT t FROM Transaction t WHERE t.payment.paymentId = :paymentId")
-    Transaction findByPaymentId(@Param("paymentId") int paymentId);
+    Optional<Transaction> findByPaymentId(@Param("paymentId") int paymentId);
 }

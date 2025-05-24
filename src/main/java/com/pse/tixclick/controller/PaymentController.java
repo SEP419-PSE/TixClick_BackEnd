@@ -190,7 +190,11 @@ public class PaymentController {
                 "userName",
                 "email",
                 "phone",
-                "status"
+                "bankingName",
+                "bankingCode",
+                "ownerCard",
+                "status",
+                "bankingImage"
         );
 
         Event event = eventRepository.findEvent(eventId);
@@ -199,17 +203,17 @@ public class PaymentController {
         response.setContentType(
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         String filename = URLEncoder.encode(
-                "refunds_" + event.getEventCode() + "_" + LocalDate.now() + ".xlsx", StandardCharsets.UTF_8);
+                "refunds_" + event.getEventCode() + ".xlsx", StandardCharsets.UTF_8);
         response.setHeader("Content-Disposition", "attachment; filename=" + filename);
 
         /* 3. Gọi service – ghi trực tiếp ra OutputStream */
-        paymentService.exportRefunds(columnList, response.getOutputStream(), eventId);
+            paymentService.exportRefunds(columnList, response.getOutputStream(), eventId);
     }
 
     @PostMapping("/import_refund")
     public ResponseEntity<ApiResponse<String>> importRefund(@RequestParam("file") MultipartFile file) {
         try {
-            String result = paymentService.readOrderCodeAndStatus(file.getInputStream());
+            String result = paymentService.readOrderCodeAndStatus(file);
             ApiResponse<String> response = ApiResponse.<String>builder()
                     .code(HttpStatus.OK.value())
                     .result(result)

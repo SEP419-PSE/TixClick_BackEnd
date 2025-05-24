@@ -178,6 +178,8 @@ public enum ErrorCode {
     CANCEL_INSTALLMENT_CONTRACT(1160,"Không thể huỷ sự kiện có hợp đồng thanh toán nhiều lần",HttpStatus.BAD_REQUEST),
     EVENT_CONTRACT_EXISTED(1161,"Sự kiện này đã lên hợp đồng",HttpStatus.BAD_REQUEST),
     JUST_ONE_UPDATE(1162,"Chỉ được phép cập nhật một lần",HttpStatus.BAD_REQUEST),
+    EVENT_CANCELLED(1163,"Sự kiện chưa bị hủy",HttpStatus.BAD_REQUEST),
+    TICKET_NOT_REFUNDING(1164,"Vé không phải status hoàn tiền",HttpStatus.BAD_REQUEST),
     ;
 
 
