@@ -30,7 +30,9 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -235,22 +237,29 @@ public class EventActivityServiceImpl implements EventActivityService {
                         ETicketPurchaseStatus.PURCHASED
                 );
 
+                if (!ticketPurchases.isEmpty() && event.getStatus() == EEventStatus.SCHEDULED) {
+                    Set<String> emailedAccounts = new HashSet<>(); // Dùng để lưu email đã gửi
 
-                if (!ticketPurchases.isEmpty()  && event.getStatus() == EEventStatus.SCHEDULED) {
-                    // Gửi email lại cho tất cả người dùng đã mua vé
                     for (TicketPurchase ticketPurchase : ticketPurchases) {
-                        String fullName = ticketPurchase.getAccount().getFirstName() + " " + ticketPurchase.getAccount().getLastName();
-                        emailService.sendRescheduleNotificationToCustomer(ticketPurchase.getAccount().getEmail(),
-                                fullName,
-                                oldActivityDate,
-                                String.valueOf(request.getDateEvent()),
-                                event.getEventName()
-                                );
+                        String email = ticketPurchase.getAccount().getEmail();
 
+                        // Kiểm tra nếu chưa gửi email cho người này
+                        if (!emailedAccounts.contains(email)) {
+                            String fullName = ticketPurchase.getAccount().getFirstName() + " " + ticketPurchase.getAccount().getLastName();
 
+                            emailService.sendRescheduleNotificationToCustomer(
+                                    email,
+                                    fullName,
+                                    oldActivityDate,
+                                    String.valueOf(request.getDateEvent()),
+                                    event.getEventName()
+                            );
 
+                            emailedAccounts.add(email); // Đánh dấu đã gửi
+                        }
                     }
                 }
+
             } else {
                 // ✅ Xử lý xóa như cũ
                 List<EventActivity> eventActivities = eventActivityRepository.findEventActivitiesByEvent_EventId(request.getEventId());
