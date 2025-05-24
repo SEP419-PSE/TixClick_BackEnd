@@ -643,11 +643,12 @@ public class PaymentServiceImpl implements PaymentService {
                         }
                         var checkinLogOld = checkinLogRepository
                                 .findCheckinLogByOrder_OrderId(oldOrder.getOrderId())
-                                .orElseThrow(() -> new AppException(ErrorCode.CHECKIN_LOG_NOT_FOUND));
+                                .orElse(null);
+                        if(checkinLogOld != null){
+                            checkinLogRepository.delete(checkinLogOld);
 
-                        checkinLogRepository.delete(checkinLogOld);
+                        }
                         orderRepository.save(oldOrder);
-                        checkinLogRepository.save(checkinLogOld);
 
 
                         if (oldTicketPurchase.get().getZoneActivity() == null && oldTicketPurchase.get().getTicket() != null) {
