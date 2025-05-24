@@ -125,6 +125,15 @@ public class EventActivityController {
     ) {
         try {
             List<CreateEventActivityAndTicketRequest> savedRequests = eventActivityService.createEventActivityAndTicket(requestList, contractCode);
+            if(savedRequests == null || savedRequests.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ApiResponse.<List<CreateEventActivityAndTicketRequest>>builder()
+                                .code(HttpStatus.BAD_REQUEST.value())
+                                .message("Đã dời lịch sự kiện")
+                                .result(Collections.emptyList())
+                                .build());
+            }
+
             return ResponseEntity.ok(
                     ApiResponse.<List<CreateEventActivityAndTicketRequest>>builder()
                             .code(HttpStatus.OK.value())

@@ -391,7 +391,7 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
         if (delay >= 0) {
             // Gửi countdown đến WebSocket mỗi giây
             ScheduledFuture<?> countdownTask = scheduler.scheduleAtFixedRate(() -> {
-                long remainingTime = java.time.Duration.between(LocalDateTime.now(), startTime.plusMinutes(15)).toSeconds();
+                long remainingTime = java.time.Duration.between(LocalDateTime.now(), startTime.plusMinutes(10)).toSeconds();
                 if (remainingTime >= 0) {
                     sendExpiredTime(remainingTime, code);
                 }
@@ -406,6 +406,33 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
         } else {
             // Nếu delay <= 0, cập nhật ngay lập tức
             updateTicketPurchaseStatus(listTicketPurchase_id);
+        }
+    }
+
+
+    @Async
+    public void scheduleStatusUpdateChangeTicket(LocalDateTime startTime, String orderCode) {
+        LocalDateTime currentTime = LocalDateTime.now();
+        long delay = java.time.Duration.between(currentTime, startTime.plusMinutes(5)).toSeconds();
+        String code = orderCode;
+        if (delay >= 0) {
+            // Gửi countdown đến WebSocket mỗi giây
+            ScheduledFuture<?> countdownTask = scheduler.scheduleAtFixedRate(() -> {
+                long remainingTime = java.time.Duration.between(LocalDateTime.now(), startTime.plusMinutes(5)).toSeconds();
+                if (remainingTime >= 0) {
+                    sendExpiredTime(remainingTime, code);
+                }
+            }, 0, 1, TimeUnit.SECONDS); // Chạy ngay lập tức, lặp lại mỗi giây
+
+            // Khi countdown kết thúc, cập nhật trạng thái
+            scheduler.schedule(() -> {
+                countdownTask.cancel(false);
+                // Cập nhật trạng thái của ticketPurchase
+                updateOrderStatus(orderCode);
+            }, delay, TimeUnit.SECONDS); // Sử dụng đúng đơn vị thời gian
+        } else {
+            // Nếu delay <= 0, cập nhật ngay lập tức
+            updateOrderStatus(orderCode);
         }
     }
 
@@ -645,6 +672,47 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
                 : allResponses.subList(fromIndex, toIndex);
 
         return new PaginationResponse<>(pagedResponses, page, total, pagedResponses.size(), size);
+    }
+
+    private void updateOrderStatus(String orderCode){
+        var order = orderRepository.findOrderByOrderCode(orderCode)
+                .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+
+        var orderDetails = orderDetailRepository.findOrderDetailsByOrder_OrderId(order.getOrderId());
+
+        if(orderDetails == null || orderDetails.isEmpty()) {
+            throw new AppException(ErrorCode.ORDER_DETAIL_NOT_FOUND);
+        }
+        String orderCode1 = null;
+        for(OrderDetail orderDetail : orderDetails) {
+            if(orderDetail.getTicketPurchase() == null) {
+                throw new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND);
+            }
+            TicketPurchase ticketPurchase = orderDetail.getTicketPurchase();
+            var ticketPurchaseOld = ticketPurchaseRepository
+                    .findById(ticketPurchase.getTicketPurchaseOldId())
+                    .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
+
+            ticketPurchaseOld.setStatus(ETicketPurchaseStatus.PURCHASED);
+            ticketPurchase.setStatus(ETicketPurchaseStatus.CANCELLED);
+            ticketPurchaseRepository.save(ticketPurchaseOld);
+
+            orderCode1 = ticketPurchaseOld.getOrderCode();
+        }
+        order.setStatus(EOrderStatus.FAILURE);
+        var oldOrder = orderRepository
+                .findOrderByOrderCode(orderCode1)
+                .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+
+        oldOrder.setStatus(EOrderStatus.SUCCESSFUL);
+        orderRepository.save(order);
+
+        var checkinLogs = checkinLogRepository
+                .findCheckinLogByOrder_OrderCode(order.getOrderCode())
+                .orElseThrow(() -> new AppException(ErrorCode.CHECKIN_LOG_NOT_FOUND));
+        if(checkinLogs != null) {
+            checkinLogRepository.delete(checkinLogs);
+        }
     }
 
 
@@ -1152,7 +1220,10 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
 
             // 9. Lấy checkinLog
             var checkinLog = checkinLogRepository.findById(dto.getCheckin_Log_id())
-                    .orElseThrow(() -> new AppException(ErrorCode.CHECKIN_LOG_NOT_FOUND));
+                    .orElse(null);
+            if(checkinLog.getCheckinStatus().equals(ECheckinLogStatus.CHECKED_IN)){
+                throw new AppException(ErrorCode.CHECKIN_LOG_CHECKED_IN);
+            }
 
             // 10. Lấy người dùng (consumer)
             var consumer = accountRepository.findAccountByUserName(dto.getUser_name())
@@ -1190,9 +1261,17 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
                     TicketQRResponse.TicketDetailResponse detail = new TicketQRResponse.TicketDetailResponse();
                     detail.setTicketPurchaseId(ticketPurchase.getTicketPurchaseId());
                     detail.setPrice(ticketPurchase.getTicket().getPrice());
-                    detail.setSeatName(AppUtils.convertSeatName(ticketPurchase.getSeatActivity().getSeat().getSeatName()));
+                    detail.setSeatName(ticketPurchase.getSeatActivity() != null &&
+                            ticketPurchase.getSeatActivity().getSeat() != null &&
+                            ticketPurchase.getSeatActivity().getSeat().getSeatName() != null
+                            ? AppUtils.convertSeatName(ticketPurchase.getSeatActivity().getSeat().getSeatName())
+                            : null);
                     detail.setTicketType(ticketPurchase.getTicket().getTicketName());
-                    detail.setZoneName(ticketPurchase.getZoneActivity().getZone().getZoneName());
+                    detail.setZoneName(ticketPurchase.getZoneActivity() != null &&
+                            ticketPurchase.getZoneActivity().getZone() != null &&
+                            ticketPurchase.getZoneActivity().getZone().getZoneName() != null
+                            ? ticketPurchase.getZoneActivity().getZone().getZoneName()
+                            : null);
                     detail.setQuantity(ticketPurchase.getQuantity());
                     ticketDetails.add(detail);
 

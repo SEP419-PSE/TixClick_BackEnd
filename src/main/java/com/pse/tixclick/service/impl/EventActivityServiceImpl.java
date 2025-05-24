@@ -30,7 +30,9 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -198,6 +200,13 @@ public class EventActivityServiceImpl implements EventActivityService {
                 EventActivity eventActivity = eventActivityRepository.findById(request.getEventActivityId())
                         .orElseThrow(() -> new AppException(ErrorCode.EVENT_ACTIVITY_NOT_FOUND));
 
+                if (account.getRole().getRoleName().equals(ERole.MANAGER)) {
+                    if (eventActivity.getUpdatedByManager() != null) {
+                        continue;
+                    }
+                }
+
+
                 if(eventActivity.getUpdatedByManager() != null) {
                     if (eventActivity.getUpdatedByManager().getAccountId() != account.getAccountId()) {
                         throw new AppException(ErrorCode.NOT_PERMISSION);
@@ -212,13 +221,13 @@ public class EventActivityServiceImpl implements EventActivityService {
             }
 
             EventActivity eventActivity;
-
+            String oldActivityDate = null;
             if (request.getEventActivityId() != null) {
                 // ✅ Cập nhật EventActivity
                 eventActivity = eventActivityRepository.findById(request.getEventActivityId())
                         .orElseThrow(() -> new AppException(ErrorCode.EVENT_ACTIVITY_NOT_FOUND));
 
-                String oldActivityDate = String.valueOf(eventActivity.getDateEvent());
+                oldActivityDate = String.valueOf(eventActivity.getDateEvent());
                 eventActivity.setActivityName(request.getActivityName());
                 eventActivity.setDateEvent(request.getDateEvent());
                 eventActivity.setStartTimeEvent(request.getStartTimeEvent());
@@ -235,22 +244,29 @@ public class EventActivityServiceImpl implements EventActivityService {
                         ETicketPurchaseStatus.PURCHASED
                 );
 
+                if (!ticketPurchases.isEmpty() && event.getStatus() == EEventStatus.SCHEDULED) {
+                    Set<String> emailedAccounts = new HashSet<>(); // Dùng để lưu email đã gửi
 
-                if (!ticketPurchases.isEmpty()  && event.getStatus() == EEventStatus.SCHEDULED) {
-                    // Gửi email lại cho tất cả người dùng đã mua vé
                     for (TicketPurchase ticketPurchase : ticketPurchases) {
-                        String fullName = ticketPurchase.getAccount().getFirstName() + " " + ticketPurchase.getAccount().getLastName();
-                        emailService.sendRescheduleNotificationToCustomer(ticketPurchase.getAccount().getEmail(),
-                                fullName,
-                                oldActivityDate,
-                                String.valueOf(request.getDateEvent()),
-                                event.getEventName()
-                                );
+                        String email = ticketPurchase.getAccount().getEmail();
 
+                        // Kiểm tra nếu chưa gửi email cho người này
+                        if (!emailedAccounts.contains(email)) {
+                            String fullName = ticketPurchase.getAccount().getFirstName() + " " + ticketPurchase.getAccount().getLastName();
 
+                            emailService.sendRescheduleNotificationToCustomer(
+                                    email,
+                                    fullName,
+                                    oldActivityDate,
+                                    String.valueOf(request.getDateEvent()),
+                                    event.getEventName()
+                            );
 
+                            emailedAccounts.add(email); // Đánh dấu đã gửi
+                        }
                     }
                 }
+
             } else {
                 // ✅ Xử lý xóa như cũ
                 List<EventActivity> eventActivities = eventActivityRepository.findEventActivitiesByEvent_EventId(request.getEventId());
@@ -297,6 +313,21 @@ public class EventActivityServiceImpl implements EventActivityService {
                     }
                 }
             }
+            int eventId = request.getEventId();
+
+            var event1 = eventRepository.findEventByEventId(eventId)
+                    .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+
+
+            String email = event1.getOrganizer().getEmail();
+            String fullName = event1.getOrganizer().getFirstName() + " " + event1.getOrganizer().getLastName();
+            emailService.sendRescheduleNotificationToOrganizer(
+                    email,
+                    fullName,
+                    oldActivityDate,
+                    String.valueOf(request.getDateEvent()),
+                    event1.getEventName()
+            );
 
             savedRequests.add(request);
         }

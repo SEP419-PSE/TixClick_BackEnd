@@ -1374,6 +1374,8 @@ public class EventServiceImpl implements EventService {
             // Convert orderCodeMap thành TicketSheetResponse
             for (Map.Entry<String, List<TicketSheetResponse.TicketPurchaseResponse>> entry : orderCodeMap.entrySet()) {
                 String orderCode = entry.getKey();
+                var order = orderRepository.findOrderByOrderCode(orderCode)
+                        .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
                 boolean isHaveCheckin = false;
 
                 Optional<CheckinLog> checkin = checkinLogRepository.findCheckinLogByOrder_OrderCode(orderCode);
@@ -1383,6 +1385,7 @@ public class EventServiceImpl implements EventService {
 
                 TicketSheetResponse ticketSheetResponse = new TicketSheetResponse(
                         orderCode,
+                        order.getOrderId(),
                         isHaveCheckin,
                         entry.getValue()
                 );

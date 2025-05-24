@@ -1,6 +1,7 @@
 package com.pse.tixclick.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pse.tixclick.cloudinary.CloudinaryService;
 import com.pse.tixclick.email.EmailService;
 import com.pse.tixclick.exception.AppException;
 import com.pse.tixclick.exception.ErrorCode;
@@ -33,12 +34,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddressList;
+import org.apache.poi.xssf.usermodel.XSSFClientAnchor;
+import org.apache.poi.xssf.usermodel.XSSFRichTextString;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import vn.payos.type.CheckoutResponseData;
 import vn.payos.type.ItemData;
 import vn.payos.type.PaymentData;
@@ -52,6 +59,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -125,6 +133,9 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Autowired
     EmailService emailService;
+
+    @Autowired
+    CloudinaryService cloudinaryService;
 
     @Override
     public PayOSResponse changeOrderStatusPayOs(int orderId) {
@@ -284,20 +295,22 @@ public class PaymentServiceImpl implements PaymentService {
                 throw new AppException(ErrorCode.TICKET_PURCHASE_CANCELLED);
             }
         }
-
         // Process ticket changes
-        int totalRequestedQuantity = ticketChange.stream()
-                .mapToInt(CreateTicketPurchaseRequest::getQuantity)
-                .sum();
+        int totalRequestedQuantity = 0;
+
+        var orderDetailList = orderDetailRepository.findByOrderId(oldOrder.getOrderId());
+        for( OrderDetail orderDetail : orderDetailList) {
+            totalRequestedQuantity = totalRequestedQuantity + orderDetail.getTicketPurchase().getQuantity();
+        }
+
+
         int totalOriginalQuantity = ticketPurchaseRequests.stream()
                 .mapToInt(req -> ticketPurchaseRepository.findById(req.getTicketPurchaseId())
                         .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND))
                         .getQuantity())
                 .sum();
 
-        if (totalRequestedQuantity > totalOriginalQuantity) {
-            throw new AppException(ErrorCode.TICKET_REQUEST_EXCEED_QUANTITY);
-        }
+
 
         if (ticketChange.size() != ticketPurchaseRequests.size()) {
             throw new AppException(ErrorCode.INVALID_REQUEST); // kiểm tra dữ liệu đầu vào
@@ -375,12 +388,22 @@ public class PaymentServiceImpl implements PaymentService {
 
 
         // Handle remaining quantity
-        int remainingQuantity = totalOriginalQuantity - totalRequestedQuantity;
+        int remainingQuantity =  totalRequestedQuantity - totalOriginalQuantity;
         if (remainingQuantity > 0) {
-            for (TicketPurchaseRequest req : ticketPurchaseRequests) {
-                TicketPurchase oldPurchase = ticketPurchaseRepository.findTicketPurchaseByTicketPurchaseId(req.getTicketPurchaseId())
-                        .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND));
 
+
+            var orderDetails = orderDetailRepository.findByOrderId(oldOrder.getOrderId());
+            Set<Integer> processedIds = ticketPurchaseRequests.stream()
+                    .map(TicketPurchaseRequest::getTicketPurchaseId)
+                    .collect(Collectors.toSet());
+            for (OrderDetail orderDetail : orderDetails) {
+
+                TicketPurchase oldPurchase = orderDetail.getTicketPurchase();
+
+                // Skip if this ticket was already in the change request
+                if (processedIds.contains(oldPurchase.getTicketPurchaseId())) {
+                    continue;
+                }
 
                 TicketPurchase keepPurchase = new TicketPurchase();
                 keepPurchase.setAccount(account);
@@ -392,10 +415,8 @@ public class PaymentServiceImpl implements PaymentService {
                 keepPurchase.setSeatActivity(oldPurchase.getSeatActivity());
                 keepPurchase.setStatus(ETicketPurchaseStatus.PENDING);
 
-                TicketPurchaseRequest oldPurchaseReq = ticketPurchaseRequests.get(count);
-
-                keepPurchase.setTicketPurchaseOldId(oldPurchaseReq.getTicketPurchaseId());
-                count = count + 1;
+                // Optionally link to the old purchase ID if needed
+                keepPurchase.setTicketPurchaseOldId(oldPurchase.getTicketPurchaseId());
 
                 keepPurchase = ticketPurchaseRepository.save(keepPurchase);
                 newPurchases.add(keepPurchase);
@@ -415,8 +436,8 @@ public class PaymentServiceImpl implements PaymentService {
         oldOrder.setStatus(EOrderStatus.CHANGED);
         orderRepository.save(oldOrder);
 
-        // Schedule status update
-        ticketPurchaseService.scheduleStatusUpdate(LocalDateTime.now(), ticketPurchaseIds);
+//        // Schedule status update
+//        ticketPurchaseService.scheduleStatusUpdate(LocalDateTime.now(), ticketPurchaseIds);
         double priceDiff = totalAmount - oldAmount;
 
         // Áp dụng xử lý tối thiểu 10.000 nếu cần:
@@ -426,15 +447,16 @@ public class PaymentServiceImpl implements PaymentService {
             priceDiff = 10000;
         }
 
-
+        ZoneId vietnamZone = ZoneId.of("Asia/Ho_Chi_Minh");
+        LocalDateTime vietnamTime = LocalDateTime.now(vietnamZone);
         // Create new order
         Order newOrder = new Order();
         newOrder.setOrderCode(orderServiceImpl.orderCodeAutomationCreating());
         newOrder.setStatus(priceDiff == 0 ? EOrderStatus.SUCCESSFUL : EOrderStatus.PENDING);
         newOrder.setTotalAmount(totalAmount);
-        newOrder.setTotalAmountDiscount(priceDiff);
+        newOrder.setTotalAmountDiscount(totalAmount);
         newOrder.setNote(orderNote);
-        newOrder.setOrderDate(LocalDateTime.now());
+        newOrder.setOrderDate(vietnamTime);
         newOrder.setAccount(account);
         newOrder = orderRepository.save(newOrder);
 
@@ -558,7 +580,7 @@ public class PaymentServiceImpl implements PaymentService {
         paymentRepository.save(payment);
 
         simpMessagingTemplate.convertAndSend("/all/messages", "call api");
-
+        ticketPurchaseService.scheduleStatusUpdateChangeTicket(LocalDateTime.now(), newOrder.getOrderCode());
         return PayOSResponse.builder()
                 .error("ok")
                 .message("Thành công")
@@ -576,7 +598,10 @@ public class PaymentServiceImpl implements PaymentService {
         String amount = request.getParameter("amount");
         String voucherCode = request.getParameter("voucherCode");
 
-        Payment payment = paymentRepository.findPaymentByOrderCode(orderCode);
+        Payment payment = paymentRepository
+                .findPaymentByOrderCode(orderCode)
+                .orElseThrow(() -> new AppException(ErrorCode.PAYMENT_NOT_FOUND));
+
         ZoneId vietnamZone = ZoneId.of("Asia/Ho_Chi_Minh");
         LocalDateTime vietnamTime = LocalDateTime.now(vietnamZone);
 
@@ -643,11 +668,12 @@ public class PaymentServiceImpl implements PaymentService {
                         }
                         var checkinLogOld = checkinLogRepository
                                 .findCheckinLogByOrder_OrderId(oldOrder.getOrderId())
-                                .orElseThrow(() -> new AppException(ErrorCode.CHECKIN_LOG_NOT_FOUND));
+                                .orElse(null);
+                        if(checkinLogOld != null){
+                            checkinLogRepository.delete(checkinLogOld);
 
-                        checkinLogRepository.delete(checkinLogOld);
+                        }
                         orderRepository.save(oldOrder);
-                        checkinLogRepository.save(checkinLogOld);
 
 
                         if (oldTicketPurchase.get().getZoneActivity() == null && oldTicketPurchase.get().getTicket() != null) {
@@ -997,6 +1023,9 @@ public class PaymentServiceImpl implements PaymentService {
             Event event = eventRepository
                     .findById(eventId)
                     .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+            if (!event.getStatus().equals(EEventStatus.CANCELLED)) {
+                throw new AppException(ErrorCode.EVENT_CANCELLED);
+            }
 
             // Lưu ý: tránh ký tự không hợp lệ trong tên sheet
             String safeSheetName = "Refunds-" + event.getEventName().replaceAll("[\\[\\]\\*\\?/\\\\]", "-");
@@ -1024,6 +1053,9 @@ public class PaymentServiceImpl implements PaymentService {
             Set<String> exportedOrderCodes = new HashSet<>();  // Dùng để track orderCode đã export
 
             for (TicketPurchase tp : ticketPurchases) {
+                if (!tp.getStatus().equals(ETicketPurchaseStatus.REFUNDING)) {
+                    throw new AppException(ErrorCode.TICKET_NOT_REFUNDING);
+                }
                 String orderCode = tp.getOrderCode();
 
                 // Nếu đã xuất orderCode này rồi thì bỏ qua
@@ -1033,8 +1065,12 @@ public class PaymentServiceImpl implements PaymentService {
 
                 Account acc = accountRepository.findById(tp.getAccount().getAccountId())
                         .orElseThrow(() -> new AppException(ErrorCode.ACCOUNT_NOT_FOUND));
-                Payment p = paymentRepository.findPaymentByOrderCode(orderCode);
-                Transaction t = transactionRepository.findByPaymentId(p.getPaymentId());
+                Payment p = paymentRepository
+                        .findPaymentByOrderCode(orderCode)
+                        .orElseThrow(() -> new AppException(ErrorCode.PAYMENT_NOT_FOUND));
+                Transaction t = transactionRepository
+                        .findByPaymentId(p.getPaymentId())
+                        .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
 
                 Row row = sheet.createRow(rowIdx);
 
@@ -1051,6 +1087,9 @@ public class PaymentServiceImpl implements PaymentService {
                         case "userName" -> cell.setCellValue(acc.getUserName());
                         case "email" -> cell.setCellValue(acc.getEmail());
                         case "phone" -> cell.setCellValue(acc.getPhone());
+                        case "bankingName" -> cell.setCellValue(acc.getBankingName());
+                        case "bankingCode" -> cell.setCellValue(acc.getBankingCode());
+                        case "ownerCard"  -> cell.setCellValue(acc.getOwnerCard());
                         case "status" -> {
                             cell.setCellValue("Chưa chuyển");
 
@@ -1061,11 +1100,25 @@ public class PaymentServiceImpl implements PaymentService {
 
                             cell.setCellStyle(unLockedStyle); // Cho phép chỉnh sửa cột status
                         }
-                        default -> cell.setCellValue("");
+                        // Sau khi tạo cell cho "bankingImage"
+                        case "bankingImage" -> {
+                            cell.setCellValue("Dán ảnh tại dòng này");
+
+                            cell.setCellStyle(unLockedStyle); // Cho phép chỉnh sửa
+
+                            Comment comment = ((XSSFSheet) sheet).createDrawingPatriarch()
+                                    .createCellComment(new XSSFClientAnchor());
+                            comment.setString(new XSSFRichTextString("Dán ảnh tại dòng này bằng Insert > Picture"));
+                            cell.setCellComment(comment);
+                        }
+                        default -> {
+                            cell.setCellValue("");
+                            cell.setCellStyle(lockedStyle);
+                        }
                     }
 
                     // Lock tất cả ô trừ cột status
-                    if (!"status".equals(col)) {
+                    if (!"status".equals(col) && !"bankingImage".equals(col)) {
                         cell.setCellStyle(lockedStyle);
                     }
                 }
@@ -1080,11 +1133,9 @@ public class PaymentServiceImpl implements PaymentService {
 
             // Bảo vệ sheet (password có thể thay đổi hoặc để trống)
             sheet.protectSheet("12345");
-
             wb.write(os);
         }
     }
-
 
     private CellStyle buildHeaderStyle(Workbook wb) {
         Font font = wb.createFont();
@@ -1103,15 +1154,23 @@ public class PaymentServiceImpl implements PaymentService {
             case "price"     -> "Giá (VND)";
             case "userName"      -> "Tên khách hàng";
             case "email"      -> "Email khách hàng";
-            case "phone"      -> "SĐT khách hàng";
+            case "phone"      -> "Số điện thoại khách hàng";
+            case "bankingName"      -> "Tên ngân hàng";
+            case "bankingCode"      -> "Số tài khoản";
+            case "ownerCard"      -> "Tên tài khoản";
             case "status" -> "Trạng thái hoàn tiền";
+            case "bankingImage" -> "Ảnh chup chuyển khoản";
 
             default          -> col;
         };
     }
 
     @Override
-    public String readOrderCodeAndStatus(InputStream is) throws IOException {
+    public String readOrderCodeAndStatus(MultipartFile file) throws IOException {
+        if (!appUtils.getAccountFromAuthentication().getRole().getRoleName().equals(ERole.MANAGER)) {
+            throw new AppException(ErrorCode.NOT_PERMISSION);
+        }
+        InputStream is = file.getInputStream();
         try (Workbook wb = new XSSFWorkbook(is)) {
             Sheet sheet = wb.getSheetAt(0);
 
@@ -1123,6 +1182,11 @@ public class PaymentServiceImpl implements PaymentService {
 
             int orderCodeColIdx  = -1;
             int statusColIdx     = -1;
+            int bakingNameColIdx = -1;
+            int bankingCodeColIdx = -1;
+            int ownerCardColIdx = -1;
+            int bankingImageColIdx = -1;
+
 
             for (int i = 0; i < header.getLastCellNum(); i++) {
                 Cell c = header.getCell(i);
@@ -1134,6 +1198,16 @@ public class PaymentServiceImpl implements PaymentService {
                 } else if ("Trạng thái hoàn tiền".equalsIgnoreCase(colName)) {
                     statusColIdx = i;
                 }
+                else if ("Tên ngân hàng".equalsIgnoreCase(colName)) {
+                    bakingNameColIdx = i;
+                } else if ("Số tài khoản".equalsIgnoreCase(colName)) {
+                    bankingCodeColIdx = i;
+                } else if ("Tên tài khoản".equalsIgnoreCase(colName)) {
+                    ownerCardColIdx = i;
+                } else if ("Ảnh chup chuyển khoản".equalsIgnoreCase(colName)) {
+                    bankingImageColIdx = i;
+                }
+
             }
 
             if (orderCodeColIdx == -1 || statusColIdx == -1) {
@@ -1156,9 +1230,27 @@ public class PaymentServiceImpl implements PaymentService {
                 if (orderCode.isEmpty()) {
                     throw new IllegalStateException("Thiếu mã đơn hàng tại dòng " + (r + 1));
                 }
+                Cell bakingCodeCell = row.getCell(bankingCodeColIdx);
+                Cell bakingNameCell = row.getCell(bakingNameColIdx);
+                Cell ownerCardCell = row.getCell(ownerCardColIdx);
+                Cell bankingImageCell = row.getCell(bankingImageColIdx);
+
+                String bankingCode = bakingCodeCell == null ? "" : bakingCodeCell.getStringCellValue().trim();
+                if (bankingCode.isEmpty()) {
+                    throw new IllegalStateException("Thiếu số tài khoản tại dòng " + (r + 1));
+                }
+                String bankingName = bakingNameCell == null ? "" : bakingNameCell.getStringCellValue().trim();
+                if (bankingName.isEmpty()) {
+                    throw new IllegalStateException("Thiếu tên ngân hàng tại dòng " + (r + 1));
+                }
+                String ownerCard = ownerCardCell == null ? "" : ownerCardCell.getStringCellValue().trim();
+                if (ownerCard.isEmpty()) {
+                    throw new IllegalStateException("Thiếu tên tài khoản tại dòng " + (r + 1));
+                }
             }
 
             /* ───── 2. Duyệt từng dòng dữ liệu bắt đầu từ row 1 ───── */
+            boolean fileUploaded = false;
             for (int r = 1; r <= sheet.getLastRowNum(); r++) {
                 Row row = sheet.getRow(r);
                 if (row == null) continue;          // bỏ qua dòng trống
@@ -1180,9 +1272,11 @@ public class PaymentServiceImpl implements PaymentService {
                         }
                         else if (ticketPurchase.getStatus().equals(ETicketPurchaseStatus.REFUNDING)) {
                             Payment payment = paymentRepository
-                                    .findPaymentByOrderCode(ticketPurchase.getOrderCode());
+                                    .findPaymentByOrderCode(ticketPurchase.getOrderCode())
+                                    .orElseThrow(() -> new AppException(ErrorCode.PAYMENT_NOT_FOUND));
                             Transaction transaction = transactionRepository
-                                    .findByPaymentId(payment.getPaymentId());
+                                    .findByPaymentId(payment.getPaymentId())
+                                    .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
                             Order order = orderRepository
                                     .findOrderByOrderCode(ticketPurchase.getOrderCode())
                                     .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
@@ -1199,6 +1293,13 @@ public class PaymentServiceImpl implements PaymentService {
                             transaction.setStatus(ETransactionStatus.REFUNDED);
                             transactionRepository.save(transaction);
                             emailService.sendEventRefundNotification(ticketPurchase.getAccount().getEmail(), ticketPurchase.getAccount().getUserName(), ticketPurchase.getEvent().getEventName(), ticketPurchase.getOrderCode(), transaction.getAmount());
+//                            if(!fileUploaded){
+//                                String uploadFile = cloudinaryService.uploadDocumentToCloudinary(file);
+//                                Event event = ticketPurchase.getEvent();
+//                                event.setRefundFileURL(uploadFile);
+//                                eventRepository.save(event);
+//                                fileUploaded = true;
+//                            }
                         }
                         else {
                             return "Trạng thái đơn hàng không hợp lệ!";

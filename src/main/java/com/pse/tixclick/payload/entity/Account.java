@@ -65,6 +65,15 @@ public class Account {
     @Column
     String avatarURL;
 
+    @Column
+    private String bankingName;
+
+    @Column(columnDefinition = "NVARCHAR(255)")
+    private String ownerCard;
+
+    @Column(columnDefinition = "NVARCHAR(255)")
+    private String bankingCode;
+
     @ManyToOne
     @JoinColumn(name = "role_id", nullable = false)
     Role role;
