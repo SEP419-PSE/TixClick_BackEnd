@@ -418,7 +418,7 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
         if (delay >= 0) {
             // Gửi countdown đến WebSocket mỗi giây
             ScheduledFuture<?> countdownTask = scheduler.scheduleAtFixedRate(() -> {
-                long remainingTime = java.time.Duration.between(LocalDateTime.now(), startTime.plusMinutes(1)).toSeconds();
+                long remainingTime = java.time.Duration.between(LocalDateTime.now(), startTime.plusMinutes(5)).toSeconds();
                 if (remainingTime >= 0) {
                     sendExpiredTime(remainingTime, code);
                 }
