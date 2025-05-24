@@ -437,7 +437,8 @@ public class PaymentServiceImpl implements PaymentService {
             priceDiff = 10000;
         }
 
-
+        ZoneId vietnamZone = ZoneId.of("Asia/Ho_Chi_Minh");
+        LocalDateTime vietnamTime = LocalDateTime.now(vietnamZone);
         // Create new order
         Order newOrder = new Order();
         newOrder.setOrderCode(orderServiceImpl.orderCodeAutomationCreating());
@@ -445,7 +446,7 @@ public class PaymentServiceImpl implements PaymentService {
         newOrder.setTotalAmount(totalAmount);
         newOrder.setTotalAmountDiscount(totalAmount);
         newOrder.setNote(orderNote);
-        newOrder.setOrderDate(LocalDateTime.now());
+        newOrder.setOrderDate(vietnamTime);
         newOrder.setAccount(account);
         newOrder = orderRepository.save(newOrder);
 
