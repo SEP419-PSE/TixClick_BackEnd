@@ -52,6 +52,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -284,20 +285,22 @@ public class PaymentServiceImpl implements PaymentService {
                 throw new AppException(ErrorCode.TICKET_PURCHASE_CANCELLED);
             }
         }
-
         // Process ticket changes
-        int totalRequestedQuantity = ticketChange.stream()
-                .mapToInt(CreateTicketPurchaseRequest::getQuantity)
-                .sum();
+        int totalRequestedQuantity = 0;
+
+        var orderDetailList = orderDetailRepository.findByOrderId(oldOrder.getOrderId());
+        for( OrderDetail orderDetail : orderDetailList) {
+            totalRequestedQuantity = totalRequestedQuantity + orderDetail.getTicketPurchase().getQuantity();
+        }
+
+
         int totalOriginalQuantity = ticketPurchaseRequests.stream()
                 .mapToInt(req -> ticketPurchaseRepository.findById(req.getTicketPurchaseId())
                         .orElseThrow(() -> new AppException(ErrorCode.TICKET_PURCHASE_NOT_FOUND))
                         .getQuantity())
                 .sum();
 
-        if (totalRequestedQuantity > totalOriginalQuantity) {
-            throw new AppException(ErrorCode.TICKET_REQUEST_EXCEED_QUANTITY);
-        }
+
 
         if (ticketChange.size() != ticketPurchaseRequests.size()) {
             throw new AppException(ErrorCode.INVALID_REQUEST); // kiểm tra dữ liệu đầu vào
@@ -375,18 +378,21 @@ public class PaymentServiceImpl implements PaymentService {
 
 
         // Handle remaining quantity
-        int remainingQuantity = totalOriginalQuantity - totalRequestedQuantity;
+        int remainingQuantity =  totalRequestedQuantity - totalOriginalQuantity;
         if (remainingQuantity > 0) {
 
+
             var orderDetails = orderDetailRepository.findByOrderId(oldOrder.getOrderId());
+            Set<Integer> processedIds = ticketPurchaseRequests.stream()
+                    .map(TicketPurchaseRequest::getTicketPurchaseId)
+                    .collect(Collectors.toSet());
             for (OrderDetail orderDetail : orderDetails) {
 
                 TicketPurchase oldPurchase = orderDetail.getTicketPurchase();
 
-                for (TicketPurchaseRequest oldPurchaseReq : ticketPurchaseRequests) {
-                    if (oldPurchase.getTicketPurchaseId() == oldPurchaseReq.getTicketPurchaseId()) {
-                        continue; // Skip already processed purchases
-                    }
+                // Skip if this ticket was already in the change request
+                if (processedIds.contains(oldPurchase.getTicketPurchaseId())) {
+                    continue;
                 }
 
                 TicketPurchase keepPurchase = new TicketPurchase();
@@ -399,10 +405,8 @@ public class PaymentServiceImpl implements PaymentService {
                 keepPurchase.setSeatActivity(oldPurchase.getSeatActivity());
                 keepPurchase.setStatus(ETicketPurchaseStatus.PENDING);
 
-                TicketPurchaseRequest oldPurchaseReq = ticketPurchaseRequests.get(count);
-
-                keepPurchase.setTicketPurchaseOldId(oldPurchaseReq.getTicketPurchaseId());
-                count = count + 1;
+                // Optionally link to the old purchase ID if needed
+                keepPurchase.setTicketPurchaseOldId(oldPurchase.getTicketPurchaseId());
 
                 keepPurchase = ticketPurchaseRepository.save(keepPurchase);
                 newPurchases.add(keepPurchase);
@@ -439,7 +443,7 @@ public class PaymentServiceImpl implements PaymentService {
         newOrder.setOrderCode(orderServiceImpl.orderCodeAutomationCreating());
         newOrder.setStatus(priceDiff == 0 ? EOrderStatus.SUCCESSFUL : EOrderStatus.PENDING);
         newOrder.setTotalAmount(totalAmount);
-        newOrder.setTotalAmountDiscount(priceDiff);
+        newOrder.setTotalAmountDiscount(totalAmount);
         newOrder.setNote(orderNote);
         newOrder.setOrderDate(LocalDateTime.now());
         newOrder.setAccount(account);
@@ -990,7 +994,7 @@ public class PaymentServiceImpl implements PaymentService {
 
 
     private String getBaseUrl(HttpServletRequest request) {
-        return "https://tixclick.site";
+        return "http://localhost:5173";
     }
 
     @Override
