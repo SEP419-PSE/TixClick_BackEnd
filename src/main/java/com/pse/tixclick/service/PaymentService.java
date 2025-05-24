@@ -7,6 +7,7 @@ import com.pse.tixclick.payload.request.create.CreateTicketPurchaseRequest;
 import com.pse.tixclick.payload.response.PayOSResponse;
 import com.pse.tixclick.payload.response.PaymentResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,5 +29,5 @@ public interface PaymentService
 
     void exportRefunds(List<String> columns, OutputStream os, int eventId) throws IOException;
 
-    String readOrderCodeAndStatus(InputStream is) throws IOException;
+    String readOrderCodeAndStatus(MultipartFile file) throws IOException;
 }

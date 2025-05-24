@@ -75,6 +75,9 @@ Event {
     @Column
     String UrlOnline;
 
+    @Column
+    String refundFileURL;
+
     @OneToMany(mappedBy = "event")
     Collection<EventActivity> eventActivities;
 
