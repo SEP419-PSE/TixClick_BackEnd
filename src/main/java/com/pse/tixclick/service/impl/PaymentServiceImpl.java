@@ -1053,9 +1053,6 @@ public class PaymentServiceImpl implements PaymentService {
             Set<String> exportedOrderCodes = new HashSet<>();  // Dùng để track orderCode đã export
 
             for (TicketPurchase tp : ticketPurchases) {
-                if (!tp.getStatus().equals(ETicketPurchaseStatus.REFUNDING)) {
-                    throw new AppException(ErrorCode.TICKET_NOT_REFUNDING);
-                }
                 String orderCode = tp.getOrderCode();
 
                 // Nếu đã xuất orderCode này rồi thì bỏ qua
@@ -1074,55 +1071,106 @@ public class PaymentServiceImpl implements PaymentService {
 
                 Row row = sheet.createRow(rowIdx);
 
-                for (int i = 0; i < columns.size(); i++) {
-                    Cell cell = row.createCell(i);
-                    String col = columns.get(i);
+                if (tp.getStatus().equals(ETicketPurchaseStatus.REFUNDED)) {
+                    for (int i = 0; i < columns.size(); i++) {
+                        Cell cell = row.createCell(i);
+                        String col = columns.get(i);
 
-                    switch (col) {
-                        case "transactionCode" -> cell.setCellValue(t.getTransactionCode());
-                        case "transactionDate" -> cell.setCellValue(
-                                t.getTransactionDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-                        case "orderCode" -> cell.setCellValue(p != null ? p.getOrderCode() : "");
-                        case "price" -> cell.setCellValue(t.getAmount());
-                        case "userName" -> cell.setCellValue(acc.getUserName());
-                        case "email" -> cell.setCellValue(acc.getEmail());
-                        case "phone" -> cell.setCellValue(acc.getPhone());
-                        case "bankingName" -> cell.setCellValue(acc.getBankingName());
-                        case "bankingCode" -> cell.setCellValue(acc.getBankingCode());
-                        case "ownerCard"  -> cell.setCellValue(acc.getOwnerCard());
-                        case "status" -> {
-                            cell.setCellValue("Chưa chuyển");
+                        switch (col) {
+                            case "transactionCode" -> cell.setCellValue(t.getTransactionCode());
+                            case "transactionDate" -> cell.setCellValue(
+                                    t.getTransactionDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+                            case "orderCode" -> cell.setCellValue(p != null ? p.getOrderCode() : "");
+                            case "price" -> cell.setCellValue(t.getAmount());
+                            case "userName" -> cell.setCellValue(acc.getUserName());
+                            case "email" -> cell.setCellValue(acc.getEmail());
+                            case "phone" -> cell.setCellValue(acc.getPhone());
+                            case "bankingName" -> cell.setCellValue(acc.getBankingName());
+                            case "bankingCode" -> cell.setCellValue(acc.getBankingCode());
+                            case "ownerCard"  -> cell.setCellValue(acc.getOwnerCard());
+                            case "status" -> {
+                                cell.setCellValue("Đã Chuyển");
 
-                            DataValidationConstraint constraint = dvHelper.createExplicitListConstraint(
-                                    new String[]{"Chưa chuyển", "Đã Chuyển"});
-                            CellRangeAddressList addr = new CellRangeAddressList(rowIdx, rowIdx, i, i);
-                            sheet.addValidationData(dvHelper.createValidation(constraint, addr));
+                                DataValidationConstraint constraint = dvHelper.createExplicitListConstraint(
+                                        new String[]{"Chưa chuyển", "Đã Chuyển"});
+                                CellRangeAddressList addr = new CellRangeAddressList(rowIdx, rowIdx, i, i);
+                                sheet.addValidationData(dvHelper.createValidation(constraint, addr));
 
-                            cell.setCellStyle(unLockedStyle); // Cho phép chỉnh sửa cột status
+                                cell.setCellStyle(unLockedStyle); // Cho phép chỉnh sửa cột status
+                            }
+                            // Sau khi tạo cell cho "bankingImage"
+                            case "bankingImage" -> {
+                                cell.setCellValue("Dán ảnh tại dòng này");
+
+                                cell.setCellStyle(unLockedStyle); // Cho phép chỉnh sửa
+
+                                Comment comment = ((XSSFSheet) sheet).createDrawingPatriarch()
+                                        .createCellComment(new XSSFClientAnchor());
+                                comment.setString(new XSSFRichTextString("Dán ảnh tại dòng này bằng Insert > Picture"));
+                                cell.setCellComment(comment);
+                            }
+                            default -> {
+                                cell.setCellValue("");
+                                cell.setCellStyle(lockedStyle);
+                            }
                         }
-                        // Sau khi tạo cell cho "bankingImage"
-                        case "bankingImage" -> {
-                            cell.setCellValue("Dán ảnh tại dòng này");
 
-                            cell.setCellStyle(unLockedStyle); // Cho phép chỉnh sửa
-
-                            Comment comment = ((XSSFSheet) sheet).createDrawingPatriarch()
-                                    .createCellComment(new XSSFClientAnchor());
-                            comment.setString(new XSSFRichTextString("Dán ảnh tại dòng này bằng Insert > Picture"));
-                            cell.setCellComment(comment);
+                        // Lock tất cả ô trừ cột status
+                        if (!"status".equals(col) && !"bankingImage".equals(col)) {
+                            cell.setCellStyle(lockedStyle);
                         }
-                        default -> {
-                            cell.setCellValue("");
+                    }
+                } else if(tp.getStatus().equals(ETicketPurchaseStatus.REFUNDING)){
+                    for (int i = 0; i < columns.size(); i++) {
+                        Cell cell = row.createCell(i);
+                        String col = columns.get(i);
+
+                        switch (col) {
+                            case "transactionCode" -> cell.setCellValue(t.getTransactionCode());
+                            case "transactionDate" -> cell.setCellValue(
+                                    t.getTransactionDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+                            case "orderCode" -> cell.setCellValue(p != null ? p.getOrderCode() : "");
+                            case "price" -> cell.setCellValue(t.getAmount());
+                            case "userName" -> cell.setCellValue(acc.getUserName());
+                            case "email" -> cell.setCellValue(acc.getEmail());
+                            case "phone" -> cell.setCellValue(acc.getPhone());
+                            case "bankingName" -> cell.setCellValue(acc.getBankingName());
+                            case "bankingCode" -> cell.setCellValue(acc.getBankingCode());
+                            case "ownerCard"  -> cell.setCellValue(acc.getOwnerCard());
+                            case "status" -> {
+                                cell.setCellValue("Chưa chuyển");
+
+                                DataValidationConstraint constraint = dvHelper.createExplicitListConstraint(
+                                        new String[]{"Chưa chuyển", "Đã Chuyển"});
+                                CellRangeAddressList addr = new CellRangeAddressList(rowIdx, rowIdx, i, i);
+                                sheet.addValidationData(dvHelper.createValidation(constraint, addr));
+
+                                cell.setCellStyle(unLockedStyle); // Cho phép chỉnh sửa cột status
+                            }
+                            // Sau khi tạo cell cho "bankingImage"
+                            case "bankingImage" -> {
+                                cell.setCellValue("Dán ảnh tại dòng này");
+
+                                cell.setCellStyle(unLockedStyle); // Cho phép chỉnh sửa
+
+                                Comment comment = ((XSSFSheet) sheet).createDrawingPatriarch()
+                                        .createCellComment(new XSSFClientAnchor());
+                                comment.setString(new XSSFRichTextString("Dán ảnh tại dòng này bằng Insert > Picture"));
+                                cell.setCellComment(comment);
+                            }
+                            default -> {
+                                cell.setCellValue("");
+                                cell.setCellStyle(lockedStyle);
+                            }
+                        }
+
+                        // Lock tất cả ô trừ cột status
+                        if (!"status".equals(col) && !"bankingImage".equals(col)) {
                             cell.setCellStyle(lockedStyle);
                         }
                     }
 
-                    // Lock tất cả ô trừ cột status
-                    if (!"status".equals(col) && !"bankingImage".equals(col)) {
-                        cell.setCellStyle(lockedStyle);
-                    }
                 }
-
                 rowIdx++;
             }
 
@@ -1174,19 +1222,17 @@ public class PaymentServiceImpl implements PaymentService {
         try (Workbook wb = new XSSFWorkbook(is)) {
             Sheet sheet = wb.getSheetAt(0);
 
-            /* ───── 1. Xác định index hai cột cần đọc ───── */
+            // ───── 1. Xác định index các cột ─────
             Row header = sheet.getRow(0);
             if (header == null) {
                 throw new IllegalStateException("File không có dòng tiêu đề");
             }
 
-            int orderCodeColIdx  = -1;
-            int statusColIdx     = -1;
-            int bakingNameColIdx = -1;
+            int orderCodeColIdx = -1;
+            int statusColIdx = -1;
+            int bankingNameColIdx = -1;
             int bankingCodeColIdx = -1;
             int ownerCardColIdx = -1;
-            int bankingImageColIdx = -1;
-
 
             for (int i = 0; i < header.getLastCellNum(); i++) {
                 Cell c = header.getCell(i);
@@ -1197,118 +1243,98 @@ public class PaymentServiceImpl implements PaymentService {
                     orderCodeColIdx = i;
                 } else if ("Trạng thái hoàn tiền".equalsIgnoreCase(colName)) {
                     statusColIdx = i;
-                }
-                else if ("Tên ngân hàng".equalsIgnoreCase(colName)) {
-                    bakingNameColIdx = i;
+                } else if ("Tên ngân hàng".equalsIgnoreCase(colName)) {
+                    bankingNameColIdx = i;
                 } else if ("Số tài khoản".equalsIgnoreCase(colName)) {
                     bankingCodeColIdx = i;
                 } else if ("Tên tài khoản".equalsIgnoreCase(colName)) {
                     ownerCardColIdx = i;
-                } else if ("Ảnh chup chuyển khoản".equalsIgnoreCase(colName)) {
-                    bankingImageColIdx = i;
                 }
-
             }
 
             if (orderCodeColIdx == -1 || statusColIdx == -1) {
                 throw new IllegalStateException("Thiếu cột Mã đơn hàng hoặc Trạng thái hoàn tiền");
             }
 
+            // ───── 2. Duyệt từng dòng dữ liệu bắt đầu từ row 1 ─────
             for (int r = 1; r <= sheet.getLastRowNum(); r++) {
                 Row row = sheet.getRow(r);
-                if (row == null) continue;  // bỏ qua dòng trống
+                if (row == null) continue;
 
-                Cell statusCell = row.getCell(statusColIdx);
-                String statusVal = statusCell == null ? "" : statusCell.getStringCellValue().trim();
-
-                if ("Chưa chuyển".equalsIgnoreCase(statusVal)) {
-                    throw new IllegalStateException("Dòng " + (r + 1) + " có trạng thái 'Chưa chuyển'. Vui lòng kiểm tra lại!");
-                }
-
-                Cell orderCell = row.getCell(orderCodeColIdx);
-                String orderCode = orderCell == null ? "" : orderCell.getStringCellValue().trim();
-                if (orderCode.isEmpty()) {
-                    throw new IllegalStateException("Thiếu mã đơn hàng tại dòng " + (r + 1));
-                }
-                Cell bakingCodeCell = row.getCell(bankingCodeColIdx);
-                Cell bakingNameCell = row.getCell(bakingNameColIdx);
-                Cell ownerCardCell = row.getCell(ownerCardColIdx);
-                Cell bankingImageCell = row.getCell(bankingImageColIdx);
-
-                String bankingCode = bakingCodeCell == null ? "" : bakingCodeCell.getStringCellValue().trim();
-                if (bankingCode.isEmpty()) {
-                    throw new IllegalStateException("Thiếu số tài khoản tại dòng " + (r + 1));
-                }
-                String bankingName = bakingNameCell == null ? "" : bakingNameCell.getStringCellValue().trim();
-                if (bankingName.isEmpty()) {
-                    throw new IllegalStateException("Thiếu tên ngân hàng tại dòng " + (r + 1));
-                }
-                String ownerCard = ownerCardCell == null ? "" : ownerCardCell.getStringCellValue().trim();
-                if (ownerCard.isEmpty()) {
-                    throw new IllegalStateException("Thiếu tên tài khoản tại dòng " + (r + 1));
-                }
-            }
-
-            /* ───── 2. Duyệt từng dòng dữ liệu bắt đầu từ row 1 ───── */
-            boolean fileUploaded = false;
-            for (int r = 1; r <= sheet.getLastRowNum(); r++) {
-                Row row = sheet.getRow(r);
-                if (row == null) continue;          // bỏ qua dòng trống
-                // Lấy trạng thái
-                Cell statusCell = row.getCell(statusColIdx);
-                String statusVal = statusCell == null ? "" : statusCell.getStringCellValue().trim();
-                boolean paid = "Đã Chuyển".equalsIgnoreCase(statusVal);
                 // Lấy mã đơn hàng
                 Cell orderCell = row.getCell(orderCodeColIdx);
                 String orderCode = orderCell == null ? "" : orderCell.getStringCellValue().trim();
                 if (orderCode.isEmpty()) {
                     throw new IllegalStateException("Thiếu mã đơn hàng tại dòng " + (r + 1));
                 }
+
+                // Lấy trạng thái
+                Cell statusCell = row.getCell(statusColIdx);
+                String statusVal = statusCell == null ? "" : statusCell.getStringCellValue().trim();
+                boolean paid = "Đã Chuyển".equalsIgnoreCase(statusVal);
+
+                // Nếu trạng thái là "Đã Chuyển", kiểm tra 3 cột
+                if (paid) {
+                    Cell bankingNameCell = row.getCell(bankingNameColIdx);
+                    Cell bankingCodeCell = row.getCell(bankingCodeColIdx);
+                    Cell ownerCardCell = row.getCell(ownerCardColIdx);
+
+                    String bankingName = bankingNameCell == null ? "" : bankingNameCell.getStringCellValue().trim();
+                    if (bankingName.isEmpty()) {
+                        throw new IllegalStateException("Thiếu tên ngân hàng tại dòng " + (r + 1));
+                    }
+                    String bankingCode = bankingCodeCell == null ? "" : bankingCodeCell.getStringCellValue().trim();
+                    if (bankingCode.isEmpty()) {
+                        throw new IllegalStateException("Thiếu số tài khoản tại dòng " + (r + 1));
+                    }
+                    String ownerCard = ownerCardCell == null ? "" : ownerCardCell.getStringCellValue().trim();
+                    if (ownerCard.isEmpty()) {
+                        throw new IllegalStateException("Thiếu tên tài khoản tại dòng " + (r + 1));
+                    }
+                    // Xử lý logic cập nhật trạng thái
                     List<TicketPurchase> ticketPurchases = ticketPurchaseRepository
                             .findTicketPurchaseByOrderCode(orderCode);
                     for (TicketPurchase ticketPurchase : ticketPurchases) {
-                        if(ticketPurchase.getStatus().equals(ETicketPurchaseStatus.REFUNDED)){
-                            return "Đơn hàng đã hoàn tiền!";
+                        if(ticketPurchase.getStatus().equals(ETicketPurchaseStatus.REFUNDED)) {
+                             continue;
                         }
-                        else if (ticketPurchase.getStatus().equals(ETicketPurchaseStatus.REFUNDING)) {
-                            Payment payment = paymentRepository
-                                    .findPaymentByOrderCode(ticketPurchase.getOrderCode())
-                                    .orElseThrow(() -> new AppException(ErrorCode.PAYMENT_NOT_FOUND));
-                            Transaction transaction = transactionRepository
-                                    .findByPaymentId(payment.getPaymentId())
-                                    .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
-                            Order order = orderRepository
-                                    .findOrderByOrderCode(ticketPurchase.getOrderCode())
-                                    .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+                        Payment payment = paymentRepository
+                                .findPaymentByOrderCode(ticketPurchase.getOrderCode())
+                                .orElseThrow(() -> new AppException(ErrorCode.PAYMENT_NOT_FOUND));
+                        Transaction transaction = transactionRepository
+                                .findByPaymentId(payment.getPaymentId())
+                                .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
+                        Order order = orderRepository
+                                .findOrderByOrderCode(ticketPurchase.getOrderCode())
+                                .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
 
-                            ticketPurchase.setStatus(ETicketPurchaseStatus.REFUNDED);
-                            ticketPurchaseRepository.save(ticketPurchase);
+                        ticketPurchase.setStatus(ETicketPurchaseStatus.REFUNDED);
+                        ticketPurchaseRepository.save(ticketPurchase);
 
-                            order.setStatus(EOrderStatus.REFUNDED);
-                            orderRepository.save(order);
+                        order.setStatus(EOrderStatus.REFUNDED);
+                        orderRepository.save(order);
 
-                            payment.setStatus(EPaymentStatus.REFUNDED);
-                            paymentRepository.save(payment);
+                        payment.setStatus(EPaymentStatus.REFUNDED);
+                        paymentRepository.save(payment);
 
-                            transaction.setStatus(ETransactionStatus.REFUNDED);
-                            transactionRepository.save(transaction);
-                            emailService.sendEventRefundNotification(ticketPurchase.getAccount().getEmail(), ticketPurchase.getAccount().getUserName(), ticketPurchase.getEvent().getEventName(), ticketPurchase.getOrderCode(), transaction.getAmount());
-//                            if(!fileUploaded){
-//                                String uploadFile = cloudinaryService.uploadDocumentToCloudinary(file);
-//                                Event event = ticketPurchase.getEvent();
-//                                event.setRefundFileURL(uploadFile);
-//                                eventRepository.save(event);
-//                                fileUploaded = true;
-//                            }
-                        }
-                        else {
-                            return "Trạng thái đơn hàng không hợp lệ!";
-                        }
+                        transaction.setStatus(ETransactionStatus.REFUNDED);
+                        transactionRepository.save(transaction);
+
+                        emailService.sendEventRefundNotification(
+                                ticketPurchase.getAccount().getEmail(),
+                                ticketPurchase.getAccount().getUserName(),
+                                ticketPurchase.getEvent().getEventName(),
+                                ticketPurchase.getOrderCode(),
+                                transaction.getAmount()
+                        );
                     }
+                }
             }
         } catch (MessagingException e) {
             throw new RuntimeException(e);
         }
+
         return "Đã hoàn tiền thành công";
     }
+
 }
