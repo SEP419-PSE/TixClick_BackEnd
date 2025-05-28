@@ -136,6 +136,15 @@ public class AccountServiceImpl implements AccountService {
         if(accountDTO.getMSSV() != null) {
             user.setMSSV(accountDTO.getMSSV());
         }
+        if(accountDTO.getBankingName() != null) {
+            user.setBankingName(accountDTO.getBankingName());
+        }
+        if(accountDTO.getBankingCode() != null) {
+            user.setBankingCode(accountDTO.getBankingCode());
+        }
+        if(accountDTO.getOwnerCard() != null) {
+            user.setOwnerCard(accountDTO.getOwnerCard());
+        }
 
         // Xử lý upload avatar nếu có
         if (accountDTO.getAvatarURL() != null && !accountDTO.getAvatarURL().isEmpty()) {

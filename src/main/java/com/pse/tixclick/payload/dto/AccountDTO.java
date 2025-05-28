@@ -17,6 +17,9 @@ public class AccountDTO {
     String phone;
     String CCCD;
     String MSSV;
+    String bankingCode;
+    String bankingName;
+    String ownerCard;
     boolean active;
     String avatarURL;
     String dob;
