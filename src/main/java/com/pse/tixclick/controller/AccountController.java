@@ -111,6 +111,9 @@ public class AccountController {
             @RequestParam(required = false) String lastName,
             @RequestParam(required = false) String CCCD,
             @RequestParam(required = false) String MSSV,
+            @RequestParam(required = false) String bankingCode,
+            @RequestParam(required = false) String bankingName,
+            @RequestParam(required = false) String ownerCard,
             @RequestParam(required = false) String email,
             @RequestParam(required = false) String phone,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dob,
@@ -123,6 +126,9 @@ public class AccountController {
             if (lastName != null && !lastName.isEmpty()) accountDTO.setLastName(lastName);
             if (CCCD != null && !CCCD.isEmpty()) accountDTO.setCCCD(CCCD);
             if (MSSV != null && !MSSV.isEmpty()) accountDTO.setMSSV(MSSV);
+            if (bankingCode != null && !bankingCode.isEmpty()) accountDTO.setBankingCode(bankingCode);
+            if (bankingName != null && !bankingName.isEmpty()) accountDTO.setBankingName(bankingName);
+            if (ownerCard != null && !ownerCard.isEmpty()) accountDTO.setOwnerCard(ownerCard);
             if (email != null && !email.isEmpty()) accountDTO.setEmail(email);
             if (phone != null && !phone.isEmpty()) accountDTO.setPhone(phone);
             if (dob != null) accountDTO.setDob(dob);
