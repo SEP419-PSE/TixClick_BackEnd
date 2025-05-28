@@ -19,5 +19,8 @@ public class UpdateAccountRequest {
     LocalDate dob;
     String CCCD;
     String MSSV;
+    String bankingCode;
+    String bankingName;
+    String ownerCard;
     MultipartFile avatarURL;
 }
