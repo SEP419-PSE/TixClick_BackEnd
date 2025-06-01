@@ -522,6 +522,16 @@ public class PaymentServiceImpl implements PaymentService {
                 ticketPurchaseRepository.save(newPurchase);
             }
 
+            Payment newPayment = new Payment();
+            newPayment.setAmount(0);
+            newPayment.setStatus(EPaymentStatus.SUCCESSFULLY);
+            newPayment.setOrderCode(newOrder.getOrderCode());
+            newPayment.setOrder(newOrder);
+            newPayment.setPaymentMethod("Thanh toán trực tiếp");
+            newPayment.setAccount(account);
+            paymentRepository.save(newPayment);
+
+
             simpMessagingTemplate.convertAndSend("/all/messages", "call api");
             Transaction transaction = new Transaction();
             return PayOSResponse.builder()
