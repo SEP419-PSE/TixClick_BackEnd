@@ -1337,7 +1337,7 @@ public class EventServiceImpl implements EventService {
 
         // Lấy danh sách accountId đã mua vé với status là 'PURCHASED'
         List<Integer> accountIds = ticketPurchaseRepository
-                .findDistinctAccountIdsByEventActivityIdAndStatus(eventActivityId, ETicketPurchaseStatus.PURCHASED);
+                .findDistinctAccountIdsByEventActivityIdAndStatus(eventActivityId );
 
         List<ListCosumerResponse> result = new ArrayList<>();
 
@@ -1348,8 +1348,8 @@ public class EventServiceImpl implements EventService {
 
             // Lấy danh sách vé đã mua cho từng account theo eventActivityId và status là 'PURCHASED'
             List<TicketPurchase> ticketPurchases = ticketPurchaseRepository
-                    .findTicketPurchasesByAccount_AccountIdAndEventActivity_EventActivityIdAndStatus(
-                            accountId, eventActivityId, ETicketPurchaseStatus.PURCHASED);
+                    .findTicketPurchase(
+                            accountId, eventActivityId);
 
             // Build danh sách TicketPurchaseResponse từ ticketPurchases
             List<TicketSheetResponse> ticketSheets = new ArrayList<>();
@@ -1379,7 +1379,7 @@ public class EventServiceImpl implements EventService {
                 boolean isHaveCheckin = false;
 
                 Optional<CheckinLog> checkin = checkinLogRepository.findCheckinLogByOrder_OrderCode(orderCode);
-                if (checkin.isPresent() && checkin.get().getCheckinStatus() == ECheckinLogStatus.CHECKED_IN) {
+                if (checkin.isPresent() && checkin.get().getCheckinStatus().equals(ECheckinLogStatus.CHECKED_IN)) {
                     isHaveCheckin = true;
                 }
 
