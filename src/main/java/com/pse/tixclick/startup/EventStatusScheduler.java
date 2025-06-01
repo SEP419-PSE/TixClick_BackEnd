@@ -13,6 +13,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 @Service
@@ -24,8 +26,11 @@ public class EventStatusScheduler {
 
     @Scheduled(fixedRate = 60 * 1000)
     public void updateEventStatus() {
+        // Lấy giờ hiện tại theo múi giờ VN
+        ZonedDateTime nowVN = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+
         List<Event> events = eventRepository.findEventsByStatus(EEventStatus.SCHEDULED);
-        if(events.isEmpty()){
+        if (events.isEmpty()) {
             System.out.println("No events found with status SCHEDULED");
             return;
         }
@@ -34,15 +39,20 @@ public class EventStatusScheduler {
             List<EventActivity> activities = eventActivityRepository.findEventActivitiesByEvent_EventId(event.getEventId());
             if (activities.isEmpty()) {
                 System.out.println("No activities found for event: " + event.getEventId());
-                return;
+                continue;
             }
-            LocalDateTime latestEndDateTime = activities.stream()
-                    .map(a -> a.getDateEvent().atTime(a.getEndTimeEvent()))
-                    .max(LocalDateTime::compareTo)
+
+            // Tính thời gian kết thúc muộn nhất của các activity
+            ZonedDateTime latestEndDateTime = activities.stream()
+                    .map(a -> ZonedDateTime.of(a.getDateEvent().atTime(a.getEndTimeEvent()), ZoneId.of("Asia/Ho_Chi_Minh")))
+                    .max(ZonedDateTime::compareTo)
                     .orElse(null);
 
-            if (latestEndDateTime != null && latestEndDateTime.isBefore(LocalDateTime.now())) {
-                // Cập nhật status nếu đã kết thúc
+            System.out.println("Checking Event ID: " + event.getEventId());
+            System.out.println("Latest End DateTime (VN): " + latestEndDateTime);
+            System.out.println("Now (VN): " + nowVN);
+
+            if (latestEndDateTime != null && latestEndDateTime.isBefore(nowVN)) {
                 event.setStatus(EEventStatus.ENDED);
                 eventRepository.save(event);
                 System.out.println("Event ID " + event.getEventId() + " is now ENDED.");
