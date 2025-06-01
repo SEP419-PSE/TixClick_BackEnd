@@ -1022,8 +1022,18 @@ public class EventServiceImpl implements EventService {
                 if(!event.getStatus().equals(EEventStatus.SCHEDULED)){
                     throw new AppException(ErrorCode.EVENT_NOT_SCHEDULED);
                 }
+                LocalDate currentDate = LocalDate.now();
+                LocalDate eventStartDate = event.getEventActivities().stream()
+                        .map(EventActivity::getDateEvent)
+                        .min(LocalDate::compareTo)
+                        .orElseThrow(() -> new AppException(ErrorCode.EVENT_ACTIVITY_NOT_FOUND));
 
-                    event.setStatus(EEventStatus.CANCELLED);
+                // Nếu hôm nay cách ngày bắt đầu sự kiện < 7 ngày → không cho huỷ
+                if (currentDate.isAfter(eventStartDate.minusDays(7))) {
+                    throw new AppException(ErrorCode.CANNOT_CANCEL_EVENT_WITHIN_7_DAYS);
+                }
+
+                event.setStatus(EEventStatus.CANCELLED);
 
                 String organizerFullname = event.getOrganizer().getFirstName() + " " + event.getOrganizer().getLastName();
                 emailService.sendEventCancellationEmail(
@@ -1084,8 +1094,6 @@ public class EventServiceImpl implements EventService {
                 }
 
                 executor.shutdown(); // Sau khi submit hết thì đóng executor
-
-
             }
 
 
@@ -1337,7 +1345,7 @@ public class EventServiceImpl implements EventService {
 
         // Lấy danh sách accountId đã mua vé với status là 'PURCHASED'
         List<Integer> accountIds = ticketPurchaseRepository
-                .findDistinctAccountIdsByEventActivityIdAndStatus(eventActivityId, ETicketPurchaseStatus.PURCHASED);
+                .findDistinctAccountIdsByEventActivityIdAndStatus(eventActivityId );
 
         List<ListCosumerResponse> result = new ArrayList<>();
 
@@ -1348,8 +1356,8 @@ public class EventServiceImpl implements EventService {
 
             // Lấy danh sách vé đã mua cho từng account theo eventActivityId và status là 'PURCHASED'
             List<TicketPurchase> ticketPurchases = ticketPurchaseRepository
-                    .findTicketPurchasesByAccount_AccountIdAndEventActivity_EventActivityIdAndStatus(
-                            accountId, eventActivityId, ETicketPurchaseStatus.PURCHASED);
+                    .findTicketPurchase(
+                            accountId, eventActivityId);
 
             // Build danh sách TicketPurchaseResponse từ ticketPurchases
             List<TicketSheetResponse> ticketSheets = new ArrayList<>();
@@ -1379,7 +1387,7 @@ public class EventServiceImpl implements EventService {
                 boolean isHaveCheckin = false;
 
                 Optional<CheckinLog> checkin = checkinLogRepository.findCheckinLogByOrder_OrderCode(orderCode);
-                if (checkin.isPresent() && checkin.get().getCheckinStatus() == ECheckinLogStatus.CHECKED_IN) {
+                if (checkin.isPresent() && checkin.get().getCheckinStatus().equals(ECheckinLogStatus.CHECKED_IN)) {
                     isHaveCheckin = true;
                 }
 

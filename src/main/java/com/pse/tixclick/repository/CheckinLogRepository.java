@@ -19,22 +19,26 @@ public interface CheckinLogRepository extends JpaRepository<CheckinLog, Integer>
 
 
     @Query(value = """
-        SELECT 
+
+            SELECT\s
             t.ticket_name AS ticketName,
             t.ticket_id AS ticketId,
             COUNT(tp.ticket_purchase_id) AS totalPurchased,
             COUNT(CASE WHEN cl.checkin_status = 'CHECKED_IN' THEN 1 END) AS checkedIn,
             COUNT(CASE WHEN cl.checkin_status IS NULL OR cl.checkin_status = 'PENDING' THEN 1 END) AS notCheckedIn
-        FROM 
+        FROM
             ticket t
-        LEFT JOIN 
+        LEFT JOIN
             ticket_purchase tp ON t.ticket_id = tp.ticket_id
-        LEFT JOIN 
-            checkin_log cl ON tp.ticket_purchase_id = cl.ticket_purchase_id
-        WHERE 
-            tp.event_activity_id = :eventActivityId
-        GROUP BY 
-            t.ticket_name, t.ticket_id
+        LEFT JOIN
+            orders o ON tp.order_code = o.order_code
+        LEFT JOIN
+            checkin_log cl ON o.order_id = cl.order_id
+        WHERE
+            tp.event_activity_id = 2
+        GROUP BY\s
+            t.ticket_name, t.ticket_id;
+        
         """, nativeQuery = true)
     List<TicketCheckinStatsProjection> getTicketCheckinStatsByEventActivityId(@Param("eventActivityId") int eventActivityId);
 
