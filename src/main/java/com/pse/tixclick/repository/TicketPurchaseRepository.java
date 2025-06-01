@@ -202,8 +202,14 @@ ORDER BY m.month;
     Optional<TicketPurchase> findTicketPurchaseByTicketPurchaseId(int ticketPurchaseId);
 
 
-    Integer countTicketPurchaseByEventActivity_EventActivityIdAndStatus(int eventActivityId, ETicketPurchaseStatus status);
+    @Query(value = """
 
+            select count(ticket_purchase_id) as total_ticket from ticket_purchase
+    where event_activity_id = 2 and status in ('PURCHASED', 'CHECKED_IN') and ticket_id = 3
+    """,nativeQuery = true)
+    Integer countTicketPurchaseByEventActivityIdAndTicketId(
+            @Param("eventActivityId") int eventActivityId,
+            @Param("ticketId") int ticketId);
     @Query(value = "SELECT DISTINCT account_id FROM ticket_purchase as tp\n" +
             "            WHERE tp.status IN ('PURCHASED', 'CHECKED_IN') AND tp.event_activity_id = :eventActivityId", nativeQuery = true)
     List<Integer> findDistinctAccountIdsByEventActivityIdAndStatus(

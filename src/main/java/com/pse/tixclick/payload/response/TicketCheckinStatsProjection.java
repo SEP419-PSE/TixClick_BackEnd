@@ -5,5 +5,5 @@ public interface TicketCheckinStatsProjection {
     Integer getTicketId();
     Integer getTotalPurchased();
     Integer getCheckedIn();
-    Integer getNotCheckedIn();
+    Integer getTotalTicket();
 }
