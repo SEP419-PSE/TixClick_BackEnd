@@ -601,7 +601,9 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
     private void updateOrderStatus(String orderCode){
         var order = orderRepository.findOrderByOrderCode(orderCode)
                 .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
-
+        if(order.getStatus().equals(EOrderStatus.SUCCESSFUL)){
+            throw new AppException(ErrorCode.ORDER_ALREADY_SUCCESSFUL);
+        }
         var orderDetails = orderDetailRepository.findOrderDetailsByOrder_OrderId(order.getOrderId());
 
         if(orderDetails == null || orderDetails.isEmpty()) {

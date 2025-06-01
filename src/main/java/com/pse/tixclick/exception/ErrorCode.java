@@ -187,7 +187,7 @@ public enum ErrorCode {
     EVENT1_NOT_FOUND(1030, "Không tìm thấy sự kiện", HttpStatus.OK),
     EVENT1_CANCELLED(1163,"Sự kiện chưa bị hủy",HttpStatus.OK),
     ACCOUNT1_NOT_FOUND(1060, "Không tìm thấy account", HttpStatus.OK),
-
+    ORDER_ALREADY_SUCCESSFUL(1166, "Đơn hàng đã thành công", HttpStatus.BAD_REQUEST)
 
 
     ;
