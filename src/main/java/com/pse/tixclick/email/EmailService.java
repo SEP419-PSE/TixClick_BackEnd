@@ -110,12 +110,14 @@ public class EmailService {
                 "<li><strong>Event:</strong> " + eventName + "</li>" +
                 "</ul>" +
                 "<p>We apologize for any inconvenience this may cause. If you have already purchased tickets, please await further instructions regarding refunds or rescheduling.</p>" +
+                "<p><strong>Please update your bank account information in the \"Trang cá nhân\" section so that we can process your refund as quickly as possible.</strong></p>" +
                 "<p>Thank you for your understanding.</p>" +
                 "<p>Best regards,<br/>TixClick Team</p>" +
                 "</body>" +
                 "</html>";
         sendNewMail(to, subject, body, fullname);
     }
+
 
     public void sendEventCancellationEmailToMany(List<String> emails, String eventName) throws MessagingException {
         String subject = "Event Cancellation Notice - TixClick";
