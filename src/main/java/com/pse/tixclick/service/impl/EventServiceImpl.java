@@ -1022,8 +1022,18 @@ public class EventServiceImpl implements EventService {
                 if(!event.getStatus().equals(EEventStatus.SCHEDULED)){
                     throw new AppException(ErrorCode.EVENT_NOT_SCHEDULED);
                 }
+                LocalDate currentDate = LocalDate.now();
+                LocalDate eventStartDate = event.getEventActivities().stream()
+                        .map(EventActivity::getDateEvent)
+                        .min(LocalDate::compareTo)
+                        .orElseThrow(() -> new AppException(ErrorCode.EVENT_ACTIVITY_NOT_FOUND));
 
-                    event.setStatus(EEventStatus.CANCELLED);
+                // Nếu hôm nay cách ngày bắt đầu sự kiện < 7 ngày → không cho huỷ
+                if (currentDate.isAfter(eventStartDate.minusDays(7))) {
+                    throw new AppException(ErrorCode.CANNOT_CANCEL_EVENT_WITHIN_7_DAYS);
+                }
+
+                event.setStatus(EEventStatus.CANCELLED);
 
                 String organizerFullname = event.getOrganizer().getFirstName() + " " + event.getOrganizer().getLastName();
                 emailService.sendEventCancellationEmail(
@@ -1084,8 +1094,6 @@ public class EventServiceImpl implements EventService {
                 }
 
                 executor.shutdown(); // Sau khi submit hết thì đóng executor
-
-
             }
 
 
