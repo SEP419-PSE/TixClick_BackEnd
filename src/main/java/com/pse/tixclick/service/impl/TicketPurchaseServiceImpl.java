@@ -601,77 +601,7 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
 
     @Override
     public PaginationResponse<MyTicketResponse> getTicketPurchasesByStatusCheckIn(int page, int size, String sortDirection) {
-        appUtils.checkRole(ERole.BUYER);
-
-        if (page < 0 || size <= 0) {
-            throw new AppException(ErrorCode.INVALID_PAGE_SIZE);
-        }
-
-        int accountId = appUtils.getAccountFromAuthentication().getAccountId();
-
-        // ⚠ Thay SUCCESSFUL bằng CHECKED_IN
-        List<MyTicketFlatDTO> flatDTOs = orderRepository.findAllTicketInfoForAccount(
-                accountId, EOrderStatus.CHECKED_IN, ETicketPurchaseStatus.CHECKED_IN
-        );
-
-        if (flatDTOs.isEmpty()) {
-            return new PaginationResponse<>(Collections.emptyList(), page, 0, 0, size);
-        }
-
-        Map<Integer, MyTicketResponse> orderMap = new LinkedHashMap<>();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-
-        for (MyTicketFlatDTO flat : flatDTOs) {
-            MyTicketResponse response = orderMap.computeIfAbsent(flat.getOrderId(), oid -> {
-                MyTicketResponse res = new MyTicketResponse();
-                res.setOrderId(flat.getOrderId());
-                res.setOrderCode(flat.getOrderCode());
-                res.setOrderDate(flat.getOrderDate().format(formatter));
-                res.setTotalPrice(flat.getTotalAmount());
-                res.setTotalDiscount(flat.getTotalAmountDiscount());
-                res.setEventId(flat.getEventId());
-                res.setEventActivityId(flat.getEventActivityId());
-                res.setEventCategoryId(flat.getEventCategoryId());
-                res.setEventName(flat.getEventName());
-                res.setEventDate(flat.getEventDate());
-                res.setEventStartTime(flat.getEventStartTime());
-                res.setTimeBuyOrder(flat.getOrderDate().format(formatter));
-                res.setLocationName(flat.getLocationName());
-                res.setLocation(Stream.of(flat.getAddress(), flat.getWard(), flat.getDistrict(), flat.getCity())
-                        .filter(Objects::nonNull)
-                        .collect(Collectors.joining(", ")));
-                res.setQrCode(flat.getQrCode());
-                res.setLogo(flat.getLogo());
-                res.setBanner(flat.getBanner());
-                res.setTicketPurchases(new ArrayList<>());
-                res.setIshaveSeatmap(Boolean.TRUE.equals(flat.getHasSeatMap()));
-                res.setQuantityOrdered(0);
-                return res;
-            });
-
-            TicketOwnerResponse dto = new TicketOwnerResponse();
-            dto.setTicketPurchaseId(flat.getTicketPurchaseId());
-            dto.setPrice(flat.getPrice());
-            dto.setSeatCode(flat.getSeatCode());
-            dto.setTicketType(flat.getTicketName());
-            dto.setZoneName(flat.getZoneName());
-            dto.setQuantity(flat.getQuantity());
-
-            response.getTicketPurchases().add(dto);
-            response.setQuantityOrdered(response.getQuantityOrdered() + flat.getQuantity());
-        }
-
-        // Phân trang kết quả
-        List<MyTicketResponse> allResponses = new ArrayList<>(orderMap.values());
-        int total = allResponses.size();
-        int fromIndex = page * size;
-        int toIndex = Math.min(fromIndex + size, total);
-
-        List<MyTicketResponse> pagedResponses = fromIndex >= total
-                ? Collections.emptyList()
-                : allResponses.subList(fromIndex, toIndex);
-
-        return new PaginationResponse<>(pagedResponses, page, total, pagedResponses.size(), size);
+        return  null;
     }
 
     private void updateOrderStatus(String orderCode){
@@ -961,14 +891,36 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
         }
 
         int accountId = appUtils.getAccountFromAuthentication().getAccountId();
+        sortDirection = sortDirection.trim().toLowerCase();
+        if(sortDirection == null){
+            throw new AppException(ErrorCode.INVALID_SORT_DIRECTION);
+        }
+        List<MyTicketFlatDTO> flatDTOs;
 
-        List<MyTicketFlatDTO> flatDTOs = orderRepository.findAllTicketInfoForAccount(
-                accountId, EOrderStatus.SUCCESSFUL, ETicketPurchaseStatus.PURCHASED
-        );
+// Chuẩn hóa sortDirection, nếu null thì mặc định "asc"
+        sortDirection = (sortDirection == null) ? "asc" : sortDirection.trim().toLowerCase();
+
+        if (sortDirection.equals("asc")) {
+            flatDTOs = orderRepository.findAllTicketInfoForAccountASC(
+                    accountId, EOrderStatus.SUCCESSFUL, ETicketPurchaseStatus.PURCHASED
+            ); 
+        } else if (sortDirection.equals("desc")) {
+            flatDTOs = orderRepository.findAllTicketInfoForAccountDESC(
+                    accountId, EOrderStatus.SUCCESSFUL, ETicketPurchaseStatus.PURCHASED
+            );
+
+
+        } else {
+            // Nếu sortDirection không đúng, mặc định gọi ASC hoặc có thể ném exception tùy ý
+            flatDTOs = orderRepository.findAllTicketInfoForAccountASC(
+                    accountId, EOrderStatus.SUCCESSFUL, ETicketPurchaseStatus.PURCHASED
+            );
+        }
 
         if (flatDTOs.isEmpty()) {
             return new PaginationResponse<>(Collections.emptyList(), page, 0, 0, size);
         }
+
 
         Map<Integer, MyTicketResponse> orderMap = new LinkedHashMap<>();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
@@ -1019,13 +971,15 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
         List<MyTicketResponse> responses = new ArrayList<>(orderMap.values());
 
         // Sort theo orderDate
-        responses.sort((o1, o2) -> {
-            if ("desc".equalsIgnoreCase(sortDirection)) {
-                return o2.getOrderDate().compareTo(o1.getOrderDate());
-            } else {
-                return o1.getOrderDate().compareTo(o2.getOrderDate());
-            }
-        });
+//        String finalSortDirection = sortDirection;
+//        responses.sort((o1, o2) -> {
+//            if ("desc".equalsIgnoreCase(finalSortDirection)) {
+//                return o2.getOrderDate().compareTo(o1.getOrderDate());
+//            } else {
+//                return o1.getOrderDate().compareTo(o2.getOrderDate());
+//            }
+//        });
+
 
         int totalElements = responses.size();
         int totalPages = (int) Math.ceil((double) totalElements / size);
