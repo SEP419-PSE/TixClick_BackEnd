@@ -207,7 +207,7 @@ public class PaymentController {
         response.setHeader("Content-Disposition", "attachment; filename=" + filename);
 
         /* 3. Gọi service – ghi trực tiếp ra OutputStream */
-            paymentService.exportRefunds(columnList, response.getOutputStream(), eventId);
+        paymentService.exportRefunds(columnList, response.getOutputStream(), eventId);
     }
 
     @PostMapping("/import_refund")

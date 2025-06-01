@@ -182,6 +182,14 @@ public enum ErrorCode {
     TICKET_NOT_REFUNDING(1164,"Vé không phải status hoàn tiền",HttpStatus.BAD_REQUEST),
     INVALID_SORT_DIRECTION(1165, "Hướng sắp xếp không hợp lệ", HttpStatus.BAD_REQUEST),
     CANNOT_CANCEL_EVENT_WITHIN_7_DAYS(1165,"Không thể hủy sự kiện trong vòng 7 ngày trước ngày diễn ra sự kiện",HttpStatus.BAD_REQUEST),
+    PAYMENT1_NOT_FOUND(1146,"Không tìm thấy đơn hàng nào",HttpStatus.OK),
+    TRANSACTION1_NOT_FOUND(1120, "Không tìm thấy giao dịch", HttpStatus.OK),
+    EVENT1_NOT_FOUND(1030, "Không tìm thấy sự kiện", HttpStatus.OK),
+    EVENT1_CANCELLED(1163,"Sự kiện chưa bị hủy",HttpStatus.OK),
+    ACCOUNT1_NOT_FOUND(1060, "Không tìm thấy account", HttpStatus.OK),
+
+
+
     ;
 
 
