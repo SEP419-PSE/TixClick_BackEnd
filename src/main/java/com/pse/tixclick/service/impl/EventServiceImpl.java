@@ -1273,17 +1273,14 @@ public class EventServiceImpl implements EventService {
 
                     Ticket ticket = ticketRepository.findById(s.getTicketId())
                             .orElseThrow(() -> new AppException(ErrorCode.TICKET_NOT_FOUND));
-                    Integer totalTicket = ticketPurchaseRepository.countTicketPurchaseByEventActivity_EventActivityIdAndStatus(eventActivityId,ETicketPurchaseStatus.PURCHASED);
-                    if(totalTicket == null){
-                        totalTicket = 0;
-                    }
-                    double percentage = total > 0 ? (checkedIn * 100.0) / totalTicket : 0.0;
+
+                    double percentage = total > 0 ? (checkedIn * 100.0) / s.getTotalTicket() : 0.0;
                     return new CheckinByTicketTypeResponse.TicketTypeCheckinStat(
                             s.getTicketName(),
                             ticket.getPrice(),
                             checkedIn,
                             total,
-                            totalTicket,
+                            s.getTotalTicket(),
                             Math.round(percentage * 100.0) / 100.0 // làm tròn 2 chữ số
                     );
                 })
