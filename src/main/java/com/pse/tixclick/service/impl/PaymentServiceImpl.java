@@ -1022,9 +1022,9 @@ public class PaymentServiceImpl implements PaymentService {
         try (Workbook wb = new XSSFWorkbook()) {
             Event event = eventRepository
                     .findById(eventId)
-                    .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+                    .orElseThrow(() -> new AppException(ErrorCode.EVENT1_NOT_FOUND));
             if (!event.getStatus().equals(EEventStatus.CANCELLED)) {
-                throw new AppException(ErrorCode.EVENT_CANCELLED);
+                throw new AppException(ErrorCode.EVENT1_CANCELLED);
             }
 
             // Lưu ý: tránh ký tự không hợp lệ trong tên sheet
@@ -1061,13 +1061,13 @@ public class PaymentServiceImpl implements PaymentService {
                 }
 
                 Account acc = accountRepository.findById(tp.getAccount().getAccountId())
-                        .orElseThrow(() -> new AppException(ErrorCode.ACCOUNT_NOT_FOUND));
+                        .orElseThrow(() -> new AppException(ErrorCode.ACCOUNT1_NOT_FOUND));
                 Payment p = paymentRepository
                         .findPaymentByOrderCode(orderCode)
-                        .orElseThrow(() -> new AppException(ErrorCode.PAYMENT_NOT_FOUND));
+                        .orElseThrow(() -> new AppException(ErrorCode.PAYMENT1_NOT_FOUND));
                 Transaction t = transactionRepository
                         .findByPaymentId(p.getPaymentId())
-                        .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
+                        .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION1_NOT_FOUND));
 
                 Row row = sheet.createRow(rowIdx);
 
